@@ -1,5 +1,5 @@
 # vector-calculator
-Vector Calculator is a program that calculates optimal vector angles in Super Mario Odyssey, primarily for use in TASing.
+A program to calculate optimal vector angles in Super Mario Odyssey, primarily for use in TASing.
 
 ## Using the Program
 Upon opening vector-calculator.jar, you will see the movement configuration window, containing the following fields:
