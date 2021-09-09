@@ -172,9 +172,6 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void main(String[] args) {
-		double[] speeds = {7, 0, 20};
-		int[] frames = {20, 1, 23}; 
-		Vector v = new Vector(270, true, speeds, frames, 16, .3, 180, 0, 0, true);
 		
 		JPanel all = new JPanel();
 		all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
