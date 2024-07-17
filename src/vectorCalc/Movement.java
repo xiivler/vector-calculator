@@ -5,6 +5,9 @@ import java.util.ArrayList;
 public class Movement {
 	
 	public static boolean onMoon = false;
+
+	//no downthrow or fakethrow because these are equivalent to others
+	public static final String[] RC_TYPES = {"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Double Throw Roll Cancel", "Triple Throw Roll Cancel", "Spinthrow Roll Cancel"};
 	
 	//boolean variableSpeed = true;
 	
@@ -27,7 +30,6 @@ public class Movement {
 	double moonGravity = .4;
 	double vectorAccel = .3;
 	double forwardAccel = .5;
-	boolean capThrow = false;
 	int framesAtMaxVerticalSpeed = 0;
 	int framesAtInitialHorizontalSpeed = 0;
 	//int jumpFramesOffset = 0; //for captures that have more frames of jumping than are held
@@ -440,7 +442,7 @@ public class Movement {
 			}
 			else if (movementType.equals("Triple Throw Roll Cancel")) {
 				minFrames = 44;
-				inputs.add("Up shake");
+				inputs.add("Y");
 			}
 			else if (movementType.equals("Spinthrow Roll Cancel")) {
 				minFrames = 46;
@@ -707,7 +709,10 @@ public class Movement {
 	*/
 	
 	public SimpleMotion getMotion(int frames, boolean rightVector, boolean complex) {
-		if (vectorAccel == 0)
+		if (movementType.contains("Roll Cancel")) {
+			return new GroundedCapThrow(this, !rightVector);
+		}
+		else if (vectorAccel == 0)
 			return new SimpleMotion(this, frames);
 		else if (complex)
 			return new ComplexVector(this, rightVector, frames);

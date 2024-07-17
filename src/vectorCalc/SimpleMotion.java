@@ -60,9 +60,7 @@ public class SimpleMotion {
 	
 	public SimpleMotion(Movement movement, double initialAngle, int frames) {
 		this(movement, frames);
-		this.initialAngle = initialAngle;
-		this.frames = frames;
-		
+		this.initialAngle = initialAngle;	
 	}
 	
 	public double calcDispForward() {
@@ -130,9 +128,74 @@ public class SimpleMotion {
 				finalVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.gravity * (frames - movement.frameOffset), movement.fallSpeedCap);
 		return finalVerticalVelocity;
 	}
+
+	public double calcDispY() {
+		dispY = 0;
+		double yVelocity = movement.initialVerticalSpeed;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		for (int i = 0; i < frames; i++) {
+			if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			if (i >= movement.frameOffset) {
+				dispY += yVelocity;
+			}
+		}
+		return dispY;
+	}
+
+	public double calcDispY(int frames) {
+		this.frames = frames;
+		return calcDispY();
+	}
+
+	//given a Y displacement, return the last frame that is at least as high as the displacement
+	//if this is not possible, return the frames to the peak of the motion
+	public int calcFrames(double maxDispY) {
+		dispY = 0;
+		double yVelocity = movement.initialVerticalSpeed;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		frames = -1;
+		int maxHeightFrames = 0;
+		boolean isPossible = false;
+		while (dispY >= maxDispY || yVelocity > 0) {
+			frames++;
+			if (dispY >= maxDispY) {
+				isPossible = true;
+			}
+			if (frames >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			if (frames >= movement.frameOffset) {
+				dispY += yVelocity;
+				if (yVelocity > 0) {
+					maxHeightFrames = frames;
+				}
+			}
+		}
+		if (!isPossible) {
+			return maxHeightFrames;
+		}
+		else {
+			return frames;
+		}
+	}
 	
 	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle
 	public double[][] calcFrameByFrame() {
+		//maybe shouldn't use the disps for this
 		dispX = x0;
 		dispY = y0;
 		dispZ = z0;

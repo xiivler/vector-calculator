@@ -26,7 +26,14 @@ public class MovementNameListPreparer {
 	public String prepareList() {
 		//initial movement
 		String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
-		int frames = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.MOVEMENT_FRAMES_ROW, 1).toString());
+		int frames = 0;
+		if (VectorCalculator.durationFrames) {
+			frames = VectorCalculator.initialFrames;
+		}
+		else {
+			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(VectorCalculator.initialFrames, false, false);
+			frames = VectorCalculator.initialMotion.calcFrames(VectorCalculator.initialDispY);
+		}
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt
 		//not crouch roll because it will be easier for people to just input the speed at the time of rolling

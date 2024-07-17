@@ -50,7 +50,7 @@ public class VectorCalculator extends JPanel {
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump"},
 		{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
-		{"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Downthrow Roll Cancel", "Double Throw Roll Cancel", "Spinthrow Roll Cancel", "Triple Throw Roll Cancel", "Fakethrow Roll Cancel"},
+		{"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Downthrow Roll Cancel", "Double Throw Roll Cancel", "Spinthrow Roll Cancel", "Triple Throw Roll Cancel", "Fakethrow Roll Cancel", "Optimal Distance Roll Cancel"},
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound NPC Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
@@ -64,6 +64,7 @@ public class VectorCalculator extends JPanel {
 		{"Angle", 0},
 		{"Angle Type", "Target Angle"},
 		{"Initial Movement Type", "Single Jump"},
+		{"Initial Movement Duration Type", "Frames"},
 		{"Initial Movement Frames", 60},
 		{"Frames of Holding Jump", 10},
 		{"Initial Horizontal Speed", 24},
@@ -75,17 +76,29 @@ public class VectorCalculator extends JPanel {
 	static final int ANGLE_ROW = 3;
 	static final int ANGLE_TYPE_ROW = 4;
 	static final int INITIAL_MOVEMENT_TYPE_ROW = 5;
-	static final int MOVEMENT_FRAMES_ROW = 6;
-	static final int HOLD_JUMP_FRAMES_ROW = 7;
-	static final int INITIAL_HORIZONTAL_SPEED_ROW = 8;
-	static final int VECTOR_DIRECTION_ROW = 9;
-	static final int GRAVITY_ROW = 10;
+	static final int MOVEMENT_DURATION_TYPE_ROW = 6;
+	static final int MOVEMENT_DURATION_ROW = 7;
+	static final int HOLD_JUMP_FRAMES_ROW = 8;
+	static final int INITIAL_HORIZONTAL_SPEED_ROW = 9;
+	static final int VECTOR_DIRECTION_ROW = 10;
+	static final int GRAVITY_ROW = 11;
 	
 	static int framesJump = 10;
+	static int initialFrames = 60;
+	static double initialDispY = 0;
+	static double initialHorizontalSpeed = 24;
+	static String initialMovementName = "Single Jump";
 	
 	static Movement initialMovement = new Movement("Single Jump");
+	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, 60);
 	static boolean chooseJumpFrames = true;
 	static boolean chooseInitialHorizontalSpeed = true;
+	static boolean durationFrames = true;
+	static int lockDurationType = 0;
+
+	static final int NONE = 0;
+	static final int FRAMES = 1;
+	static final int VERTICAL_DISPLACEMENT = 2;
 	
 	static JLabel errorMessage;
 	
@@ -104,6 +117,27 @@ public class VectorCalculator extends JPanel {
 	public static BigDecimal round(double d, int places) {
 			return BigDecimal.valueOf(d).setScale(places, RoundingMode.HALF_UP);
 		}
+
+	public static void lockDurationType(int value) {
+		lockDurationType = value;
+		System.out.println(lockDurationType);
+		if (lockDurationType == FRAMES) {
+			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
+			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
+			if (durationFrames == false) {
+				durationFrames = true;
+				genPropertiesTable.setValueAt(initialMovement.minRecommendedFrames, MOVEMENT_DURATION_ROW, 0);
+			}
+		}
+		else if (lockDurationType == VERTICAL_DISPLACEMENT) {
+			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_TYPE_ROW, 1);
+			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
+			if (durationFrames == true) {
+				durationFrames = false;
+				genPropertiesTable.setValueAt(0, MOVEMENT_DURATION_ROW, 1);
+			}
+		}
+	}
 	
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
 		  public MyComboBoxRenderer(String[] items) {
@@ -192,6 +226,17 @@ public class VectorCalculator extends JPanel {
                     JComboBox<String> angle = new JComboBox<String>(options);
                     return new DefaultCellEditor(angle);
                 }
+				else if (modelColumn == 1 && row == MOVEMENT_DURATION_TYPE_ROW)
+                {
+					if (lockDurationType == NONE) {
+						String[] options = {"Frames", "Vertical Displacement"};
+						JComboBox<String> choice = new JComboBox<String>(options);
+						return new DefaultCellEditor(choice);
+					}
+					else {
+						return null;
+					}
+                }
                 else if (modelColumn == 1 && row == VECTOR_DIRECTION_ROW)
                 {
                 	String[] options = {"Left", "Right"}; //can add none option
@@ -247,7 +292,7 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
-		genPropertiesScrollPane.setPreferredSize(new Dimension(500, 225));
+		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * genProperties.length + 25));
 		
 		genPropertiesModel = genPropertiesTable.getModel();
 		ListSelectionModel genPropertiesSelectionModel = genPropertiesTable.getSelectionModel();
@@ -262,7 +307,7 @@ public class VectorCalculator extends JPanel {
 				confirm.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						//System.out.println(dialogWindow.getSelectedMovementName());
-						String initialMovementName = dialogWindow.getSelectedMovementName();
+						initialMovementName = dialogWindow.getSelectedMovementName();
 						initialMovement = new Movement(initialMovementName);
 						genPropertiesModel.setValueAt(initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
 						double suggestedSpeed = initialMovement.getSuggestedSpeed();
@@ -280,10 +325,18 @@ public class VectorCalculator extends JPanel {
 								genPropertiesModel.setValueAt((int) initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
 							else
 								genPropertiesModel.setValueAt(initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
+							//TODO
 						}
 						else {
 							chooseInitialHorizontalSpeed = false;
 							genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
+						}
+						
+						if (initialMovementName.equals("Optimal Distance Roll Cancel")) {
+							lockDurationType(VERTICAL_DISPLACEMENT);
+						}
+						else {
+							lockDurationType(NONE);
 						}
 						dialogWindow.close();	
 					}
@@ -295,41 +348,84 @@ public class VectorCalculator extends JPanel {
 		genPropertiesModel.addTableModelListener(new TableModelListener() {
 
 			public void tableChanged(TableModelEvent e) {
+				initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
+
 				int row = e.getFirstRow();
-				if (row == MOVEMENT_FRAMES_ROW || row == INITIAL_MOVEMENT_TYPE_ROW) {
+				int column = e.getColumn();
+				if (row == MOVEMENT_DURATION_ROW || row == INITIAL_MOVEMENT_TYPE_ROW) {
 					try {
-						String movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
-						int minFrames = (new Movement(movementType)).minFrames;
-						if (Integer.parseInt(genPropertiesTable.getValueAt(MOVEMENT_FRAMES_ROW, 1).toString()) < minFrames)
-							genPropertiesTable.setValueAt(minFrames, MOVEMENT_FRAMES_ROW, 1);
+						//movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
+						int minFrames = initialMovement.minFrames;
+						if (durationFrames) {
+							initialFrames = Integer.parseInt(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
+							if (initialFrames < minFrames) {
+								initialFrames = minFrames;
+								genPropertiesTable.setValueAt(minFrames, MOVEMENT_DURATION_ROW, 1);
+							}
+						}
+						else {
+							initialDispY = Double.parseDouble(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
+							//add checks to make sure it isn't too big?
+						}
 					}
 					catch (NumberFormatException ex) {
-						genPropertiesTable.setValueAt(1, MOVEMENT_FRAMES_ROW, 1);
+						if (durationFrames) {
+							genPropertiesTable.setValueAt(1, MOVEMENT_DURATION_ROW, 1);
+							initialFrames = 1;
+						}
 					}
 				}
 				else if (row == HOLD_JUMP_FRAMES_ROW) {
-					if (chooseJumpFrames)
+					if (chooseJumpFrames) {
+						framesJump = 0;
 						try {
-							if (Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString()) < 1)
-								genPropertiesTable.setValueAt(1, row, 1);
-							else if (Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString()) > 10)
-								genPropertiesTable.setValueAt(10, row, 1);
-								framesJump = 10;
+							framesJump = Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString());
 						}
-						catch (NumberFormatException ex) {
-							genPropertiesTable.setValueAt(1, row, 1);
+						catch (NumberFormatException ex) {};
+						if (framesJump > 10) {
+							framesJump = 10;
+							genPropertiesTable.setValueAt(framesJump, row, 1);
+						}
+						if (framesJump < 1) {
 							framesJump = 1;
+							genPropertiesTable.setValueAt(framesJump, row, 1);
 						}
+						//genPropertiesTable.setValueAt(framesJump, row, 1);
+					}
 				}
 				else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
-					if (chooseInitialHorizontalSpeed)
+					if (chooseInitialHorizontalSpeed) {
+						initialHorizontalSpeed = 0;
 						try {
-							if (Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString()) < 0)
-								genPropertiesTable.setValueAt(0, row, 1);
+							initialHorizontalSpeed = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
 						}
 						catch (NumberFormatException ex) {
-							genPropertiesTable.setValueAt(0, row, 1);
+							genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
 						}
+						if (initialHorizontalSpeed < 0) {
+							initialHorizontalSpeed = 0;
+							genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
+						}
+					}
+				}
+				else if (row == MOVEMENT_DURATION_TYPE_ROW) {
+					if (lockDurationType == NONE) {
+						System.out.println("oops");
+						boolean oldDurationFrames = durationFrames;
+						durationFrames = genPropertiesTable.getValueAt(MOVEMENT_DURATION_TYPE_ROW, 1).equals("Frames");
+						System.out.println(durationFrames);
+						initialMovement.initialHorizontalSpeed = initialHorizontalSpeed;
+						System.out.println(initialMovement.initialHorizontalSpeed);
+						initialMotion = initialMovement.getMotion(initialFrames, false, false);//new SimpleMotion(initialMovement, initialFrames);
+						if (durationFrames && !oldDurationFrames) {
+							genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
+							genPropertiesTable.setValueAt(initialMotion.calcFrames(initialDispY), MOVEMENT_DURATION_ROW, 1);
+						}
+						else if (!durationFrames && oldDurationFrames) {
+							genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
+							genPropertiesTable.setValueAt(initialMotion.calcDispY(initialFrames), MOVEMENT_DURATION_ROW, 1);
+						}
+					}
 				}
 				/*
 				else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
@@ -359,6 +455,8 @@ public class VectorCalculator extends JPanel {
 					if (setValue == (int) setValue)
 						genPropertiesTable.setValueAt((int) setValue, row, 1);
 				}
+
+				initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
 			}
 		});	
 		
@@ -469,7 +567,19 @@ public class VectorCalculator extends JPanel {
 		//f.setResizable(false);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setLocationRelativeTo(null);
-		f.setVisible(true);		
+		f.setVisible(true);
+		
+		//DEBUG PREPOLUATE MOVEMENT
+		/*
+		movementModel.addRow(new String[]{"Motion Cap Throw", "20"});
+		movementModel.addRow(new String[]{"Dive", "20"});
+		movementModel.addRow(new String[]{"Cap Bounce", "20"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "20"});
+		movementModel.addRow(new String[]{"Dive", "20"});
+		genPropertiesModel.setValueAt("Motion Cap Throw Roll Cancel", INITIAL_MOVEMENT_TYPE_ROW, 1);
+		genPropertiesModel.setValueAt(120, MOVEMENT_DURATION_ROW, 1);
+		genPropertiesModel.setValueAt(29.94, INITIAL_HORIZONTAL_SPEED_ROW, 1);
+		*/
 	}
 
 }

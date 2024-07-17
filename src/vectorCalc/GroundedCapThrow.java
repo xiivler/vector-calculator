@@ -48,6 +48,7 @@ public class GroundedCapThrow extends SimpleMotion {
 		super(movement, initialAngle, movement.minFrames);
 		//this.finalAngle = finalAngle;
 		this.finalAngleDiff = finalAngleDiff;
+		//System.out.println("Frames: " + frames);
 		this.velocityAngles = new double[frames];
 		this.holdingAngles = new double[frames];
 		postHookFrames = frames - PRE_HOOK_FRAMES;
@@ -142,83 +143,85 @@ public class GroundedCapThrow extends SimpleMotion {
 		
 		//first frame of turn
 		int firstTurnFrame = frames - turningFrames;
-		currentVelocity -= WALKING_DECEL;
-		//use small rotational accel if there's a big enough overshoot; this only gives you like .1 units so maybe just disable this logic
-		double potentialOvershootReduction = (rotationalAccel - SMALL_ROTATIONAL_ACCEL) * overshootSpreadFrames;
-		if (remainingOvershoot >= potentialOvershootReduction && spreadOutOvershoot && spreadOutOvershootExtreme) {
-			rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
-			remainingOvershoot -= potentialOvershootReduction;
-			holdingAngles[firstTurnFrame] = capThrowAngle + Math.PI / 6; //anything <45 degrees from cap throw angle will do
-		}
-		else {
-			rotationalSpeed = rotationalAccel;
-			holdingAngles[firstTurnFrame] = capThrowAngle + NORMAL_ANGLE;
-		}
-		velocityAngles[firstTurnFrame] = capThrowAngle + rotationalSpeed; //we hook, and begin accelerating immediately
-		//System.out.println("Step " + firstTurnFrame + ": " + Math.toDegrees(rotationalSpeed) + ", " + Math.toDegrees(velocityAngles[firstTurnFrame]));
-		dispForward += currentVelocity * Math.cos(velocityAngles[firstTurnFrame]);
-		dispSideways += currentVelocity * Math.sin(velocityAngles[firstTurnFrame]);
-
-		//System.out.println(Math.toDegrees(remainingOvershoot));
-		//remaining frames of turn
-		boolean hasUndershot = false;
-		framesAtMaxRotationalSpeed = 0;
-		friction = FRICTION_COEFFICIENT;
-		for (int i = firstTurnFrame + 1; i < frames; i++) {
+		if (turningFrames > 0) {
 			currentVelocity -= WALKING_DECEL;
-			overshootSpreadFrames--;
-			if (remainingOvershoot == 0 || rotationalSpeed == SMALL_ROTATIONAL_ACCEL || !spreadOutOvershoot) {
-				if (rotationalSpeed == SMALL_ROTATIONAL_ACCEL) {
-					holdingAngles[i] = capThrowAngle + NORMAL_ANGLE;
-				}
-				else {
-					holdingAngles[i] = holdingAngles[i - 1];
-				}
-				rotationalSpeed += rotationalAccel;
+			//use small rotational accel if there's a big enough overshoot; this only gives you like .1 units so maybe just disable this logic
+			double potentialOvershootReduction = (rotationalAccel - SMALL_ROTATIONAL_ACCEL) * overshootSpreadFrames;
+			if (remainingOvershoot >= potentialOvershootReduction && spreadOutOvershoot && spreadOutOvershootExtreme) {
+				rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
+				remainingOvershoot -= potentialOvershootReduction;
+				holdingAngles[firstTurnFrame] = capThrowAngle + Math.PI / 6; //anything <45 degrees from cap throw angle will do
 			}
 			else {
-				int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
-				double biggestFriction = FRICTION_COEFFICIENT * biggestFrictionFrame * biggestFrictionFrame;
-				if (remainingOvershoot != overshoot && remainingOvershoot > 3 * SMALL_ROTATIONAL_ACCEL && turningFrames > 5) {
-					remainingOvershoot += biggestFriction;
-				}
-				//System.out.println(Math.toDegrees(remainingOvershoot));
-				double overshootRotationalSpeedReduction = Math.min(remainingOvershoot / overshootSpreadFrames, rotationalAccel);
-				//System.out.println(Math.toDegrees(overshootRotationalSpeedReduction));
-				double oldRotationalSpeed = rotationalSpeed;
-				rotationalSpeed += rotationalAccel - overshootRotationalSpeedReduction;
-				//System.out.println(Math.toDegrees(rotationalSpeed));
-				remainingOvershoot -= overshootRotationalSpeedReduction * overshootSpreadFrames;
-				//if we accidentally took too much off of a frame that was 6.5 deg/fr before
-				if (turningFrames > 5 && !hasUndershot) {
-					//int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
-					//double biggestFriction = FRICTION_COEFFICIENT * biggestFrictionFrame * biggestFrictionFrame;
-					double undershoot = Math.max(maxRotationalSpeed - (rotationalSpeed + rotationalAccel * overshootSpreadFrames), 0);
-					//System.out.println("Undershoot: " + Math.toDegrees(undershoot));
-					rotationalSpeed += undershoot / (overshootSpreadFrames + 1);
-					hasUndershot = true;
-				}
-				double trueRotationalAccel = rotationalSpeed - oldRotationalSpeed;
-				holdingAngles[i] = holdingAngles[i - 1] - (rotationalAccel - trueRotationalAccel); //counterrotate by how much less you want to accelerate
+				rotationalSpeed = rotationalAccel;
+				holdingAngles[firstTurnFrame] = capThrowAngle + NORMAL_ANGLE;
 			}
-			if (rotationalSpeed >= maxRotationalSpeed - friction) { //including friction
-				rotationalSpeed = maxRotationalSpeed - friction;
-				framesAtMaxRotationalSpeed++;
-				friction = FRICTION_COEFFICIENT * (framesAtMaxRotationalSpeed + 1) * (framesAtMaxRotationalSpeed + 1);
-			}
-			if (i == frames - 1 && !spreadOutOvershoot) {
-				rotationalSpeed -= overshoot;
-				if (rotationalSpeed < SMALL_ROTATIONAL_ACCEL) {
-					rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
+			velocityAngles[firstTurnFrame] = capThrowAngle + rotationalSpeed; //we hook, and begin accelerating immediately
+			//System.out.println("Step " + firstTurnFrame + ": " + Math.toDegrees(rotationalSpeed) + ", " + Math.toDegrees(velocityAngles[firstTurnFrame]));
+			dispForward += currentVelocity * Math.cos(velocityAngles[firstTurnFrame]);
+			dispSideways += currentVelocity * Math.sin(velocityAngles[firstTurnFrame]);
+
+			//System.out.println(Math.toDegrees(remainingOvershoot));
+			//remaining frames of turn
+			boolean hasUndershot = false;
+			framesAtMaxRotationalSpeed = 0;
+			friction = FRICTION_COEFFICIENT;
+			for (int i = firstTurnFrame + 1; i < frames; i++) {
+				currentVelocity -= WALKING_DECEL;
+				overshootSpreadFrames--;
+				if (remainingOvershoot == 0 || rotationalSpeed == SMALL_ROTATIONAL_ACCEL || !spreadOutOvershoot) {
+					if (rotationalSpeed == SMALL_ROTATIONAL_ACCEL) {
+						holdingAngles[i] = capThrowAngle + NORMAL_ANGLE;
+					}
+					else {
+						holdingAngles[i] = holdingAngles[i - 1];
+					}
+					rotationalSpeed += rotationalAccel;
 				}
-				else if (rotationalSpeed < rotationalAccel) {
-					rotationalSpeed = rotationalAccel;
+				else {
+					int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
+					double biggestFriction = FRICTION_COEFFICIENT * biggestFrictionFrame * biggestFrictionFrame;
+					if (remainingOvershoot != overshoot && remainingOvershoot > 3 * SMALL_ROTATIONAL_ACCEL && turningFrames > 5) {
+						remainingOvershoot += biggestFriction;
+					}
+					//System.out.println(Math.toDegrees(remainingOvershoot));
+					double overshootRotationalSpeedReduction = Math.min(remainingOvershoot / overshootSpreadFrames, rotationalAccel);
+					//System.out.println(Math.toDegrees(overshootRotationalSpeedReduction));
+					double oldRotationalSpeed = rotationalSpeed;
+					rotationalSpeed += rotationalAccel - overshootRotationalSpeedReduction;
+					//System.out.println(Math.toDegrees(rotationalSpeed));
+					remainingOvershoot -= overshootRotationalSpeedReduction * overshootSpreadFrames;
+					//if we accidentally took too much off of a frame that was 6.5 deg/fr before
+					if (turningFrames > 5 && !hasUndershot) {
+						//int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
+						//double biggestFriction = FRICTION_COEFFICIENT * biggestFrictionFrame * biggestFrictionFrame;
+						double undershoot = Math.max(maxRotationalSpeed - (rotationalSpeed + rotationalAccel * overshootSpreadFrames), 0);
+						//System.out.println("Undershoot: " + Math.toDegrees(undershoot));
+						rotationalSpeed += undershoot / (overshootSpreadFrames + 1);
+						hasUndershot = true;
+					}
+					double trueRotationalAccel = rotationalSpeed - oldRotationalSpeed;
+					holdingAngles[i] = holdingAngles[i - 1] - (rotationalAccel - trueRotationalAccel); //counterrotate by how much less you want to accelerate
 				}
+				if (rotationalSpeed >= maxRotationalSpeed - friction) { //including friction
+					rotationalSpeed = maxRotationalSpeed - friction;
+					framesAtMaxRotationalSpeed++;
+					friction = FRICTION_COEFFICIENT * (framesAtMaxRotationalSpeed + 1) * (framesAtMaxRotationalSpeed + 1);
+				}
+				if (i == frames - 1 && !spreadOutOvershoot) {
+					rotationalSpeed -= overshoot;
+					if (rotationalSpeed < SMALL_ROTATIONAL_ACCEL) {
+						rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
+					}
+					else if (rotationalSpeed < rotationalAccel) {
+						rotationalSpeed = rotationalAccel;
+					}
+				}
+				velocityAngles[i] = velocityAngles[i - 1] + rotationalSpeed;
+				//System.out.println("Step " + i + ": " + Math.toDegrees(rotationalSpeed) + ", " + Math.toDegrees(velocityAngles[i]));
+				dispForward += currentVelocity * Math.cos(velocityAngles[i]);
+				dispSideways += currentVelocity * Math.sin(velocityAngles[i]);
 			}
-			velocityAngles[i] = velocityAngles[i - 1] + rotationalSpeed;
-			//System.out.println("Step " + i + ": " + Math.toDegrees(rotationalSpeed) + ", " + Math.toDegrees(velocityAngles[i]));
-			dispForward += currentVelocity * Math.cos(velocityAngles[i]);
-			dispSideways += currentVelocity * Math.sin(velocityAngles[i]);
 		}
 
 		finalSpeed = currentVelocity;
@@ -283,6 +286,68 @@ public class GroundedCapThrow extends SimpleMotion {
 		dispZ = dispForward * Math.sin(initialAngle) + dispSideways * Math.sin(normalAngle);	
 	}
 
+	public double calcDispY() {
+		if (frames > PRE_HOOK_FRAMES) {
+			return -1.5 * PRE_HOOK_FRAMES + -7 * (frames - PRE_HOOK_FRAMES);
+		}
+		else {
+			return -1.5 * frames;
+		}
+	}
+
+	public double calcDispY(int frames) {
+		double dispY = 0; //not the real one
+		double yVelocity = -1.5;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		for (int i = 0; i < frames; i++) {
+			if (i < PRE_HOOK_FRAMES) {
+				yVelocity = -1.5;
+			}
+			else if (i < movement.maxFrames) {
+				yVelocity = -7;
+			}
+			else {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			dispY += yVelocity;
+		}
+		return dispY;
+	}
+
+	//doesn't use main frames int because it includes the fall too
+	public int calcFrames(double maxDispY) {
+		dispY = 0;
+		double yVelocity = -1.5;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		int frames = -1; //don't use the main one for this
+		while (dispY >= maxDispY) {
+			frames++;
+			if (frames < PRE_HOOK_FRAMES) {
+				yVelocity = -1.5;
+			}
+			else if (frames < movement.maxFrames) {
+				yVelocity = -7;
+			}
+			else {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			dispY += yVelocity;
+		}
+			return Math.max(0, frames);
+	}
+
 	public double[][] calcFrameByFrame() {
 		dispX = x0;
 		dispY = y0;
@@ -306,7 +371,7 @@ public class GroundedCapThrow extends SimpleMotion {
 			if (holdingAngles[i] == NO_ANGLE) {
 				currentHoldingAngle = NO_ANGLE;
 			}
-			System.out.println(holdingAngles[i]);
+			//System.out.println(holdingAngles[i]);
 			if (i >= PRE_HOOK_FRAMES) { //when the hook happens, change vertical velocity and start reducing current velocity
 				yVelocity = POST_HOOK_Y_VEL;
 				currentVelocity -= WALKING_DECEL;
@@ -326,6 +391,15 @@ public class GroundedCapThrow extends SimpleMotion {
 			info[i][7] = currentHoldingAngle;
 		}	
 		return info;
+	}
+
+	public double calcFinalVerticalVelocity() {
+		if (frames <= 15) {
+			return -1.5;
+		}
+		else {
+			return -7;
+		}
 	}
 	
 /*
