@@ -28,12 +28,12 @@ public class MovementNameListPreparer {
 		String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
 		int frames = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.MOVEMENT_FRAMES_ROW, 1).toString());
 		
+		//prepending movements if there are ones to prepend to the actual named movememnt
 		//not crouch roll because it will be easier for people to just input the speed at the time of rolling
 		if (name.equals("Backflip") || name.equals("Long Jump")) {
 			movementNames.add("Crouch");
 			movementFrames.add(1);
 		}
-		
 		else if (name.equals("Crouch") && frames > 43) {
 			movementNames.add("Ground Pound Roll");
 			movementFrames.add(43);
@@ -53,6 +53,7 @@ public class MovementNameListPreparer {
 		if (Movement.onMoon)
 			flowerFrames = 125;
 		
+		//special cases to say which movements should happen
 		if (name.equals("Ground Pound Roll") && frames > 43) {
 			movementNames.add("Ground Pound Roll");
 			movementFrames.add(43);
@@ -91,6 +92,13 @@ public class MovementNameListPreparer {
 			movementFrames.add(11);
 			movementNames.add("Swinging Jump Vector");
 			movementFrames.add(frames - 11);
+		}
+		else if (name.contains("Roll Cancel")) {
+			movementNames.add(name);
+			int rcFrames = (new Movement(name)).minFrames;
+			movementFrames.add(rcFrames);
+			movementNames.add("Falling");
+			movementFrames.add(frames - rcFrames);
 		}
 		else {
 			movementNames.add(name);

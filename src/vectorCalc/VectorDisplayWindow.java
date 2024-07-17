@@ -126,7 +126,7 @@ public class VectorDisplayWindow {
 	
 	private static double reduceAngle(double angle) {
 		double d = Math.toDegrees(angle);
-		while (d > 360)
+		while (d >= 360)
 			d -= 360;
 		while (d < 0)
 			d += 360;

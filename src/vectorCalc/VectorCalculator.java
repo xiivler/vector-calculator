@@ -46,10 +46,11 @@ public class VectorCalculator extends JPanel {
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
 	
 	//category for falling for height calculator?
-	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Rolls", "Object-Dependent Motion"};
+	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancels", "Rolls", "Object-Dependent Motion"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump"},
 		{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
+		{"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Downthrow Roll Cancel", "Double Throw Roll Cancel", "Spinthrow Roll Cancel", "Triple Throw Roll Cancel", "Fakethrow Roll Cancel"},
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound NPC Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
@@ -295,13 +296,15 @@ public class VectorCalculator extends JPanel {
 
 			public void tableChanged(TableModelEvent e) {
 				int row = e.getFirstRow();
-				if (row == MOVEMENT_FRAMES_ROW) {
+				if (row == MOVEMENT_FRAMES_ROW || row == INITIAL_MOVEMENT_TYPE_ROW) {
 					try {
-						if (Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString()) < 1)
-							genPropertiesTable.setValueAt(1, row, 1);
+						String movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
+						int minFrames = (new Movement(movementType)).minFrames;
+						if (Integer.parseInt(genPropertiesTable.getValueAt(MOVEMENT_FRAMES_ROW, 1).toString()) < minFrames)
+							genPropertiesTable.setValueAt(minFrames, MOVEMENT_FRAMES_ROW, 1);
 					}
 					catch (NumberFormatException ex) {
-						genPropertiesTable.setValueAt(1, row, 1);
+						genPropertiesTable.setValueAt(1, MOVEMENT_FRAMES_ROW, 1);
 					}
 				}
 				else if (row == HOLD_JUMP_FRAMES_ROW) {

@@ -5,9 +5,9 @@ public class SimpleMotion {
 	public static final double NORMAL_ANGLE = Math.PI / 2;
 	public static final double NO_ANGLE = Double.MIN_VALUE;
 	
-	public static final double ROTATIONAL_ACCEL = Math.toRadians(.3);
-	public static final double MAX_ROTATIONAL_SPEED = Math.toRadians(6);
-	public static final double ROTATIONAL_SPEED_AFTER_MAX = Math.toRadians(3.5);
+	double rotationalAccel;
+	double maxRotationalSpeed;
+	double rotationalSpeedAfterMax;
 	
 	Movement movement;
 	
@@ -42,6 +42,9 @@ public class SimpleMotion {
 	double z0 = 0;
 	
 	public SimpleMotion(Movement movement, int frames) {
+		this.rotationalAccel = movement.rotationalAccel;
+		this.maxRotationalSpeed = movement.maxRotationalSpeed;
+		this.rotationalSpeedAfterMax = movement.rotationalSpeedAfterMax;
 		this.movement = movement;
 		this.initialForwardVelocity = movement.initialHorizontalSpeed;
 		this.frames = frames;

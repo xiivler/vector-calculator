@@ -79,9 +79,10 @@ public class VectorMaximizer {
 		motionGroup2Index = movementNames.size();
 		//motionGroup3Index = movementNames.size();
 		
+		//determine where the cap throws / other movement types whose angles are variable are (if any), since they will partition the movement
 		for (int i = 0; i < movementNames.size(); i++)	
-			if (movementNames.get(i).equals("Dive"))
-				if (i - 2 >= 0 && movementNames.get(i - 2).contains("Throw"))
+			if (movementNames.get(i).equals("Dive")) {
+				if (i - 2 >= 0 && movementNames.get(i - 2).contains("Throw")) {
 					if (i == movementNames.size() - 1) {
 						hasVariableCapThrow2 = true;
 						variableMovement2Index = i - 2;
@@ -92,6 +93,7 @@ public class VectorMaximizer {
 						variableCapThrow1Index = i - 2;
 						motionGroup2Index = i - 1;
 					}
+				}
 				else if (i - 3 >= 0 && movementNames.get(i - 3).contains("Throw") && movementNames.get(i - 2).equals("Falling")) {
 					if (i == movementNames.size() - 1) {
 						hasVariableCapThrow2 = true;
@@ -116,6 +118,7 @@ public class VectorMaximizer {
 						variableMovement2Index = i - 2;
 					}
 				}
+			}
 		
 		motions = new SimpleMotion[movementNames.size()];
 		
@@ -183,6 +186,7 @@ public class VectorMaximizer {
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = angle;
 		int lastNormalAngleFrame = (frames - 1) / 2;
+		//int lastNormalAngleFrame = frames - 2;
 		for (int i = 1; i <= lastNormalAngleFrame; i++)
 			holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 		for (int i = lastNormalAngleFrame + 1; i < frames; i++)
@@ -236,14 +240,34 @@ public class VectorMaximizer {
 		if (motionGroup.length == 0)
 			return motionGroup;
 		
-		Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-		motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
-		motionGroup[0].setInitialAngle(Math.PI / 2);
-		motionGroup[0].calcDispDispCoordsAngleSpeed();
-		if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion"))
-			currentVectorRight = !currentVectorRight;
+		//calculate the trajectory of the inital movement
 
-		for (int i = 1; i < motionGroup.length; i++) {
+		//case for roll cancel vectors (note it assumes at least 1 falling frame afterward)
+		int nextIndex;
+		if (movementNames.get(startIndex).contains("Roll Cancel")) {
+			nextIndex = 2;
+			Movement rc = new Movement(movementNames.get(startIndex), initialVelocity);
+			GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, RcvTool.calcRCCapThrowAngle(rc.movementType, initialVelocity, movementFrames.get(startIndex + 1)), !currentVectorRight);
+			rcMotion.calcDispDispCoordsAngleSpeed();
+			Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
+			rcv.initialVerticalSpeed = -7;
+			SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, currentVectorRight, movementFrames.get(startIndex + 1));
+			rcvMotion.calcDispDispCoordsAngleSpeed();
+			motionGroup[0] = rcMotion;
+			motionGroup[1] = rcvMotion;
+			currentVectorRight = !currentVectorRight;
+		}
+		else {
+			nextIndex = 1;
+			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
+			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+			motionGroup[0].setInitialAngle(Math.PI / 2);
+			motionGroup[0].calcDispDispCoordsAngleSpeed();
+			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion"))
+				currentVectorRight = !currentVectorRight;
+		}
+
+		for (int i = nextIndex; i < motionGroup.length; i++) {
 			int j = i + startIndex;
 			Movement currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
 			if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
@@ -278,6 +302,7 @@ public class VectorMaximizer {
 		return targetAngle;
 	}
 	
+	//the actual maximization function
 	public void maximize() {
 		long startTime = System.currentTimeMillis();
 		
@@ -287,6 +312,7 @@ public class VectorMaximizer {
 		
 		currentVectorRight = rightVector;
 		
+		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
 		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), listPreparer.initialVelocity, VectorCalculator.framesJump);
 		sumXDisps(motionGroup1);
 		sumYDisps(motionGroup1);

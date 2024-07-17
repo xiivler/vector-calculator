@@ -15,6 +15,11 @@ public class Movement {
 	int minFrames = 1;
 	int minRecommendedFrames = 1;
 	int maxFrames = Integer.MAX_VALUE;
+
+	double rotationalAccel = Math.toRadians(.3);
+	double maxRotationalSpeed = Math.toRadians(6);
+	double rotationalSpeedAfterMax = Math.toRadians(3.5);
+	boolean hasRotationalAccel = true;
 	
 	double initialHorizontalSpeed = 0;
 	double initialVerticalSpeed = 0;
@@ -22,6 +27,7 @@ public class Movement {
 	double moonGravity = .4;
 	double vectorAccel = .3;
 	double forwardAccel = .5;
+	boolean capThrow = false;
 	int framesAtMaxVerticalSpeed = 0;
 	int framesAtInitialHorizontalSpeed = 0;
 	//int jumpFramesOffset = 0; //for captures that have more frames of jumping than are held
@@ -403,6 +409,46 @@ public class Movement {
 			inputs.add("B");
 		}
 		
+		else if (movementType.contains("Roll Cancel")) {
+			trueSpeedCap = 100;
+			recommendedInitialHorizontalSpeed = 29.94;
+			rotationalAccel = Math.toRadians(1.3);
+			maxRotationalSpeed = Math.toRadians(1.3 * 5);
+			if (movementType.equals("Motion Cap Throw Roll Cancel")) {
+				minFrames = 19;
+				inputs.add("Shake");
+			}
+			else if (movementType.equals("Single Throw Roll Cancel")) {
+				minFrames = 24;
+				inputs.add("Y");
+			}
+			else if (movementType.equals("Upthrow Roll Cancel")) {
+				minFrames = 28;
+				inputs.add("Up shake");
+			}
+			else if (movementType.equals("Downthrow Roll Cancel")) {
+				minFrames = 28;
+				inputs.add("Down shake");
+			}
+			else if (movementType.equals("Double Throw Roll Cancel")) {
+				minFrames = 34;
+				inputs.add("Y");
+			}
+			else if (movementType.equals("Fakethrow Roll Cancel")) {
+				minFrames = 34;
+				inputs.add("Y");
+			}
+			else if (movementType.equals("Triple Throw Roll Cancel")) {
+				minFrames = 44;
+				inputs.add("Up shake");
+			}
+			else if (movementType.equals("Spinthrow Roll Cancel")) {
+				minFrames = 46;
+				inputs.add("Side shake");
+			}
+			maxFrames = minFrames;
+		}
+
 		//only lasts 24 frames, should be split into falling after this
 		//add min frames to this and rainbow spin?
 		else if (movementType.contains("Throw")) {

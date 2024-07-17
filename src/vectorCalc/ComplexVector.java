@@ -97,14 +97,14 @@ public class ComplexVector extends SimpleVector {
 				//System.out.println("step: " + Math.toDegrees(rotation));
 				oldRotation = rotation;
 				if (rotation > initialAngle) {
-					rotationVelocity -= ROTATIONAL_ACCEL;
-					if (rotationVelocity < -MAX_ROTATIONAL_SPEED)
-						rotationVelocity = -ROTATIONAL_SPEED_AFTER_MAX;
+					rotationVelocity -= rotationalAccel;
+					if (rotationVelocity < -maxRotationalSpeed)
+						rotationVelocity = -rotationalSpeedAfterMax;
 				}
 				else {
-					rotationVelocity += ROTATIONAL_ACCEL;
-					if (rotationVelocity > MAX_ROTATIONAL_SPEED)
-						rotationVelocity = ROTATIONAL_SPEED_AFTER_MAX;
+					rotationVelocity += rotationalAccel;
+					if (rotationVelocity > maxRotationalSpeed)
+						rotationVelocity = rotationalSpeedAfterMax;
 				}
 						
 				rotation += rotationVelocity;
@@ -131,16 +131,16 @@ public class ComplexVector extends SimpleVector {
 			if (rotation > adjustedHoldingAngle) {
 				if (rotationVelocity > 0)
 					rotationVelocity = 0;
-				rotationVelocity -= ROTATIONAL_ACCEL;
-				if (rotationVelocity < -MAX_ROTATIONAL_SPEED)
-					rotationVelocity = -ROTATIONAL_SPEED_AFTER_MAX;
+				rotationVelocity -= rotationalAccel;
+				if (rotationVelocity < -maxRotationalSpeed)
+					rotationVelocity = -rotationalSpeedAfterMax;
 			}
 			else {
 				if (rotationVelocity < 0)
 					rotationVelocity = 0;
-				rotationVelocity += ROTATIONAL_ACCEL;
-				if (rotationVelocity > MAX_ROTATIONAL_SPEED)
-					rotationVelocity = ROTATIONAL_SPEED_AFTER_MAX;
+				rotationVelocity += rotationalAccel;
+				if (rotationVelocity > maxRotationalSpeed)
+					rotationVelocity = rotationalSpeedAfterMax;
 			}
 			rotation += rotationVelocity;
 			
