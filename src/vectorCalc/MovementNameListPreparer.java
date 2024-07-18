@@ -7,7 +7,7 @@ import javax.swing.table.TableModel;
 
 public class MovementNameListPreparer {
 
-	TableModel genPropertiesModel;
+	//TableModel genPropertiesModel;
 	DefaultTableModel movementModel;
 	
 	ArrayList<String> movementNames = new ArrayList<String>();
@@ -19,13 +19,15 @@ public class MovementNameListPreparer {
 	String invalidMessage = "";
 	
 	public MovementNameListPreparer() {
-		this.genPropertiesModel = VectorCalculator.genPropertiesModel;
+		//this.genPropertiesModel = VectorCalculator.genPropertiesModel;
 		this.movementModel = VectorCalculator.movementModel;
 	}
 	
 	public String prepareList() {
+
 		//initial movement
-		String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
+		//String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
+		String name = VectorCalculator.initialMovementName;
 		int frames = 0;
 		if (VectorCalculator.durationFrames) {
 			frames = VectorCalculator.initialFrames;
@@ -101,6 +103,9 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames - 11);
 		}
 		else if (name.contains("Roll Cancel")) {
+			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH && Math.abs(VectorCalculator.initialAngle - VectorCalculator.targetAngle) > 65) {
+				return "Cannot calculate RCV with angle difference greater than 65°";
+			}
 			movementNames.add(name);
 			int rcFrames = (new Movement(name)).minFrames;
 			movementFrames.add(rcFrames);
@@ -112,10 +117,14 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames);
 		}
 		
-		if (VectorCalculator.chooseInitialHorizontalSpeed)
-			initialVelocity = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
-		if (VectorCalculator.chooseJumpFrames)
-			framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
+		if (VectorCalculator.chooseInitialHorizontalSpeed) {
+			//initialVelocity = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
+			initialVelocity = VectorCalculator.initialHorizontalSpeed;
+		}
+		if (VectorCalculator.chooseJumpFrames) {
+			//framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
+			framesJump = VectorCalculator.framesJump;
+		}
 		
 		//midair movement
 		String oldName = "";

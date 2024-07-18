@@ -56,20 +56,6 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 	
-	static String[] genPropertiesTitles = {"Property", "Value"};
-	static Object[][] genProperties =
-		{{"Initial X Position", 0},
-		{"Initial Y Position", 0},
-		{"Initial Z Position", 0},
-		{"Angle", 0},
-		{"Angle Type", "Target Angle"},
-		{"Initial Movement Type", "Single Jump"},
-		{"Initial Movement Duration Type", "Frames"},
-		{"Initial Movement Frames", 60},
-		{"Frames of Holding Jump", 10},
-		{"Initial Horizontal Speed", 24},
-		{"Initial Vector Direction", "Left"},
-		{"Gravity", "Regular"}};
 	static final int X_ROW = 0;
 	static final int Y_ROW = 1;
 	static final int Z_ROW = 2;
@@ -82,24 +68,35 @@ public class VectorCalculator extends JPanel {
 	static final int INITIAL_HORIZONTAL_SPEED_ROW = 9;
 	static final int VECTOR_DIRECTION_ROW = 10;
 	static final int GRAVITY_ROW = 11;
+
+	static enum AngleType {
+		INITIAL, TARGET, BOTH
+	}
+
+	static final int LOCK_NONE = 0;
+	static final int LOCK_FRAMES = 1;
+	static final int LOCK_VERTICAL_DISPLACEMENT = 2;
 	
-	static int framesJump = 10;
+	static double initialAngle = 0;
+	static double targetAngle = 0;
+	static AngleType angleType = AngleType.TARGET;
+	static String initialMovementName = "Single Jump";
+	static boolean durationFrames = true;
 	static int initialFrames = 60;
 	static double initialDispY = 0;
+	static int framesJump = 10;
 	static double initialHorizontalSpeed = 24;
-	static String initialMovementName = "Single Jump";
+	static boolean rightVector = false;
+	static boolean onMoon = false;
 	
-	static Movement initialMovement = new Movement("Single Jump");
-	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, 60);
+	static Movement initialMovement = new Movement(initialMovementName);
+	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, initialFrames);
 	static boolean chooseJumpFrames = true;
 	static boolean chooseInitialHorizontalSpeed = true;
-	static boolean durationFrames = true;
-	static int lockDurationType = 0;
-
-	static final int NONE = 0;
-	static final int FRAMES = 1;
-	static final int VERTICAL_DISPLACEMENT = 2;
+	static int lockDurationType = LOCK_NONE;
 	
+	static boolean forceEdit = false;
+
 	static JLabel errorMessage;
 	
 	static String[] attributeTitles = {"Parameter", "Value"};
@@ -111,6 +108,21 @@ public class VectorCalculator extends JPanel {
 	static JumpDialogWindow dialogWindow = new JumpDialogWindow("Choose Initial Movement", initialMovementCategories, initialMovementNames);
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
 	static JTable movementTable;
+
+	static String[] genPropertiesTitles = {"Property", "Value"};
+	static Object[][] genProperties =
+		{{"Initial X Position", 0},
+		{"Initial Y Position", 0},
+		{"Initial Z Position", 0},
+		{"Target Angle", 0},
+		{"Angle Type", "Target Angle"},
+		{"Initial Movement Type", initialMovementName},
+		{"Initial Movement Duration Type", "Frames"},
+		{"Initial Movement Frames", initialFrames},
+		{"Frames of Holding Jump", framesJump},
+		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
+		{"Initial Vector Direction", "Left"},
+		{"Gravity", "Regular"}};
 	
 	static JFrame f = new JFrame("Configure Movement");
 	
@@ -121,22 +133,67 @@ public class VectorCalculator extends JPanel {
 	public static void lockDurationType(int value) {
 		lockDurationType = value;
 		System.out.println(lockDurationType);
-		if (lockDurationType == FRAMES) {
+		if (lockDurationType == LOCK_FRAMES) {
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
 			if (durationFrames == false) {
 				durationFrames = true;
 				genPropertiesTable.setValueAt(initialMovement.minRecommendedFrames, MOVEMENT_DURATION_ROW, 0);
+				initialFrames = initialMovement.minRecommendedFrames;
 			}
 		}
-		else if (lockDurationType == VERTICAL_DISPLACEMENT) {
+		else if (lockDurationType == LOCK_VERTICAL_DISPLACEMENT) {
 			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
 			if (durationFrames == true) {
 				durationFrames = false;
 				genPropertiesTable.setValueAt(0, MOVEMENT_DURATION_ROW, 1);
+				initialDispY = 0;
 			}
 		}
+	}
+
+	public static void setAngleType(AngleType type) {
+		forceEdit = true;
+		AngleType oldAngleType = angleType;
+		System.out.println(oldAngleType);
+		System.out.println(type);
+		angleType = type;
+		if (oldAngleType != AngleType.BOTH && type == AngleType.BOTH) {
+			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
+			genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 0);
+			if (oldAngleType == AngleType.INITIAL) {
+				targetAngle = initialAngle;
+			}
+			else if (oldAngleType == AngleType.TARGET) {
+				initialAngle = targetAngle;
+			}
+			genPropertiesTable.setValueAt(initialAngle, ANGLE_ROW, 1);
+			genPropertiesTable.setValueAt(targetAngle, ANGLE_TYPE_ROW, 1);
+		}
+		else if (oldAngleType == AngleType.BOTH && type == AngleType.TARGET) {
+			genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+			genPropertiesTable.setValueAt(targetAngle, ANGLE_ROW, 1);
+			genPropertiesTable.setValueAt("Angle Type", ANGLE_TYPE_ROW, 0);
+			genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 1);
+		}
+		else if (oldAngleType == AngleType.BOTH && type == AngleType.INITIAL) {
+			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
+			genPropertiesTable.setValueAt(initialAngle, ANGLE_ROW, 1);
+			genPropertiesTable.setValueAt("Angle Type", ANGLE_TYPE_ROW, 0);
+			genPropertiesTable.setValueAt("Initial Angle", ANGLE_TYPE_ROW, 1);
+		}
+		else if (oldAngleType == AngleType.TARGET && type == AngleType.INITIAL) {
+			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
+			initialAngle = targetAngle;
+		}
+		else if (oldAngleType == AngleType.INITIAL && type == AngleType.TARGET) {
+			genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+			targetAngle = initialAngle;
+		}
+		System.out.println("Initial Angle: " + initialAngle);
+		System.out.println("Target Angle: " + targetAngle);
+		forceEdit = false;
 	}
 	
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -220,7 +277,7 @@ public class VectorCalculator extends JPanel {
             {
                 int modelColumn = convertColumnIndexToModel( column );
 
-                if (modelColumn == 1 && row == ANGLE_TYPE_ROW)
+                if (modelColumn == 1 && row == ANGLE_TYPE_ROW && angleType != AngleType.BOTH)
                 {
                 	String[] options = {"Target Angle", "Initial Angle"};
                     JComboBox<String> angle = new JComboBox<String>(options);
@@ -228,7 +285,7 @@ public class VectorCalculator extends JPanel {
                 }
 				else if (modelColumn == 1 && row == MOVEMENT_DURATION_TYPE_ROW)
                 {
-					if (lockDurationType == NONE) {
+					if (lockDurationType == LOCK_NONE) {
 						String[] options = {"Frames", "Vertical Displacement"};
 						JComboBox<String> choice = new JComboBox<String>(options);
 						return new DefaultCellEditor(choice);
@@ -239,7 +296,7 @@ public class VectorCalculator extends JPanel {
                 }
                 else if (modelColumn == 1 && row == VECTOR_DIRECTION_ROW)
                 {
-                	String[] options = {"Left", "Right"}; //can add none option
+                	String[] options = {"Left", "Right"}; //can add LOCK_NONE option
                     JComboBox<String> angle = new JComboBox<String>(options);
                     return new DefaultCellEditor(angle);
                 }
@@ -311,9 +368,11 @@ public class VectorCalculator extends JPanel {
 						initialMovement = new Movement(initialMovementName);
 						genPropertiesModel.setValueAt(initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
 						double suggestedSpeed = initialMovement.getSuggestedSpeed();
+						initialHorizontalSpeed = suggestedSpeed;
 						if (!chooseJumpFrames && initialMovement.variableJumpFrames()) {
 							chooseJumpFrames = true;
 							genPropertiesModel.setValueAt(10, HOLD_JUMP_FRAMES_ROW, 1);
+							framesJump = 10;
 						}
 						else if (chooseJumpFrames && !initialMovement.variableJumpFrames()) {
 							chooseJumpFrames = false;
@@ -331,12 +390,18 @@ public class VectorCalculator extends JPanel {
 							chooseInitialHorizontalSpeed = false;
 							genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
 						}
+						if (initialMovementName.contains("Roll Cancel")) {
+							setAngleType(AngleType.BOTH);
+						}
+						else if (angleType == AngleType.BOTH) { //switch back to just Initial or Target angle
+							setAngleType(AngleType.TARGET);
+						}
 						
 						if (initialMovementName.equals("Optimal Distance Roll Cancel")) {
-							lockDurationType(VERTICAL_DISPLACEMENT);
+							lockDurationType(LOCK_VERTICAL_DISPLACEMENT);
 						}
 						else {
-							lockDurationType(NONE);
+							lockDurationType(LOCK_NONE);
 						}
 						dialogWindow.close();	
 					}
@@ -351,102 +416,138 @@ public class VectorCalculator extends JPanel {
 				initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
 
 				int row = e.getFirstRow();
-				int column = e.getColumn();
-				if (row == MOVEMENT_DURATION_ROW || row == INITIAL_MOVEMENT_TYPE_ROW) {
-					try {
-						//movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
-						int minFrames = initialMovement.minFrames;
-						if (durationFrames) {
-							initialFrames = Integer.parseInt(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
-							if (initialFrames < minFrames) {
-								initialFrames = minFrames;
-								genPropertiesTable.setValueAt(minFrames, MOVEMENT_DURATION_ROW, 1);
+
+				if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
+					if (row == X_ROW || row == Y_ROW || row == Z_ROW) {
+						try {
+							Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+						}
+						catch (NumberFormatException ex) {
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
+					}
+					if (row == ANGLE_ROW) {
+						if (angleType == angleType.TARGET) {
+							try {
+								targetAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {
+								targetAngle = 0;
+								genPropertiesTable.setValueAt(0, row, 1);
 							}
 						}
 						else {
-							initialDispY = Double.parseDouble(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
-							//add checks to make sure it isn't too big?
+							try {
+								initialAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {
+								initialAngle = 0;
+								genPropertiesTable.setValueAt(0, row, 1);
+							}
 						}
 					}
-					catch (NumberFormatException ex) {
-						if (durationFrames) {
-							genPropertiesTable.setValueAt(1, MOVEMENT_DURATION_ROW, 1);
-							initialFrames = 1;
+					else if (row == ANGLE_TYPE_ROW) {
+						if (angleType == AngleType.BOTH) {
+							try {
+								targetAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {
+								targetAngle = 0;
+								genPropertiesTable.setValueAt(0, row, 1);
+							}
+						}
+						if (angleType != AngleType.BOTH) {
+							if (genPropertiesTable.getValueAt(row, 1).equals("Initial Angle")) {
+								setAngleType(AngleType.INITIAL);
+							}
+							else {
+								setAngleType(AngleType.TARGET);
+							}
 						}
 					}
-				}
-				else if (row == HOLD_JUMP_FRAMES_ROW) {
-					if (chooseJumpFrames) {
-						framesJump = 0;
+					if (row == INITIAL_MOVEMENT_TYPE_ROW || row == MOVEMENT_DURATION_ROW) {
 						try {
-							framesJump = Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString());
-						}
-						catch (NumberFormatException ex) {};
-						if (framesJump > 10) {
-							framesJump = 10;
-							genPropertiesTable.setValueAt(framesJump, row, 1);
-						}
-						if (framesJump < 1) {
-							framesJump = 1;
-							genPropertiesTable.setValueAt(framesJump, row, 1);
-						}
-						//genPropertiesTable.setValueAt(framesJump, row, 1);
-					}
-				}
-				else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
-					if (chooseInitialHorizontalSpeed) {
-						initialHorizontalSpeed = 0;
-						try {
-							initialHorizontalSpeed = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							//movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
+							int minFrames = initialMovement.minFrames;
+							if (durationFrames) {
+								initialFrames = Integer.parseInt(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
+								if (initialFrames < minFrames) {
+									initialFrames = minFrames;
+									genPropertiesTable.setValueAt(minFrames, MOVEMENT_DURATION_ROW, 1);
+								}
+							}
+							else {
+								initialDispY = Double.parseDouble(genPropertiesTable.getValueAt(MOVEMENT_DURATION_ROW, 1).toString());
+								//add checks to make sure it isn't too big?
+							}
 						}
 						catch (NumberFormatException ex) {
-							genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
+							if (durationFrames) {
+								genPropertiesTable.setValueAt(1, MOVEMENT_DURATION_ROW, 1);
+								initialFrames = 1;
+							}
 						}
-						if (initialHorizontalSpeed < 0) {
+					}
+					else if (row == MOVEMENT_DURATION_TYPE_ROW) {
+						if (lockDurationType == LOCK_NONE) {
+							boolean oldDurationFrames = durationFrames;
+							durationFrames = genPropertiesTable.getValueAt(MOVEMENT_DURATION_TYPE_ROW, 1).equals("Frames");
+							System.out.println(durationFrames);
+							initialMovement.initialHorizontalSpeed = initialHorizontalSpeed;
+							System.out.println(initialMovement.initialHorizontalSpeed);
+							initialMotion = initialMovement.getMotion(initialFrames, false, false);//new SimpleMotion(initialMovement, initialFrames);
+							if (durationFrames && !oldDurationFrames) {
+								genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
+								initialFrames = initialMotion.calcFrames(initialDispY);
+								genPropertiesTable.setValueAt(initialFrames, MOVEMENT_DURATION_ROW, 1);
+							}
+							else if (!durationFrames && oldDurationFrames) {
+								genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
+								initialDispY = initialMotion.calcDispY(initialFrames);
+								genPropertiesTable.setValueAt(initialDispY, MOVEMENT_DURATION_ROW, 1);
+							}
+						}
+					}
+					else if (row == HOLD_JUMP_FRAMES_ROW) {
+						if (chooseJumpFrames) {
+							framesJump = 0;
+							try {
+								framesJump = Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {};
+							if (framesJump > 10) {
+								framesJump = 10;
+								genPropertiesTable.setValueAt(framesJump, row, 1);
+							}
+							if (framesJump < 1) {
+								framesJump = 1;
+								genPropertiesTable.setValueAt(framesJump, row, 1);
+							}
+							//genPropertiesTable.setValueAt(framesJump, row, 1);
+						}
+					}
+					else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
+						if (chooseInitialHorizontalSpeed) {
 							initialHorizontalSpeed = 0;
-							genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
+							try {
+								initialHorizontalSpeed = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {
+								genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
+							}
+							if (initialHorizontalSpeed < 0) {
+								initialHorizontalSpeed = 0;
+								genPropertiesTable.setValueAt(initialHorizontalSpeed, row, 1);
+							}
 						}
 					}
-				}
-				else if (row == MOVEMENT_DURATION_TYPE_ROW) {
-					if (lockDurationType == NONE) {
-						System.out.println("oops");
-						boolean oldDurationFrames = durationFrames;
-						durationFrames = genPropertiesTable.getValueAt(MOVEMENT_DURATION_TYPE_ROW, 1).equals("Frames");
-						System.out.println(durationFrames);
-						initialMovement.initialHorizontalSpeed = initialHorizontalSpeed;
-						System.out.println(initialMovement.initialHorizontalSpeed);
-						initialMotion = initialMovement.getMotion(initialFrames, false, false);//new SimpleMotion(initialMovement, initialFrames);
-						if (durationFrames && !oldDurationFrames) {
-							genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
-							genPropertiesTable.setValueAt(initialMotion.calcFrames(initialDispY), MOVEMENT_DURATION_ROW, 1);
-						}
-						else if (!durationFrames && oldDurationFrames) {
-							genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
-							genPropertiesTable.setValueAt(initialMotion.calcDispY(initialFrames), MOVEMENT_DURATION_ROW, 1);
-						}
+					else if (row == VECTOR_DIRECTION_ROW) {
+						rightVector = genPropertiesTable.getValueAt(row, 1).equals("Right");
+					}
+					else if (row == GRAVITY_ROW) {
+						onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
 					}
 				}
-				/*
-				else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
-					try {
-						if (Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString()) < - initialMovement.getTrueSpeedCap())
-							genPropertiesTable.setValueAt(- initialMovement.getTrueSpeedCap(), row, 1);
-						else if (Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString()) > initialMovement.getTrueSpeedCap())
-							genPropertiesTable.setValueAt(initialMovement.getTrueSpeedCap(), row, 1);
-					}
-					catch (NumberFormatException ex) {
-						genPropertiesTable.setValueAt(0, row, 1);
-					}
-				}
-				*/		
-				else if (row != ANGLE_TYPE_ROW && row != INITIAL_MOVEMENT_TYPE_ROW && row != VECTOR_DIRECTION_ROW && row != GRAVITY_ROW)
-					try {
-						Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
-					}
-					catch (NumberFormatException ex) {
-						genPropertiesTable.setValueAt(0, row, 1);
-					}
 				
 				//make whole numbers not have decimal places
 				String setString = genPropertiesTable.getValueAt(row, 1).toString();
@@ -576,9 +677,6 @@ public class VectorCalculator extends JPanel {
 		movementModel.addRow(new String[]{"Cap Bounce", "20"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "20"});
 		movementModel.addRow(new String[]{"Dive", "20"});
-		genPropertiesModel.setValueAt("Motion Cap Throw Roll Cancel", INITIAL_MOVEMENT_TYPE_ROW, 1);
-		genPropertiesModel.setValueAt(120, MOVEMENT_DURATION_ROW, 1);
-		genPropertiesModel.setValueAt(29.94, INITIAL_HORIZONTAL_SPEED_ROW, 1);
 		*/
 	}
 

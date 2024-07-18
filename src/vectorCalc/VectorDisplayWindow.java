@@ -34,7 +34,7 @@ public class VectorDisplayWindow {
 	static final int VERTICAL_DISPLACEMENT_ROW = 5;
 	static final int TOTAL_FRAMES_ROW = 6;
 	
-	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "Position (X, Y, Z)", "Velocity <Vx, Vy, Vz>", "Hor. Speed"};
+	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
@@ -92,7 +92,8 @@ public class VectorDisplayWindow {
 		dataTable.getColumnModel().getColumn(3).setPreferredWidth(160);
 		dataTable.getColumnModel().getColumn(4).setPreferredWidth(400);
 		dataTable.getColumnModel().getColumn(5).setPreferredWidth(360);
-		dataTable.getColumnModel().getColumn(6).setPreferredWidth(160);
+		dataTable.getColumnModel().getColumn(6).setPreferredWidth(240);
+		//dataTable.getColumnModel().getColumn(7).setPreferredWidth(160);
 		
 		JScrollPane dataScrollPane = new JScrollPane(dataTable);
 		
@@ -107,7 +108,11 @@ public class VectorDisplayWindow {
 	}
 	
 	private static String toVelocityVector(double vx, double vy, double vz) {
-		return String.format("<%.3f, %.3f, %.3f>", vx, vy, vz);
+		return String.format("(%.3f, %.3f, %.3f)", vx, vy, vz);
+	}
+
+	private static String toPolarCoordinates(double r, double theta) {
+		return String.format("(%.3f; %.3f)", r, theta);
 	}
 	
 	private static String shorten(double d, int decimalPlaces) {
@@ -141,11 +146,11 @@ public class VectorDisplayWindow {
 		x0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.X_ROW, 1).toString());
 		y0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.Y_ROW, 1).toString());
 		z0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.Z_ROW, 1).toString());
-		v0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
+		v0 = VectorCalculator.initialHorizontalSpeed;
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(x0, y0, z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), shorten(v0, 3)});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(x0, y0, z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, Math.toDegrees(initialAngle))});
 		
 		double x = x0;
 		double y = y0;
@@ -172,7 +177,11 @@ public class VectorDisplayWindow {
 					rowContents[3] = "";
 				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
-				rowContents[6] = shorten(info[i][6], 3);
+				double velocityAngle = Math.toDegrees(Math.atan2(info[i][5], info[i][3]));
+				if (velocityAngle < 0) {
+					velocityAngle += 360;
+				}
+				rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				dataTableModel.addRow(rowContents);
 				if (i < motion.movement.inputs.size())
 					dataTableModel.setValueAt(motion.movement.inputs.get(i), row - 1, 2);
@@ -184,7 +193,7 @@ public class VectorDisplayWindow {
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);	
 		}
 	
-		if (genPropertiesModel.getValueAt(VectorCalculator.ANGLE_TYPE_ROW, 1).toString().equals("Target Angle")) {
+		if (VectorCalculator.angleType == VectorCalculator.AngleType.TARGET) {
 			infoTableModel.setValueAt("Initial Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(Math.toDegrees(initialAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}

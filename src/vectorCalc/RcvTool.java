@@ -44,12 +44,12 @@ public class RcvTool {
         */
         
         //loop to find best for every height
-        for (int maxYDisp = 657; maxYDisp < 7000; maxYDisp += 7) {
+        for (double maxYDisp = 240; maxYDisp < 657; maxYDisp += .5) {
             findBest(29.94, maxYDisp, false);
         }
         
         //5650
-        findBest(29.94, 4650, true);
+        //findBest(29.94, 4650, true);
     }
 
     public static void findBest(double initialVelocity, double maxYDisp, boolean verbose) {
@@ -130,37 +130,5 @@ public class RcvTool {
             }
         }
         System.out.println(maxYDisp + "," + bestThrow);
-    }
-
-    public static double calcRCCapThrowAngle(String movementType, double initialVelocity, int framesRCV) {
-        double low = 0;
-        double high = Math.PI / 4; //strongest you can vector is 45 degrees
-        int i = 0;
-        double test = 0;
-        while (i < RCV_MAX_ITERATIONS) {
-            test = (high + low) / 2; //binary search for the correct angle
-            //System.out.println("Testing " + Math.toDegrees(test));
-            Movement rcCapThrow = new Movement(movementType, initialVelocity);
-            GroundedCapThrow rcMotion = new GroundedCapThrow(rcCapThrow, 0, test, true);
-            rcMotion.calcDispDispCoordsAngleSpeed();
-            //System.out.println("Final Angle: " + Math.toDegrees(rcMotion.finalAngle));
-            Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
-            rcv.initialVerticalSpeed = -7;
-            SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, false, framesRCV);
-            rcvMotion.calcDispDispCoordsAngleSpeed();
-            double sumDispZ = rcMotion.dispZ + rcvMotion.dispZ;
-            //System.out.println("Disp Z sum: " + sumDispZ);
-            if (Math.abs(sumDispZ) < RCV_ERROR) {
-                break;
-            }
-            else if (sumDispZ > 0) { //we went too far left, increase rcv angle
-                low = test;
-            }
-            else {
-                high = test;
-            }
-            i++;
-        }
-        return test;
     }
 }

@@ -1,10 +1,16 @@
 package vectorCalc;
 
 import java.util.ArrayList;
+import java.util.Vector;
 
 import javax.swing.table.TableModel;
 
+import vectorCalc.VectorCalculator.AngleType;
+
 public class VectorMaximizer {
+
+	public static final double RCV_ERROR = .001; //acceptable Z axis error when trying to make a RCV go straight
+    public static final int RCV_MAX_ITERATIONS = 100; //stop after this many iterations no matter what when trying to make a RCV go straight
 
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	public static int numSteps = 901;
@@ -47,8 +53,9 @@ public class VectorMaximizer {
 	double testDispY2;
 	double variableAngle2Adjusted;
 
-	double rcCapThrowAngle;
-	double bestRCCapThrowAngle;
+	double rcTrueInitialAngleDiff;
+	double rcFinalAngleDiff;
+	double bestRCFinalAngleDiff;
 
 	double once_bestDispX;
 	double once_bestDispY;
@@ -88,10 +95,13 @@ public class VectorMaximizer {
 		
 		this.listPreparer = listPreparer;
 		
-		TableModel genPropertiesModel = listPreparer.genPropertiesModel;
-		givenAngle = Math.toRadians(Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.ANGLE_ROW, 1).toString()));
-		targetAngleGiven = genPropertiesModel.getValueAt(VectorCalculator.ANGLE_TYPE_ROW, 1).toString().equals("Target Angle");
-		rightVector = genPropertiesModel.getValueAt(VectorCalculator.VECTOR_DIRECTION_ROW, 1).toString().equals("Right");
+		TableModel genPropertiesModel = VectorCalculator.genPropertiesModel;
+		targetAngleGiven = VectorCalculator.angleType == AngleType.TARGET; //keep this logic; if it's both, you want to conform to the initial
+		initialAngle = Math.toRadians(VectorCalculator.initialAngle);
+		targetAngle = Math.toRadians(VectorCalculator.targetAngle);
+		//givenAngle = Math.toRadians(Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.ANGLE_ROW, 1).toString()));
+		//targetAngleGiven = genPropertiesModel.getValueAt(VectorCalculator.ANGLE_TYPE_ROW, 1).toString().equals("Target Angle");
+		rightVector = VectorCalculator.rightVector;
 		
 		movementNames = listPreparer.movementNames;
 		movementFrames = listPreparer.movementFrames;
@@ -273,8 +283,8 @@ public class VectorMaximizer {
 		if (hasVariableRollCancel && startIndex == 0) {
 			nextIndex = 2;
 			Movement rc = new Movement(movementNames.get(0), initialVelocity);
-			GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, rcCapThrowAngle, !currentVectorRight);
-			//GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, RcvTool.calcRCCapThrowAngle(rc.movementType, initialVelocity, movementFrames.get(startIndex + 1)), !currentVectorRight);
+			GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, rcTrueInitialAngleDiff, rcFinalAngleDiff, !currentVectorRight);
+			//GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, RcvTool.calcRCFinalAngleDiff(rc.movementType, initialVelocity, movementFrames.get(startIndex + 1)), !currentVectorRight);
 			rcMotion.calcDispDispCoordsAngleSpeed();
 			Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
 			rcv.initialVerticalSpeed = -7;
@@ -316,12 +326,46 @@ public class VectorMaximizer {
 		
 		return motionGroup;
 	}
+
+	public double calcRCFinalAngleDiff(String movementType, double initialVelocity, int framesRCV) {
+        double low = 0;
+        double high = Math.PI / 4; //strongest you can vector is 45 degrees
+        int i = 0;
+        double test = 0;
+        while (i < RCV_MAX_ITERATIONS) {
+            test = (high + low) / 2; //binary search for the correct angle
+            //System.out.println("Testing " + Math.toDegrees(test));
+            Movement rcCapThrow = new Movement(movementType, initialVelocity);
+            GroundedCapThrow rcMotion = new GroundedCapThrow(rcCapThrow, 0, rcTrueInitialAngleDiff, test, true);
+            rcMotion.calcDispDispCoordsAngleSpeed();
+            //System.out.println("Final Angle: " + Math.toDegrees(rcMotion.finalAngle));
+            Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
+            SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, false, framesRCV);
+            rcvMotion.calcDispDispCoordsAngleSpeed();
+            double sumDispZ = rcMotion.dispZ + rcvMotion.dispZ;
+            System.out.println("Disp Z sum: " + sumDispZ);
+            if (Math.abs(sumDispZ) < RCV_ERROR) {
+                break;
+            }
+            else if (sumDispZ > 0) { //we went too far left, increase rcv angle
+                low = test;
+            }
+            else {
+                high = test;
+            }
+            i++;
+        }
+        return test;
+    }
 	
 	public SimpleMotion[] getMotions() {
 		return motions;
 	}
 	
 	public double getInitialAngle() {
+		//if (hasVariableRollCancel) {
+		//	return ((GroundedCapThrow) motions[0]).trueInitialAngle;	
+		//}
 		return initialAngle;
 	}
 	
@@ -337,25 +381,42 @@ public class VectorMaximizer {
 		//SimpleMotion[] motionGroup2 = new SimpleMotion[variableMovement2Index - motionGroup2Index];
 		//int motionGroup3Index;
 		
-		currentVectorRight = rightVector;
+		//currentVectorRight = rightVector;
 
+		if (VectorCalculator.angleType == AngleType.BOTH) {
+			if (rightVector) {
+				rcTrueInitialAngleDiff = initialAngle - targetAngle;
+				//initialAngle -= rcTrueInitialAngleDiff;
+			}
+			else {
+				rcTrueInitialAngleDiff = targetAngle - initialAngle;
+				//initialAngle += rcTrueInitialAngleDiff;
+			}
+			System.out.println("True Diff: " + Math.toDegrees(rcTrueInitialAngleDiff));
+		}
+		else {
+			rcTrueInitialAngleDiff = 0;
+		}
+
+		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
 		if (hasVariableRollCancel) {
 			if (movementNames.get(0).equals("Optimal Distance Roll Cancel")) {
 				String bestRCName = "";
 				int bestRCFrames = 0;
 				int bestRCVFrames = 0;
-				double bestRCCapThrowAngle = 0;
+				double bestRCFinalAngleDiff = 0;
 				bestDisp = 0;
 				
 				//iterate through the RC types and see which is best
 				for (int i = 0; i < Movement.RC_TYPES.length; i++) {
+
 					movementNames.set(0, Movement.RC_TYPES[i]);
 					Movement rc = new Movement(Movement.RC_TYPES[i]);
 					GroundedCapThrow rcMotion = new GroundedCapThrow(rc, false);
 					int totalFrames = rcMotion.calcFrames(VectorCalculator.initialDispY);
 					movementFrames.set(0, rc.minFrames);
 					movementFrames.set(1, totalFrames - rc.minFrames);
-					rcCapThrowAngle = RcvTool.calcRCCapThrowAngle(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
+					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 
 					maximizeOnce();
 
@@ -364,7 +425,7 @@ public class VectorMaximizer {
 						bestRCFrames = rc.minFrames;
 						bestRCVFrames = totalFrames - rc.minFrames;
 						bestDisp = once_bestDisp;
-						bestRCCapThrowAngle = rcCapThrowAngle;
+						bestRCFinalAngleDiff = rcFinalAngleDiff;
 					}
 				}
 
@@ -372,10 +433,10 @@ public class VectorMaximizer {
 				movementNames.set(0, bestRCName);
 				movementFrames.set(0, bestRCFrames);
 				movementFrames.set(1, bestRCVFrames);
-				rcCapThrowAngle = bestRCCapThrowAngle;
+				rcFinalAngleDiff = bestRCFinalAngleDiff;
 			}
 			else {
-				rcCapThrowAngle = RcvTool.calcRCCapThrowAngle(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
+				rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 			}
 			
 			//optimize the rc, then try to get the rc initial angle to be the same as the target angle
@@ -393,7 +454,7 @@ public class VectorMaximizer {
 				unadjustedTargetAngle -= Math.PI / 2;
 				if (Math.abs(unadjustedTargetAngle) < Math.abs(bestUnadjustedTargetAngle)) {
 					bestUnadjustedTargetAngle = unadjustedTargetAngle;
-					bestRCCapThrowAngle = rcCapThrowAngle;
+					bestRCFinalAngleDiff = rcFinalAngleDiff;
 					if (Math.abs(unadjustedTargetAngle) < Math.toRadians(0.001)) {
 						break;
 					}
@@ -401,9 +462,9 @@ public class VectorMaximizer {
 				if (i == 1) {
 					increment = unadjustedTargetAngle * 2 / maxCount;
 				}
-				rcCapThrowAngle += increment;
+				rcFinalAngleDiff += increment;
 			}
-			rcCapThrowAngle = bestRCCapThrowAngle;
+			rcFinalAngleDiff = bestRCFinalAngleDiff;
 			//maximizeOnce();
 
 			//hopefully it's small by now; fine tune by nudging by the difference between the initial and target angles
@@ -421,7 +482,7 @@ public class VectorMaximizer {
 
 				//System.out.println("RC Cap Throw Angle Change: " + Math.toDegrees(unadjustedTargetAngle));
 
-				rcCapThrowAngle += unadjustedTargetAngle;
+				rcFinalAngleDiff += unadjustedTargetAngle;
 			}
 		}
 		else {
@@ -461,14 +522,22 @@ public class VectorMaximizer {
 		System.out.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
 		double adjustment;
 		if (targetAngleGiven) {
-			adjustment = givenAngle - unadjustedTargetAngle;
+			//adjustment = givenAngle - unadjustedTargetAngle;
+			adjustment = targetAngle - unadjustedTargetAngle;
 			initialAngle = Math.PI / 2 + adjustment;
-			targetAngle = givenAngle;
+			//targetAngle = givenAngle;
 		}
 		else {
 			System.out.println("hi");
-			adjustment = givenAngle - Math.PI / 2;
-			initialAngle = givenAngle;
+			//adjustment = givenAngle - Math.PI / 2;
+			adjustment = initialAngle - Math.PI / 2;
+			if (rightVector) {
+				adjustment -= rcTrueInitialAngleDiff;
+			}
+			else {
+				adjustment += rcTrueInitialAngleDiff;
+			}
+			//initialAngle = givenAngle;
 			targetAngle = unadjustedTargetAngle + adjustment;
 		}
 		for (int i = 0; i < motions.length; i++) {
@@ -503,6 +572,8 @@ public class VectorMaximizer {
 	}
 
 	private void maximizeOnce() {
+		currentVectorRight = rightVector;
+
 		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
 		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), listPreparer.initialVelocity, VectorCalculator.framesJump);
 		sumXDisps(motionGroup1);

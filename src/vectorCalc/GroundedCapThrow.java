@@ -9,6 +9,9 @@ public class GroundedCapThrow extends SimpleMotion {
 
 	double normalAngle;
 	double finalAngleDiff;
+	double trueInitialAngleDiff; //angle at which to start this motion relative to the stated initial angle; calculate as target - initial for goRight = true (a left vector once you begin falling)
+
+	double trueInitialAngle;
 
 	double capThrowAngle; //could just use holdingAngle for this
 	double finalAngle; //how much we want to rotate by
@@ -42,6 +45,7 @@ public class GroundedCapThrow extends SimpleMotion {
 			normalAngle = initialAngle - Math.PI / 2;
 		else
 			normalAngle = initialAngle + Math.PI / 2;
+		this.trueInitialAngleDiff = 0;
 	}
 	
 	public GroundedCapThrow(Movement movement, double initialAngle, double finalAngleDiff, boolean goRight) {
@@ -61,6 +65,19 @@ public class GroundedCapThrow extends SimpleMotion {
 		else {
 			normalAngle = initialAngle + Math.PI / 2;
 			finalAngle = initialAngle + finalAngleDiff;
+		}
+		this.trueInitialAngleDiff = 0;
+	}
+
+	//trueinitialdiff should be negative for an optimal vector
+	public GroundedCapThrow(Movement movement, double initialAngle, double trueInitialAngleDiff, double finalAngleDiff, boolean goRight) {
+		this(movement, initialAngle, finalAngleDiff, goRight);
+		this.trueInitialAngleDiff = trueInitialAngleDiff;
+		if (goRight) {
+			trueInitialAngle = initialAngle - trueInitialAngleDiff;
+		}
+		else {
+			trueInitialAngle = initialAngle + trueInitialAngleDiff;
 		}
 	}
 	
@@ -109,22 +126,40 @@ public class GroundedCapThrow extends SimpleMotion {
 		}
 
 		//now that we know the capThrowAngle we can calculate the first frame
-		velocityAngles[0] = Math.min(capThrowAngle, CT_ROTATIONAL_VELOCITY); //rotate up to 5 degrees
+		velocityAngles[0] = Math.min(capThrowAngle, CT_ROTATIONAL_VELOCITY) + trueInitialAngleDiff; //rotate up to 5 degrees
 		if (capThrowAngle == 0) {
 			holdingAngles[0] = NO_ANGLE; //don't need to hold anything if cap throwing straight ahead
-			holdingAngles[1] = NO_ANGLE;
+			//holdingAngles[1] = NO_ANGLE;
 		}
 		else {
-			holdingAngles[0] = capThrowAngle;
-			holdingAngles[1] = 0; //make it so you're going straight again
+			holdingAngles[0] = capThrowAngle + trueInitialAngleDiff;
+			//holdingAngles[1] = 0; //make it so you're going straight again
 		}
 		dispForward += initialForwardVelocity * Math.cos(velocityAngles[0]);
 		dispSideways += initialForwardVelocity * Math.sin(velocityAngles[0]);
 
-		//for frames 1 to 14 angle should be 0
-		dispForward += initialForwardVelocity * (PRE_HOOK_FRAMES - 1);
-		for (int i = 2; i < PRE_HOOK_FRAMES; i++) { //i = 1 should have holding angle of 0 to get back to straight
-			holdingAngles[i] = NO_ANGLE;
+		//for frames 1 to 14 only need to hold until your velocity angle is 0
+		//dispForward += initialForwardVelocity * (PRE_HOOK_FRAMES - 1);
+		for (int i = 1; i < PRE_HOOK_FRAMES; i++) { //i = 1 should have holding angle of 0 to get back to straight
+			if (velocityAngles[i - 1] != 0) {
+				holdingAngles[i] = 0;
+				if (velocityAngles[i - 1] > CT_ROTATIONAL_VELOCITY) {
+					velocityAngles[i] = velocityAngles[i - 1] - CT_ROTATIONAL_VELOCITY;
+				}
+				else if (velocityAngles[i - 1] < 0 - CT_ROTATIONAL_VELOCITY) {
+					velocityAngles[i] = velocityAngles[i - 1] + CT_ROTATIONAL_VELOCITY;
+				}
+				else {
+					velocityAngles[i] = 0;
+				}
+				dispForward += initialForwardVelocity * Math.cos(velocityAngles[i]);
+				dispSideways += initialForwardVelocity * Math.sin(velocityAngles[i]);
+			}
+			else {
+				holdingAngles[i] = NO_ANGLE;
+				velocityAngles[i] = 0;
+				dispForward += initialForwardVelocity;
+			}
 		}
 
 		//for frames after the hook but before we turn, angle is also 0, but we begin decelerating
@@ -345,7 +380,7 @@ public class GroundedCapThrow extends SimpleMotion {
 			}
 			dispY += yVelocity;
 		}
-			return Math.max(0, frames);
+			return Math.max(0, frames); //possibly return max of frames and minFrames + 1 instead
 	}
 
 	public double[][] calcFrameByFrame() {
@@ -400,6 +435,11 @@ public class GroundedCapThrow extends SimpleMotion {
 		else {
 			return -7;
 		}
+	}
+
+	public void adjustInitialAngle(double amount) {
+		initialAngle += amount;
+		trueInitialAngle += amount;
 	}
 	
 /*
