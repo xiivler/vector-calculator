@@ -88,7 +88,7 @@ public class VectorDisplayWindow {
 		
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-		dataTable.getColumnModel().getColumn(2).setPreferredWidth(110);
+		dataTable.getColumnModel().getColumn(2).setPreferredWidth(160);
 		dataTable.getColumnModel().getColumn(3).setPreferredWidth(160);
 		dataTable.getColumnModel().getColumn(4).setPreferredWidth(400);
 		dataTable.getColumnModel().getColumn(5).setPreferredWidth(360);

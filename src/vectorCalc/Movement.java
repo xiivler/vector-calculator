@@ -392,12 +392,9 @@ public class Movement {
 			moonGravity = .6;
 		}
 		
-		else if (movementType.equals("Ground Pound NPC Bounce")) {
-			displayName = "GP NPC Bounce";
-			if (onMoon)
-				initialVerticalSpeed = 35;
-			else
-				initialVerticalSpeed = 30;
+		else if (movementType.equals("Ground Pound Object/Enemy Bounce")) {
+			displayName = "GP Bounce";
+			initialVerticalSpeed = 35;
 			initialHorizontalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
 		}
@@ -417,36 +414,44 @@ public class Movement {
 			rotationalAccel = Math.toRadians(1.3);
 			maxRotationalSpeed = Math.toRadians(1.3 * 5);
 			if (movementType.equals("Motion Cap Throw Roll Cancel")) {
+				displayName = "MCCTRC";
 				minFrames = 19;
-				inputs.add("Shake");
+				inputs.add("B, Shake");
 			}
 			else if (movementType.equals("Single Throw Roll Cancel")) {
+				displayName = "Single Throw RC";
 				minFrames = 24;
-				inputs.add("Y");
+				inputs.add("B, Y");
 			}
 			else if (movementType.equals("Upthrow Roll Cancel")) {
+				displayName = "UTRC";
 				minFrames = 28;
-				inputs.add("Up shake");
+				inputs.add("B, Up shake");
 			}
 			else if (movementType.equals("Downthrow Roll Cancel")) {
+				displayName = "Downthrow RC";
 				minFrames = 28;
-				inputs.add("Down shake");
+				inputs.add("B, Down shake");
 			}
 			else if (movementType.equals("Double Throw Roll Cancel")) {
+				displayName = "Double Throw RC";
 				minFrames = 34;
-				inputs.add("Y");
+				inputs.add("B, Y");
 			}
 			else if (movementType.equals("Fakethrow Roll Cancel")) {
+				displayName = "Fakethrow RC";
 				minFrames = 34;
-				inputs.add("Y");
+				inputs.add("B, Y");
 			}
 			else if (movementType.equals("Triple Throw Roll Cancel")) {
+				displayName = "TTRC";
 				minFrames = 44;
-				inputs.add("Y");
+				inputs.add("B, Y");
 			}
 			else if (movementType.equals("Spinthrow Roll Cancel")) {
+				displayName = "STRC";
 				minFrames = 46;
-				inputs.add("Side shake");
+				inputs.add("B, Side shake");
 			}
 			maxFrames = minFrames;
 		}
@@ -588,6 +593,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Swinging Jump Vector")) {
+			displayName = "";
 			initialHorizontalSpeed = 15;
 			initialVerticalSpeed = 9;
 			gravity = 1;

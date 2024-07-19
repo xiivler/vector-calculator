@@ -48,11 +48,11 @@ public class VectorCalculator extends JPanel {
 	//category for falling for height calculator?
 	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancels", "Rolls", "Object-Dependent Motion"};
 	static String[][] initialMovementNames =
-		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump"},
+		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Optimal Distance Motion"},
 		{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
 		{"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Downthrow Roll Cancel", "Double Throw Roll Cancel", "Spinthrow Roll Cancel", "Triple Throw Roll Cancel", "Fakethrow Roll Cancel", "Optimal Distance Roll Cancel"},
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
-		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound NPC Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
+		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 	
@@ -243,24 +243,54 @@ public class VectorCalculator extends JPanel {
 					 }
 			 }
 			 else if (evt.getActionCommand() == "calculate") {
-				 Movement.onMoon = genPropertiesModel.getValueAt(GRAVITY_ROW, 1).toString().equals("Moon");
-				 MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
-				 String errorText = movementPreparer.prepareList();
-				 movementPreparer.print();
+				VectorMaximizer maximizer = null;
+				if (initialMovementName.equals("Optimal Distance Motion")) {
+					initialMovementName = "Triple Jump";
+					framesJump = 10;
+					initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
+					VectorMaximizer maximizerTJ = calculate();
+					initialMovementName = "Optimal Distance Roll Cancel";
+					initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
+					VectorMaximizer maximizerRC = calculate();
+					if (maximizerTJ != null && maximizerRC != null) {
+						if (maximizerTJ.bestDisp > maximizerRC.bestDisp) {
+							maximizer = maximizerTJ;
+						}
+						else {
+							maximizer = maximizerRC;
+						}
+					}
+					initialMovementName = "Optimal Distance Motion";
+				}
+				else {
+					maximizer = calculate();
+				}
+				if (maximizer != null) {
+					VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+					VectorDisplayWindow.display();
+				}
 				 
-				 if (errorText.equals("")) {
-					 errorMessage.setText("");
-					 VectorMaximizer maximizer = new VectorMaximizer(movementPreparer);
-					 maximizer.maximize(); 
-					 VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-					 VectorDisplayWindow.display();
-				 }
-				 else
-				 	errorMessage.setText("Error: " + errorText);
-				 
-				 System.out.println();
+				System.out.println();
 			 }
 		 }
+	}
+
+	public static VectorMaximizer calculate() {
+		Movement.onMoon = onMoon;
+		MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
+		String errorText = movementPreparer.prepareList();
+		movementPreparer.print();
+
+		if (errorText.equals("")) {
+			errorMessage.setText("");
+			VectorMaximizer maximizer = new VectorMaximizer(movementPreparer);
+			maximizer.maximize(); 
+			return maximizer;
+		}
+		else {
+			errorMessage.setText("Error: " + errorText);
+			return null;
+		}
 	}
 
 	public static void main(String[] args) {
@@ -397,7 +427,7 @@ public class VectorCalculator extends JPanel {
 							setAngleType(AngleType.TARGET);
 						}
 						
-						if (initialMovementName.equals("Optimal Distance Roll Cancel")) {
+						if (initialMovementName.contains("Optimal Distance")) {
 							lockDurationType(LOCK_VERTICAL_DISPLACEMENT);
 						}
 						else {
