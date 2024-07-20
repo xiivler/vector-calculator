@@ -30,6 +30,7 @@ public class Movement {
 	double moonGravity = .4;
 	double vectorAccel = .3;
 	double forwardAccel = .5;
+	double backwardAccel = 1;
 	int framesAtMaxVerticalSpeed = 0;
 	int framesAtInitialHorizontalSpeed = 0;
 	//int jumpFramesOffset = 0; //for captures that have more frames of jumping than are held
@@ -452,6 +453,11 @@ public class Movement {
 				displayName = "STRC";
 				minFrames = 46;
 				inputs.add("B, Side shake");
+			}
+			else if (movementType.equals("MCCT Roll Cancel Spinpound")) {
+				displayName = "MCCTRC to Spin";
+				minFrames = 21;
+				inputs.add("B, Shake");
 			}
 			maxFrames = minFrames;
 		}

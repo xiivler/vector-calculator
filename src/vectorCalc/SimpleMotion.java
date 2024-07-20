@@ -29,6 +29,7 @@ public class SimpleMotion {
 	
 	double defaultSpeedCap;
 	double baseForwardAccel;
+	double baseBackwardAccel;
 	double forwardAccel;
 	
 	double finalAngle;
@@ -50,6 +51,7 @@ public class SimpleMotion {
 		this.frames = frames;
 		this.defaultSpeedCap = movement.defaultSpeedCap;
 		this.baseForwardAccel = movement.forwardAccel;
+		this.baseBackwardAccel = movement.backwardAccel;
 		this.forwardAccel = baseForwardAccel;
 		
 		if (initialForwardVelocity > defaultSpeedCap)

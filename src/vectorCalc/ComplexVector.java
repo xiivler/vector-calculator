@@ -3,6 +3,9 @@ package vectorCalc;
 public class ComplexVector extends SimpleVector {
 	
 	double[] holdingAngles;
+	boolean[] holdingMinRadius;
+
+	public static final double MIN_RADIUS = 0.11;
 	
 	double forwardVelocity;
 	double sidewaysVelocity;
@@ -14,11 +17,13 @@ public class ComplexVector extends SimpleVector {
 	public ComplexVector(Movement movement, double initialAngle, double[] holdingAngles, boolean rightVector, int frames) {
 		super(movement, initialAngle, holdingAngles[0], rightVector, frames);
 		this.holdingAngles = holdingAngles;
+		this.holdingMinRadius = new boolean[holdingAngles.length];
 	}
 	
 	public ComplexVector(Movement movement, double initialAngle, double[] holdingAngles, boolean rightVector) {
 		super(movement, initialAngle, holdingAngles[0], rightVector, holdingAngles.length);
 		this.holdingAngles = holdingAngles;
+		this.holdingMinRadius = new boolean[holdingAngles.length];
 	}
 	
 	public double calcDispSideways() {
@@ -37,8 +42,14 @@ public class ComplexVector extends SimpleVector {
 	}
 	
 	public void stepSideways(int i) {
-		if (holdingAngles[i] != NO_ANGLE)
-			sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
+		if (holdingAngles[i] != NO_ANGLE) {
+			if (holdingMinRadius[i]) {
+				sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
+			}
+			else {
+				sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
+			}
+		}
 		if (sidewaysVelocity > forwardVelocityCap)
 			sidewaysVelocity = forwardVelocityCap;
 		dispSideways += sidewaysVelocity;
@@ -55,9 +66,19 @@ public class ComplexVector extends SimpleVector {
 	}
 	
 	public void stepForward(int i) {
-
-		if (holdingAngles[i] != NO_ANGLE)
-			forwardVelocity += baseForwardAccel * Math.cos(holdingAngles[i]);
+		if (holdingAngles[i] != NO_ANGLE) {
+			double accelValue;
+			if (holdingAngles[i] <= NORMAL_ANGLE) {
+				accelValue = baseForwardAccel;
+			}
+			else {
+				accelValue = baseBackwardAccel;
+			}
+			if (holdingMinRadius[i]) {
+				accelValue *= MIN_RADIUS;
+			}
+			forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
+		}
 		if (forwardVelocity > forwardVelocityCap)
 			forwardVelocity = forwardVelocityCap;
 		dispForward += forwardVelocity;
@@ -199,8 +220,19 @@ public class ComplexVector extends SimpleVector {
 			for (int i = 0; i < frames; i++) {	
 				if (forwardVelocity < forwardVelocityCap) {
 					if (i >= nonVectorFrames) {
-						if (holdingAngles[i] != NO_ANGLE)
-							forwardVelocity += baseForwardAccel * Math.cos(holdingAngles[i]);
+						if (holdingAngles[i] != NO_ANGLE) {
+							double accelValue;
+							if (holdingAngles[i] <= NORMAL_ANGLE) {
+								accelValue = baseForwardAccel;
+							}
+							else {
+								accelValue = baseBackwardAccel;
+							}
+							if (holdingMinRadius[i]) {
+								accelValue *= MIN_RADIUS;
+							}
+							forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
+						}
 					}
 					else
 						forwardVelocity += baseForwardAccel;
@@ -208,7 +240,12 @@ public class ComplexVector extends SimpleVector {
 						forwardVelocity = forwardVelocityCap;
 				}
 				if (sidewaysVelocity < forwardVelocityCap && i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
-					sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
+					if (holdingMinRadius[i]) {
+						sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
+					}
+					else {
+						sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
+					}
 					if (sidewaysVelocity > forwardVelocityCap)
 						sidewaysVelocity = forwardVelocityCap;
 				}
@@ -240,5 +277,11 @@ public class ComplexVector extends SimpleVector {
 	
 	public void setHoldingAngles(double angles[]) {
 		holdingAngles = angles;
+		holdingMinRadius = new boolean[holdingAngles.length];
+	}
+
+	public void setHolding(double angles[], boolean radii[]) {
+		holdingAngles = angles;
+		holdingMinRadius = radii;
 	}
 }

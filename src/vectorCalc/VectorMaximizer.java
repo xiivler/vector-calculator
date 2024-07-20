@@ -12,6 +12,9 @@ public class VectorMaximizer {
 	public static final double RCV_ERROR = .001; //acceptable Z axis error when trying to make a RCV go straight
     public static final int RCV_MAX_ITERATIONS = 100; //stop after this many iterations no matter what when trying to make a RCV go straight
 
+	public static final double FAST_TURNAROUND = Math.toRadians(25);
+	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(135);
+
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	public static int numSteps = 901;
 			
@@ -217,7 +220,72 @@ public class VectorMaximizer {
 		}
 	}
 	
-	private double[] generateCapThrowHoldingAngles(double angle, int frames) {
+	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
+		double[] holdingAngles = new double[frames];
+		holdingAngles[0] = angle;
+		if (VectorCalculator.hyperoptimize) { //three frames to get back to the angle
+			if (frames <= 10) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
+				for (int i = 2; i < frames - 3; i++) {
+					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
+				}
+				for (int i = frames - 3; i < frames; i++) {
+					holdingAngles[i] = angle;
+				}
+				motion.setHoldingAngles(holdingAngles);
+			}
+			else if (frames <= 14) { //four frames to get back to the angle
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
+				for (int i = 2; i < frames - 4; i++) {
+					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
+				}
+				for (int i = frames - 4; i < frames; i++) {
+					holdingAngles[i] = angle;
+				}
+				motion.setHoldingAngles(holdingAngles);
+			}
+			else {
+				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
+				System.out.println("Min Rotation: " + Math.toDegrees(minRotation));
+				double additionalRotation = FAST_TURNAROUND - minRotation;
+				double rotationSum = 0;
+				double rotationalVelocity = 0;
+				int additionalRotationFrames = 0;
+				while (rotationSum < additionalRotation) {
+					rotationalVelocity += motion.rotationalAccel;
+					rotationSum += rotationalVelocity;
+					additionalRotationFrames++;
+				}
+				double overshoot = rotationSum - additionalRotation;
+				//how much counterrotation there should be on the first frame of acceleration
+				double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
+				int firstAdditionalRotationFrame = frames - 1 - additionalRotationFrames;
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
+				for (int i = 2; i < firstAdditionalRotationFrame; i++) {
+					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
+				}
+				holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
+				for (int i = firstAdditionalRotationFrame + 1; i < frames - 1; i++) {
+					holdingAngles[i] = holdingAngles[i - 1];
+				}
+				holdingAngles[frames - 1] = angle + FAST_TURNAROUND - FAST_TURNAROUND_ANGLE;
+				boolean[] holdingRadii = new boolean[frames];
+				holdingRadii[frames - 1] = true;
+				motion.setHolding(holdingAngles, holdingRadii);
+			}
+		}
+		else {
+			int lastNormalAngleFrame = (frames - 1) / 2;
+			//int lastNormalAngleFrame = frames - 2;
+			for (int i = 1; i <= lastNormalAngleFrame; i++)
+				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+			for (int i = lastNormalAngleFrame + 1; i < frames; i++)
+				holdingAngles[i] = angle;
+			motion.setHoldingAngles(holdingAngles);
+		}
+	}
+
+	private void generateCapThrowHolding(double angle, int frames) {
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = angle;
 		int lastNormalAngleFrame = (frames - 1) / 2;
@@ -226,10 +294,9 @@ public class VectorMaximizer {
 			holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 		for (int i = lastNormalAngleFrame + 1; i < frames; i++)
 			holdingAngles[i] = angle;
-		return holdingAngles;
 	}
 	
-	private double[] generateOtherMovementHoldingAngles(SimpleMotion[] motionGroup, int index, double angle, double initialRotation, boolean rightVector) {
+	private void setOtherMovementHoldingAngles(ComplexVector motion, SimpleMotion[] motionGroup, int index, double angle, double initialRotation, boolean rightVector) {
 		
 		Movement movement;
 		SimpleVector angleCalculator;
@@ -267,7 +334,7 @@ public class VectorMaximizer {
 			System.out.println(i + ": " + Math.toDegrees(holdingAngles[i]));
 			*/
 		
-		return holdingAngles;
+		motion.setHoldingAngles(holdingAngles);
 	}
 	
 	private SimpleMotion[] calcMotionGroup(int startIndex, int endIndex, double initialVelocity, int framesJump) {
@@ -639,7 +706,8 @@ public class VectorMaximizer {
 				variableAngle1 =  i / ((double) numSteps - 1) * Math.PI / 2;
 		//		variableAngle1 = Math.toRadians(26.126126126126128);
 
-				variableCapThrow1Vector.setHoldingAngles(generateCapThrowHoldingAngles(variableAngle1, variableCapThrow1Frames));
+				setCapThrowHoldingAngles(variableCapThrow1Vector, variableAngle1, variableCapThrow1Frames);
+				
 				variableCapThrow1Vector.calcDisp();
 				variableCapThrow1Vector.calcDispCoords();
 				
@@ -718,7 +786,7 @@ public class VectorMaximizer {
 			}
 			
 			//set cap throw 1 vector and falling vector to the correct angles
-			variableCapThrow1Vector.setHoldingAngles(generateCapThrowHoldingAngles(once_bestAngle1, variableCapThrow1Frames));
+			setCapThrowHoldingAngles(variableCapThrow1Vector, once_bestAngle1, variableCapThrow1Frames);
 			variableCapThrow1Vector.calcDisp();
 			if (hasVariableCapThrow1Falling)
 				calcFallingDisplacements(variableCapThrow1Vector, variableCapThrow1Index, once_bestAngle1Adjusted, !variableCapThrow1VectorRight);
@@ -787,9 +855,9 @@ public class VectorMaximizer {
 		while(high - low > .00001) {
 		
 			if (hasVariableCapThrow2)
-				variableMovement2Vector.setHoldingAngles(generateCapThrowHoldingAngles(variableAngle2, movementFrames.get(variableMovement2Index)));
+				setCapThrowHoldingAngles(variableMovement2Vector, variableAngle2, movementFrames.get(variableMovement2Index));
 			else
-				variableMovement2Vector.setHoldingAngles(generateOtherMovementHoldingAngles(motionGroup, variableMovement2Index, variableAngle2, initialRotation, currentVectorRight));
+				setOtherMovementHoldingAngles(variableMovement2Vector, motionGroup, variableMovement2Index, variableAngle2, initialRotation, currentVectorRight);
 			variableMovement2Vector.calcDisp();
 			variableMovement2Vector.calcDispCoords();
 			

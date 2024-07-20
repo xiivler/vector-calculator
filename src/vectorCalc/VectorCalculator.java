@@ -68,6 +68,7 @@ public class VectorCalculator extends JPanel {
 	static final int INITIAL_HORIZONTAL_SPEED_ROW = 9;
 	static final int VECTOR_DIRECTION_ROW = 10;
 	static final int GRAVITY_ROW = 11;
+	static final int HYPEROPTIMIZE_ROW = 12;
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
@@ -88,6 +89,7 @@ public class VectorCalculator extends JPanel {
 	static double initialHorizontalSpeed = 24;
 	static boolean rightVector = false;
 	static boolean onMoon = false;
+	static boolean hyperoptimize = true;
 	
 	static Movement initialMovement = new Movement(initialMovementName);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, initialFrames);
@@ -122,7 +124,8 @@ public class VectorCalculator extends JPanel {
 		{"Frames of Holding Jump", framesJump},
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
-		{"Gravity", "Regular"}};
+		{"Gravity", "Regular"},
+		{"Hyperoptimize Cap Throws", "True"}};
 	
 	static JFrame f = new JFrame("Configure Movement");
 	
@@ -335,6 +338,12 @@ public class VectorCalculator extends JPanel {
                 	String[] options = {"Regular", "Moon"};
                     JComboBox<String> angle = new JComboBox<String>(options);
                     return new DefaultCellEditor(angle);
+                }
+				else if (modelColumn == 1 && row == HYPEROPTIMIZE_ROW)
+                {
+                	String[] options = {"True", "False"};
+                    JComboBox<String> choice = new JComboBox<String>(options);
+                    return new DefaultCellEditor(choice);
                 }
                 else
                     return super.getCellEditor(row, column);
@@ -576,6 +585,9 @@ public class VectorCalculator extends JPanel {
 					}
 					else if (row == GRAVITY_ROW) {
 						onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
+					}
+					else if (row == HYPEROPTIMIZE_ROW) {
+						hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("True");
 					}
 				}
 				
