@@ -216,7 +216,7 @@ public class ComplexVector extends SimpleVector {
 				else
 					holdingAnglesAdjusted[i] = initialAngle + holdingAngles[i];
 			
-			double[][] info = new double[frames][8];
+			double[][] info = new double[frames][9];
 			for (int i = 0; i < frames; i++) {	
 				if (forwardVelocity < forwardVelocityCap) {
 					if (i >= nonVectorFrames) {
@@ -271,6 +271,15 @@ public class ComplexVector extends SimpleVector {
 				info[i][5] = zVelocity;
 				info[i][6] = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(zVelocity, 2));
 				info[i][7] = holdingAnglesAdjusted[i];
+				if (holdingMinRadius[i]) {
+					info[i][8] = MIN_RADIUS;
+				}
+				else if (holdingAnglesAdjusted[i] == NO_ANGLE) {
+					info[i][8] = 0;
+				}
+				else {
+					info[i][8] = 1;
+				}
 			}	
 			return info;
 		}

@@ -434,6 +434,12 @@ public class StayGroundedCapThrow extends GroundedCapThrow {
 			info[i][5] = zVelocity;
 			info[i][6] = currentVelocity;
 			info[i][7] = currentHoldingAngle;
+			if (currentHoldingAngle == NO_ANGLE) {
+				info[i][8] = 0;
+			}
+			else {
+				info[i][8] = 1;
+			}
 		}	
 		return info;
 	}

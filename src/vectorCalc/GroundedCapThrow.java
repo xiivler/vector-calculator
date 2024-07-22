@@ -391,7 +391,7 @@ public class GroundedCapThrow extends SimpleMotion {
 		double xVelocity;
 		double yVelocity = PRE_HOOK_Y_VEL;
 		double zVelocity;
-		double[][] info = new double[frames][8];
+		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
 			double currentVelocityAngle;
 			double currentHoldingAngle;

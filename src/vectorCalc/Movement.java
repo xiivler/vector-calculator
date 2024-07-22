@@ -51,6 +51,7 @@ public class Movement {
 	boolean variableJumpFrames = false;
 	boolean variableInitialHorizontalSpeed = true;
 	
+	//deprecated constructor
 	public Movement(double initialHorizontalSpeed, double vectorAccel) {
 		this.initialHorizontalSpeed = initialHorizontalSpeed;
 		this.vectorAccel = vectorAccel;

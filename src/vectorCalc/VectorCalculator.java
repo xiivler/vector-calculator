@@ -585,6 +585,7 @@ public class VectorCalculator extends JPanel {
 					}
 					else if (row == GRAVITY_ROW) {
 						onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
+						Movement.onMoon = onMoon;
 					}
 					else if (row == HYPEROPTIMIZE_ROW) {
 						hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("True");
@@ -713,13 +714,10 @@ public class VectorCalculator extends JPanel {
 		f.setVisible(true);
 		
 		//DEBUG PREPOLUATE MOVEMENT
-		/*
-		movementModel.addRow(new String[]{"Motion Cap Throw", "20"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "8"});
 		movementModel.addRow(new String[]{"Dive", "20"});
-		movementModel.addRow(new String[]{"Cap Bounce", "20"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "20"});
+		movementModel.addRow(new String[]{"Cap Bounce", "40"});
 		movementModel.addRow(new String[]{"Dive", "20"});
-		*/
 	}
 
 }

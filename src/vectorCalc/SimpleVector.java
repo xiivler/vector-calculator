@@ -116,6 +116,72 @@ public class SimpleVector extends SimpleMotion {
 		return finalSpeed;
 	}
 	
+	public double[] calcRelativeRotations() { //calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
+		double relativeInitialRotation;
+		if (rightVector) {
+			relativeInitialRotation = initialAngle - initialRotation;
+		}
+		else {
+			relativeInitialRotation = initialRotation - initialAngle;
+		}
+		double rotation = relativeInitialRotation;
+		double[] rotations = new double[frames];
+		double rotationVelocity = 0;
+
+		int i = 0;
+		//when holding forwards, rotate until facing the forward direction
+		if (optimalForwardAccel) {
+			while (i < frames - vectorFrames) {
+				if (rotation > 0) {
+					rotationVelocity -= rotationalAccel;
+					if (rotationVelocity < -maxRotationalSpeed)
+						rotationVelocity = -rotationalSpeedAfterMax;
+				}
+				else if (rotation < 0) {
+					rotationVelocity += rotationalAccel;
+					if (rotationVelocity > maxRotationalSpeed)
+						rotationVelocity = rotationalSpeedAfterMax;
+				}
+						
+				rotation += rotationVelocity;
+
+				if ((rotations[i - 1] <= 0 && 0 <= rotation) || (rotation <= 0 && 0 <= rotations[i - 1])) {
+					rotation = 0;
+					rotationVelocity = 0;
+				}
+				rotations[i] = rotation;
+				i++;
+			}
+		}
+		
+		//now keep rotating until we reach the angle that we're holding
+		if (holdingAngle != NO_ANGLE) {
+			while (i < frames) {
+				if (rotationVelocity < 0) {
+					rotationVelocity = 0;
+				}
+				rotationVelocity += rotationalAccel;
+				if (rotationVelocity > maxRotationalSpeed) {
+					rotationVelocity = rotationalSpeedAfterMax;
+				}
+				rotation += rotationVelocity;
+
+				if (rotation > holdingAngle) {
+					rotation = holdingAngle;
+				}
+				rotations[i] = rotation;
+				i++;
+			}
+		}
+		else {
+			while (i < frames) {
+				rotations[i] = rotations[i - 1];
+			}
+		}
+
+		return rotations;
+	}
+
 	//does not currently account for fast turnarounds, returns -1 if no frames to rotation can be calculated
 	public double calcFramesToRotation(double targetRotation) {
 		double rotation = initialRotation;
@@ -201,7 +267,7 @@ public class SimpleVector extends SimpleMotion {
 	}
 	
 	//must run calcDisp() first to calculate acceleration values and vectorFrames
-	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle
+	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle, column 8: holding radius
 	public double[][] calcFrameByFrame() {
 		dispForward = 0;
 		dispSideways = 0;
@@ -233,7 +299,7 @@ public class SimpleVector extends SimpleMotion {
 		else
 			holdingAngleAdjusted = initialAngle + holdingAngle;
 		
-		double[][] info = new double[frames][8];
+		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
 			if (forwardVelocity < forwardVelocityCap) {
 				forwardVelocity += forwardAccel;
@@ -266,10 +332,18 @@ public class SimpleVector extends SimpleMotion {
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
 			info[i][6] = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(zVelocity, 2));
-			if (i < nonVectorFrames)
+			if (i < nonVectorFrames) {
 				info[i][7] = initialAngle;
-			else
+			}
+			else {
 				info[i][7] = holdingAngleAdjusted;
+			}
+			if (info[i][7] == NO_ANGLE) {
+				info[i][8] = 0;
+			}
+			else {
+				info[i][8] = 1;
+			}
 		}	
 		return info;
 	}

@@ -34,7 +34,7 @@ public class VectorDisplayWindow {
 	static final int VERTICAL_DISPLACEMENT_ROW = 5;
 	static final int TOTAL_FRAMES_ROW = 6;
 	
-	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)"};
+	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
@@ -89,7 +89,7 @@ public class VectorDisplayWindow {
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(200);
 		dataTable.getColumnModel().getColumn(2).setPreferredWidth(160);
-		dataTable.getColumnModel().getColumn(3).setPreferredWidth(160);
+		dataTable.getColumnModel().getColumn(3).setPreferredWidth(240);
 		dataTable.getColumnModel().getColumn(4).setPreferredWidth(400);
 		dataTable.getColumnModel().getColumn(5).setPreferredWidth(360);
 		dataTable.getColumnModel().getColumn(6).setPreferredWidth(240);
@@ -113,6 +113,19 @@ public class VectorDisplayWindow {
 
 	private static String toPolarCoordinates(double r, double theta) {
 		return String.format("(%.3f; %.3f)", r, theta);
+	}
+
+	private static String toPolarCoordinatesJoystick(double r, double theta) {
+		if (theta == SimpleMotion.NO_ANGLE) {
+			return "";
+		}
+		theta = reduceAngle(theta);
+		if (r == 1) {
+			return String.format("(1; %.4f)", theta);
+		}
+		else {
+			return String.format("(%.2f; %.4f)", r, theta);
+		}
 	}
 	
 	private static String shorten(double d, int decimalPlaces) {
@@ -171,16 +184,10 @@ public class VectorDisplayWindow {
 				rowContents[0] = row;
 				rowContents[1] = "";
 				rowContents[2] = "";
-				if (info[i][7] != SimpleMotion.NO_ANGLE)
-					rowContents[3] = shorten(reduceAngle(info[i][7]), 4);
-				else
-					rowContents[3] = "";
+				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], info[i][7]);
 				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
-				double velocityAngle = Math.toDegrees(Math.atan2(info[i][5], info[i][3]));
-				if (velocityAngle < 0) {
-					velocityAngle += 360;
-				}
+				double velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
 				rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				dataTableModel.addRow(rowContents);
 				if (i < motion.movement.inputs.size())

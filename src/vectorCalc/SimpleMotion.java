@@ -195,7 +195,7 @@ public class SimpleMotion {
 		}
 	}
 	
-	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle
+	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle, column 8: holding radius
 	public double[][] calcFrameByFrame() {
 		//maybe shouldn't use the disps for this
 		dispX = x0;
@@ -212,16 +212,19 @@ public class SimpleMotion {
 		double xVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double zVelocity;
-		double[][] info = new double[frames][8];
+		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
 			if (forwardVelocity < forwardVelocityCap) {
 				info[i][7] = initialAngle;
+				info[i][8] = 1;
 				forwardVelocity += forwardAccel;
 				if (forwardVelocity > forwardVelocityCap)
 					forwardVelocity = forwardVelocityCap;
 			}
-			else
+			else {
 				info[i][7] = NO_ANGLE;
+				info[i][8] = 0;
+			}
 			if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
 				yVelocity -= gravity;
 				if (yVelocity < movement.fallSpeedCap)
