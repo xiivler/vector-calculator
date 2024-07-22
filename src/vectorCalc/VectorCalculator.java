@@ -121,7 +121,7 @@ public class VectorCalculator extends JPanel {
 		{"Initial Movement Type", initialMovementName},
 		{"Initial Movement Duration Type", "Frames"},
 		{"Initial Movement Frames", initialFrames},
-		{"Frames of Holding Jump", framesJump},
+		{"Frames of Holding A/B", framesJump},
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
 		{"Gravity", "Regular"},
