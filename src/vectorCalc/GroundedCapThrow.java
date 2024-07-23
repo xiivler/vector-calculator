@@ -1,5 +1,6 @@
 package vectorCalc;
 
+//motion for a roll cancel up to once Mario starts Falling instead
 public class GroundedCapThrow extends SimpleMotion {
 
 	//TODO: enfoce minframes
@@ -30,6 +31,7 @@ public class GroundedCapThrow extends SimpleMotion {
 	public static final double SMALL_ROTATIONAL_ACCEL = Math.toRadians(0.325);
 	public static final int ROTATIONAL_ACCEL_FRAMES = 5;
 	public static final double FRICTION_COEFFICIENT = Math.toRadians(.01);
+	public static final double WALKING_SPEED = 14;
 
 	double dispSideways;
 
@@ -167,6 +169,9 @@ public class GroundedCapThrow extends SimpleMotion {
 		
 		for (int i = 0; i < postHookFrames - turningFrames; i++) {
 			currentVelocity -= WALKING_DECEL;
+			if (currentVelocity < WALKING_SPEED) {
+				currentVelocity = WALKING_SPEED;
+			}
 			dispForward += currentVelocity;
 		}
 
@@ -180,6 +185,9 @@ public class GroundedCapThrow extends SimpleMotion {
 		int firstTurnFrame = frames - turningFrames;
 		if (turningFrames > 0) {
 			currentVelocity -= WALKING_DECEL;
+			if (currentVelocity < WALKING_SPEED) {
+				currentVelocity = WALKING_SPEED;
+			}
 			//use small rotational accel if there's a big enough overshoot; this only gives you like .1 units so maybe just disable this logic
 			double potentialOvershootReduction = (rotationalAccel - SMALL_ROTATIONAL_ACCEL) * overshootSpreadFrames;
 			if (remainingOvershoot >= potentialOvershootReduction && spreadOutOvershoot && spreadOutOvershootExtreme) {
@@ -203,6 +211,9 @@ public class GroundedCapThrow extends SimpleMotion {
 			friction = FRICTION_COEFFICIENT;
 			for (int i = firstTurnFrame + 1; i < frames; i++) {
 				currentVelocity -= WALKING_DECEL;
+				if (currentVelocity < WALKING_SPEED) {
+					currentVelocity = WALKING_SPEED;
+				}
 				overshootSpreadFrames--;
 				if (remainingOvershoot == 0 || rotationalSpeed == SMALL_ROTATIONAL_ACCEL || !spreadOutOvershoot) {
 					if (rotationalSpeed == SMALL_ROTATIONAL_ACCEL) {
@@ -270,6 +281,9 @@ public class GroundedCapThrow extends SimpleMotion {
 		/*
 		for (int i = firstTurnFrame + 1; i < frames; i++) {
 			currentVelocity -= WALKING_DECEL;
+			if (currentVelocity < WALKING_SPEED) {
+				currentVelocity = WALKING_SPEED;
+			}
 			if (rotationalSpeed < maxRotationalSpeed) {
 				rotationalSpeed += rotationalAccel;
 				if (rotationalSpeed > maxRotationalSpeed) {
@@ -410,6 +424,9 @@ public class GroundedCapThrow extends SimpleMotion {
 			if (i >= PRE_HOOK_FRAMES) { //when the hook happens, change vertical velocity and start reducing current velocity
 				yVelocity = POST_HOOK_Y_VEL;
 				currentVelocity -= WALKING_DECEL;
+				if (currentVelocity < WALKING_SPEED) {
+					currentVelocity = WALKING_SPEED;
+				}
 			}
 			xVelocity = currentVelocity * Math.cos(currentVelocityAngle);
 			zVelocity = currentVelocity * Math.sin(currentVelocityAngle);
@@ -424,6 +441,12 @@ public class GroundedCapThrow extends SimpleMotion {
 			info[i][5] = zVelocity;
 			info[i][6] = currentVelocity;
 			info[i][7] = currentHoldingAngle;
+			if (currentHoldingAngle == NO_ANGLE) {
+				info[i][8] = 0;
+			}
+			else {
+				info[i][8] = 1;
+			}
 		}	
 		return info;
 	}

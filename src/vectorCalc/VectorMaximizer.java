@@ -14,7 +14,9 @@ public class VectorMaximizer {
 
 	public static final double FAST_TURNAROUND_VELOCITY = Math.toRadians(25);
 	public static final double FAST_TURNAROUND_ACCEL = Math.toRadians(2.5);
-	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(135);
+	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(135.1); //only needs to be 135, but extra .1 degrees for safety
+
+	public static final double TURN_COUNTERROTATION = Math.toRadians(.4); //really should be .3 but this produces inaccurate results
 
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	//public static int numSteps = 901;
@@ -119,7 +121,7 @@ public class VectorMaximizer {
 		
 		this.listPreparer = listPreparer;
 		
-		TableModel genPropertiesModel = VectorCalculator.genPropertiesModel;
+		//TableModel genPropertiesModel = VectorCalculator.genPropertiesModel;
 		targetAngleGiven = VectorCalculator.angleType == AngleType.TARGET; //keep this logic; if it's both, you want to conform to the initial
 		initialAngle = Math.toRadians(VectorCalculator.initialAngle);
 		targetAngle = Math.toRadians(VectorCalculator.targetAngle);
@@ -229,6 +231,7 @@ public class VectorMaximizer {
 			for (int i = 1; i < motionGroup.length; i++)
 				motionGroup[i].setInitialRotation(motionGroup[i-1].calcFinalRotation());
 			
+			/*
 			System.out.println("Rotation steps:");
 			motionGroup[motionGroup.length - 1].calcFinalRotation();
 			for (int i = 0; i < motionGroup.length; i++) {
@@ -237,6 +240,7 @@ public class VectorMaximizer {
 					System.out.println(((SimpleVector) motionGroup[i]).rightVector); 
 				System.out.println(Math.toDegrees(motionGroup[i].finalRotation));
 			}
+			*/
 			
 			return motionGroup[motionGroup.length - 1].calcFinalRotation();
 		}
@@ -245,26 +249,103 @@ public class VectorMaximizer {
 	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = angle;
-		if (VectorCalculator.hyperoptimize) { //three frames to get back to the angle
-			if (frames <= 10) {
-				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
-				for (int i = 2; i < frames - 3; i++) {
-					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
-				}
-				for (int i = frames - 3; i < frames; i++) {
+		if (VectorCalculator.hyperoptimize || frames <= 8) {
+			if (frames < 7) {
+				for (int i = 1; i < frames; i++) {
 					holdingAngles[i] = angle;
 				}
-				motion.setHoldingAngles(holdingAngles);
 			}
-			else if (frames <= 14) { //four frames to get back to the angle
-				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
-				for (int i = 2; i < frames - 4; i++) {
-					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
-				}
-				for (int i = frames - 4; i < frames; i++) {
-					holdingAngles[i] = angle;
-				}
-				motion.setHoldingAngles(holdingAngles);
+			else if (frames == 7) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE; //.6
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE; //.9
+				holdingAngles[4] = angle - Math.toRadians(.2); //1.5
+				holdingAngles[5] = angle - Math.toRadians(.2); //.9
+				holdingAngles[6] = angle - Math.toRadians(.2); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
+			}
+			else if (frames == 8) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3 //really should be .3 but this makes it slightly inaccurate
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.6
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.6
+				holdingAngles[5] = angle - Math.toRadians(.2); //1.5
+				holdingAngles[6] = angle - Math.toRadians(.2); //.9
+				holdingAngles[7] = angle - Math.toRadians(.2); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
+			}
+			else if (frames == 9) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.6
+				holdingAngles[6] = angle - Math.toRadians(.2); //1.5
+				holdingAngles[7] = angle - Math.toRadians(.2); //.9
+				holdingAngles[8] = angle - Math.toRadians(.2); //0
+			}
+			else if (frames == 10) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
+				holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.3
+				holdingAngles[7] = angle - Math.toRadians(.2); //1.5
+				holdingAngles[8] = angle - Math.toRadians(.2); //.9
+				holdingAngles[9] = angle - Math.toRadians(.2); //0
+			}
+			else if (frames == 11) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.6
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.6
+				holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.9
+				holdingAngles[7] = angle;
+				holdingAngles[8] = angle;
+				holdingAngles[9] = angle;
+				holdingAngles[10] = angle;
+			}
+			else if (frames == 12) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
+				holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.6
+				holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.9
+				holdingAngles[8] = angle;
+				holdingAngles[9] = angle;
+				holdingAngles[10] = angle;
+				holdingAngles[11] = angle;
+			}
+			else if (frames == 13) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
+				holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.3
+				holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.6
+				holdingAngles[8] = SimpleMotion.NORMAL_ANGLE - 6 * TURN_COUNTERROTATION; //.6
+				holdingAngles[9] = angle;
+				holdingAngles[10] = angle;
+				holdingAngles[11] = angle;
+				holdingAngles[12] = angle;
+			}
+			else if (frames == 14) {
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
+				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3
+				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
+				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
+				holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
+				holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.3
+				holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 6 * TURN_COUNTERROTATION; //.3
+				holdingAngles[8] = SimpleMotion.NORMAL_ANGLE - 7 * TURN_COUNTERROTATION; //.3
+				holdingAngles[9] = SimpleMotion.NORMAL_ANGLE - 7 * TURN_COUNTERROTATION; //.6
+				holdingAngles[10] = angle;
+				holdingAngles[11] = angle;
+				holdingAngles[12] = angle;
+				holdingAngles[13] = angle;
 			}
 			else {
 				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
@@ -284,7 +365,7 @@ public class VectorMaximizer {
 				int firstAdditionalRotationFrame = frames - 1 - additionalRotationFrames;
 				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
 				for (int i = 2; i < firstAdditionalRotationFrame; i++) {
-					holdingAngles[i] = holdingAngles[i - 1] - motion.rotationalAccel;
+					holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 				}
 				holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
 				for (int i = firstAdditionalRotationFrame + 1; i < frames - 1; i++) {
@@ -294,7 +375,9 @@ public class VectorMaximizer {
 				boolean[] holdingMinRadius = new boolean[frames];
 				holdingMinRadius[frames - 1] = true;
 				motion.setHolding(holdingAngles, holdingMinRadius);
+				return;
 			}
+			motion.setHoldingAngles(holdingAngles);
 		}
 		else {
 			int lastNormalAngleFrame = (frames - 1) / 2;
@@ -344,37 +427,22 @@ public class VectorMaximizer {
 		double turnaroundRotation = fastTurnarounds[listIndex];
 		int turnaroundFrames = fastTurnaroundFrames[listIndex];
 		int firstTurnaroundFrame = frames - turnaroundFrames;
-		double reverseRotation = 0;
-		double reverseRotationalVelocity = 0;
-		int firstNonNormalAngleFrame = firstTurnaroundFrame - 1; //the frame we start holding turnaroundRotation + angle so that this becomes Mario's rotation angle so that we can then do the fast turnaround
-		for (; firstNonNormalAngleFrame > 0; firstNonNormalAngleFrame--) {
-			reverseRotationalVelocity += angleCalculator.rotationalAccel;
-			reverseRotation += reverseRotationalVelocity;
-
-			//System.out.println("Reverse Rotation Vel: " + Math.toDegrees(reverseRotationalVelocity));
-			//System.out.println("Reverse Rotation: " + Math.toDegrees(reverseRotation));
-			//System.out.println(rotationalVelocities[firstNonNormalAngleFrame]);
-			if (rotations[firstNonNormalAngleFrame - 1] - reverseRotation <= turnaroundRotation + angle) {
-				break;
-			}
-		}
-		//hold the normal angle as long as we can
-		for (int i = 0; i < firstNonNormalAngleFrame; i++) {
+		int i = 0;
+		while (rotations[i] < turnaroundRotation + angle) {
 			holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+			i++;
 		}
-		//then hold turnaroundRotation + angle so that we rotate to this
-		reverseRotationalVelocity = 0;
-		for (int i = firstNonNormalAngleFrame; i < firstTurnaroundFrame; i++) {
+		double previousVelocity = rotations[i - 1] - rotations[i - 2];
+		double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
+		holdingAngles[i] = SimpleMotion.NORMAL_ANGLE - (previousVelocity + angleCalculator.rotationalAccel - neededVelocity);
+		i++;
+		for (; i < firstTurnaroundFrame; i++) {
 			holdingAngles[i] = turnaroundRotation + angle;
-			reverseRotationalVelocity += angleCalculator.rotationalAccel;
-			rotations[i] = rotations[i - 1] - reverseRotationalVelocity;
-			if (rotations[i] < turnaroundRotation + angle) {
-				rotations[i] = turnaroundRotation + angle;
-			}
+			rotations[i] = turnaroundRotation + angle;
 		}
 		//finally, apply the turnaround so we end up at the desired angle
 		double fastTurnaroundVelocity = FAST_TURNAROUND_VELOCITY;
-		for (int i = firstTurnaroundFrame; i < frames; i++) {
+		for (; i < frames; i++) {
 			if (i == firstTurnaroundFrame) {
 				holdingAngles[i] = rotations[i - 1] - FAST_TURNAROUND_ANGLE;
 				rotations[i] = rotations[i - 1] - FAST_TURNAROUND_VELOCITY;
@@ -807,8 +875,14 @@ public class VectorMaximizer {
 			once_bestDisp = calcDisp(once_bestAngle1);
 			//the variables on the right in these assignments are set by the previous call
 			once_bestAngle2 = variableAngle2;
-			once_bestDispX = testDispX2;
-			once_bestDispY = testDispY2;
+			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+				once_bestDispX = testDispX2;
+				once_bestDispY = testDispY2;
+			}
+			else {
+				once_bestDispX = testDispX1;
+				once_bestDispY = testDispY1;
+			}
 			bestDispX1 = testDispX1;
 			bestDispY1 = testDispY1;
 			once_bestAngle1Adjusted = variableAngle1Adjusted;
@@ -931,6 +1005,8 @@ public class VectorMaximizer {
 				System.out.println("-");
 			}
 			oldTestDisp = testDisp; */
+			System.out.println("Test Disp X1: " + testDispX1);
+			System.out.println("Test Disp Y1: " + testDispY1);
 			return testDisp;
 		}
 		

@@ -78,15 +78,16 @@ public class VectorCalculator extends JPanel {
 	static final int LOCK_FRAMES = 1;
 	static final int LOCK_VERTICAL_DISPLACEMENT = 2;
 	
+	static double x0 = 0, y0 = 0, z0 = 0;
 	static double initialAngle = 0;
 	static double targetAngle = 0;
 	static AngleType angleType = AngleType.TARGET;
-	static String initialMovementName = "Single Jump";
+	static String initialMovementName = "Upthrow Roll Cancel";
 	static boolean durationFrames = true;
 	static int initialFrames = 60;
 	static double initialDispY = 0;
 	static int framesJump = 10;
-	static double initialHorizontalSpeed = 24;
+	static double initialHorizontalSpeed = 29.94;
 	static boolean rightVector = false;
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
@@ -113,10 +114,10 @@ public class VectorCalculator extends JPanel {
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
 	static Object[][] genProperties =
-		{{"Initial X Position", 0},
-		{"Initial Y Position", 0},
-		{"Initial Z Position", 0},
-		{"Target Angle", 0},
+		{{"Initial X Position", (int) x0},
+		{"Initial Y Position", (int) y0},
+		{"Initial Z Position", (int) z0},
+		{"Target Angle", (int) targetAngle},
 		{"Angle Type", "Target Angle"},
 		{"Initial Movement Type", initialMovementName},
 		{"Initial Movement Duration Type", "Frames"},
@@ -428,6 +429,7 @@ public class VectorCalculator extends JPanel {
 						else {
 							chooseInitialHorizontalSpeed = false;
 							genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
+							initialHorizontalSpeed = 0;
 						}
 						if (initialMovementName.contains("Roll Cancel")) {
 							setAngleType(AngleType.BOTH);
@@ -458,11 +460,21 @@ public class VectorCalculator extends JPanel {
 
 				if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
 					if (row == X_ROW || row == Y_ROW || row == Z_ROW) {
+						double value = 0;
 						try {
-							Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+							value = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
 						}
 						catch (NumberFormatException ex) {
 							genPropertiesTable.setValueAt(0, row, 1);
+						}
+						if (row == X_ROW) {
+							x0 = value;
+						}
+						else if (row == Y_ROW) {
+							y0 = value;
+						}
+						else {
+							z0 = value;
 						}
 					}
 					if (row == ANGLE_ROW) {
@@ -714,10 +726,14 @@ public class VectorCalculator extends JPanel {
 		f.setVisible(true);
 		
 		//DEBUG PREPOLUATE MOVEMENT
-		movementModel.addRow(new String[]{"Motion Cap Throw", "8"});
-		movementModel.addRow(new String[]{"Dive", "20"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Dive", "23"});
 		movementModel.addRow(new String[]{"Cap Bounce", "40"});
 		movementModel.addRow(new String[]{"Dive", "20"});
+
+		setAngleType(AngleType.BOTH);
+		initialAngle = 65;
+		targetAngle = 90;
 	}
 
 }

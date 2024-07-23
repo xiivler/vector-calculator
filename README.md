@@ -34,12 +34,20 @@ Below this information is a table containing frame-by-frame information regardin
 The joystick column specifies how to hold the joystick in terms of polar coordinates (radius and angle). The horizontal speed column is also in polar coordinates, representing the speed and the direction the speed is in.
 
 ## Iterating and TASing
-Go back and tweak the various parameters until you are happy with the result. Then, if the top row of the Vector Calculations window displays an initial angle, modify the part of the TAS before the jump until Mario's velocity is the direction of the initial angle. This may change your initial X, Y, and Z coordinates, in which case you should update them in vector calculator, change the target angle if desired, and press Calculate Vectors again.
+Go back and tweak the various parameters until you are happy with the result. A good strategy to get more distance is to find movements that have frames with lots of falling speed and not a lot of horizontal speed and lower the number of frames these movements last, adding frames to movements that have a better ratio of horizontal speed to falling speed.
+
+Then, if the top row of the Vector Calculations window displays an initial angle, modify the part of the TAS before the jump until Mario's velocity is the direction of the initial angle. This may change your initial X, Y, and Z coordinates, in which case you should update them in vector calculator, change the target angle if desired, and press Calculate Vectors again.
 
 Now, use your TAS editing software to input the inputs and joystick angles as indicated by the frame-by-frame display in the Vector Calculations window. However, depending on your camera angle, you may need to adjust the joystick angles, which can usually only be done by trial and error by comparing Mario's expected and actual positions and/or velocities. Note that if you make the camera face as far down as possible, it will not rotate as Mario's velocity changes, meaning that you just need to adjust one angle properly and then adjust the rest by the same amount. If you don't point the camera down, it is likely that if Hyperoptimize Cap Throws is set to True, it will be very difficult to rotate Mario properly.
 
 A strategy is simply to face the target angle of the jump in-game, center the camera, face it down, then set the target angle in Vector Calculator to 90 degrees, calculate the vectors, and enter the joystick angles without having to adjust them at all.
 
+If, during a vector, your speed in-game is not as great as the speed Vector Calculator shows, try vectoring a tiny bit less strongly (like .1 degrees).
+
+For frames where the joystick radius is .11, you should expect Mario to be doing a fast turnaround.
+
 ## Current Limitations
 
 The program does not currently calculate edge cap bounces. If you would like to include one, try cap throwing more strongly than the program suggests, then rotating Mario to still dive in the same direction as the program calculates.
+
+If the only midair movement is a dive (ex. triple jump -> dive with no cap throw), the program assumes your initial rotation is the same as your initial angle, but if you buffer the initial jump, this may not be the case. Likewise, the height for single and double jumps may be incorrect because they are based on Mario's velocity in the direction he is facing, which is not necessarily forwards.

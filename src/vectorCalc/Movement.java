@@ -47,6 +47,7 @@ public class Movement {
 	String displayName;
 	
 	ArrayList<String> inputs = new ArrayList<String>();
+	ArrayList<String> TSVInputs = inputs;
 	
 	boolean variableJumpFrames = false;
 	boolean variableInitialHorizontalSpeed = true;
@@ -194,6 +195,8 @@ public class Movement {
 			gravity = .48;
 			moonGravity = .2;
 			inputs.add("ZL, B");
+			TSVInputs = new ArrayList<String>();
+			TSVInputs.add("ZL\tB");
 		}
 		
 		//need to change rolls to falling to vector them, but falling may have different gravity
@@ -228,6 +231,8 @@ public class Movement {
 			moonGravity = 1;
 			frameOffset = 1;
 			inputs.add("ZL, Y");
+			TSVInputs = new ArrayList<String>();
+			TSVInputs.add("ZL\tY");
 		}
 		
 		//technically there are 4 varieties, at speeds 20, 23, and 26
@@ -245,6 +250,8 @@ public class Movement {
 			moonGravity = 1;
 			frameOffset = 1;
 			inputs.add("ZL, shake");
+			TSVInputs = new ArrayList<String>();
+			TSVInputs.add("ZL\tM");
 		}
 		
 		else if (movementType.equals("Roll Vector")) {
@@ -342,7 +349,18 @@ public class Movement {
 			trueSpeedCap = 8.6;
 			gravity = .95;
 			moonGravity = .3;
+			vectorAccel = 0;
 			inputs.add("B");
+		}
+
+		else if (movementType.equals("Flip Forward Vector")) {
+			displayName = "";
+			initialVerticalSpeed = -.75;
+			initialHorizontalSpeed = 8.6;
+			defaultSpeedCap = 8.6;
+			trueSpeedCap = 8.6;
+			gravity = .95;
+			moonGravity = .3;
 		}
 		
 		else if (movementType.equals("Cap Bounce")) {
@@ -415,50 +433,60 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 29.94;
 			rotationalAccel = Math.toRadians(1.3);
 			maxRotationalSpeed = Math.toRadians(1.3 * 5);
+			TSVInputs = new ArrayList<String>();
 			if (movementType.equals("Motion Cap Throw Roll Cancel")) {
 				displayName = "MCCTRC";
 				minFrames = 19;
 				inputs.add("B, Shake");
+				TSVInputs.add("M-U\tB");
 			}
 			else if (movementType.equals("Single Throw Roll Cancel")) {
 				displayName = "Single Throw RC";
 				minFrames = 24;
 				inputs.add("B, Y");
+				TSVInputs.add("Y\tB");
 			}
 			else if (movementType.equals("Upthrow Roll Cancel")) {
 				displayName = "UTRC";
 				minFrames = 28;
 				inputs.add("B, Up shake");
+				TSVInputs.add("M-UU\tB");
 			}
 			else if (movementType.equals("Downthrow Roll Cancel")) {
 				displayName = "Downthrow RC";
 				minFrames = 28;
 				inputs.add("B, Down shake");
+				TSVInputs.add("M-DD\tB");
 			}
 			else if (movementType.equals("Double Throw Roll Cancel")) {
 				displayName = "Double Throw RC";
 				minFrames = 34;
 				inputs.add("B, Y");
+				TSVInputs.add("Y\tB");
 			}
 			else if (movementType.equals("Fakethrow Roll Cancel")) {
 				displayName = "Fakethrow RC";
 				minFrames = 34;
 				inputs.add("B, Y");
+				TSVInputs.add("Y\tB");
 			}
 			else if (movementType.equals("Triple Throw Roll Cancel")) {
 				displayName = "TTRC";
 				minFrames = 44;
 				inputs.add("B, Y");
+				TSVInputs.add("Y\tB");
 			}
 			else if (movementType.equals("Spinthrow Roll Cancel")) {
 				displayName = "STRC";
 				minFrames = 46;
 				inputs.add("B, Side shake");
+				TSVInputs.add("M-LL\tB");
 			}
 			else if (movementType.equals("MCCT Roll Cancel Spinpound")) {
 				displayName = "MCCTRC to Spin";
 				minFrames = 21;
 				inputs.add("B, Shake");
+				TSVInputs.add("M-U\tB");
 			}
 			maxFrames = minFrames;
 		}
@@ -467,6 +495,8 @@ public class Movement {
 		//add min frames to this and rainbow spin?
 		else if (movementType.contains("Throw")) {
 			inputs.add("Shake");
+			TSVInputs = new ArrayList<String>();
+			TSVInputs.add("M-U");
 			if (movementType.equals("Motion Cap Throw"))
 				minFrames = 8;
 			else if (movementType.equals("Triple Throw"))
@@ -474,16 +504,22 @@ public class Movement {
 			else if (movementType.equals("Homing Motion Cap Throw")) {
 				displayName = "Homing MCCT";
 				minFrames = 36; //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
-				for (int i = 0; i < 19; i++)
+				for (int i = 0; i < 19; i++) {
 					inputs.add("");
+					TSVInputs.add("");
+				}
 				inputs.add("Shake");
+				TSVInputs.add("M-D");
 			}
 			else if (movementType.equals("Homing Triple Throw")) {
 				displayName = "Homing TT";
 				minFrames = 23;
-				for (int i = 0; i < 6; i++)
+				for (int i = 0; i < 6; i++) {
 					inputs.add("");
+					TSVInputs.add("");
+				}
 				inputs.add("Shake");
+				TSVInputs.add("M-D");
 			}
 			initialVerticalSpeed = 6;
 			defaultSpeedCap = 7;
@@ -617,6 +653,8 @@ public class Movement {
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
 			inputs.add("Shake");
+			TSVInputs = new ArrayList<String>();
+			TSVInputs.add("M");
 		}
 		
 		//could do custom angles in the future

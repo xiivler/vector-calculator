@@ -1,5 +1,6 @@
 package vectorCalc;
 
+//calculates the behavior of movement without vectoring
 public class SimpleMotion {
 	
 	public static final double NORMAL_ANGLE = Math.PI / 2;
@@ -160,6 +161,7 @@ public class SimpleMotion {
 	//given a Y displacement, return the last frame that is at least as high as the displacement
 	//if this is not possible, return the frames to the peak of the motion
 	public int calcFrames(double maxDispY) {
+		maxDispY -= 0.0001; //account for lack of double precision
 		dispY = 0;
 		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
@@ -221,6 +223,13 @@ public class SimpleMotion {
 				if (forwardVelocity > forwardVelocityCap)
 					forwardVelocity = forwardVelocityCap;
 			}
+			//doesn't actually do anything for small angles
+			/*
+			else if (movement.movementType.equals("Dive")) { //sometimes the cap throw rotation doesn't work out quite right
+				info[i][7] = initialAngle;
+				info[i][8] = 1;
+			}
+				*/
 			else {
 				info[i][7] = NO_ANGLE;
 				info[i][8] = 0;

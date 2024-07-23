@@ -102,6 +102,12 @@ public class MovementNameListPreparer {
 			movementNames.add("Swinging Jump Vector");
 			movementFrames.add(frames - 11);
 		}
+		else if (name.equals("Flip Forward") && frames > VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed) { //could standardize this for all motion that behaves like this, add the motion name + " Vector"
+			movementNames.add("Flip Forward");
+			movementFrames.add(VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
+			movementNames.add("Flip Forward Vector");
+			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
+		}
 		else if (name.contains("Roll Cancel")) {
 			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH && Math.abs(VectorCalculator.initialAngle - VectorCalculator.targetAngle) > 65) {
 				return "Cannot calculate RCV with angle difference greater than 65°";

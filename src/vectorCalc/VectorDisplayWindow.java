@@ -2,6 +2,9 @@ package vectorCalc;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
@@ -12,17 +15,17 @@ import javax.swing.table.TableModel;
 
 public class VectorDisplayWindow {
 
-	static double x0;
-	static double y0;
-	static double z0;
+	static PrintWriter print = null;
+	static boolean printTSV = true;
+	static String lastPrintLine = "";
+	static String currentPrintLine = "";
+
 	static double v0;
 	
 	static JTable infoTable;
 	static JTable dataTable;
 	static DefaultTableModel dataTableModel;
 	static TableModel infoTableModel;
-	
-	static TableModel genPropertiesModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
 	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final X Position", ""}, {"Final Y Position", ""}, {"Final Z Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}};
@@ -42,7 +45,6 @@ public class VectorDisplayWindow {
 	static {
 		
 		//INFO TABLE
-		genPropertiesModel = VectorCalculator.genPropertiesModel;
 		
 		infoTable = new JTable(infoColumnData, infoColumnTitles) {
 			
@@ -156,23 +158,46 @@ public class VectorDisplayWindow {
 	}
 	
 	public static void generateData(SimpleMotion[] simpleMotions, double initialAngle, double targetAngle) {
-		x0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.X_ROW, 1).toString());
-		y0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.Y_ROW, 1).toString());
-		z0 = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.Z_ROW, 1).toString());
+		if (printTSV) {
+			try {
+            	File destination = new File("vector.tsv");
+            	print = new PrintWriter(destination);
+				print.println("\\\\\tOptimized using Vector Calculator");
+				print.println("\\\\\tCopy and paste this into your script");
+				print.println("\\\\\tAdjust the below variable as needed");
+				print.println("$TA = 0");
+				currentPrintLine = "";
+				if (simpleMotions[0].movement.TSVInputs.size() > 0) {
+					currentPrintLine = simpleMotions[0].movement.TSVInputs.get(0).toLowerCase();
+				}
+				lastPrintLine = currentPrintLine;
+        	}
+			catch (FileNotFoundException e) {}
+		}
+		
 		v0 = VectorCalculator.initialHorizontalSpeed;
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(x0, y0, z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, Math.toDegrees(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.x0, VectorCalculator.y0, VectorCalculator.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, Math.toDegrees(initialAngle))});
 		
-		double x = x0;
-		double y = y0;
-		double z = z0;
+		double x = VectorCalculator.x0;
+		double y = VectorCalculator.y0;
+		double z = VectorCalculator.z0;
 		
 		double[][] info = null;
 		
+		int identicalLineCount = 1;
+
 		int row = 1;
-		for (SimpleMotion motion : simpleMotions) {
+		for (int index = 0; index < simpleMotions.length; index++) {
+			SimpleMotion motion = simpleMotions[index];
+			if (motion.frames == 0) {
+				continue;
+			}
+			//if (printTSV && print != null && motion.movement.displayName != "" && motion.movement.movementType != "Ground Pound") {
+			//	print.println("\\\\\t" + motion.movement.displayName);
+			//}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
@@ -188,16 +213,80 @@ public class VectorDisplayWindow {
 				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
 				double velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
-				rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
+				if (info[i][6] == 0) {
+					rowContents[6] = toPolarCoordinates(info[i][6], reduceAngle(motion.initialAngle));
+				}
+				else {
+					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
+				}
 				dataTableModel.addRow(rowContents);
 				if (i < motion.movement.inputs.size())
 					dataTableModel.setValueAt(motion.movement.inputs.get(i), row - 1, 2);
+
+				if (printTSV && print != null) {
+					currentPrintLine = "";
+					int tabs = 0;
+					if (i + 1 < motion.movement.TSVInputs.size()) {
+						currentPrintLine = motion.movement.TSVInputs.get(i + 1).toLowerCase();
+					}
+					else if (i == info.length - 1 && index + 1 < simpleMotions.length && simpleMotions[index + 1].movement.TSVInputs.size() > 0) {
+						currentPrintLine = simpleMotions[index + 1].movement.TSVInputs.get(0).toLowerCase();
+					}
+					if (currentPrintLine.contains("\t")) {
+						tabs = 1;
+					}
+					while (tabs < 2) {
+						currentPrintLine += '\t';
+						tabs++;
+					}
+					if (info[i][7] != SimpleMotion.NO_ANGLE) {
+						System.out.println(Math.toDegrees(info[i][7] - targetAngle + Math.PI / 2));
+						double theta = reduceAngle(info[i][7] - targetAngle + Math.PI / 2); //finding the holding angle if the camera is facing the target angle's direction
+						double r = info[i][8];
+						if (r == 1) {
+							if (Math.round(theta) * 10000 == Math.round(theta * 10000)) { //check if equal with 4 decimal places
+								currentPrintLine += String.format("ls($TA + %d)", Math.round(theta));
+							}
+							else {
+								currentPrintLine += String.format("ls($TA + %.4f)", theta);
+							}
+						}
+						else {
+							if (Math.round(theta) * 10000 == Math.round(theta * 10000)) {
+								currentPrintLine += String.format("ls(%.2f; $TA + %d)", r, Math.round(theta));
+							}
+							else {
+								currentPrintLine += String.format("ls(%.2f; $TA + %.4f)", r, theta);
+							}
+						}
+					}
+					
+					System.out.println("Current:" + currentPrintLine);
+					System.out.println("Last:" + lastPrintLine);
+					if (currentPrintLine.equals(lastPrintLine)) {
+						identicalLineCount++;
+					}
+					else {
+						String printLine = identicalLineCount + "\t" + lastPrintLine;
+						System.out.println(printLine);
+						print.println(printLine);
+						identicalLineCount = 1;
+					}
+					lastPrintLine = currentPrintLine;
+				}
 			}
 			x = info[info.length - 1][0];
 			y = info[info.length - 1][1];
 			z = info[info.length - 1][2];
 			System.out.println(motion.movement.displayName);
-			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);	
+			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
+		}
+
+		if (printTSV && print != null) {
+			if (identicalLineCount > 1) {
+				print.println(identicalLineCount + "\t" + lastPrintLine);
+			}
+			print.close();
 		}
 	
 		if (VectorCalculator.angleType == VectorCalculator.AngleType.TARGET) {
@@ -211,8 +300,8 @@ public class VectorDisplayWindow {
 		infoTableModel.setValueAt(shorten(x, 3), XF_ROW, 1);
 		infoTableModel.setValueAt(shorten(y, 3), YF_ROW, 1);
 		infoTableModel.setValueAt(shorten(z, 3), ZF_ROW, 1);
-		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - x0, 2) + Math.pow(z - z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
-		infoTableModel.setValueAt(shorten(y - y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - VectorCalculator.x0, 2) + Math.pow(z - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(y - VectorCalculator.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
 	}
 	

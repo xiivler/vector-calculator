@@ -1,8 +1,9 @@
 package vectorCalc;
 
+//calculates the behavior of vectorable movement if the joystick angle is consistent
 public class SimpleVector extends SimpleMotion {
 	
-	boolean optimalForwardAccel = true;
+	boolean optimalForwardAccel = true; //if true, the holding angle will be overridden to be 0 to until full speed is reached from accelerating forward
 	
 	double normalAngle;
 	
