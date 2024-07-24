@@ -147,7 +147,7 @@ public class VectorDisplayWindow {
 		//EXPORT SETTINGS
 
 		JPanel export = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JLabel scriptTypeLabel = new JLabel("Script Type: ", JLabel.RIGHT);
+		JLabel scriptTypeLabel = new JLabel("Script Format: ", JLabel.RIGHT);
 		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS", "TSV-TAS-2"});
 		scriptTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

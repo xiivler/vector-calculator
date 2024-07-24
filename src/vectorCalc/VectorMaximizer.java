@@ -139,7 +139,7 @@ public class VectorMaximizer {
 		movementNames = listPreparer.movementNames;
 		movementFrames = listPreparer.movementFrames;
 		
-		hasVariableRollCancel = movementNames.get(0).contains("Roll Cancel");
+		hasVariableRollCancel = movementNames.get(0).contains("RCV");
 
 		variableCapThrow1Index = movementNames.size();
 		variableMovement2Index = movementNames.size();
@@ -161,7 +161,7 @@ public class VectorMaximizer {
 						motionGroup2Index = i - 1;
 					}
 				}
-				else if (i - 3 >= 0 && movementNames.get(i - 3).contains("Throw") && !movementNames.get(i - 3).contains("Roll Cancel") && movementNames.get(i - 2).equals("Falling")) {
+				else if (i - 3 >= 0 && movementNames.get(i - 3).contains("Throw") && !movementNames.get(i - 3).contains("RCV") && movementNames.get(i - 2).equals("Falling")) {
 					if (i == movementNames.size() - 1) {
 						hasVariableCapThrow2 = true;
 						hasVariableMovement2Falling = true;
@@ -177,12 +177,12 @@ public class VectorMaximizer {
 				else if (i - 2 >= 0 && i == movementNames.size() - 1) {
 					System.out.println("i-3" + movementNames.get(i - 3));
 					System.out.println("i-2" + movementNames.get(i - 2));
-					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("Roll Cancel")) {
+					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !movementNames.get(i - 3).contains("Roll Cancel")) {
+					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -611,7 +611,7 @@ public class VectorMaximizer {
 
 		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
 		if (hasVariableRollCancel) {
-			if (movementNames.get(0).equals("Optimal Distance Roll Cancel")) {
+			if (movementNames.get(0).equals("Optimal Distance RCV")) {
 				String bestRCName = "";
 				int bestRCFrames = 0;
 				int bestRCVFrames = 0;

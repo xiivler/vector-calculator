@@ -108,7 +108,7 @@ public class MovementNameListPreparer {
 			movementNames.add("Flip Forward Vector");
 			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
 		}
-		else if (name.contains("Roll Cancel")) {
+		else if (name.contains("RCV")) {
 			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH) {
 				double difference = VectorCalculator.initialAngle - VectorCalculator.targetAngle;
 				while (difference >= 180) {

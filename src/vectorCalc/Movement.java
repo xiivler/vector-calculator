@@ -7,7 +7,7 @@ public class Movement {
 	public static boolean onMoon = false;
 
 	//no downthrow or fakethrow because these are equivalent to others
-	public static final String[] RC_TYPES = {"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Double Throw Roll Cancel", "Triple Throw Roll Cancel", "Spinthrow Roll Cancel"};
+	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};
 	
 	//boolean variableSpeed = true;
 	
@@ -426,65 +426,67 @@ public class Movement {
 			inputs1.add(Inputs.B);
 		}
 		
-		else if (movementType.contains("Roll Cancel")) {
+		else if (movementType.contains("RCV")) {
 			trueSpeedCap = 100;
 			recommendedInitialHorizontalSpeed = 29.94;
 			rotationalAccel = Math.toRadians(1.3);
 			maxRotationalSpeed = Math.toRadians(1.3 * 5);
-			if (movementType.equals("Motion Cap Throw Roll Cancel")) {
-				displayName = "MCCTRC";
+			if (movementType.equals("Motion Cap Throw RCV")) {
+				displayName = "MCCTRCV";
 				minFrames = 19;
 				inputs1.add(Inputs.MU);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Single Throw Roll Cancel")) {
-				displayName = "Single Throw RC";
+			else if (movementType.equals("Single Throw RCV")) {
+				displayName = "Single Throw RCV";
 				minFrames = 24;
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Upthrow Roll Cancel")) {
-				displayName = "UTRC";
+			else if (movementType.equals("Upthrow RCV")) {
+				displayName = "UTRCV";
 				minFrames = 28;
 				inputs1.add(Inputs.MUU);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Downthrow Roll Cancel")) {
-				displayName = "Downthrow RC";
+			else if (movementType.equals("Downthrow RCV")) {
+				displayName = "Downthrow RCV";
 				minFrames = 28;
 				inputs1.add(Inputs.MDD);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Double Throw Roll Cancel")) {
-				displayName = "Double Throw RC";
+			else if (movementType.equals("Double Throw RCV")) {
+				displayName = "Double Throw RCV";
 				minFrames = 34;
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Fakethrow Roll Cancel")) {
-				displayName = "Fakethrow RC";
+			else if (movementType.equals("Fakethrow RCV")) {
+				displayName = "Fakethrow RCV";
 				minFrames = 34;
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Triple Throw Roll Cancel")) {
-				displayName = "TTRC";
+			else if (movementType.equals("Triple Throw RCV")) {
+				displayName = "TTRCV";
 				minFrames = 44;
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Spinthrow Roll Cancel")) {
-				displayName = "STRC";
+			else if (movementType.equals("Spinthrow RCV")) {
+				displayName = "STRCV";
 				minFrames = 46;
 				inputs1.add(Inputs.MLL);
 				inputs2.add(Inputs.B);
 			}
+			/*
 			else if (movementType.equals("MCCT Roll Cancel Spinpound")) {
 				displayName = "MCCTRC to Spin";
 				minFrames = 21;
 				inputs1.add(Inputs.MU);
 				inputs2.add(Inputs.B);
 			}
+				*/
 			maxFrames = minFrames;
 		}
 
@@ -749,7 +751,7 @@ public class Movement {
 	*/
 	
 	public SimpleMotion getMotion(int frames, boolean rightVector, boolean complex) {
-		if (movementType.contains("Roll Cancel")) {
+		if (movementType.contains("RCV")) {
 			return new GroundedCapThrow(this, !rightVector);
 		}
 		else if (vectorAccel == 0)

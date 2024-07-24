@@ -46,11 +46,11 @@ public class VectorCalculator extends JPanel {
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
 	
 	//category for falling for height calculator?
-	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancels", "Rolls", "Object-Dependent Motion"};
+	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Optimal Distance Motion"},
 		{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
-		{"Motion Cap Throw Roll Cancel", "Single Throw Roll Cancel", "Upthrow Roll Cancel", "Downthrow Roll Cancel", "Double Throw Roll Cancel", "Spinthrow Roll Cancel", "Triple Throw Roll Cancel", "Fakethrow Roll Cancel", "Optimal Distance Roll Cancel"},
+		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
@@ -89,7 +89,7 @@ public class VectorCalculator extends JPanel {
 	static double initialAngle = 0;
 	static double targetAngle = 0;
 	static AngleType angleType = AngleType.TARGET;
-	static String initialMovementName = "Upthrow Roll Cancel";
+	static String initialMovementName = "Upthrow RCV";
 	static boolean durationFrames = true;
 	static int initialFrames = 60;
 	static double initialDispY = 0;
@@ -282,7 +282,7 @@ public class VectorCalculator extends JPanel {
 					framesJump = 10;
 					initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
 					VectorMaximizer maximizerTJ = calculate();
-					initialMovementName = "Optimal Distance Roll Cancel";
+					initialMovementName = "Optimal Distance RCV";
 					initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
 					VectorMaximizer maximizerRC = calculate();
 					if (maximizerTJ != null && maximizerRC != null) {
@@ -470,7 +470,7 @@ public class VectorCalculator extends JPanel {
 							genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
 							initialHorizontalSpeed = 0;
 						}
-						if (initialMovementName.contains("Roll Cancel")) {
+						if (initialMovementName.contains("RCV")) {
 							setAngleType(AngleType.BOTH);
 						}
 						else if (angleType == AngleType.BOTH) { //switch back to just Initial or Target angle
