@@ -440,7 +440,7 @@ public class Movement {
 			else if (movementType.equals("Single Throw Roll Cancel")) {
 				displayName = "Single Throw RC";
 				minFrames = 24;
-				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Upthrow Roll Cancel")) {
@@ -458,19 +458,19 @@ public class Movement {
 			else if (movementType.equals("Double Throw Roll Cancel")) {
 				displayName = "Double Throw RC";
 				minFrames = 34;
-				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Fakethrow Roll Cancel")) {
 				displayName = "Fakethrow RC";
 				minFrames = 34;
-				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Triple Throw Roll Cancel")) {
 				displayName = "TTRC";
 				minFrames = 44;
-				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Spinthrow Roll Cancel")) {

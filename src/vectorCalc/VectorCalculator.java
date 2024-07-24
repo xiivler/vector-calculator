@@ -69,8 +69,9 @@ public class VectorCalculator extends JPanel {
 	static final int VECTOR_DIRECTION_ROW = 10;
 	static final int GRAVITY_ROW = 11;
 	static final int HYPEROPTIMIZE_ROW = 12;
-	static final int CAMERA_TYPE_ROW = 13;
-	static final int CAMERA_ROW = 14;
+	static final int AXIS_ORDER_ROW = 13;
+	static final int CAMERA_TYPE_ROW = 14;
+	static final int CAMERA_ROW = 15;
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
@@ -97,6 +98,7 @@ public class VectorCalculator extends JPanel {
 	static boolean rightVector = false;
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
+	static boolean xAxisZeroDegrees = true;
 	static CameraType cameraType = CameraType.TARGET;
 	static double customCameraAngle = 0;
 	
@@ -135,6 +137,7 @@ public class VectorCalculator extends JPanel {
 		{"Initial Vector Direction", "Left"},
 		{"Gravity", "Regular"},
 		{"Hyperoptimize Cap Throws", "True"},
+		{"0 Degree Axis", "X"},
 		{"Camera Angle", "Target Angle"}};
 	
 	static JFrame f = new JFrame("Configure Movement");
@@ -378,6 +381,11 @@ public class VectorCalculator extends JPanel {
                     JComboBox<String> choice = new JComboBox<String>(options);
                     return new DefaultCellEditor(choice);
                 }
+				else if (modelColumn == 1 && row == AXIS_ORDER_ROW) {
+					String[] options = {"X", "Z"};
+                    JComboBox<String> choice = new JComboBox<String>(options);
+                    return new DefaultCellEditor(choice);
+				}
                 else
                     return super.getCellEditor(row, column);
             }
@@ -636,6 +644,9 @@ public class VectorCalculator extends JPanel {
 					}
 					else if (row == HYPEROPTIMIZE_ROW) {
 						hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("True");
+					}
+					else if (row == AXIS_ORDER_ROW) {
+						xAxisZeroDegrees = genPropertiesTable.getValueAt(row, 1).equals("X");
 					}
 					else if (row == CAMERA_TYPE_ROW) {
 						String choice = (String) genPropertiesTable.getValueAt(row, 1);
