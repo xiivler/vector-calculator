@@ -168,12 +168,14 @@ public class VectorMaximizer {
 					}
 				}
 				else if (i - 2 >= 0 && i == movementNames.size() - 1) {
-					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0)) {
+					System.out.println("i-3" + movementNames.get(i - 3));
+					System.out.println("i-2" + movementNames.get(i - 2));
+					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("Roll Cancel")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0) {
+					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !movementNames.get(i - 3).contains("Roll Cancel")) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -657,7 +659,12 @@ public class VectorMaximizer {
 				if (i == 1) {
 					increment = unadjustedTargetAngle * 2 / maxCount;
 				}
-				rcFinalAngleDiff += increment;
+				if (rightVector) {
+					rcFinalAngleDiff -= increment;
+				}
+				else {
+					rcFinalAngleDiff += increment;
+				}
 			}
 			rcFinalAngleDiff = bestRCFinalAngleDiff;
 			//maximizeOnce();
@@ -677,7 +684,12 @@ public class VectorMaximizer {
 
 				//System.out.println("RC Cap Throw Angle Change: " + Math.toDegrees(unadjustedTargetAngle));
 
-				rcFinalAngleDiff += unadjustedTargetAngle;
+				if (rightVector) {
+					rcFinalAngleDiff -= unadjustedTargetAngle;
+				}
+				else {
+					rcFinalAngleDiff += unadjustedTargetAngle;
+				}
 			}
 		}
 		else {

@@ -46,8 +46,9 @@ public class Movement {
 	String movementType;
 	String displayName;
 	
-	ArrayList<String> inputs = new ArrayList<String>();
-	ArrayList<String> TSVInputs = inputs;
+	ArrayList<Integer> inputs1 = new ArrayList<Integer>();
+	ArrayList<Integer> inputs2 = new ArrayList<Integer>();
+	//ArrayList<String> TSVInputs = inputs;
 	
 	boolean variableJumpFrames = false;
 	boolean variableInitialHorizontalSpeed = true;
@@ -88,7 +89,7 @@ public class Movement {
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
 			for (int i = 0; i < framesJump; i++)
-				inputs.add("B");
+				inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Double Jump")) {
@@ -101,7 +102,7 @@ public class Movement {
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
 			for (int i = 0; i < framesJump; i++)
-				inputs.add("B");
+				inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Triple Jump")) {
@@ -113,7 +114,7 @@ public class Movement {
 			moonGravity = .3;
 			variableJumpFrames = true;
 			for (int i = 0; i < framesJump; i++)
-				inputs.add("B");
+				inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Cap Return Jump")) {
@@ -123,7 +124,7 @@ public class Movement {
 			moonGravity = .6;
 			variableJumpFrames = true;
 			for (int i = 0; i < framesJump; i++)
-				inputs.add("B");
+				inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Ground Pound Jump")) {
@@ -134,7 +135,7 @@ public class Movement {
 				initialVerticalSpeed = 40;
 			initialHorizontalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Crouch")) {
@@ -143,7 +144,7 @@ public class Movement {
 			vectorAccel = 0;
 			defaultSpeedCap = 3.5;
 			trueSpeedCap = 100;
-			inputs.add("ZL");
+			inputs1.add(Inputs.ZL);
 		}
 		
 		else if (movementType.equals("Backflip")) {
@@ -156,7 +157,7 @@ public class Movement {
 			trueSpeedCap = 9;
 			gravity = 1;
 			moonGravity = .45;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 	
 		else if (movementType.equals("Vault")) {
@@ -165,8 +166,8 @@ public class Movement {
 			else
 				initialVerticalSpeed = 32;
 			gravity = 1;
-			inputs.add("Y");
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
+			inputs1.add(Inputs.Y);
 		}
 		
 		else if (movementType.equals("Sideflip")) {
@@ -178,7 +179,7 @@ public class Movement {
 			trueSpeedCap = 9;
 			gravity = 1;
 			moonGravity = .45;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Long Jump")) {
@@ -194,9 +195,8 @@ public class Movement {
 			trueSpeedCap = 23;
 			gravity = .48;
 			moonGravity = .2;
-			inputs.add("ZL, B");
-			TSVInputs = new ArrayList<String>();
-			TSVInputs.add("ZL\tB");
+			inputs1.add(Inputs.ZL);
+			inputs2.add(Inputs.B);
 		}
 		
 		//need to change rolls to falling to vector them, but falling may have different gravity
@@ -212,7 +212,7 @@ public class Movement {
 			defaultSpeedCap = 30;
 			trueSpeedCap = 30;
 			frameOffset = 1;
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
 		}
 		
 		//5% speed decay from the frame of crouching, which can be separated
@@ -230,9 +230,8 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 20;
 			moonGravity = 1;
 			frameOffset = 1;
-			inputs.add("ZL, Y");
-			TSVInputs = new ArrayList<String>();
-			TSVInputs.add("ZL\tY");
+			inputs1.add(Inputs.ZL);
+			inputs2.add(Inputs.Y);
 		}
 		
 		//technically there are 4 varieties, at speeds 20, 23, and 26
@@ -249,9 +248,8 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 29;
 			moonGravity = 1;
 			frameOffset = 1;
-			inputs.add("ZL, shake");
-			TSVInputs = new ArrayList<String>();
-			TSVInputs.add("ZL\tM");
+			inputs1.add(Inputs.ZL);
+			inputs2.add(Inputs.M);
 		}
 		
 		else if (movementType.equals("Roll Vector")) {
@@ -278,7 +276,7 @@ public class Movement {
 			trueSpeedCap = initialHorizontalSpeed;
 			gravity = 2;
 			moonGravity = .8;
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
 		}
 		
 		else if (movementType.equals("Spin Jump")) {
@@ -287,7 +285,7 @@ public class Movement {
 			trueSpeedCap = 8;
 			gravity = .4;
 			moonGravity = .18;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Spinpound")) {
@@ -301,7 +299,7 @@ public class Movement {
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
 			fallSpeedCap = -45;
-			inputs.add("ZL"); //technically need to loop for how long it is
+			inputs1.add(Inputs.ZL); //technically need to loop for how long it is
 		}
 		
 		else if (movementType.equals("Ground Pound")) {
@@ -317,7 +315,7 @@ public class Movement {
 			trueSpeedCap = 0;
 			fallSpeedCap = -45;
 			frameOffset = 25;
-			inputs.add("ZL");
+			inputs1.add(Inputs.ZL);
 		}
 		
 		//will need wall slide beforehand
@@ -333,7 +331,7 @@ public class Movement {
 			trueSpeedCap = 8.6;
 			gravity = .95;
 			moonGravity = .3;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Flip Forward")) {
@@ -350,7 +348,7 @@ public class Movement {
 			gravity = .95;
 			moonGravity = .3;
 			vectorAccel = 0;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 
 		else if (movementType.equals("Flip Forward Vector")) {
@@ -366,8 +364,8 @@ public class Movement {
 		else if (movementType.equals("Cap Bounce")) {
 			initialVerticalSpeed = 25;
 			gravity = 1;
-			inputs.add("Y");
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
+			inputs1.add(Inputs.Y);
 		}
 		
 		else if (movementType.equals("Dive Cap Bounce")) {
@@ -376,8 +374,8 @@ public class Movement {
 			trueSpeedCap = 16;
 			gravity = 1;
 			moonGravity = .6;
-			inputs.add("Y");
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
+			inputs1.add(Inputs.Y);
 		}
 		
 		else if (movementType.equals("Ground Pound Cap Bounce")) {
@@ -388,15 +386,15 @@ public class Movement {
 				initialVerticalSpeed = 30;
 			initialHorizontalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
-			inputs.add("Y");
-			inputs.add("Y");
+			inputs1.add(Inputs.Y);
+			inputs1.add(Inputs.Y);
 		}
 		
 		else if (movementType.equals("Large NPC Bounce")) {
 			initialVerticalSpeed = 25;
 			gravity = 1;
-			inputs.add("");
-			inputs.add("B");
+			inputs1.add(Inputs.NONE);
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Small NPC Bounce")) {
@@ -425,7 +423,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = 26;
 			gravity = 1;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.contains("Roll Cancel")) {
@@ -433,60 +431,59 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 29.94;
 			rotationalAccel = Math.toRadians(1.3);
 			maxRotationalSpeed = Math.toRadians(1.3 * 5);
-			TSVInputs = new ArrayList<String>();
 			if (movementType.equals("Motion Cap Throw Roll Cancel")) {
 				displayName = "MCCTRC";
 				minFrames = 19;
-				inputs.add("B, Shake");
-				TSVInputs.add("M-U\tB");
+				inputs1.add(Inputs.MU);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Single Throw Roll Cancel")) {
 				displayName = "Single Throw RC";
 				minFrames = 24;
-				inputs.add("B, Y");
-				TSVInputs.add("Y\tB");
+				inputs1.add(Inputs.Y);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Upthrow Roll Cancel")) {
 				displayName = "UTRC";
 				minFrames = 28;
-				inputs.add("B, Up shake");
-				TSVInputs.add("M-UU\tB");
+				inputs1.add(Inputs.MUU);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Downthrow Roll Cancel")) {
 				displayName = "Downthrow RC";
 				minFrames = 28;
-				inputs.add("B, Down shake");
-				TSVInputs.add("M-DD\tB");
+				inputs1.add(Inputs.MDD);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Double Throw Roll Cancel")) {
 				displayName = "Double Throw RC";
 				minFrames = 34;
-				inputs.add("B, Y");
-				TSVInputs.add("Y\tB");
+				inputs1.add(Inputs.Y);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Fakethrow Roll Cancel")) {
 				displayName = "Fakethrow RC";
 				minFrames = 34;
-				inputs.add("B, Y");
-				TSVInputs.add("Y\tB");
+				inputs1.add(Inputs.Y);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Triple Throw Roll Cancel")) {
 				displayName = "TTRC";
 				minFrames = 44;
-				inputs.add("B, Y");
-				TSVInputs.add("Y\tB");
+				inputs1.add(Inputs.Y);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("Spinthrow Roll Cancel")) {
 				displayName = "STRC";
 				minFrames = 46;
-				inputs.add("B, Side shake");
-				TSVInputs.add("M-LL\tB");
+				inputs1.add(Inputs.MLL);
+				inputs2.add(Inputs.B);
 			}
 			else if (movementType.equals("MCCT Roll Cancel Spinpound")) {
 				displayName = "MCCTRC to Spin";
 				minFrames = 21;
-				inputs.add("B, Shake");
-				TSVInputs.add("M-U\tB");
+				inputs1.add(Inputs.MU);
+				inputs2.add(Inputs.B);
 			}
 			maxFrames = minFrames;
 		}
@@ -494,9 +491,7 @@ public class Movement {
 		//only lasts 24 frames, should be split into falling after this
 		//add min frames to this and rainbow spin?
 		else if (movementType.contains("Throw")) {
-			inputs.add("Shake");
-			TSVInputs = new ArrayList<String>();
-			TSVInputs.add("M-U");
+			inputs1.add(Inputs.MU);
 			if (movementType.equals("Motion Cap Throw"))
 				minFrames = 8;
 			else if (movementType.equals("Triple Throw"))
@@ -505,21 +500,17 @@ public class Movement {
 				displayName = "Homing MCCT";
 				minFrames = 36; //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
 				for (int i = 0; i < 19; i++) {
-					inputs.add("");
-					TSVInputs.add("");
+					inputs1.add(Inputs.NONE);
 				}
-				inputs.add("Shake");
-				TSVInputs.add("M-D");
+				inputs1.add(Inputs.MD);
 			}
 			else if (movementType.equals("Homing Triple Throw")) {
 				displayName = "Homing TT";
 				minFrames = 23;
 				for (int i = 0; i < 6; i++) {
-					inputs.add("");
-					TSVInputs.add("");
+					inputs1.add(Inputs.NONE);
 				}
-				inputs.add("Shake");
-				TSVInputs.add("M-D");
+				inputs1.add(Inputs.MD);
 			}
 			initialVerticalSpeed = 6;
 			defaultSpeedCap = 7;
@@ -536,7 +527,7 @@ public class Movement {
 			trueSpeedCap = 7;
 			gravity = .8;
 			moonGravity = .6;
-			inputs.add("B");
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Falling")) {
@@ -560,7 +551,7 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 0;
 			//one frame of 0 motion beforehand
 			initialHorizontalSpeed = 5;
-			inputs.add("ZL");
+			inputs1.add(Inputs.ZL);
 		}
 		
 		else if (movementType.equals("Bouncy Object Bounce")) {
@@ -618,7 +609,7 @@ public class Movement {
 			moonGravity = 1.5;
 			trueSpeedCap = 0;
 			fallSpeedCap = -30;
-			inputs.add("ZL"); //technically more than one of these
+			inputs1.add(Inputs.ZL); //technically more than one of these
 		}
 		
 		else if (movementType.equals("Swinging Jump")) {
@@ -631,8 +622,8 @@ public class Movement {
 			gravity = 1;
 			defaultSpeedCap = 15;
 			trueSpeedCap = 15;
-			inputs.add("");
-			inputs.add("B");
+			inputs1.add(Inputs.NONE);
+			inputs1.add(Inputs.B);
 		}
 		
 		else if (movementType.equals("Swinging Jump Vector")) {
@@ -652,9 +643,7 @@ public class Movement {
 			gravity = 0;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
-			inputs.add("Shake");
-			TSVInputs = new ArrayList<String>();
-			TSVInputs.add("M");
+			inputs1.add(Inputs.M);
 		}
 		
 		//could do custom angles in the future

@@ -109,8 +109,17 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
 		}
 		else if (name.contains("Roll Cancel")) {
-			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH && Math.abs(VectorCalculator.initialAngle - VectorCalculator.targetAngle) > 65) {
-				return "Cannot calculate RCV with angle difference greater than 65°";
+			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH) {
+				double difference = VectorCalculator.initialAngle - VectorCalculator.targetAngle;
+				while (difference >= 180) {
+					difference -= 360;
+				}
+				while (difference < -180) {
+					difference += 360;
+				}
+				if (Math.abs(difference) > 65) {
+					return "Cannot calculate RCV with angle difference greater than 65°";
+				}
 			}
 			movementNames.add(name);
 			int rcFrames = (new Movement(name)).minFrames;

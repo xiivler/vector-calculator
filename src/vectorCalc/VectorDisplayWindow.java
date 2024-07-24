@@ -2,16 +2,38 @@ package vectorCalc;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+
+import vectorCalc.VectorCalculator.CameraType;
 
 public class VectorDisplayWindow {
 
@@ -36,11 +58,33 @@ public class VectorDisplayWindow {
 	static final int HORIZONTAL_DISPLACEMENT_ROW = 4;
 	static final int VERTICAL_DISPLACEMENT_ROW = 5;
 	static final int TOTAL_FRAMES_ROW = 6;
+
+	static final int NX_TAS = 0;
+	static final int TSV_TAS = 1;
+	static final int TSV_TAS_2 = 2;
 	
 	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
+
+	static ArrayList<Inputs> inputs;
+
+	static JTextField scriptPathField;
+	static String scriptPath = "";
+	static File scriptFile = new File(scriptPath);
+
+	static JComboBox scriptTypeComboBox;
+	static JButton create;
+	static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+
+	static SimpleMotion[] simpleMotions;
+	static double initialAngle;
+	static double targetAngle;
+
+	static boolean shiftMotion = false; //for newer mods where motion inputs have to be 1f earlier
+
+	static double cameraAngle;
 	
 	static {
 		
@@ -98,13 +142,92 @@ public class VectorDisplayWindow {
 		//dataTable.getColumnModel().getColumn(7).setPreferredWidth(160);
 		
 		JScrollPane dataScrollPane = new JScrollPane(dataTable);
+
+		//EXPORT SETTINGS
+
+		JPanel export = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JLabel scriptTypeLabel = new JLabel("Script Type: ", JLabel.RIGHT);
+		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS", "TSV-TAS-2"});
+		scriptTypeComboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS_2) {
+					setShiftMotion(true);
+				}
+				else {
+					setShiftMotion(false);
+				}
+			}
+		});
+		JLabel exportLabel = new JLabel("Script Path: ", JLabel.RIGHT);
+		JButton browse = new JButton("Browse");
+		browse.setActionCommand("browse");
+		create = new JButton("Create");
+		create.setActionCommand("export");
+		create.setEnabled(false);
+		JButton copy = new JButton("Copy to Clipboard");
+		copy.setActionCommand("clipboard");
+		scriptPathField = new JTextField(20);
+		scriptPathField.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				validatePath();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				validatePath();
+			}
+
+			public void insertUpdate(DocumentEvent e) {
+				validatePath();
+			}
+		});
+
+		export.add(scriptTypeLabel);
+		export.add(scriptTypeComboBox);
+		export.add(exportLabel);
+		export.add(scriptPathField);
+		export.add(browse);
+		export.add(create);
+		export.add(copy);
+
+		ButtonListener buttonListen = new ButtonListener();
+		browse.addActionListener(buttonListen);
+		create.addActionListener(buttonListen);
+		copy.addActionListener(buttonListen);
 		
 		frame = new JFrame("Vector Calculations");
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
+		frame.add(export, BorderLayout.SOUTH);
 		frame.setSize(1000, 600);
 	}
 	
+	private static void validatePath() {
+		scriptPath = scriptPathField.getText();
+		scriptFile = new File(scriptPath);
+		if (!scriptFile.isDirectory() && scriptFile.getParentFile() != null && scriptFile.getParentFile().isDirectory()) {
+			System.out.println("Valid path");
+			Paths.get(scriptPath);
+			create.setEnabled(true);
+			if (scriptFile.exists()) {
+				create.setText("Append");
+			}
+			else {
+				create.setText("Create");
+			}
+		}
+		else {
+			create.setEnabled(false);
+			System.out.println("Invalid path");
+		}
+	}
+
+	private static void setShiftMotion(boolean b) {
+		if (shiftMotion != b) {
+			shiftMotion = b;
+			generateData(simpleMotions, initialAngle, targetAngle);
+		}
+	}
+
 	private static String toCoordinates(double x, double y, double z) {
 		return String.format("(%.3f, %.3f, %.3f)", x, y, z);
 	}
@@ -121,7 +244,6 @@ public class VectorDisplayWindow {
 		if (theta == SimpleMotion.NO_ANGLE) {
 			return "";
 		}
-		theta = reduceAngle(theta);
 		if (r == 1) {
 			return String.format("(1; %.4f)", theta);
 		}
@@ -158,36 +280,36 @@ public class VectorDisplayWindow {
 	}
 	
 	public static void generateData(SimpleMotion[] simpleMotions, double initialAngle, double targetAngle) {
-		if (printTSV) {
-			try {
-            	File destination = new File("vector.tsv");
-            	print = new PrintWriter(destination);
-				print.println("\\\\\tOptimized using Vector Calculator");
-				print.println("\\\\\tCopy and paste this into your script");
-				print.println("\\\\\tAdjust the below variable as needed");
-				print.println("$TA = 0");
-				currentPrintLine = "";
-				if (simpleMotions[0].movement.TSVInputs.size() > 0) {
-					currentPrintLine = simpleMotions[0].movement.TSVInputs.get(0).toLowerCase();
-				}
-				lastPrintLine = currentPrintLine;
-        	}
-			catch (FileNotFoundException e) {}
+		VectorDisplayWindow.simpleMotions = simpleMotions;
+		VectorDisplayWindow.initialAngle = initialAngle;
+		VectorDisplayWindow.targetAngle = targetAngle;
+		if (VectorCalculator.cameraType == CameraType.INITIAL) {
+			cameraAngle = initialAngle;
+		}
+		else if (VectorCalculator.cameraType == CameraType.TARGET) {
+			cameraAngle = targetAngle;
+		}
+		else if (VectorCalculator.cameraType == CameraType.ABSOLUTE) {
+			cameraAngle = Math.PI / 2;
+		}
+		else {
+			cameraAngle = Math.toRadians(VectorCalculator.customCameraAngle);
 		}
 		
 		v0 = VectorCalculator.initialHorizontalSpeed;
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.x0, VectorCalculator.y0, VectorCalculator.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, Math.toDegrees(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.z0, VectorCalculator.y0, VectorCalculator.x0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, Math.toDegrees(initialAngle))});
 		
-		double x = VectorCalculator.x0;
+		double x = VectorCalculator.z0;
 		double y = VectorCalculator.y0;
-		double z = VectorCalculator.z0;
+		double z = VectorCalculator.x0;
 		
 		double[][] info = null;
-		
-		int identicalLineCount = 1;
+
+		inputs = new ArrayList<Inputs>();
+		inputs.add(new Inputs());
 
 		int row = 1;
 		for (int index = 0; index < simpleMotions.length; index++) {
@@ -195,9 +317,6 @@ public class VectorDisplayWindow {
 			if (motion.frames == 0) {
 				continue;
 			}
-			//if (printTSV && print != null && motion.movement.displayName != "" && motion.movement.movementType != "Ground Pound") {
-			//	print.println("\\\\\t" + motion.movement.displayName);
-			//}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
@@ -205,13 +324,18 @@ public class VectorDisplayWindow {
 			//	System.out.println(Arrays.toString(ds));
 			int startRow = row;
 			for (int i = 0; i < info.length; i++, row++) {
+				double theta = SimpleMotion.NO_ANGLE;
+				if (info[i][7] != SimpleMotion.NO_ANGLE) {
+					theta = reduceAngle(info[i][7] - cameraAngle + Math.PI / 2);
+				}
+
 				Object[] rowContents = new Object[7];
 				rowContents[0] = row;
 				rowContents[1] = "";
 				rowContents[2] = "";
-				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], info[i][7]);
-				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
-				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
+				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], theta);
+				rowContents[4] = toCoordinates(info[i][2], info[i][1], info[i][0]);
+				rowContents[5] = toVelocityVector(info[i][5], info[i][4], info[i][3]);
 				double velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
 				if (info[i][6] == 0) {
 					rowContents[6] = toPolarCoordinates(info[i][6], reduceAngle(motion.initialAngle));
@@ -220,59 +344,38 @@ public class VectorDisplayWindow {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
 				dataTableModel.addRow(rowContents);
-				if (i < motion.movement.inputs.size())
-					dataTableModel.setValueAt(motion.movement.inputs.get(i), row - 1, 2);
 
-				if (printTSV && print != null) {
-					currentPrintLine = "";
-					int tabs = 0;
-					if (i + 1 < motion.movement.TSVInputs.size()) {
-						currentPrintLine = motion.movement.TSVInputs.get(i + 1).toLowerCase();
+				//configure the Inputs array
+				inputs.add(new Inputs(info[i][8], theta));
+				if (i < motion.movement.inputs1.size()) {
+					int offset = -1;
+					int input1 = motion.movement.inputs1.get(i);
+					if (input1 >= Inputs.M && shiftMotion) {
+						offset = -2;
 					}
-					else if (i == info.length - 1 && index + 1 < simpleMotions.length && simpleMotions[index + 1].movement.TSVInputs.size() > 0) {
-						currentPrintLine = simpleMotions[index + 1].movement.TSVInputs.get(0).toLowerCase();
-					}
-					if (currentPrintLine.contains("\t")) {
-						tabs = 1;
-					}
-					while (tabs < 2) {
-						currentPrintLine += '\t';
-						tabs++;
-					}
-					if (info[i][7] != SimpleMotion.NO_ANGLE) {
-						System.out.println(Math.toDegrees(info[i][7] - targetAngle + Math.PI / 2));
-						double theta = reduceAngle(info[i][7] - targetAngle + Math.PI / 2); //finding the holding angle if the camera is facing the target angle's direction
-						double r = info[i][8];
-						if (r == 1) {
-							if (Math.round(theta) * 10000 == Math.round(theta * 10000)) { //check if equal with 4 decimal places
-								currentPrintLine += String.format("ls($TA + %d)", Math.round(theta));
-							}
-							else {
-								currentPrintLine += String.format("ls($TA + %.4f)", theta);
-							}
+					if (row + offset >= 0) {
+						if (inputs.get(row + offset).input1 == Inputs.NONE) {
+							inputs.get(row + offset).input1 = input1;
 						}
 						else {
-							if (Math.round(theta) * 10000 == Math.round(theta * 10000)) {
-								currentPrintLine += String.format("ls(%.2f; $TA + %d)", r, Math.round(theta));
-							}
-							else {
-								currentPrintLine += String.format("ls(%.2f; $TA + %.4f)", r, theta);
-							}
+							inputs.get(row + offset).input2 = input1;
 						}
 					}
-					
-					System.out.println("Current:" + currentPrintLine);
-					System.out.println("Last:" + lastPrintLine);
-					if (currentPrintLine.equals(lastPrintLine)) {
-						identicalLineCount++;
+				}
+				if (i < motion.movement.inputs2.size()) {
+					int offset = -1;
+					int input2 = motion.movement.inputs2.get(i);
+					if (input2 >= Inputs.M && shiftMotion) {
+						offset = -2;
 					}
-					else {
-						String printLine = identicalLineCount + "\t" + lastPrintLine;
-						System.out.println(printLine);
-						print.println(printLine);
-						identicalLineCount = 1;
+					if (row + offset >= 0) {
+						if (inputs.get(row + offset).input1 == Inputs.NONE) {
+							inputs.get(row + offset).input1 = input2;
+						}
+						else {
+							inputs.get(row + offset).input2 = input2;
+						}
 					}
-					lastPrintLine = currentPrintLine;
 				}
 			}
 			x = info[info.length - 1][0];
@@ -282,11 +385,18 @@ public class VectorDisplayWindow {
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
 
-		if (printTSV && print != null) {
-			if (identicalLineCount > 1) {
-				print.println(identicalLineCount + "\t" + lastPrintLine);
+		//display the inputs
+		for (int i = 0; i < row; i++) {
+			int input1 = inputs.get(i).input1;
+			int input2 = inputs.get(i).input2;
+			String displayString = "";
+			if (input1 != Inputs.NONE) {
+				displayString += Inputs.displayInputs[input1];
+				if (input2 != Inputs.NONE) {
+					displayString += ", " + Inputs.displayInputs[input2];
+				}
 			}
-			print.close();
+			dataTableModel.setValueAt(displayString, i, 2);
 		}
 	
 		if (VectorCalculator.angleType == VectorCalculator.AngleType.TARGET) {
@@ -297,9 +407,9 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Target Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(Math.toDegrees(targetAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
-		infoTableModel.setValueAt(shorten(x, 3), XF_ROW, 1);
+		infoTableModel.setValueAt(shorten(z, 3), XF_ROW, 1);
 		infoTableModel.setValueAt(shorten(y, 3), YF_ROW, 1);
-		infoTableModel.setValueAt(shorten(z, 3), ZF_ROW, 1);
+		infoTableModel.setValueAt(shorten(x, 3), ZF_ROW, 1);
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - VectorCalculator.x0, 2) + Math.pow(z - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - VectorCalculator.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
@@ -307,5 +417,144 @@ public class VectorDisplayWindow {
 	
 	public static void display() {
 		frame.setVisible(true);
+	}
+
+	public static void generateTSVTAS(boolean toClipboard) {
+		
+		String clipboardString = "";
+
+		if (!toClipboard) {
+			try {
+				print = new PrintWriter(new FileOutputStream(scriptFile, true));
+				print.println("\\\\\tOptimized using Vector Calculator");
+			}
+			catch (FileNotFoundException e) {
+				return;
+			}
+		}
+
+		Inputs currentInputs = inputs.get(0);
+		Inputs oldInputs = currentInputs;
+		int identicalLineCount = 1;
+		
+		for (int i = 1; i < inputs.size(); i++) {
+			currentInputs = inputs.get(i);
+			if (currentInputs.equals(oldInputs)) {
+				identicalLineCount++;
+			}
+			else {
+				String line = identicalLineCount + "\t" + oldInputs.toTSV();
+				if (toClipboard) {
+					clipboardString += line + "\n";
+				}
+				else {
+					print.println(line);
+				}
+				identicalLineCount = 1;
+				oldInputs = currentInputs;
+			}
+		}
+		String line = identicalLineCount + "\t" + currentInputs.toTSV();
+		if (toClipboard) {
+			clipboardString += line;
+			clipboard.setContents(new StringSelection(clipboardString), null);
+		}
+		else {
+			print.println(line);
+			print.close();
+		}
+	}
+
+	public static void generateNXTAS(boolean toClipboard) {
+		
+		int startLine = 0;
+
+		String clipboardString = "";
+
+		if (!toClipboard) {
+			try {
+				if (scriptFile.exists()) {
+					Scanner read = new Scanner(scriptFile);
+					String line = "";
+					while (read.hasNextLine()) {
+						line = read.nextLine();
+					}
+					Scanner readToken = new Scanner(line);
+					if (readToken.hasNextInt()) {
+						startLine = readToken.nextInt() + 1;
+					}
+					read.close();
+					readToken.close();
+				}
+				print = new PrintWriter(new FileOutputStream(scriptFile, true));
+			}
+			catch (FileNotFoundException e) {
+				return;
+			}
+		}
+		
+		for (int i = 0; i < inputs.size(); i++) {
+			String line = (i + startLine) + " " + inputs.get(i).toNXTAS();
+			if (toClipboard) {
+				clipboardString += line;
+				if (i < inputs.size() - 1) {
+					clipboardString += "\n";
+				}
+			}
+			else {
+				print.println(line);
+			}
+		}
+		if (toClipboard) {
+			clipboard.setContents(new StringSelection(clipboardString), null);
+		}
+		else {
+			print.close();
+		}
+	}
+
+	static class ButtonListener implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			String com = evt.getActionCommand();
+
+			if (com.equals("browse")) {
+				JFileChooser j = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+				j.setDialogTitle("Choose Script Location");
+				
+				if (scriptPathField.getText().length() > 0)
+					j.setSelectedFile(new File(scriptPathField.getText()));
+
+				j.setDialogType(JFileChooser.SAVE_DIALOG);
+				if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
+					scriptPathField.setText(j.getSelectedFile().getAbsolutePath());
+				}
+			}
+			else if (com.equals("export")) {
+				System.out.println("Export file");
+				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS) {
+					generateTSVTAS(false);
+				}
+				else if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS_2) {
+					generateTSVTAS(false);
+				}
+				else {
+					generateNXTAS(false);
+				}
+			}
+			else if (com.equals("clipboard")) {
+				System.out.println("Copy to clipboard");
+				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS) {
+					generateTSVTAS(true);
+				}
+				else if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS_2) {
+					generateTSVTAS(true);
+				}
+				else {
+					generateNXTAS(true);
+				}
+			}
+
+			validatePath();
+		}
 	}
 }

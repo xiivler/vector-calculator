@@ -69,9 +69,15 @@ public class VectorCalculator extends JPanel {
 	static final int VECTOR_DIRECTION_ROW = 10;
 	static final int GRAVITY_ROW = 11;
 	static final int HYPEROPTIMIZE_ROW = 12;
+	static final int CAMERA_TYPE_ROW = 13;
+	static final int CAMERA_ROW = 14;
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
+	}
+
+	static enum CameraType {
+		INITIAL, TARGET, ABSOLUTE, CUSTOM
 	}
 
 	static final int LOCK_NONE = 0;
@@ -91,6 +97,8 @@ public class VectorCalculator extends JPanel {
 	static boolean rightVector = false;
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
+	static CameraType cameraType = CameraType.TARGET;
+	static double customCameraAngle = 0;
 	
 	static Movement initialMovement = new Movement(initialMovementName);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, initialFrames);
@@ -107,7 +115,7 @@ public class VectorCalculator extends JPanel {
 	static String[] movementRows = {"Motion Cap Throw", "8"};
 	
 	static JTable genPropertiesTable;
-	static TableModel genPropertiesModel;
+	static DefaultTableModel genPropertiesModel;
 	static JumpDialogWindow dialogWindow = new JumpDialogWindow("Choose Initial Movement", initialMovementCategories, initialMovementNames);
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
 	static JTable movementTable;
@@ -126,7 +134,8 @@ public class VectorCalculator extends JPanel {
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
 		{"Gravity", "Regular"},
-		{"Hyperoptimize Cap Throws", "True"}};
+		{"Hyperoptimize Cap Throws", "True"},
+		{"Camera Angle", "Target Angle"}};
 	
 	static JFrame f = new JFrame("Configure Movement");
 	
@@ -198,6 +207,23 @@ public class VectorCalculator extends JPanel {
 		System.out.println("Initial Angle: " + initialAngle);
 		System.out.println("Target Angle: " + targetAngle);
 		forceEdit = false;
+	}
+
+	public static void setCameraType(CameraType type) {
+		System.out.println("Setting camera type to " + type);
+		CameraType oldCameraType = cameraType;
+		cameraType = type;
+		if (cameraType == CameraType.CUSTOM && oldCameraType != CameraType.CUSTOM) {
+			if ((int) customCameraAngle == customCameraAngle) {
+				genPropertiesModel.addRow(new Object[]{"Custom Camera Angle", (int) customCameraAngle});
+			}
+			else {
+				genPropertiesModel.addRow(new Object[]{"Custom Camera Angle", customCameraAngle});
+			}
+		}
+		else if (cameraType != CameraType.CUSTOM && oldCameraType == CameraType.CUSTOM) {
+			genPropertiesModel.removeRow(genPropertiesModel.getRowCount() - 1);
+		}
 	}
 	
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -304,8 +330,8 @@ public class VectorCalculator extends JPanel {
 		all.setOpaque(true);
 		
 		//GENERAL PROPERTIES TABLE
-		
-		genPropertiesTable = new JTable(genProperties, genPropertiesTitles) {
+		genPropertiesModel = new DefaultTableModel(genProperties, genPropertiesTitles);
+		genPropertiesTable = new JTable(genPropertiesModel) {
 			
 			public TableCellEditor getCellEditor(int row, int column)
             {
@@ -343,6 +369,12 @@ public class VectorCalculator extends JPanel {
 				else if (modelColumn == 1 && row == HYPEROPTIMIZE_ROW)
                 {
                 	String[] options = {"True", "False"};
+                    JComboBox<String> choice = new JComboBox<String>(options);
+                    return new DefaultCellEditor(choice);
+                }
+				else if (modelColumn == 1 && row == CAMERA_TYPE_ROW)
+                {
+                	String[] options = {"Initial Angle", "Target Angle", "Absolute", "Custom"};
                     JComboBox<String> choice = new JComboBox<String>(options);
                     return new DefaultCellEditor(choice);
                 }
@@ -389,9 +421,8 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
-		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * genProperties.length + 25));
+		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * (genProperties.length + 1) + 25));
 		
-		genPropertiesModel = genPropertiesTable.getModel();
 		ListSelectionModel genPropertiesSelectionModel = genPropertiesTable.getSelectionModel();
 		
 		//initial movement type selector
@@ -457,6 +488,10 @@ public class VectorCalculator extends JPanel {
 				initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
 
 				int row = e.getFirstRow();
+
+				if (row >= genPropertiesModel.getRowCount()) {
+					return;
+				}
 
 				if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
 					if (row == X_ROW || row == Y_ROW || row == Z_ROW) {
@@ -601,6 +636,30 @@ public class VectorCalculator extends JPanel {
 					}
 					else if (row == HYPEROPTIMIZE_ROW) {
 						hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("True");
+					}
+					else if (row == CAMERA_TYPE_ROW) {
+						String choice = (String) genPropertiesTable.getValueAt(row, 1);
+						if (choice.equals("Initial Angle")) {
+							setCameraType(CameraType.INITIAL);
+						}
+						else if (choice.equals("Target Angle")) {
+							setCameraType(CameraType.TARGET);
+						}
+						else if (choice.equals("Absolute")) {
+							setCameraType(CameraType.ABSOLUTE);
+						}
+						else {
+							setCameraType(CameraType.CUSTOM);
+						}
+					}
+					else if (row == CAMERA_ROW) {
+						customCameraAngle = 0;
+						try {
+							customCameraAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+						}
+						catch (NumberFormatException ex) {
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
 					}
 				}
 				
