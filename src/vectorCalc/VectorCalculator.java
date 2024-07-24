@@ -89,12 +89,12 @@ public class VectorCalculator extends JPanel {
 	static double initialAngle = 0;
 	static double targetAngle = 0;
 	static AngleType angleType = AngleType.TARGET;
-	static String initialMovementName = "Upthrow RCV";
+	static String initialMovementName = "Triple Jump";
 	static boolean durationFrames = true;
 	static int initialFrames = 60;
 	static double initialDispY = 0;
 	static int framesJump = 10;
-	static double initialHorizontalSpeed = 29.94;
+	static double initialHorizontalSpeed = 24;
 	static boolean rightVector = false;
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
@@ -796,6 +796,7 @@ public class VectorCalculator extends JPanel {
 		f.setVisible(true);
 		
 		//DEBUG PREPOLUATE MOVEMENT
+		/*
 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
 		movementModel.addRow(new String[]{"Dive", "23"});
 		movementModel.addRow(new String[]{"Cap Bounce", "40"});
@@ -804,6 +805,7 @@ public class VectorCalculator extends JPanel {
 		setAngleType(AngleType.BOTH);
 		initialAngle = 65;
 		targetAngle = 90;
+		*/
 	}
 
 }

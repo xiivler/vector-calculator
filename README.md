@@ -4,7 +4,7 @@ A program to calculate optimal vector angles in Super Mario Odyssey, primarily f
 ## Configuring the Initial Movement
 Upon opening vector-calculator.jar, you will see the movement configuration window.
 
-First, select the initial movement type you would like (ex. triple jump, vault) from the menu that appears when you click on the cell that currently says "Single Jump." Enter the number of frames you want this movement to last in the cell below this. If you instead would like to enter the amount of distance you'd like the movement to rise or fall before executing the next movement, change the Initial Movement Duration Type to Vertical Displacement. Use a negative number if you'd like the initial movement to end lower than it began, or a positive number if you'd like the initial movement to end higher than it began.
+First, select the initial movement type you would like (ex. triple jump, vault) from the menu that appears when you click on the cell that currently says "Triple Jump." Enter the number of frames you want this movement to last in the cell below this. If you instead would like to enter the amount of distance you'd like the movement to rise or fall before executing the next movement, change the Initial Movement Duration Type to Vertical Displacement. Use a negative number if you'd like the initial movement to end lower than it began, or a positive number if you'd like the initial movement to end higher than it began.
 
 Note that roll cancel vectors will only be calculated accurately if Mario preserves his speed no matter his roll cancel angle. If you roll cancel at the last possible frame when rolling off a ledge, this should happen (you should notice Mario fall by 7 units on the frame before the roll cancel).
 
