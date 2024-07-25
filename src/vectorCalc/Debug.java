@@ -15,7 +15,7 @@ public class Debug {
             System.out.println();
         }
     }
-    
+
     public static void print(Object o) {
         if (debug) {
             System.out.print(o);

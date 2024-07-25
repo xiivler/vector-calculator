@@ -175,14 +175,12 @@ public class VectorMaximizer {
 					}
 				}
 				else if (i - 2 >= 0 && i == movementNames.size() - 1) {
-					Debug.println("i-3" + movementNames.get(i - 3));
-					Debug.println("i-2" + movementNames.get(i - 2));
 					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !movementNames.get(i - 3).contains("RCV")) {
+					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -422,33 +420,50 @@ public class VectorMaximizer {
 		double[] holdingAngles = new double[frames];
 		boolean[] holdingMinRadius = new boolean[frames];
 
-		/* for (int i = 0; i < frames; i++) {
+		 for (int z = 0; z < frames; z++) {
 			if (Debug.debug) {
-				System.out.printf("Frame %d, Rotation %.3f\n", i, Math.toDegrees(rotations[i]));
+				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
 			}
 		}
-		Debug.println(); */
+		Debug.println(); 
 
 		double rotationWithFastTurnaround = -Double.MAX_VALUE;
 		int listIndex = -1; //which type of fast turnaround from the list that we're checking
-		while (rotationWithFastTurnaround < angle) {
+		while (rotationWithFastTurnaround < angle && listIndex < fastTurnarounds.length - 1) {
 			listIndex++;
 			rotationWithFastTurnaround = rotations[frames - 1 - fastTurnaroundFrames[listIndex]] - fastTurnarounds[listIndex];
+		}
+		if (listIndex >= fastTurnarounds.length) {
+			listIndex = fastTurnarounds.length - 1;
 		}
 		double turnaroundRotation = fastTurnarounds[listIndex];
 		int turnaroundFrames = fastTurnaroundFrames[listIndex];
 		int firstTurnaroundFrame = frames - turnaroundFrames;
 		int i = 0;
-		while (rotations[i] < turnaroundRotation + angle) {
+		while (i < rotations.length && rotations[i] < turnaroundRotation + angle) {
 			holdingAngles[i] = angleCalculator.holdingAngle; //NORMAL_ANGLE unless dive cap bounce where it's slightly less to account for error
 			i++;
 		}
-		double previousVelocity = rotations[i - 1] - rotations[i - 2];
-		double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
-		holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.rotationalAccel - neededVelocity);
-		i++;
-		for (; i < firstTurnaroundFrame; i++) {
-			holdingAngles[i] = turnaroundRotation + angle;
+		boolean overshot = false;
+		if (i < rotations.length && i > 1 && rotations[i] != turnaroundRotation + angle) { //we overshoot on this frame if we don't adjust the holding angle
+			double previousVelocity = rotations[i - 1] - rotations[i - 2];
+			double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
+			if (neededVelocity < angleCalculator.rotationalAccel) { //we can't rotate this small, so overshoot by .3 degrees (the rotational acceleration)
+				neededVelocity += angleCalculator.rotationalAccel;
+				overshot = true;
+			}
+			holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.rotationalAccel - neededVelocity);
+			rotations[i] = rotations[i - 1] + neededVelocity;
+			i++;
+		}
+		for (; i < firstTurnaroundFrame && i < rotations.length; i++) {
+			if (overshot) {
+				holdingAngles[i] = turnaroundRotation + angle - Math.toRadians(1);
+				overshot = false;
+			}
+			else {
+				holdingAngles[i] = turnaroundRotation + angle;
+			}
 			rotations[i] = turnaroundRotation + angle;
 		}
 		//finally, apply the turnaround so we end up at the desired angle
@@ -469,12 +484,12 @@ public class VectorMaximizer {
 			}
 			holdingMinRadius[i] = true;
 		}
-		/* for (int i = 0; i < frames; i++) {
+		 for (int z = 0; z < frames; z++) {
 			if (Debug.debug) {
-				System.out.printf("Frame %d, Rotation %.3f\n", i, Math.toDegrees(rotations[i]));
+				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
 			}
 		}
-		Debug.println(); */
+		Debug.println(); 
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 	
