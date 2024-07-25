@@ -274,9 +274,9 @@ public class SimpleVector extends SimpleMotion {
 	public double[][] calcFrameByFrame() {
 		dispForward = 0;
 		dispSideways = 0;
-		dispZ = z0;
-		dispY = y0;
 		dispX = x0;
+		dispY = y0;
+		dispZ = z0;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -329,11 +329,11 @@ public class SimpleVector extends SimpleMotion {
 			else
 				info[i][4] = 0;
 			dispX += xVelocity;
-			info[i][0] = dispZ;
+			info[i][0] = dispX;
 			info[i][1] = dispY;
-			info[i][2] = dispX;
-			info[i][3] = zVelocity;
-			info[i][5] = xVelocity;
+			info[i][2] = dispZ;
+			info[i][3] = xVelocity;
+			info[i][5] = zVelocity;
 			info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
 			if (i < nonVectorFrames) {
 				info[i][7] = initialAngle;

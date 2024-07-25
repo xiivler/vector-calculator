@@ -25,7 +25,6 @@ public class GroundedCapThrow extends SimpleMotion {
 
 	public static final double WALKING_DECEL = 14.0 / 120.0 ;
 	public static final int PRE_HOOK_FRAMES = 15;
-	public static final double PRE_HOOK_Y_VEL = -1.5;
 	public static final double POST_HOOK_Y_VEL = -7.0;
 	public static final double CT_ROTATIONAL_VELOCITY = Math.toRadians(5);
 	public static final double SMALL_ROTATIONAL_ACCEL = Math.toRadians(0.325);
@@ -337,16 +336,16 @@ public class GroundedCapThrow extends SimpleMotion {
 
 	public double calcDispY() {
 		if (frames > PRE_HOOK_FRAMES) {
-			return -1.5 * PRE_HOOK_FRAMES + -7 * (frames - PRE_HOOK_FRAMES);
+			return movement.initialVerticalSpeed * PRE_HOOK_FRAMES + POST_HOOK_Y_VEL * (frames - PRE_HOOK_FRAMES);
 		}
 		else {
-			return -1.5 * frames;
+			return movement.initialVerticalSpeed * frames;
 		}
 	}
 
 	public double calcDispY(int frames) {
 		double dispY = 0; //not the real one
-		double yVelocity = -1.5;
+		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -354,10 +353,10 @@ public class GroundedCapThrow extends SimpleMotion {
 			gravity = movement.gravity;
 		for (int i = 0; i < frames; i++) {
 			if (i < PRE_HOOK_FRAMES) {
-				yVelocity = -1.5;
+				yVelocity = movement.initialVerticalSpeed;
 			}
 			else if (i < movement.maxFrames) {
-				yVelocity = -7;
+				yVelocity = POST_HOOK_Y_VEL;
 			}
 			else {
 				yVelocity -= gravity;
@@ -372,7 +371,7 @@ public class GroundedCapThrow extends SimpleMotion {
 	//doesn't use main frames int because it includes the fall too
 	public int calcFrames(double maxDispY) {
 		dispY = 0;
-		double yVelocity = -1.5;
+		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -382,10 +381,10 @@ public class GroundedCapThrow extends SimpleMotion {
 		while (dispY >= maxDispY) {
 			frames++;
 			if (frames < PRE_HOOK_FRAMES) {
-				yVelocity = -1.5;
+				yVelocity = movement.initialVerticalSpeed;
 			}
 			else if (frames < movement.maxFrames) {
-				yVelocity = -7;
+				yVelocity = POST_HOOK_Y_VEL;
 			}
 			else {
 				yVelocity -= gravity;
@@ -398,12 +397,12 @@ public class GroundedCapThrow extends SimpleMotion {
 	}
 
 	public double[][] calcFrameByFrame() {
-		dispZ = z0;
-		dispY = y0;
 		dispX = x0;
+		dispY = y0;
+		dispZ = z0;
 		double currentVelocity = initialForwardVelocity;
 		double zVelocity;
-		double yVelocity = PRE_HOOK_Y_VEL;
+		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
@@ -434,11 +433,11 @@ public class GroundedCapThrow extends SimpleMotion {
 			dispY += yVelocity;
 			dispX += xVelocity;
 			info[i][4] = yVelocity;
-			info[i][0] = dispZ;
+			info[i][0] = dispX;
 			info[i][1] = dispY;
-			info[i][2] = dispX;
-			info[i][3] = zVelocity;
-			info[i][5] = xVelocity;
+			info[i][2] = dispZ;
+			info[i][3] = xVelocity;
+			info[i][5] = zVelocity;
 			info[i][6] = currentVelocity;
 			info[i][7] = currentHoldingAngle;
 			if (currentHoldingAngle == NO_ANGLE) {
@@ -453,10 +452,10 @@ public class GroundedCapThrow extends SimpleMotion {
 
 	public double calcFinalVerticalVelocity() {
 		if (frames <= 15) {
-			return -1.5;
+			return movement.initialVerticalSpeed;
 		}
 		else {
-			return -7;
+			return POST_HOOK_Y_VEL;
 		}
 	}
 

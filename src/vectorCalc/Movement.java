@@ -430,6 +430,12 @@ public class Movement {
 			trueSpeedCap = 100;
 			recommendedInitialHorizontalSpeed = 29.94;
 			rotationalAccel = Math.toRadians(1.3);
+			if (onMoon) {
+				initialVerticalSpeed = -1;
+			}
+			else {
+				initialVerticalSpeed = -1.5;
+			}
 			maxRotationalSpeed = Math.toRadians(1.3 * 5);
 			if (movementType.equals("Motion Cap Throw RCV")) {
 				displayName = "MCCTRCV";

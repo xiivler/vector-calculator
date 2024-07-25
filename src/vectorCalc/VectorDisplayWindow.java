@@ -306,11 +306,11 @@ public class VectorDisplayWindow {
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.z0, VectorCalculator.y0, VectorCalculator.x0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.x0, VectorCalculator.y0, VectorCalculator.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
 		
-		double z = VectorCalculator.z0;
-		double y = VectorCalculator.y0;
 		double x = VectorCalculator.x0;
+		double y = VectorCalculator.y0;
+		double z = VectorCalculator.z0;
 		
 		double[][] info = null;
 
@@ -324,7 +324,7 @@ public class VectorDisplayWindow {
 				continue;
 			}
 			motion.calcDisp();
-			motion.setInitialCoordinates(z, y, x);
+			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
 			//for (double[] ds : info)
 			//	Debug.println(Arrays.toString(ds));
@@ -340,14 +340,14 @@ public class VectorDisplayWindow {
 				rowContents[1] = "";
 				rowContents[2] = "";
 				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], theta);
-				rowContents[4] = toCoordinates(info[i][2], info[i][1], info[i][0]);
-				rowContents[5] = toVelocityVector(info[i][5], info[i][4], info[i][3]);
+				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
+				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
 				double velocityAngle;
 				if (VectorCalculator.xAxisZeroDegrees) {
-					velocityAngle = reduceAngle(Math.atan2(info[i][3], info[i][5]));
+					velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
 				}
 				else {
-					velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
+					velocityAngle = reduceAngle(Math.atan2(info[i][3], info[i][5]));
 				}
 				if (info[i][6] == 0) {
 					if (VectorCalculator.xAxisZeroDegrees) {
@@ -395,9 +395,9 @@ public class VectorDisplayWindow {
 					}
 				}
 			}
-			z = info[info.length - 1][0];
+			x = info[info.length - 1][0];
 			y = info[info.length - 1][1];
-			x = info[info.length - 1][2];
+			z = info[info.length - 1][2];
 			Debug.println(motion.movement.displayName);
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
