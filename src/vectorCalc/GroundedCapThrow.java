@@ -331,8 +331,8 @@ public class GroundedCapThrow extends SimpleMotion {
 	}
 
 	public void calcDispCoords() {	
-		dispX = dispForward * Math.cos(initialAngle) + dispSideways * Math.cos(normalAngle);
-		dispZ = dispForward * Math.sin(initialAngle) + dispSideways * Math.sin(normalAngle);	
+		dispZ = dispForward * Math.cos(initialAngle) + dispSideways * Math.cos(normalAngle);
+		dispX = dispForward * Math.sin(initialAngle) + dispSideways * Math.sin(normalAngle);	
 	}
 
 	public double calcDispY() {
@@ -398,13 +398,13 @@ public class GroundedCapThrow extends SimpleMotion {
 	}
 
 	public double[][] calcFrameByFrame() {
-		dispX = x0;
-		dispY = y0;
 		dispZ = z0;
+		dispY = y0;
+		dispX = x0;
 		double currentVelocity = initialForwardVelocity;
-		double xVelocity;
-		double yVelocity = PRE_HOOK_Y_VEL;
 		double zVelocity;
+		double yVelocity = PRE_HOOK_Y_VEL;
+		double xVelocity;
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
 			double currentVelocityAngle;
@@ -428,17 +428,17 @@ public class GroundedCapThrow extends SimpleMotion {
 					currentVelocity = WALKING_SPEED;
 				}
 			}
-			xVelocity = currentVelocity * Math.cos(currentVelocityAngle);
-			zVelocity = currentVelocity * Math.sin(currentVelocityAngle);
-			dispX += xVelocity;
-			dispY += yVelocity;
+			zVelocity = currentVelocity * Math.cos(currentVelocityAngle);
+			xVelocity = currentVelocity * Math.sin(currentVelocityAngle);
 			dispZ += zVelocity;
+			dispY += yVelocity;
+			dispX += xVelocity;
 			info[i][4] = yVelocity;
-			info[i][0] = dispX;
+			info[i][0] = dispZ;
 			info[i][1] = dispY;
-			info[i][2] = dispZ;
-			info[i][3] = xVelocity;
-			info[i][5] = zVelocity;
+			info[i][2] = dispX;
+			info[i][3] = zVelocity;
+			info[i][5] = xVelocity;
 			info[i][6] = currentVelocity;
 			info[i][7] = currentHoldingAngle;
 			if (currentHoldingAngle == NO_ANGLE) {
@@ -464,192 +464,4 @@ public class GroundedCapThrow extends SimpleMotion {
 		initialAngle += amount;
 		trueInitialAngle += amount;
 	}
-	
-/*
-	public double calcUnoptimalDispForward() {
-		dispForward = 0;
-		forwardVelocity = initialForwardVelocity;
-		for (int i = 0; i < frames; i++)
-			stepForward(i);
-		finalSidewaysVelocity = forwardVelocity;
-		
-		return dispForward;
-	}
-	
-	public void stepForward(int i) {
-
-		if (holdingAngles[i] != NO_ANGLE)
-			forwardVelocity += baseForwardAccel * Math.cos(holdingAngles[i]);
-		if (forwardVelocity > forwardVelocityCap)
-			forwardVelocity = forwardVelocityCap;
-		dispForward += forwardVelocity;
-	}
-	
-	public double calcFinalAngle() {
-		
-		if (rightVector)
-			finalAngle = initialAngle - Math.atan(sidewaysVelocity / finalForwardVelocity);
-		else
-			finalAngle = initialAngle + Math.atan(sidewaysVelocity / finalForwardVelocity);
-		return finalAngle;
-		
-	}
-		*/
-
-	/*
-	//does not currently account for fast turnarounds
-	public double calcFinalRotation() {
-		double rotation = initialRotation;
-		double oldRotation;
-		double adjustedHoldingAngle;
-		double rotationVelocity = 0;
-
-		int i = 0;
-		//when holding forwards
-		if (optimalForwardAccel)
-			while (i < frames - vectorFrames) {
-				//Debug.println("step: " + Math.toDegrees(rotation));
-				oldRotation = rotation;
-				if (rotation > initialAngle) {
-					rotationVelocity -= rotationalAccel;
-					if (rotationVelocity < -maxRotationalSpeed)
-						rotationVelocity = -rotationalSpeedAfterMax;
-				}
-				else {
-					rotationVelocity += rotationalAccel;
-					if (rotationVelocity > maxRotationalSpeed)
-						rotationVelocity = rotationalSpeedAfterMax;
-				}
-						
-				rotation += rotationVelocity;
-				if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
-					rotation = initialAngle;
-					rotationVelocity = 0;
-					i = frames - vectorFrames;
-					break;
-				}
-				i++;
-			}
-		
-		while (i < frames) {
-			//Debug.println("step: " + Math.toDegrees(rotation));
-			oldRotation = rotation;
-			
-			if (holdingAngles[i] == NO_ANGLE)
-				adjustedHoldingAngle = rotation;
-			else if (rightVector)
-				adjustedHoldingAngle = initialAngle - holdingAngles[i];
-			else
-				adjustedHoldingAngle = initialAngle + holdingAngles[i];
-			
-			if (rotation > adjustedHoldingAngle) {
-				if (rotationVelocity > 0)
-					rotationVelocity = 0;
-				rotationVelocity -= rotationalAccel;
-				if (rotationVelocity < -maxRotationalSpeed)
-					rotationVelocity = -rotationalSpeedAfterMax;
-			}
-			else {
-				if (rotationVelocity < 0)
-					rotationVelocity = 0;
-				rotationVelocity += rotationalAccel;
-				if (rotationVelocity > maxRotationalSpeed)
-					rotationVelocity = rotationalSpeedAfterMax;
-			}
-			rotation += rotationVelocity;
-			
-			if ((oldRotation <= adjustedHoldingAngle && adjustedHoldingAngle <= rotation) || (rotation <= adjustedHoldingAngle && adjustedHoldingAngle <= oldRotation)) {
-				rotation = adjustedHoldingAngle;
-				rotationVelocity = 0;
-			}
-			i++;
-		}
-		
-		finalRotation = rotation;
-		return finalRotation;
-	}
-	
-	public double calcFinalSpeed() {
-		finalSpeed = Math.sqrt(Math.pow(finalForwardVelocity, 2) + Math.pow(finalSidewaysVelocity, 2));
-		return finalSpeed;
-	}
-	
-	//must run calcDisp() first to calculate acceleration values and vectorFrames
-		//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle
-		public double[][] calcFrameByFrame() {
-			dispForward = 0;
-			dispSideways = 0;
-			dispX = x0;
-			dispY = y0;
-			dispZ = z0;
-			double gravity;
-			if (Movement.onMoon)
-				gravity = movement.moonGravity;
-			else
-				gravity = movement.gravity;
-			double cosInitialAngle = Math.cos(initialAngle);
-			double sinInitialAngle = Math.sin(initialAngle);
-			double cosNormalAngle = Math.cos(normalAngle);
-			double sinNormalAngle = Math.sin(normalAngle);
-			double forwardVelocity = initialForwardVelocity;
-			double sidewaysVelocity = 0;
-			double xVelocity;
-			double zVelocity;
-			double yVelocity = movement.initialVerticalSpeed;
-			int nonVectorFrames = frames - vectorFrames;
-			
-			double[] holdingAnglesAdjusted = new double[frames];
-			for (int i = 0; i < frames; i++)
-				if (i < nonVectorFrames)
-					holdingAnglesAdjusted[i] = initialAngle;
-				else if (holdingAngles[i] == NO_ANGLE)
-					holdingAnglesAdjusted[i] = NO_ANGLE;
-				else if (rightVector)
-					holdingAnglesAdjusted[i] = initialAngle - holdingAngles[i];
-				else
-					holdingAnglesAdjusted[i] = initialAngle + holdingAngles[i];
-			
-			double[][] info = new double[frames][8];
-			for (int i = 0; i < frames; i++) {	
-				if (forwardVelocity < forwardVelocityCap) {
-					if (i >= nonVectorFrames) {
-						if (holdingAngles[i] != NO_ANGLE)
-							forwardVelocity += baseForwardAccel * Math.cos(holdingAngles[i]);
-					}
-					else
-						forwardVelocity += baseForwardAccel;
-					if (forwardVelocity > forwardVelocityCap)
-						forwardVelocity = forwardVelocityCap;
-				}
-				if (sidewaysVelocity < forwardVelocityCap && i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
-					sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
-					if (sidewaysVelocity > forwardVelocityCap)
-						sidewaysVelocity = forwardVelocityCap;
-				}
-				xVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
-				zVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
-				if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
-					yVelocity -= gravity;
-					if (yVelocity < movement.fallSpeedCap)
-						yVelocity = movement.fallSpeedCap;
-				}
-				dispX += xVelocity;
-				if (i >= movement.frameOffset) {
-					dispY += yVelocity;
-					info[i][4] = yVelocity;
-				}
-				else
-					info[i][4] = 0;
-				dispZ += zVelocity;
-				info[i][0] = dispX;
-				info[i][1] = dispY;
-				info[i][2] = dispZ;
-				info[i][3] = xVelocity;
-				info[i][5] = zVelocity;
-				info[i][6] = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(zVelocity, 2));
-				info[i][7] = holdingAnglesAdjusted[i];
-			}	
-			return info;
-		}
-			*/
 }

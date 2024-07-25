@@ -20,9 +20,9 @@ public class SimpleMotion {
 	int frames;
 	
 	double dispForward;
-	double dispX;
-	double dispY;
 	double dispZ;
+	double dispY;
+	double dispX;
 	
 	double finalForwardVelocity;
 	double forwardVelocityCap;
@@ -39,9 +39,9 @@ public class SimpleMotion {
 	double initialRotation = 0;
 	double finalRotation = 0;
 	
-	double x0 = 0;
-	double y0 = 0;
 	double z0 = 0;
+	double y0 = 0;
+	double x0 = 0;
 	
 	public SimpleMotion(Movement movement, int frames) {
 		this.rotationalAccel = movement.rotationalAccel;
@@ -97,8 +97,8 @@ public class SimpleMotion {
 	}
 	
 	public void calcDispCoords() {
-		dispX = dispForward * Math.cos(initialAngle);
-		dispZ = dispForward * Math.sin(initialAngle);
+		dispZ = dispForward * Math.cos(initialAngle);
+		dispX = dispForward * Math.sin(initialAngle);
 	}
 	
 	public double calcFinalAngle() {
@@ -200,9 +200,9 @@ public class SimpleMotion {
 	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle, column 8: holding radius
 	public double[][] calcFrameByFrame() {
 		//maybe shouldn't use the disps for this
-		dispX = x0;
-		dispY = y0;
 		dispZ = z0;
+		dispY = y0;
+		dispX = x0;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -241,17 +241,17 @@ public class SimpleMotion {
 			}
 			xVelocity = forwardVelocity * cosInitialAngle;
 			zVelocity = forwardVelocity * sinInitialAngle;
-			dispX += xVelocity;
+			dispZ += xVelocity;
 			if (i >= movement.frameOffset) {
 				dispY += yVelocity;
 				info[i][4] = yVelocity;
 			}
 			else
 				info[i][4] = 0;
-			dispZ += zVelocity;
-			info[i][0] = dispX;
+			dispX += zVelocity;
+			info[i][0] = dispZ;
 			info[i][1] = dispY;
-			info[i][2] = dispZ;
+			info[i][2] = dispX;
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
 			info[i][6] = forwardVelocity;
@@ -271,10 +271,10 @@ public class SimpleMotion {
 		initialRotation = rotation;
 	}
 	
-	public void setInitialCoordinates(double x, double y, double z) {
-		x0 = x;
-		y0 = y;
+	public void setInitialCoordinates(double z, double y, double x) {
 		z0 = z;
+		y0 = y;
+		x0 = x;
 	}
 	
 	public void adjustInitialAngle(double amount) {

@@ -187,9 +187,9 @@ public class ComplexVector extends SimpleVector {
 		public double[][] calcFrameByFrame() {
 			dispForward = 0;
 			dispSideways = 0;
-			dispX = x0;
-			dispY = y0;
 			dispZ = z0;
+			dispY = y0;
+			dispX = x0;
 			double gravity;
 			if (Movement.onMoon)
 				gravity = movement.moonGravity;
@@ -201,8 +201,8 @@ public class ComplexVector extends SimpleVector {
 			double sinNormalAngle = Math.sin(normalAngle);
 			double forwardVelocity = initialForwardVelocity;
 			double sidewaysVelocity = 0;
-			double xVelocity;
 			double zVelocity;
+			double xVelocity;
 			double yVelocity = movement.initialVerticalSpeed;
 			int nonVectorFrames = frames - vectorFrames;
 			
@@ -250,27 +250,27 @@ public class ComplexVector extends SimpleVector {
 					if (sidewaysVelocity > forwardVelocityCap)
 						sidewaysVelocity = forwardVelocityCap;
 				}
-				xVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
-				zVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
+				zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
+				xVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
 				if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
 					yVelocity -= gravity;
 					if (yVelocity < movement.fallSpeedCap)
 						yVelocity = movement.fallSpeedCap;
 				}
-				dispX += xVelocity;
+				dispZ += zVelocity;
 				if (i >= movement.frameOffset) {
 					dispY += yVelocity;
 					info[i][4] = yVelocity;
 				}
 				else
 					info[i][4] = 0;
-				dispZ += zVelocity;
-				info[i][0] = dispX;
+				dispX += xVelocity;
+				info[i][0] = dispZ;
 				info[i][1] = dispY;
-				info[i][2] = dispZ;
-				info[i][3] = xVelocity;
-				info[i][5] = zVelocity;
-				info[i][6] = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(zVelocity, 2));
+				info[i][2] = dispX;
+				info[i][3] = zVelocity;
+				info[i][5] = xVelocity;
+				info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
 				info[i][7] = holdingAnglesAdjusted[i];
 				if (holdingMinRadius[i]) {
 					info[i][8] = MIN_RADIUS;

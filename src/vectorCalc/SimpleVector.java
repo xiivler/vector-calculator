@@ -12,8 +12,6 @@ public class SimpleVector extends SimpleMotion {
 	
 	double dispForward;
 	double dispSideways;
-	//double dispX;
-	//double dispZ;
 	
 	double finalSidewaysVelocity;
 	
@@ -100,8 +98,8 @@ public class SimpleVector extends SimpleMotion {
 	
 	public void calcDispCoords() {
 		
-		dispX = dispForward * Math.cos(initialAngle) + dispSideways * Math.cos(normalAngle);
-		dispZ = dispForward * Math.sin(initialAngle) + dispSideways * Math.sin(normalAngle);
+		dispZ = dispForward * Math.cos(initialAngle) + dispSideways * Math.cos(normalAngle);
+		dispX = dispForward * Math.sin(initialAngle) + dispSideways * Math.sin(normalAngle);
 		
 	}
 	
@@ -276,9 +274,9 @@ public class SimpleVector extends SimpleMotion {
 	public double[][] calcFrameByFrame() {
 		dispForward = 0;
 		dispSideways = 0;
-		dispX = x0;
-		dispY = y0;
 		dispZ = z0;
+		dispY = y0;
+		dispX = x0;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -290,9 +288,9 @@ public class SimpleVector extends SimpleMotion {
 		double sinNormalAngle = Math.sin(normalAngle);
 		double forwardVelocity = initialForwardVelocity;
 		double sidewaysVelocity = 0;
-		double xVelocity;
-		double yVelocity = movement.initialVerticalSpeed;
 		double zVelocity;
+		double yVelocity = movement.initialVerticalSpeed;
+		double xVelocity;
 
 		int nonVectorFrames = frames - vectorFrames;
 		
@@ -316,27 +314,27 @@ public class SimpleVector extends SimpleMotion {
 				if (sidewaysVelocity > forwardVelocityCap)
 					sidewaysVelocity = forwardVelocityCap;
 			}
-			xVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
-			zVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
+			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
+			xVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
 			if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
 				yVelocity -= gravity;
 				if (yVelocity < movement.fallSpeedCap)
 					yVelocity = movement.fallSpeedCap;
 			}
-			dispX += xVelocity;
+			dispZ += zVelocity;
 			if (i >= movement.frameOffset) {
 				dispY += yVelocity;
 				info[i][4] = yVelocity;
 			}
 			else
 				info[i][4] = 0;
-			dispZ += zVelocity;
-			info[i][0] = dispX;
+			dispX += xVelocity;
+			info[i][0] = dispZ;
 			info[i][1] = dispY;
-			info[i][2] = dispZ;
-			info[i][3] = xVelocity;
-			info[i][5] = zVelocity;
-			info[i][6] = Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(zVelocity, 2));
+			info[i][2] = dispX;
+			info[i][3] = zVelocity;
+			info[i][5] = xVelocity;
+			info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
 			if (i < nonVectorFrames) {
 				info[i][7] = initialAngle;
 			}

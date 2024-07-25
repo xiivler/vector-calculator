@@ -308,9 +308,9 @@ public class VectorDisplayWindow {
 		
 		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.z0, VectorCalculator.y0, VectorCalculator.x0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
 		
-		double x = VectorCalculator.z0;
+		double z = VectorCalculator.z0;
 		double y = VectorCalculator.y0;
-		double z = VectorCalculator.x0;
+		double x = VectorCalculator.x0;
 		
 		double[][] info = null;
 
@@ -324,7 +324,7 @@ public class VectorDisplayWindow {
 				continue;
 			}
 			motion.calcDisp();
-			motion.setInitialCoordinates(x, y, z);
+			motion.setInitialCoordinates(z, y, x);
 			info = motion.calcFrameByFrame();
 			//for (double[] ds : info)
 			//	Debug.println(Arrays.toString(ds));
@@ -395,9 +395,9 @@ public class VectorDisplayWindow {
 					}
 				}
 			}
-			x = info[info.length - 1][0];
+			z = info[info.length - 1][0];
 			y = info[info.length - 1][1];
-			z = info[info.length - 1][2];
+			x = info[info.length - 1][2];
 			Debug.println(motion.movement.displayName);
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
@@ -424,10 +424,10 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Target Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
-		infoTableModel.setValueAt(shorten(z, 3), XF_ROW, 1);
+		infoTableModel.setValueAt(shorten(x, 3), XF_ROW, 1);
 		infoTableModel.setValueAt(shorten(y, 3), YF_ROW, 1);
-		infoTableModel.setValueAt(shorten(x, 3), ZF_ROW, 1);
-		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(z - VectorCalculator.x0, 2) + Math.pow(x - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(z, 3), ZF_ROW, 1);
+		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - VectorCalculator.x0, 2) + Math.pow(z - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - VectorCalculator.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
 	}
