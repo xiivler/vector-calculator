@@ -83,8 +83,8 @@ public class JumpDialogWindow implements ActionListener {
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		//System.out.println(e);
-		//System.out.println(categoryComboBox.getSelectedIndex());
+		//Debug.println(e);
+		//Debug.println(categoryComboBox.getSelectedIndex());
 		
 		movementModel.clear();
 		for (String s : movementNames[categoryComboBox.getSelectedIndex()])

@@ -148,7 +148,7 @@ public class VectorCalculator extends JPanel {
 
 	public static void lockDurationType(int value) {
 		lockDurationType = value;
-		System.out.println(lockDurationType);
+		Debug.println(lockDurationType);
 		if (lockDurationType == LOCK_FRAMES) {
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
@@ -172,8 +172,8 @@ public class VectorCalculator extends JPanel {
 	public static void setAngleType(AngleType type) {
 		forceEdit = true;
 		AngleType oldAngleType = angleType;
-		System.out.println(oldAngleType);
-		System.out.println(type);
+		Debug.println(oldAngleType);
+		Debug.println(type);
 		angleType = type;
 		if (oldAngleType != AngleType.BOTH && type == AngleType.BOTH) {
 			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
@@ -207,13 +207,13 @@ public class VectorCalculator extends JPanel {
 			genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
 			targetAngle = initialAngle;
 		}
-		System.out.println("Initial Angle: " + initialAngle);
-		System.out.println("Target Angle: " + targetAngle);
+		Debug.println("Initial Angle: " + initialAngle);
+		Debug.println("Target Angle: " + targetAngle);
 		forceEdit = false;
 	}
 
 	public static void setCameraType(CameraType type) {
-		System.out.println("Setting camera type to " + type);
+		Debug.println("Setting camera type to " + type);
 		CameraType oldCameraType = cameraType;
 		cameraType = type;
 		if (cameraType == CameraType.CUSTOM && oldCameraType != CameraType.CUSTOM) {
@@ -303,7 +303,7 @@ public class VectorCalculator extends JPanel {
 					VectorDisplayWindow.display();
 				}
 				 
-				System.out.println();
+				Debug.println();
 			 }
 		 }
 	}
@@ -442,7 +442,7 @@ public class VectorCalculator extends JPanel {
 				JButton confirm = dialogWindow.getConfirmButton();
 				confirm.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						//System.out.println(dialogWindow.getSelectedMovementName());
+						//Debug.println(dialogWindow.getSelectedMovementName());
 						initialMovementName = dialogWindow.getSelectedMovementName();
 						initialMovement = new Movement(initialMovementName);
 						genPropertiesModel.setValueAt(initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
@@ -586,9 +586,9 @@ public class VectorCalculator extends JPanel {
 						if (lockDurationType == LOCK_NONE) {
 							boolean oldDurationFrames = durationFrames;
 							durationFrames = genPropertiesTable.getValueAt(MOVEMENT_DURATION_TYPE_ROW, 1).equals("Frames");
-							System.out.println(durationFrames);
+							Debug.println(durationFrames);
 							initialMovement.initialHorizontalSpeed = initialHorizontalSpeed;
-							System.out.println(initialMovement.initialHorizontalSpeed);
+							Debug.println(initialMovement.initialHorizontalSpeed);
 							initialMotion = initialMovement.getMotion(initialFrames, false, false);//new SimpleMotion(initialMovement, initialFrames);
 							if (durationFrames && !oldDurationFrames) {
 								genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);

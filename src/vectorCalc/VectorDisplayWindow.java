@@ -206,7 +206,7 @@ public class VectorDisplayWindow {
 		scriptPath = scriptPathField.getText();
 		scriptFile = new File(scriptPath);
 		if (!scriptFile.isDirectory() && scriptFile.getParentFile() != null && scriptFile.getParentFile().isDirectory()) {
-			System.out.println("Valid path");
+			Debug.println("Valid path");
 			Paths.get(scriptPath);
 			create.setEnabled(true);
 			if (scriptFile.exists()) {
@@ -218,7 +218,7 @@ public class VectorDisplayWindow {
 		}
 		else {
 			create.setEnabled(false);
-			System.out.println("Invalid path");
+			Debug.println("Invalid path");
 		}
 	}
 
@@ -327,7 +327,7 @@ public class VectorDisplayWindow {
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
 			//for (double[] ds : info)
-			//	System.out.println(Arrays.toString(ds));
+			//	Debug.println(Arrays.toString(ds));
 			int startRow = row;
 			for (int i = 0; i < info.length; i++, row++) {
 				double theta = SimpleMotion.NO_ANGLE;
@@ -398,7 +398,7 @@ public class VectorDisplayWindow {
 			x = info[info.length - 1][0];
 			y = info[info.length - 1][1];
 			z = info[info.length - 1][2];
-			System.out.println(motion.movement.displayName);
+			Debug.println(motion.movement.displayName);
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
 
@@ -547,7 +547,7 @@ public class VectorDisplayWindow {
 				}
 			}
 			else if (com.equals("export")) {
-				System.out.println("Export file");
+				Debug.println("Export file");
 				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS) {
 					generateTSVTAS(false);
 				}
@@ -559,7 +559,7 @@ public class VectorDisplayWindow {
 				}
 			}
 			else if (com.equals("clipboard")) {
-				System.out.println("Copy to clipboard");
+				Debug.println("Copy to clipboard");
 				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS) {
 					generateTSVTAS(true);
 				}

@@ -221,7 +221,7 @@ public class SimpleVector extends SimpleMotion {
 			
 			if (holdingAngle != NO_ANGLE)
 				while (i < frames) {
-					//System.out.println("step: " + Math.toDegrees(rotation));
+					//Debug.println("step: " + Math.toDegrees(rotation));
 					oldRotation = rotation;
 					
 					if (rotation > targetRotation) {

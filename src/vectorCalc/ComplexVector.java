@@ -116,7 +116,7 @@ public class ComplexVector extends SimpleVector {
 		//when holding forwards
 		if (optimalForwardAccel)
 			while (i < frames - vectorFrames) {
-				//System.out.println("step: " + Math.toDegrees(rotation));
+				//Debug.println("step: " + Math.toDegrees(rotation));
 				oldRotation = rotation;
 				if (rotation > initialAngle) {
 					rotationVelocity -= rotationalAccel;
@@ -140,7 +140,7 @@ public class ComplexVector extends SimpleVector {
 			}
 		
 		while (i < frames) {
-			//System.out.println("step: " + Math.toDegrees(rotation));
+			//Debug.println("step: " + Math.toDegrees(rotation));
 			oldRotation = rotation;
 			
 			if (holdingAngles[i] == NO_ANGLE)

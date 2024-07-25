@@ -175,8 +175,8 @@ public class VectorMaximizer {
 					}
 				}
 				else if (i - 2 >= 0 && i == movementNames.size() - 1) {
-					System.out.println("i-3" + movementNames.get(i - 3));
-					System.out.println("i-2" + movementNames.get(i - 2));
+					Debug.println("i-3" + movementNames.get(i - 3));
+					Debug.println("i-2" + movementNames.get(i - 2));
 					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
@@ -191,10 +191,10 @@ public class VectorMaximizer {
 		
 		motions = new SimpleMotion[movementNames.size()];
 		
-		System.out.println("Variable cap throw 1: " + hasVariableCapThrow1);
-		System.out.println("Variable cap throw 2: " + hasVariableCapThrow2);
-		System.out.println("Variable other movement 2: " + hasVariableOtherMovement2);
-		System.out.println("Indices: " + variableCapThrow1Index + ", " + motionGroup2Index + ", " + variableMovement2Index);
+		Debug.println("Variable cap throw 1: " + hasVariableCapThrow1);
+		Debug.println("Variable cap throw 2: " + hasVariableCapThrow2);
+		Debug.println("Variable other movement 2: " + hasVariableOtherMovement2);
+		Debug.println("Indices: " + variableCapThrow1Index + ", " + motionGroup2Index + ", " + variableMovement2Index);
 	}
 	
 	private int booleanToPlusMinus(boolean b) {
@@ -241,13 +241,13 @@ public class VectorMaximizer {
 				motionGroup[i].setInitialRotation(motionGroup[i-1].calcFinalRotation());
 			
 			/*
-			System.out.println("Rotation steps:");
+			Debug.println("Rotation steps:");
 			motionGroup[motionGroup.length - 1].calcFinalRotation();
 			for (int i = 0; i < motionGroup.length; i++) {
-				System.out.println(motionGroup[i].movement.movementType); 
+				Debug.println(motionGroup[i].movement.movementType); 
 				if (motionGroup[i].getClass().getSimpleName().contains("Vector"))
-					System.out.println(((SimpleVector) motionGroup[i]).rightVector); 
-				System.out.println(Math.toDegrees(motionGroup[i].finalRotation));
+					Debug.println(((SimpleVector) motionGroup[i]).rightVector); 
+				Debug.println(Math.toDegrees(motionGroup[i].finalRotation));
 			}
 			*/
 			
@@ -358,7 +358,7 @@ public class VectorMaximizer {
 			}
 			else {
 				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
-				//System.out.println("Min Rotation: " + Math.toDegrees(minRotation));
+				//Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
 				double additionalRotation = FAST_TURNAROUND_VELOCITY - minRotation;
 				double rotationSum = 0;
 				double rotationalVelocity = 0;
@@ -407,9 +407,9 @@ public class VectorMaximizer {
 			movement = new Movement(movementNames.get(index), motionGroup[motionGroup.length - 1].finalSpeed);
 			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
 			angleCalculator.setInitialAngle(initialAngle);
-			//System.out.println("Initial Angle: " + Math.toDegrees(initialAngle));
+			//Debug.println("Initial Angle: " + Math.toDegrees(initialAngle));
 			angleCalculator.setInitialRotation(initialRotation);
-			//System.out.println("Initial Rotation: " + Math.toDegrees(initialRotation));
+			//Debug.println("Initial Rotation: " + Math.toDegrees(initialRotation));
 		}
 		else {
 			movement = new Movement(movementNames.get(index), listPreparer.initialVelocity);
@@ -423,9 +423,11 @@ public class VectorMaximizer {
 		boolean[] holdingMinRadius = new boolean[frames];
 
 		/* for (int i = 0; i < frames; i++) {
-			System.out.printf("Frame %d, Rotation %.3f\n", i, Math.toDegrees(rotations[i]));
+			if (Debug.debug) {
+				System.out.printf("Frame %d, Rotation %.3f\n", i, Math.toDegrees(rotations[i]));
+			}
 		}
-		System.out.println(); */
+		Debug.println(); */
 
 		double rotationWithFastTurnaround = -Double.MAX_VALUE;
 		int listIndex = -1; //which type of fast turnaround from the list that we're checking
@@ -468,9 +470,11 @@ public class VectorMaximizer {
 			holdingMinRadius[i] = true;
 		}
 		/* for (int i = 0; i < frames; i++) {
-			System.out.printf("Frame %d, Rotation %.3f, Holding %.3f\n", i, Math.toDegrees(rotations[i]), Math.toDegrees(holdingAngles[i]));
+			if (Debug.debug) {
+				System.out.printf("Frame %d, Rotation %.3f\n", i, Math.toDegrees(rotations[i]));
+			}
 		}
-		System.out.println(); */
+		Debug.println(); */
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 	
@@ -524,7 +528,7 @@ public class VectorMaximizer {
 		}
 		
 		for (SimpleMotion m : motionGroup)
-			System.out.println(m.dispX + ", " + m.dispZ);
+			Debug.println(m.dispX + ", " + m.dispZ);
 		
 		System.arraycopy(motionGroup, 0, motions, startIndex, motionGroup.length);
 		
@@ -538,16 +542,16 @@ public class VectorMaximizer {
         double test = 0;
         while (i < RCV_MAX_ITERATIONS) {
             test = (high + low) / 2; //binary search for the correct angle
-            //System.out.println("Testing " + Math.toDegrees(test));
+            //Debug.println("Testing " + Math.toDegrees(test));
             Movement rcCapThrow = new Movement(movementType, initialVelocity);
             GroundedCapThrow rcMotion = new GroundedCapThrow(rcCapThrow, 0, rcTrueInitialAngleDiff, test, true);
             rcMotion.calcDispDispCoordsAngleSpeed();
-            //System.out.println("Final Angle: " + Math.toDegrees(rcMotion.finalAngle));
+            //Debug.println("Final Angle: " + Math.toDegrees(rcMotion.finalAngle));
             Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
             SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, false, framesRCV);
             rcvMotion.calcDispDispCoordsAngleSpeed();
             double sumDispZ = rcMotion.dispZ + rcvMotion.dispZ;
-            System.out.println("Disp Z sum: " + sumDispZ);
+            Debug.println("Disp Z sum: " + sumDispZ);
             if (Math.abs(sumDispZ) < RCV_ERROR) {
                 break;
             }
@@ -603,7 +607,7 @@ public class VectorMaximizer {
 				rcTrueInitialAngleDiff = targetAngle - initialAngle;
 				//initialAngle += rcTrueInitialAngleDiff;
 			}
-			System.out.println("True Diff: " + Math.toDegrees(rcTrueInitialAngleDiff));
+			Debug.println("True Diff: " + Math.toDegrees(rcTrueInitialAngleDiff));
 		}
 		else {
 			rcTrueInitialAngleDiff = 0;
@@ -696,7 +700,7 @@ public class VectorMaximizer {
 					unadjustedTargetAngle += Math.PI;
 				unadjustedTargetAngle -= Math.PI / 2;
 
-				//System.out.println("RC Cap Throw Angle Change: " + Math.toDegrees(unadjustedTargetAngle));
+				//Debug.println("RC Cap Throw Angle Change: " + Math.toDegrees(unadjustedTargetAngle));
 
 				if (rightVector) {
 					rcFinalAngleDiff -= unadjustedTargetAngle;
@@ -718,13 +722,13 @@ public class VectorMaximizer {
 		bestAngle1Adjusted = once_bestAngle1Adjusted;
 		bestAngle2Adjusted = once_bestAngle2Adjusted;
 
-		System.out.println("Displacement x, y: " + bestDispX + ", " + bestDispY);
-		System.out.println("Maximum displacement: " + bestDisp);
-		System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
-		System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
-		System.out.println("Angle 1 Adjusted: " + Math.toDegrees(bestAngle1Adjusted));
-		System.out.println("Angle 2 Adjusted: " + Math.toDegrees(bestAngle2Adjusted));
-		System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+		Debug.println("Displacement x, y: " + bestDispX + ", " + bestDispY);
+		Debug.println("Maximum displacement: " + bestDisp);
+		Debug.println("Angle 1: " + Math.toDegrees(bestAngle1));
+		Debug.println("Angle 2: " + Math.toDegrees(bestAngle2));
+		Debug.println("Angle 1 Adjusted: " + Math.toDegrees(bestAngle1Adjusted));
+		Debug.println("Angle 2 Adjusted: " + Math.toDegrees(bestAngle2Adjusted));
+		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
 		
 		//adjusting motions to the optimized values
@@ -740,7 +744,7 @@ public class VectorMaximizer {
 		double unadjustedTargetAngle = Math.atan(bestDispY / bestDispX);
 		if (unadjustedTargetAngle < 0)
 			unadjustedTargetAngle += Math.PI;
-		System.out.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
+		Debug.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
 		double adjustment;
 		if (targetAngleGiven) {
 			//adjustment = givenAngle - unadjustedTargetAngle;
@@ -749,7 +753,7 @@ public class VectorMaximizer {
 			//targetAngle = givenAngle;
 		}
 		else {
-			System.out.println("hi");
+			Debug.println("hi");
 			//adjustment = givenAngle - Math.PI / 2;
 			adjustment = initialAngle - Math.PI / 2;
 			if (rightVector) {
@@ -765,14 +769,14 @@ public class VectorMaximizer {
 			motions[i].adjustInitialAngle(adjustment);
 			if (motions[i].movement.movementType.equals("Falling") && i > 0)
 				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
-			System.out.println(motions[i].movement.movementType + " motion angle:" + Math.toDegrees(motions[i].initialAngle));
+			Debug.println(motions[i].movement.movementType + " motion angle:" + Math.toDegrees(motions[i].initialAngle));
 		}
 		if (initialAngle < 0)
 			initialAngle += 2 * Math.PI;
 		if (targetAngle < 0)
 			targetAngle += 2 * Math.PI;
-		System.out.println("Initial angle:" + Math.toDegrees(initialAngle));
-		System.out.println("Target angle:" + Math.toDegrees(targetAngle));
+		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
+		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
 		
 	}
 	
@@ -805,9 +809,9 @@ public class VectorMaximizer {
 		if (motionGroup1.length > 0)
 			motionGroup1FinalAngle = motionGroup1[motionGroup1.length - 1].finalAngle;
 		
-		System.out.println("Group 1 displacement x, y: " + dispXMotionGroup1 + ", " + dispYMotionGroup1);
-		//System.out.println("Group 1 displacement: " + dispMotionGroup1);
-		//System.out.println("Group 1 angle: " + Math.toDegrees(angleMotionGroup1));
+		Debug.println("Group 1 displacement x, y: " + dispXMotionGroup1 + ", " + dispYMotionGroup1);
+		//Debug.println("Group 1 displacement: " + dispMotionGroup1);
+		//Debug.println("Group 1 angle: " + Math.toDegrees(angleMotionGroup1));
 		
 		//the holding angle for the first variable cap throw
 		
@@ -825,7 +829,7 @@ public class VectorMaximizer {
 		
 		once_bestDisp = Math.sqrt(Math.pow(dispXMotionGroup1, 2) + Math.pow(dispYMotionGroup1, 2));
 		
-		//System.out.println(variableCapThrow1VectorRight);
+		//Debug.println(variableCapThrow1VectorRight);
 		
 		//SimpleMotion[] motionGroup2 = null;
 		
@@ -837,19 +841,19 @@ public class VectorMaximizer {
 			
 			motionGroup2VectorRight = currentVectorRight;
 			motionGroup2 = calcMotionGroup(motionGroup2Index, variableMovement2Index, 0, 0); //last velocity does not currently matter as there is a ground pound then dive
-			System.out.println("Motion group 2 calculation:");
+			Debug.println("Motion group 2 calculation:");
 			calcAll(motionGroup2);
 			dispMotionGroup2 = disp;
 			motionGroup2Angle = Math.PI / 2 - Math.abs(angle);
 			motionGroup2FinalAngle = Math.abs(motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2);
 			motionGroup2FinalRotation = calcFinalRotation(motionGroup2);
 			
-			System.out.println("motion group 2 disp: " + dispMotionGroup2);
+			Debug.println("motion group 2 disp: " + dispMotionGroup2);
 			
 			//optimize the first variable cap throw
 			Movement variableCapThrow1 = new Movement(movementNames.get(variableCapThrow1Index), motions[variableCapThrow1Index - 1].finalSpeed);
 			variableCapThrow1Frames = movementFrames.get(variableCapThrow1Index);
-			System.out.println("frames: " + variableCapThrow1Frames);
+			Debug.println("frames: " + variableCapThrow1Frames);
 			variableCapThrow1Vector = (ComplexVector) variableCapThrow1.getMotion(variableCapThrow1Frames, variableCapThrow1VectorRight, true);
 			motions[variableCapThrow1Index] = variableCapThrow1Vector;
 			variableCapThrow1Vector.setInitialAngle(motionGroup1FinalAngle);
@@ -872,7 +876,7 @@ public class VectorMaximizer {
 			//binary search-ish algorithm to find maximum
 			//this works because the function is increasing/flat until the maximum, then decreasing/flat after
 			while (radius > Math.toRadians(.05)) {
-				//System.out.println("Med: " + Math.toDegrees(med));
+				//Debug.println("Med: " + Math.toDegrees(med));
 				lowMed = med - radius;
 				highMed = med + radius;
 				lowMedDisp = calcDisp(lowMed);
@@ -926,14 +930,14 @@ public class VectorMaximizer {
 			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
 				double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted - booleanToPlusMinus(motionGroup2VectorRight) * motionGroup2FinalAngle;
 				double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
-				//System.out.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+				//Debug.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
 				findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, bestDispX1, bestDispY1); //will make bestDispX2 and bestDispY2 wrong
 			}	
 		}
 		//if we didn't have variableCapThrow1 but we do have a second variable movement (i.e. before the final dive)
 		else if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
 			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1);
-			System.out.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
+			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
 			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispXMotionGroup1, dispYMotionGroup1);
 			once_bestAngle2 = variableAngle2;
 			once_bestAngle2Adjusted = variableAngle2Adjusted;
@@ -985,14 +989,14 @@ public class VectorMaximizer {
 			variableCapThrow1DispY += fallingDisplacements[1];
 		}
 		
-		//System.out.println(Math.toDegrees(motions[variableCapThrow1Index].finalAngle));
+		//Debug.println(Math.toDegrees(motions[variableCapThrow1Index].finalAngle));
 		
-//		System.out.println(variableCapThrow1DispX);
-//		System.out.println(variableCapThrow1DispY);
-//		System.out.println(dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle));
-//		System.out.println(dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle));
+//		Debug.println(variableCapThrow1DispX);
+//		Debug.println(variableCapThrow1DispY);
+//		Debug.println(dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle));
+//		Debug.println(dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle));
 		
-		//System.out.println(Math.toDegrees(variableAngle1Adjusted));
+		//Debug.println(Math.toDegrees(variableAngle1Adjusted));
 		
 		//sum the displacements so far
 		testDispX1 = dispXMotionGroup1 + variableCapThrow1DispX + dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle);
@@ -1004,17 +1008,17 @@ public class VectorMaximizer {
 			
 			//need to know the final rotation so that we can get the right rotation before a final dive if we're rotating, say, a cap bounce
 			double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + variableAngle1Adjusted - Math.PI / 2;
-			//System.out.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
-			//System.out.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
-			//System.out.println(Math.toDegrees(variableAngle2) + ": " + Math.toDegrees(variableAngle2Adjusted));
+			//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+			//Debug.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+			//Debug.println(Math.toDegrees(variableAngle2) + ": " + Math.toDegrees(variableAngle2Adjusted));
 			if (findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, testDispX1, testDispY1)) {
 				//if we're able to find a variable angle 2
 				double testDisp = Math.sqrt(Math.pow(testDispX2, 2) + Math.pow(testDispY2, 2));
 				/* if (testDisp > oldTestDisp) {
-					System.out.println("+");
+					Debug.println("+");
 				}
 				else {
-					System.out.println("-");
+					Debug.println("-");
 				}
 				oldTestDisp = testDisp; */
 				return testDisp;
@@ -1025,22 +1029,22 @@ public class VectorMaximizer {
 		else { //if there isn't one we just compare this choice of variableAngle1 to the ones we've tried before
 			double testDisp = Math.sqrt(Math.pow(testDispX1, 2) + Math.pow(testDispY1, 2));
 			/* if (testDisp > oldTestDisp) {
-				System.out.println("+");
+				Debug.println("+");
 			}
 			else {
-				System.out.println("-");
+				Debug.println("-");
 			}
 			oldTestDisp = testDisp; */
-			System.out.println("Test Disp X1: " + testDispX1);
-			System.out.println("Test Disp Y1: " + testDispY1);
+			Debug.println("Test Disp X1: " + testDispX1);
+			Debug.println("Test Disp Y1: " + testDispY1);
 			return testDisp;
 		}
 		
-		//System.out.println("Angle: " + Math.toDegrees(variableAngle1));
-		//System.out.println("Group 2 Angle: " + Math.toDegrees(motionGroup2AdjustedAngle));
-		//System.out.println("Displacement x, y: " + testDispX1 + ", " + testDispY1);
-		//System.out.println("Variable 1 displacement x, y: " + motions[variableCapThrow1Index].dispX + ", " + motions[variableCapThrow1Index].dispZ);
-		//System.out.println("Group 2 displacement x, y: " + dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle) + ", " + dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle));
+		//Debug.println("Angle: " + Math.toDegrees(variableAngle1));
+		//Debug.println("Group 2 Angle: " + Math.toDegrees(motionGroup2AdjustedAngle));
+		//Debug.println("Displacement x, y: " + testDispX1 + ", " + testDispY1);
+		//Debug.println("Variable 1 displacement x, y: " + motions[variableCapThrow1Index].dispX + ", " + motions[variableCapThrow1Index].dispZ);
+		//Debug.println("Group 2 displacement x, y: " + dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle) + ", " + dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle));
 	}
 	
 	private boolean findVariableAngle2(SimpleMotion[] motionGroup, double initialAngle, double initialRotation, double previousDispX, double previousDispY) {
@@ -1062,7 +1066,7 @@ public class VectorMaximizer {
 		
 		//variableAngle2 = Math.toRadians(11.40380859375);
 		
-		//System.out.println("Initial Angle:" + Math.toDegrees(initialAngle));
+		//Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
 		
@@ -1090,14 +1094,14 @@ public class VectorMaximizer {
 			if (testDispAngle2 <= 0)
 				testDispAngle2 += Math.PI;		
 			
-		//	System.out.println("High:" + Math.toDegrees(high));
-		//	System.out.println("Low:" + Math.toDegrees(low));
-		//	System.out.println("Test angle:" + Math.toDegrees(testFinalAngle));
-		//	System.out.println("Disp angle:" + Math.toDegrees(testDispAngle));
+		//	Debug.println("High:" + Math.toDegrees(high));
+		//	Debug.println("Low:" + Math.toDegrees(low));
+		//	Debug.println("Test angle:" + Math.toDegrees(testFinalAngle));
+		//	Debug.println("Disp angle:" + Math.toDegrees(testDispAngle));
 
 			/*if (hasVariableRollCancel) {
 				if (Math.abs(testDispX2) < .01) {
-					System.out.println("angle 2 found");
+					Debug.println("angle 2 found");
 					return true;
 				}
 				else if ((currentVectorRight && testDispX2 > 0) || (!currentVectorRight && testDispX2 < 0))
@@ -1107,7 +1111,7 @@ public class VectorMaximizer {
 			}
 			else {*/
 			if (Math.abs(variableAngle2Adjusted - testDispAngle2) < .0001) {
-				//System.out.println("angle 2 found");
+				//Debug.println("angle 2 found");
 				return true;
 			}
 			else if ((currentVectorRight && variableAngle2Adjusted < testDispAngle2) || (!currentVectorRight && variableAngle2Adjusted > testDispAngle2))

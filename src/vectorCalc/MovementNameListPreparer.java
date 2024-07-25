@@ -207,6 +207,6 @@ public class MovementNameListPreparer {
 	
 	public void print() {
 		for (int i = 0; i < movementNames.size(); i++)
-			System.out.println(movementNames.get(i) + ", " + movementFrames.get(i));
+			Debug.println(movementNames.get(i) + ", " + movementFrames.get(i));
 	}
 }
