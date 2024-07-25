@@ -789,7 +789,7 @@ public class VectorCalculator extends JPanel {
 		
 		f.add(nonResize, BorderLayout.CENTER);
 		//f.add(resize, BorderLayout.CENTER);
-		f.setSize(600, 480);
+		f.setSize(600, 540);
 		//f.setResizable(false);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setLocationRelativeTo(null);
