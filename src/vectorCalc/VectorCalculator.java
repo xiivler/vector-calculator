@@ -398,17 +398,6 @@ public class VectorCalculator extends JPanel {
 			}
 			
 			@Override
-			public boolean isCellSelected(int row, int column) {
-		        if (!getRowSelectionAllowed() && !getColumnSelectionAllowed()) {
-		            return false;
-		        }
-		        if (column == 0)
-		        	return false;
-		        return (!getRowSelectionAllowed() || isRowSelected(row)) &&
-		               (!getColumnSelectionAllowed() || isColumnSelected(column));
-		    }
-			
-			@Override
 			public Component prepareEditor(TableCellEditor editor, int row, int column) {
 			    Component c = super.prepareEditor(editor, row, column);
 			    if (c instanceof JTextComponent) {
