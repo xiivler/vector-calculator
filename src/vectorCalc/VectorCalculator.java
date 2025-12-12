@@ -91,7 +91,7 @@ public class VectorCalculator extends JPanel {
 	static AngleType angleType = AngleType.TARGET;
 	static String initialMovementName = "Triple Jump";
 	static boolean durationFrames = true;
-	static int initialFrames = 60;
+	static int initialFrames = 70;
 	static double initialDispY = 0;
 	static int framesJump = 10;
 	static double initialHorizontalSpeed = 24;
@@ -785,16 +785,28 @@ public class VectorCalculator extends JPanel {
 		f.setVisible(true);
 		
 		//DEBUG PREPOLUATE MOVEMENT
-		/*
-		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "23"});
-		movementModel.addRow(new String[]{"Cap Bounce", "40"});
-		movementModel.addRow(new String[]{"Dive", "20"});
+		
+/* 		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
+		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
+		movementModel.addRow(new String[]{"Dive", "21"});
+		movementModel.addRow(new String[]{"Cap Bounce", "42"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
+		movementModel.addRow(new String[]{"Dive", "25"}); */
+		
 
-		setAngleType(AngleType.BOTH);
-		initialAngle = 65;
-		targetAngle = 90;
-		*/
+/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
+		movementModel.addRow(new String[]{"Dive", "21"});
+		movementModel.addRow(new String[]{"Cap Bounce", "42"});
+		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
+		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
+		movementModel.addRow(new String[]{"Dive", "25"}); */
+
+		//setAngleType(AngleType.BOTH);
+		//initialAngle = 65;
+		//targetAngle = 90;
+		//*/
 	}
 
 }

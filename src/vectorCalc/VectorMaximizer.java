@@ -39,6 +39,9 @@ public class VectorMaximizer {
 	
 	boolean rightVector;
 	boolean currentVectorRight;
+
+	boolean switchHCTFallVectorDir = true;
+	boolean bestSwitchHCTFallVectorDir = true;
 	
 	boolean hasVariableRollCancel = false;
 	boolean hasVariableCapThrow1 = false;
@@ -46,10 +49,12 @@ public class VectorMaximizer {
 	boolean hasVariableOtherMovement2 = false;
 	boolean hasVariableCapThrow1Falling = false;
 	boolean hasVariableMovement2Falling = false;
+	boolean hasVariableHCTFallVector = false;
 	
 	int variableCapThrow1Index;
 	int variableMovement2Index;
 	int motionGroup2Index;
+	int variableHCTFallIndex;
 	//int motionGroup3Index;
 
 	ComplexVector variableCapThrow1Vector;
@@ -75,6 +80,7 @@ public class VectorMaximizer {
 	double variableAngle1Adjusted;
 	double variableAngle2;
 	double variableAngle2Adjusted;
+	double variableHCTHoldingAngle;
 
 	double rcTrueInitialAngleDiff;
 	double rcFinalAngleDiff;
@@ -147,7 +153,7 @@ public class VectorMaximizer {
 		//motionGroup3Index = movementNames.size();
 		
 		//determine where the cap throws / other movement types whose angles are variable are (if any), since they will partition the movement
-		for (int i = 0; i < movementNames.size(); i++)	
+		for (int i = 0; i < movementNames.size(); i++) {
 			if (movementNames.get(i).equals("Dive")) {
 				if (i - 2 >= 0 && movementNames.get(i - 2).contains("Throw")) {
 					if (i == movementNames.size() - 1) {
@@ -186,6 +192,12 @@ public class VectorMaximizer {
 					}
 				}
 			}
+			//we need to optimize the hct fall specifically
+			else if (movementNames.get(i).contains("Homing") && i < movementNames.size() - 1 && movementNames.get(i + 1).equals("Falling")) {
+				hasVariableHCTFallVector = true;
+				variableHCTFallIndex = i + 1;
+			}
+		}
 		
 		motions = new SimpleMotion[movementNames.size()];
 		
@@ -536,10 +548,20 @@ public class VectorMaximizer {
 			}
 			else
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
+			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall
+				((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
+				if (!switchHCTFallVectorDir) {
+					currentVectorRight = !currentVectorRight;
+				}
+				Debug.println("HCT Optimize Branch Activated!");
+			}
 			motionGroup[i].setInitialAngle(motionGroup[i - 1].finalAngle);
 			motionGroup[i].calcDispDispCoordsAngleSpeed();
+			//if the movement is falling, switch the vector only if j is the index of the hct AND we are hct second
+			//if the movement is an HCT, do not switch the vector if HCT second
 			if (!(movementNames.get(j).equals("Falling") || motionGroup[i].getClass().getSimpleName().equals("SimpleMotion")))
-				currentVectorRight = !currentVectorRight;
+				if (!(!switchHCTFallVectorDir && j == variableHCTFallIndex - 1))
+					currentVectorRight = !currentVectorRight;
 		}
 		
 		for (SimpleMotion m : motionGroup)
@@ -648,7 +670,7 @@ public class VectorMaximizer {
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 
-					maximizeOnce();
+					maximizeOnceHCT();
 
 					if (once_bestDisp > bestDisp) {
 						bestRCName = Movement.RC_TYPES[i];
@@ -677,7 +699,7 @@ public class VectorMaximizer {
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
 			for (int i = 1; i <= maxCount; i++) {
-				maximizeOnce();
+				maximizeOnceHCT();
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
 					unadjustedTargetAngle += Math.PI;
@@ -708,7 +730,7 @@ public class VectorMaximizer {
 					break;
 				}
 
-				maximizeOnce();
+				maximizeOnceHCT();
 
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -726,7 +748,7 @@ public class VectorMaximizer {
 			}
 		}
 		else {
-			maximizeOnce();
+			maximizeOnceHCT();
 		}
 
 		bestDispZ = once_bestDispZ;
@@ -811,6 +833,43 @@ public class VectorMaximizer {
 		return displacements;
 	}
 
+	//runs maximizeOnce() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector
+	private void maximizeOnceHCT() {
+		if (hasVariableHCTFallVector) {
+			bestDisp = 0;
+			double bestVariableHCTHoldingAngle = 0;
+
+			int numSteps = 20; //do binary search instead?
+			for (int i = -numSteps / 2; i <= numSteps / 2; i++) {
+				variableHCTHoldingAngle = Math.PI / 2 / numSteps * i; //range from -90 degrees to 90 degrees
+				if (variableHCTHoldingAngle < 0) {
+					switchHCTFallVectorDir = true;
+					variableHCTHoldingAngle = -variableHCTHoldingAngle;
+				}
+				else {
+					switchHCTFallVectorDir = false;
+				}
+				Debug.println("Testing HCT fall holding angle " + Math.toDegrees(variableHCTHoldingAngle));
+
+				maximizeOnce();
+
+				if (once_bestDisp > bestDisp) {
+					bestDisp = once_bestDisp;
+					bestVariableHCTHoldingAngle = variableHCTHoldingAngle;
+					bestSwitchHCTFallVectorDir = switchHCTFallVectorDir;
+				}
+			}
+
+			variableHCTHoldingAngle = bestVariableHCTHoldingAngle;
+			switchHCTFallVectorDir = bestSwitchHCTFallVectorDir;
+			maximizeOnce();
+		}
+		else {
+			maximizeOnce();
+		}
+	}
+
+	//one iteration of maximization of variable angles 1 and 2 if they exist
 	private void maximizeOnce() {
 		currentVectorRight = rightVector;
 

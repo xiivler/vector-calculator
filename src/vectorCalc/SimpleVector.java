@@ -4,7 +4,7 @@ package vectorCalc;
 public class SimpleVector extends SimpleMotion {
 	
 	boolean optimalForwardAccel = true; //if true, the holding angle will be overridden to be 0 to until full speed is reached from accelerating forward
-	
+
 	double normalAngle;
 	
 	double baseSidewaysAccel;
