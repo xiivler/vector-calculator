@@ -761,7 +761,10 @@ public class Movement {
 			return new GroundedCapThrow(this, !rightVector);
 		}
 		else if (vectorAccel == 0)
-			return new SimpleMotion(this, frames);
+			if (complex && movementType.equals("Dive"))
+				return new DiveTurn(this, rightVector, frames);
+			else
+				return new SimpleMotion(this, frames);
 		else if (complex)
 			return new ComplexVector(this, rightVector, frames);
 		else

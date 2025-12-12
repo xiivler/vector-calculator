@@ -64,7 +64,7 @@ public class VectorDisplayWindow {
 	static final int TSV_TAS = 1;
 	static final int TSV_TAS_2 = 2;
 	
-	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)"};
+	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)", "Efficiency"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
@@ -140,7 +140,7 @@ public class VectorDisplayWindow {
 		dataTable.getColumnModel().getColumn(4).setPreferredWidth(400);
 		dataTable.getColumnModel().getColumn(5).setPreferredWidth(360);
 		dataTable.getColumnModel().getColumn(6).setPreferredWidth(240);
-		//dataTable.getColumnModel().getColumn(7).setPreferredWidth(160);
+		dataTable.getColumnModel().getColumn(7).setPreferredWidth(160);
 		
 		JScrollPane dataScrollPane = new JScrollPane(dataTable);
 
@@ -335,7 +335,7 @@ public class VectorDisplayWindow {
 					theta = reduceAngle(info[i][7] - cameraAngle + Math.PI / 2);
 				}
 
-				Object[] rowContents = new Object[7];
+				Object[] rowContents = new Object[8];
 				rowContents[0] = row;
 				rowContents[1] = "";
 				rowContents[2] = "";
@@ -360,6 +360,7 @@ public class VectorDisplayWindow {
 				else {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
+				rowContents[7] = String.format("%.3f", -info[i][3] / info[i][4]); //not right unless target angle is 0
 				dataTableModel.addRow(rowContents);
 
 				//configure the Inputs array
