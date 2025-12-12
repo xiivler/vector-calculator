@@ -4,7 +4,7 @@ package vectorCalc;
 public class SimpleVector extends SimpleMotion {
 	
 	boolean optimalForwardAccel = true; //if true, the holding angle will be overridden to be 0 to until full speed is reached from accelerating forward
-
+	
 	double normalAngle;
 	
 	double baseSidewaysAccel;
@@ -14,6 +14,8 @@ public class SimpleVector extends SimpleMotion {
 	double dispSideways;
 	
 	double finalSidewaysVelocity;
+
+	double sidewaysVelocityCap;
 	
 	boolean rightVector;
 	
@@ -36,6 +38,7 @@ public class SimpleVector extends SimpleMotion {
 			this.holdingAngle -= Math.toRadians(.5);
 		}
 		vectorFrames = frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
+		sidewaysVelocityCap = forwardVelocityCap;
 	}
 	
 	
@@ -55,6 +58,7 @@ public class SimpleVector extends SimpleMotion {
 		
 		this.holdingAngle = holdingAngle;
 		vectorFrames = frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
+		sidewaysVelocityCap = forwardVelocityCap;
 	}
 
 	public double calcDispSideways() {
@@ -73,12 +77,12 @@ public class SimpleVector extends SimpleMotion {
 		else
 			vectorFrames = frames;
 		
-		int framesToMaxSidewaysSpeed = (int) (forwardVelocityCap / sidewaysAccel);
+		int framesToMaxSidewaysSpeed = (int) (sidewaysVelocityCap / sidewaysAccel);
 		if (vectorFrames >= 0) {
-			if (vectorFrames <= (int) (forwardVelocityCap / sidewaysAccel))
+			if (vectorFrames <= (int) (sidewaysVelocityCap / sidewaysAccel))
 				return sidewaysAccel / 2 * vectorFrames * (vectorFrames + 1);
 			else
-				return sidewaysAccel * (framesToMaxSidewaysSpeed + 1) / 2 * framesToMaxSidewaysSpeed + forwardVelocityCap * (vectorFrames - framesToMaxSidewaysSpeed);
+				return sidewaysAccel * (framesToMaxSidewaysSpeed + 1) / 2 * framesToMaxSidewaysSpeed + sidewaysVelocityCap * (vectorFrames - framesToMaxSidewaysSpeed);
 		}
 		else
 			return 0;
@@ -92,7 +96,7 @@ public class SimpleVector extends SimpleMotion {
 		dispForward = calcDispForward();
 		dispSideways = calcDispSideways();
 		
-		finalSidewaysVelocity = Math.min(sidewaysAccel * vectorFrames, finalForwardVelocity);
+		finalSidewaysVelocity = Math.min(sidewaysAccel * vectorFrames, Math.min(finalForwardVelocity, sidewaysVelocityCap));
 		
 	}
 	
@@ -309,10 +313,12 @@ public class SimpleVector extends SimpleMotion {
 				if (forwardVelocity > forwardVelocityCap)
 					forwardVelocity = forwardVelocityCap;
 			}
-			if (sidewaysVelocity < forwardVelocityCap && i >= nonVectorFrames) {
+			if (i == frames - 1)
+				forwardVelocity -= yank;
+			if (sidewaysVelocity < sidewaysVelocityCap && i >= nonVectorFrames) {
 				sidewaysVelocity += sidewaysAccel;
-				if (sidewaysVelocity > forwardVelocityCap)
-					sidewaysVelocity = forwardVelocityCap;
+				if (sidewaysVelocity > sidewaysVelocityCap)
+					sidewaysVelocity = sidewaysVelocityCap;
 			}
 			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
 			xVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
@@ -338,11 +344,17 @@ public class SimpleVector extends SimpleMotion {
 			if (i < nonVectorFrames) {
 				info[i][7] = initialAngle;
 			}
+			else if (yank > 0 && i == frames - 1) {
+				info[i][7] = initialAngle + Math.PI;
+			}
 			else {
 				info[i][7] = holdingAngleAdjusted;
 			}
 			if (info[i][7] == NO_ANGLE) {
 				info[i][8] = 0;
+			}
+			else if (yank > 0 && i == frames - 1) {
+				info[i][8] = yank / baseBackwardAccel;
 			}
 			else {
 				info[i][8] = 1;

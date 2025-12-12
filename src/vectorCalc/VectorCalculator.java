@@ -786,6 +786,19 @@ public class VectorCalculator extends JPanel {
 		
 		//DEBUG PREPOLUATE MOVEMENT
 		
+/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Dive", "21"});
+		movementModel.addRow(new String[]{"Cap Bounce", "42"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Dive", "25"}); */
+
+		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Dive", "21"});
+		movementModel.addRow(new String[]{"Cap Bounce", "36"});
+		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Dive", "25"});
+
 /* 		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
 		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});

@@ -532,7 +532,20 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+			// if (movementNames.get(startIndex).equals("Triple Jump")) {
+			// 	motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
+			// 	double[] holdingAngles = new double[movementFrames.get(startIndex)];
+			// 	int framesCountervector = 1;
+			// 	for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
+			// }
+			// else
+				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
 			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion"))
@@ -546,6 +559,31 @@ public class VectorMaximizer {
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((ComplexVector) motionGroup[i]).setHoldingAngles(homingMotionThrowHoldingAngles);
 			}
+			/* else if (movementNames.get(j).equals("Rainbow Spin")) {
+				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+				double[] holdingAngles = new double[movementFrames.get(j)];
+				int framesCountervector = 7;
+				for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+				}
+				for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+					holdingAngles[a] = -SimpleMotion.NORMAL_ANGLE;
+				}
+				System.out.println("Rainbow spin length: " + movementFrames.get(j));
+				((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
+			}
+			else if (movementNames.get(j).equals("Dive Cap Bounce")) {
+				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+				double[] holdingAngles = new double[movementFrames.get(j)];
+				int framesCountervector = 1;
+				for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+				}
+				for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+					holdingAngles[a] = 1.5*SimpleMotion.NORMAL_ANGLE;
+				}
+				((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
+			} */
 			else
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
 			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall

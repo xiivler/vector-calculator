@@ -56,12 +56,12 @@ public class ComplexVector extends SimpleVector {
 		dispSideways += sidewaysVelocity;
 	}
 	
-	public double calcUnoptimalDispForward() {
+	public double calcDispForward() {
 		dispForward = 0;
 		forwardVelocity = initialForwardVelocity;
 		for (int i = 0; i < frames; i++)
 			stepForward(i);
-		finalSidewaysVelocity = forwardVelocity;
+		finalForwardVelocity = forwardVelocity;
 		
 		return dispForward;
 	}
@@ -69,7 +69,7 @@ public class ComplexVector extends SimpleVector {
 	public void stepForward(int i) {
 		if (holdingAngles[i] != NO_ANGLE) {
 			double accelValue;
-			if (holdingAngles[i] <= NORMAL_ANGLE) {
+			if (holdingAngles[i] <= NORMAL_ANGLE && holdingAngles[i] >= -NORMAL_ANGLE) {
 				accelValue = baseForwardAccel;
 			}
 			else {
@@ -86,13 +86,8 @@ public class ComplexVector extends SimpleVector {
 	}
 	
 	public void calcDisp() {
-		
-		if (!optimalForwardAccel && initialForwardVelocity < defaultSpeedCap)
-			dispForward = calcUnoptimalDispForward();
-		else
-			dispForward = calcDispForward();
+		dispForward = calcDispForward();
 		dispSideways = calcDispSideways();
-		
 	}
 	
 	public double calcFinalAngle() {
@@ -219,28 +214,28 @@ public class ComplexVector extends SimpleVector {
 			
 			double[][] info = new double[frames][9];
 			for (int i = 0; i < frames; i++) {	
-				if (forwardVelocity < forwardVelocityCap) {
-					if (i >= nonVectorFrames) {
-						if (holdingAngles[i] != NO_ANGLE) {
-							double accelValue;
-							if (holdingAngles[i] <= NORMAL_ANGLE) {
-								accelValue = baseForwardAccel;
-							}
-							else {
-								accelValue = baseBackwardAccel;
-							}
-							if (holdingMinRadius[i]) {
-								accelValue *= MIN_RADIUS;
-							}
-							forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
+				//apply forward/backward accel
+				if (i >= nonVectorFrames) {
+					if (holdingAngles[i] != NO_ANGLE) {
+						double accelValue;
+						if (holdingAngles[i] <= NORMAL_ANGLE && holdingAngles[i] >= -NORMAL_ANGLE) {
+							accelValue = baseForwardAccel;
 						}
+						else {
+							accelValue = baseBackwardAccel;
+						}
+						if (holdingMinRadius[i]) {
+							accelValue *= MIN_RADIUS;
+						}
+						forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
 					}
-					else
-						forwardVelocity += baseForwardAccel;
-					if (forwardVelocity > forwardVelocityCap)
-						forwardVelocity = forwardVelocityCap;
 				}
-				if (sidewaysVelocity < forwardVelocityCap && i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
+				else
+					forwardVelocity += baseForwardAccel;
+				if (forwardVelocity > forwardVelocityCap)
+					forwardVelocity = forwardVelocityCap;
+				//apply sideways accel
+				if (i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
 					if (holdingMinRadius[i]) {
 						sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
 					}

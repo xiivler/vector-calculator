@@ -4,6 +4,7 @@ package vectorCalc;
 public class SimpleMotion {
 	
 	public static final double NORMAL_ANGLE = Math.PI / 2;
+	public static final double BACK_ANGLE = Math.PI;
 	public static final double NO_ANGLE = Double.MIN_VALUE;
 	
 	double rotationalAccel;
@@ -32,6 +33,8 @@ public class SimpleMotion {
 	double baseForwardAccel;
 	double baseBackwardAccel;
 	double forwardAccel;
+
+	double yank = 0; //holding backward on final frame, the amount of speed decrease (can be up to baseBackwardAccel)
 	
 	double finalAngle;
 	double finalSpeed;
@@ -72,20 +75,22 @@ public class SimpleMotion {
 			finalForwardVelocity = initialForwardVelocity;
 		else
 			finalForwardVelocity = Math.min(initialForwardVelocity + forwardAccel * frames, defaultSpeedCap);
-		
+
 		int framesToMaxSpeed = Math.max((int) ((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
 		
+		finalForwardVelocity -= yank;
+
 		//if the movement is up to speed just multiply velocity by time
 		if (initialForwardVelocity >= defaultSpeedCap)
-			return initialForwardVelocity * frames;
+			return initialForwardVelocity * frames - yank;
 		
 		//if the jump is not yet up to speed let it accelerate to the speed cap
 		//note that the acceleration will already be applied in the first frame because it can be (hence initialForwardVelocity + forwardAccel)
 		else {
 			if (frames <= framesToMaxSpeed)
-				return (2 * initialForwardVelocity + forwardAccel * (frames + 1)) / 2 * frames;
+				return (2 * initialForwardVelocity + forwardAccel * (frames + 1)) / 2 * frames - yank;
 			else
-				return (2 * initialForwardVelocity + forwardAccel * (framesToMaxSpeed + 1)) / 2 * framesToMaxSpeed + finalForwardVelocity * (frames - framesToMaxSpeed);
+				return (2 * initialForwardVelocity + forwardAccel * (framesToMaxSpeed + 1)) / 2 * framesToMaxSpeed + finalForwardVelocity * (frames - framesToMaxSpeed) - yank;
 		}
 	}
 		
@@ -277,6 +282,10 @@ public class SimpleMotion {
 		z0 = z;
 	}
 	
+	public void setYank(double yank) {
+		this.yank = yank;
+	}
+
 	public void adjustInitialAngle(double amount) {
 		initialAngle += amount;
 	}
