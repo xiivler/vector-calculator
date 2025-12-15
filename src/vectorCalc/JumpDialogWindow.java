@@ -13,6 +13,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
 public class JumpDialogWindow implements ActionListener {
 	
@@ -63,11 +64,14 @@ public class JumpDialogWindow implements ActionListener {
 		frame.setSize(300, 205);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.getRootPane().setDefaultButton(confirm);
 	}
 	
 	public void display() {
 		frame.setLocationRelativeTo(null);
+		frame.getRootPane().setDefaultButton(confirm);
 		frame.setVisible(true);
+		movementList.requestFocus();
 	}
 	
 	public JButton getConfirmButton() {

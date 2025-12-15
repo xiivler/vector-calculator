@@ -228,7 +228,7 @@ public class VectorMaximizer {
 	//applies the binary serach value based on what is being optimized
 	public void applyBinarySearchValue(double value, int optID) {
 		if (optID == 0) {
-			generateSimpleTechRainbowSpinHoldingAngles(value);
+			//generateSimpleTechRainbowSpinHoldingAngles(value);
 		}
 	}
 
@@ -339,7 +339,8 @@ public class VectorMaximizer {
 	}
 
 	//generates the holding angles for optimizing a rainbow spin within a simple tech jump and stores them in the variable rainbowSpinHoldingAngles
-	private void generateSimpleTechRainbowSpinHoldingAngles(double unvectorAmount) {
+	//Don't actually need it though
+	/* private void generateSimpleTechRainbowSpinHoldingAngles(double unvectorAmount) {
 		rainbowSpinHoldingAngles = new double[rainbowSpinFrames];
 
 		int fullUnvectorFrames = (int) unvectorAmount;
@@ -356,7 +357,7 @@ public class VectorMaximizer {
 		for (int a = rainbowSpinFrames - fullUnvectorFrames; a < rainbowSpinFrames; a++) {
 			rainbowSpinHoldingAngles[a] = -SimpleMotion.NORMAL_ANGLE;
 		}
-	}
+	} */
 	
 	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
 		double[] holdingAngles = new double[frames];
@@ -500,6 +501,58 @@ public class VectorMaximizer {
 				holdingAngles[i] = angle;
 			motion.setHoldingAngles(holdingAngles);
 		}
+	}
+
+	//idea: vector perfectly for as long as you can
+	//then initiate a turnaround but then go back to vectoring afterward
+	//the last frame hold the exact direction you want to go in
+	//OR if turning around for x frames is almost enough, just vector more weakly to start with
+	//angle is dive angle
+	//it seems that turnaroundFrames is always 3
+	private void setFinalCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
+		double limit = 5; //how many degrees you are willing to sacrifice off a perfect vector
+		double[] holdingAngles = new double[frames];
+		double initialHoldingAngle = SimpleMotion.NORMAL_ANGLE;
+		double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
+		Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
+		int turnaroundFrames;
+		double difference; //difference between exact turnaround and how much Mario needs to turn around
+		if (ang_deg <= 25 + limit) {
+			turnaroundFrames = 1;
+			difference = ang_deg - 25;
+		}
+		else if (ang_deg <= 25 + 22.5 + limit) {
+			turnaroundFrames = 2;
+			difference = ang_deg - 25 - 22.5;
+		}
+		else if (ang_deg <= 25 + 22.5 + 20 + limit) {
+			turnaroundFrames = 3;
+			difference = ang_deg - 25 - 22.5 - 20;
+		}
+		else {
+			turnaroundFrames = 4;
+			difference = ang_deg - 25 - 22.5 - 20 - 17.5;
+		}
+		if (difference > 0) {
+			initialHoldingAngle = SimpleMotion.NORMAL_ANGLE - Math.toRadians(difference);
+		}
+		for (int i = 0; i < frames - turnaroundFrames; i++) {
+			holdingAngles[i] = initialHoldingAngle;
+		}
+		Debug.println("Turnaround Frames: " + turnaroundFrames);
+		holdingAngles[frames - turnaroundFrames] = initialHoldingAngle + Math.PI * 181/180.0;
+		if (turnaroundFrames > 1)
+			holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle - Math.PI * 1/180.0;
+		if (turnaroundFrames > 2)
+			holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle + Math.PI * 3/180.0;
+		if (turnaroundFrames > 3)
+			holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle + Math.PI * 7/180.0;
+		if (difference < -1) {
+			holdingAngles[frames - 1] = angle;
+		}
+		boolean[] holdingMinRadius = new boolean[frames];
+		holdingMinRadius[frames - turnaroundFrames] = true;
+		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 	
 	private void setOtherMovementHoldingAngles(ComplexVector motion, SimpleMotion[] motionGroup, int index, double angle, double initialAngle, double initialRotation, boolean rightVector) {
@@ -655,11 +708,23 @@ public class VectorMaximizer {
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((ComplexVector) motionGroup[i]).setHoldingAngles(homingMotionThrowHoldingAngles);
 			}
-			else if (movementNames.get(j).equals("Rainbow Spin") && simpleTech) {
-				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-				System.out.println("Simple tech!");
-				((ComplexVector) motionGroup[i]).setHoldingAngles(rainbowSpinHoldingAngles);
-			}
+			// else if (movementNames.get(j).equals("Rainbow Spin") && simpleTech) {
+			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+			// 	System.out.println("Simple tech!");
+			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(rainbowSpinHoldingAngles);
+			// }
+			// else if (movementNames.get(j).equals("Rainbow Spin")) {
+			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+			// 	double[] holdingAngles = new double[movementFrames.get(j)];
+			// 	int framesCountervector = 1;
+			// 	for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+			// 		holdingAngles[a] = -.5*SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
+			// }
 			// else if (movementNames.get(j).equals("Dive Cap Bounce")) {
 			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 			// 	double[] holdingAngles = new double[movementFrames.get(j)];
@@ -684,9 +749,9 @@ public class VectorMaximizer {
 				Debug.println("HCT Optimize Branch Activated!");
 			}
 			motionGroup[i].setInitialAngle(motionGroup[i - 1].finalAngle);
-			Debug.println("Previous angle: " + Math.toDegrees(motionGroup[i - 1].finalAngle));
-			Debug.println("It was a: " + movementNames.get(j - 1));
-			Debug.println("It is a: " + movementNames.get(j));
+			// Debug.println("Previous angle: " + Math.toDegrees(motionGroup[i - 1].finalAngle));
+			// Debug.println("It was a: " + movementNames.get(j - 1));
+			// Debug.println("It is a: " + movementNames.get(j));
 			motionGroup[i].calcDispDispCoordsAngleSpeed();
 			//if the movement is falling, switch the vector only if j is the index of the hct AND we are hct second
 			//if the movement is an HCT, do not switch the vector if HCT second
@@ -801,7 +866,7 @@ public class VectorMaximizer {
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 
-					maximizeOnceHCTorSimple();
+					maximizeOnceHCT();
 
 					if (once_bestDisp > bestDisp) {
 						bestRCName = Movement.RC_TYPES[i];
@@ -830,7 +895,7 @@ public class VectorMaximizer {
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
 			for (int i = 1; i <= maxCount; i++) {
-				maximizeOnceHCTorSimple();
+				maximizeOnceHCT();
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
 					unadjustedTargetAngle += Math.PI;
@@ -861,7 +926,7 @@ public class VectorMaximizer {
 					break;
 				}
 
-				maximizeOnceHCTorSimple();
+				maximizeOnceHCT();
 
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -879,7 +944,7 @@ public class VectorMaximizer {
 			}
 		}
 		else {
-			maximizeOnceHCTorSimple();
+			maximizeOnceHCT();
 		}
 
 		bestDispZ = once_bestDispZ;
@@ -964,7 +1029,7 @@ public class VectorMaximizer {
 	}
 
 	//runs maximizeOnce() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
-	private void maximizeOnceHCTorSimple() {
+	private void maximizeOnceHCT() {
 		if (hasVariableHCTFallVector) {
 			double hct_bestDisp = 0;
 			double bestVariableHCTHoldingAngle = 0;
@@ -994,30 +1059,31 @@ public class VectorMaximizer {
 			switchHCTFallVectorDir = bestSwitchHCTFallVectorDir;
 			maximizeOnce();
 		}
-		else if (hasRainbowSpin) {
-			//simpleTech = true;
+		//not needed anymore since simple tech doesn't actually have this optimization
+		/* else if (hasRainbowSpin) {
+			simpleTech = true;
 
 			double simple_bestDisp = 0;
 
 			int high = rainbowSpinFrames / 2;
 
-			double[] results = binarySearch(0, rainbowSpinFrames / 2, 0, .05);
-			Debug.println("Best RS: " + results[1]);
+			//double[] results = binarySearch(0, rainbowSpinFrames / 2, 0, .05);
+			//Debug.println("Best RS: " + results[1]);
 
-			// for (double i = 0; i <= high; i += .1) {
-			// 	generateSimpleTechRainbowSpinHoldingAngles(i);
+			for (double i = 0; i <= high; i += .1) {
+				generateSimpleTechRainbowSpinHoldingAngles(i);
 
-			// 	maximizeOnce();
+				maximizeOnce();
 
-			// 	if (once_bestDisp > simple_bestDisp) {
-			// 		simple_bestDisp = once_bestDisp;
-			// 		bestRainbowSpinHoldingAngles = rainbowSpinHoldingAngles;
-			// 	}
+				if (once_bestDisp > simple_bestDisp) {
+					simple_bestDisp = once_bestDisp;
+					bestRainbowSpinHoldingAngles = rainbowSpinHoldingAngles;
+				}
 
-			// 	rainbowSpinHoldingAngles = bestRainbowSpinHoldingAngles;
-			// 	maximizeOnce();
-			// }
-		}
+				rainbowSpinHoldingAngles = bestRainbowSpinHoldingAngles;
+				maximizeOnce();
+			}
+		} */
 		else {
 			maximizeOnce();
 		}
@@ -1081,8 +1147,8 @@ public class VectorMaximizer {
 				motionGroup2FinalAngle = motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2;
 				
 			motionGroup2FinalRotation = calcFinalRotation(motionGroup2);
-			System.out.println("MG2 final angle: " + Math.toDegrees(motionGroup2FinalAngle));
-			System.out.println("MG2 final rotation: " + Math.toDegrees(motionGroup2FinalRotation));
+			// System.out.println("MG2 final angle: " + Math.toDegrees(motionGroup2FinalAngle));
+			// System.out.println("MG2 final rotation: " + Math.toDegrees(motionGroup2FinalRotation));
 			
 			Debug.println("motion group 2 disp: " + dispMotionGroup2);
 			
@@ -1305,13 +1371,13 @@ public class VectorMaximizer {
 		
 		//variableAngle2 = Math.toRadians(11.40380859375);
 		
-		Debug.println("Finding Variable Angle 2");
-		Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
+		// Debug.println("Finding Variable Angle 2");
+		// Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
 			
 			if (hasVariableCapThrow2)
-				setCapThrowHoldingAngles(variableMovement2Vector, variableAngle2, movementFrames.get(variableMovement2Index));
+				setFinalCapThrowHoldingAngles(variableMovement2Vector, variableAngle2, movementFrames.get(variableMovement2Index));
 			else
 				setOtherMovementHoldingAngles(variableMovement2Vector, motionGroup, variableMovement2Index, variableAngle2, initialAngle, initialRotation, currentVectorRight);
 			variableMovement2Vector.calcDisp();
@@ -1351,7 +1417,7 @@ public class VectorMaximizer {
 			}
 			else {*/
 			if (Math.abs(variableAngle2Adjusted - testDispAngle2) < .0001) {
-				Debug.println("angle 2 found");
+				// Debug.println("angle 2 found");
 				return true;
 			}
 			else if ((currentVectorRight && variableAngle2Adjusted < testDispAngle2) || (!currentVectorRight && variableAngle2Adjusted > testDispAngle2))
