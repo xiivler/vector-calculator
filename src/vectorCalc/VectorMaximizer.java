@@ -361,9 +361,13 @@ public class VectorMaximizer {
 		}
 	} */
 	
+	//angle is the angle of the dive
 	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
+		double throwAngle = angle;
+		if (VectorCalculator.hyperoptimize && frames > 14)
+			throwAngle += Math.toRadians(VectorCalculator.diveCapBounceAngle);
 		double[] holdingAngles = new double[frames];
-		holdingAngles[0] = angle;
+		holdingAngles[0] = throwAngle;
 		if (VectorCalculator.hyperoptimize || frames <= 8) {
 			if (frames < 7) {
 				for (int i = 1; i < frames; i++) {
@@ -464,8 +468,9 @@ public class VectorMaximizer {
 			}
 			else {
 				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
-				//Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
-				double additionalRotation = FAST_TURNAROUND_VELOCITY - minRotation;
+				Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
+				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(VectorCalculator.diveCapBounceAngle) + minRotation);
+				Debug.println("Additional rotation: " + Math.toDegrees(additionalRotation));
 				double rotationSum = 0;
 				double rotationalVelocity = 0;
 				int additionalRotationFrames = 0;
@@ -475,6 +480,7 @@ public class VectorMaximizer {
 					additionalRotationFrames++;
 				}
 				double overshoot = rotationSum - additionalRotation;
+				Debug.println("Overshoot: " + Math.toDegrees(overshoot));
 				//how much counterrotation there should be on the first frame of acceleration
 				double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
 				int firstAdditionalRotationFrame = frames - 1 - additionalRotationFrames;
@@ -483,12 +489,14 @@ public class VectorMaximizer {
 					holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 				}
 				holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
+				System.out.println(holdingAngles[firstAdditionalRotationFrame]);
 				for (int i = firstAdditionalRotationFrame + 1; i < frames - 1; i++) {
 					holdingAngles[i] = holdingAngles[i - 1];
 				}
 				holdingAngles[frames - 1] = angle + FAST_TURNAROUND_VELOCITY - FAST_TURNAROUND_ANGLE;
 				boolean[] holdingMinRadius = new boolean[frames];
 				holdingMinRadius[frames - 1] = true;
+				System.out.println(holdingAngles[firstAdditionalRotationFrame]);
 				motion.setHolding(holdingAngles, holdingMinRadius);
 				return;
 			}
@@ -1051,7 +1059,6 @@ public class VectorMaximizer {
 		double disp_noDiveTurn = maximize_HCT();
 		diveTurn = true;
 		double disp_diveTurn = maximize_HCT();
-		Debug.println();
 		if (disp_noDiveTurn > disp_diveTurn) {
 			diveTurn = false;
 			maximize_HCT();

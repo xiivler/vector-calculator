@@ -57,11 +57,12 @@ public class VectorCalculator extends JPanel {
 	static final int HOLD_JUMP_FRAMES_ROW = 8;
 	static final int INITIAL_HORIZONTAL_SPEED_ROW = 9;
 	static final int VECTOR_DIRECTION_ROW = 10;
-	static final int GRAVITY_ROW = 11;
-	static final int HYPEROPTIMIZE_ROW = 12;
-	static final int AXIS_ORDER_ROW = 13;
-	static final int CAMERA_TYPE_ROW = 14;
-	static final int CAMERA_ROW = 15;
+	static final int DIVE_CAP_BOUNCE_ANGLE_ROW = 11;
+	static final int GRAVITY_ROW = 12;
+	static final int HYPEROPTIMIZE_ROW = 13;
+	static final int AXIS_ORDER_ROW = 14;
+	static final int CAMERA_TYPE_ROW = 15;
+	static final int CAMERA_ROW = 16;
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
@@ -86,6 +87,7 @@ public class VectorCalculator extends JPanel {
 	static int framesJump = 10;
 	static double initialHorizontalSpeed = 24;
 	static boolean rightVector = false;
+	static double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
 	static boolean xAxisZeroDegrees = true;
@@ -125,6 +127,7 @@ public class VectorCalculator extends JPanel {
 		{"Frames of Holding A/B", framesJump},
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
+		{"Edge Cap Bounce Angle", "0"},
 		{"Gravity", "Regular"},
 		{"Hyperoptimize Cap Throws", "True"},
 		{"0 Degree Axis", "X"},
@@ -617,6 +620,19 @@ public class VectorCalculator extends JPanel {
 					else if (row == VECTOR_DIRECTION_ROW) {
 						rightVector = genPropertiesTable.getValueAt(row, 1).equals("Right");
 					}
+					else if (row == DIVE_CAP_BOUNCE_ANGLE_ROW) {
+						try {
+							diveCapBounceAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+						}
+						catch (NumberFormatException ex) {
+							diveCapBounceAngle = 0;
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
+						if (diveCapBounceAngle > 18.4)
+							genPropertiesTable.setValueAt(18.4, row, 1);
+						else if (diveCapBounceAngle < 0)
+							genPropertiesTable.setValueAt(0, row, 1);
+					}
 					else if (row == GRAVITY_ROW) {
 						onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
 						Movement.onMoon = onMoon;
@@ -802,13 +818,13 @@ public class VectorCalculator extends JPanel {
 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
 		movementModel.addRow(new String[]{"Dive", "25"}); */
 
-/* 		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
+		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
 		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
 		movementModel.addRow(new String[]{"Dive", "21"});
 		movementModel.addRow(new String[]{"Cap Bounce", "42"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
+		movementModel.addRow(new String[]{"Dive", "25"});
 		
 
 /* 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
