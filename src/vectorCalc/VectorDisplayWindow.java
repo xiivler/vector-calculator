@@ -64,7 +64,7 @@ public class VectorDisplayWindow {
 	static final int TSV_TAS = 1;
 	static final int TSV_TAS_2 = 2;
 	
-	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)", "Efficiency"};
+	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)", "Value"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
@@ -199,7 +199,7 @@ public class VectorDisplayWindow {
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
-		frame.setSize(1000, 600);
+		frame.setSize(1160, 600);
 	}
 	
 	private static void validatePath() {
@@ -360,7 +360,12 @@ public class VectorDisplayWindow {
 				else {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
-				rowContents[7] = String.format("%.3f", -info[i][3] / info[i][4]); //not right unless target angle is 0
+				if (info[i][4] < 0) { //how efficient the jump is
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][5], info[i][3]) - Math.toRadians(VectorCalculator.targetAngle));
+					double value = -1 / ((info[i][4] / speedInTargetDirection) - 1);
+					rowContents[7] = String.format("%.3f", value);
+				}
+				
 				dataTableModel.addRow(rowContents);
 
 				//configure the Inputs array

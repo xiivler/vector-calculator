@@ -19,6 +19,8 @@ public class VectorMaximizer {
 	public static final double TURN_COUNTERROTATION = Math.toRadians(.4); //really should be .3 but this produces inaccurate results
 	public static final double TRUE_TURN_COUNTERROTATION = Math.toRadians(.3);
 
+	public static final double FINAL_CT_ANGLE_REDUCTION_LIMIT = 5; //how many degrees you are willing to sacrifice off a perfect vector
+
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	//public static int numSteps = 901;
 			
@@ -220,9 +222,9 @@ public class VectorMaximizer {
 
 	public double maximize(int optID) {
 		if (optID == 0) {
-			return maximizeOnce();
+			return maximize_variableAngle1();
 		}
-		else return maximizeOnce();
+		else return maximize_variableAngle1();
 	}
 
 	//applies the binary serach value based on what is being optimized
@@ -510,49 +512,59 @@ public class VectorMaximizer {
 	//angle is dive angle
 	//it seems that turnaroundFrames is always 3
 	private void setFinalCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
-		double limit = 5; //how many degrees you are willing to sacrifice off a perfect vector
 		double[] holdingAngles = new double[frames];
-		double initialHoldingAngle = SimpleMotion.NORMAL_ANGLE;
-		double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
-		Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
-		int turnaroundFrames;
-		double difference; //difference between exact turnaround and how much Mario needs to turn around
-		if (ang_deg <= 25 + limit) {
-			turnaroundFrames = 1;
-			difference = ang_deg - 25;
-		}
-		else if (ang_deg <= 25 + 22.5 + limit) {
-			turnaroundFrames = 2;
-			difference = ang_deg - 25 - 22.5;
-		}
-		else if (ang_deg <= 25 + 22.5 + 20 + limit) {
-			turnaroundFrames = 3;
-			difference = ang_deg - 25 - 22.5 - 20;
+		if (VectorCalculator.hyperoptimize) {
+			double initialHoldingAngle = SimpleMotion.NORMAL_ANGLE;
+			double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
+			Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
+			int turnaroundFrames;
+			double difference; //difference between exact turnaround and how much Mario needs to turn around
+			if (ang_deg <= 25 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
+				turnaroundFrames = 1;
+				difference = ang_deg - 25;
+			}
+			else if (ang_deg <= 25 + 22.5 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
+				turnaroundFrames = 2;
+				difference = ang_deg - 25 - 22.5;
+			}
+			else if (ang_deg <= 25 + 22.5 + 20 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
+				turnaroundFrames = 3;
+				difference = ang_deg - 25 - 22.5 - 20;
+			}
+			else {
+				turnaroundFrames = 4;
+				difference = ang_deg - 25 - 22.5 - 20 - 17.5;
+			}
+			if (difference > 0) {
+				initialHoldingAngle = SimpleMotion.NORMAL_ANGLE - Math.toRadians(difference);
+			}
+			for (int i = 0; i < frames - turnaroundFrames; i++) {
+				holdingAngles[i] = initialHoldingAngle;
+			}
+			Debug.println("Turnaround Frames: " + turnaroundFrames);
+			holdingAngles[frames - turnaroundFrames] = initialHoldingAngle + Math.PI * 181/180.0;
+			if (turnaroundFrames > 1)
+				holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle - Math.PI * 1/180.0;
+			if (turnaroundFrames > 2)
+				holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle + Math.PI * 3/180.0;
+			if (turnaroundFrames > 3)
+				holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle + Math.PI * 7/180.0;
+			if (difference < -1) {
+				holdingAngles[frames - 1] = angle;
+			}
+			boolean[] holdingMinRadius = new boolean[frames];
+			holdingMinRadius[frames - turnaroundFrames] = true;
+			motion.setHolding(holdingAngles, holdingMinRadius);
 		}
 		else {
-			turnaroundFrames = 4;
-			difference = ang_deg - 25 - 22.5 - 20 - 17.5;
+			int lastNormalAngleFrame = (frames - 1) / 2;
+			//int lastNormalAngleFrame = frames - 2;
+			for (int i = 1; i <= lastNormalAngleFrame; i++)
+				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+			for (int i = lastNormalAngleFrame + 1; i < frames; i++)
+				holdingAngles[i] = angle;
+			motion.setHoldingAngles(holdingAngles);
 		}
-		if (difference > 0) {
-			initialHoldingAngle = SimpleMotion.NORMAL_ANGLE - Math.toRadians(difference);
-		}
-		for (int i = 0; i < frames - turnaroundFrames; i++) {
-			holdingAngles[i] = initialHoldingAngle;
-		}
-		Debug.println("Turnaround Frames: " + turnaroundFrames);
-		holdingAngles[frames - turnaroundFrames] = initialHoldingAngle + Math.PI * 181/180.0;
-		if (turnaroundFrames > 1)
-			holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle - Math.PI * 1/180.0;
-		if (turnaroundFrames > 2)
-			holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle + Math.PI * 3/180.0;
-		if (turnaroundFrames > 3)
-			holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle + Math.PI * 7/180.0;
-		if (difference < -1) {
-			holdingAngles[frames - 1] = angle;
-		}
-		boolean[] holdingMinRadius = new boolean[frames];
-		holdingMinRadius[frames - turnaroundFrames] = true;
-		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 	
 	private void setOtherMovementHoldingAngles(ComplexVector motion, SimpleMotion[] motionGroup, int index, double angle, double initialAngle, double initialRotation, boolean rightVector) {
@@ -822,6 +834,11 @@ public class VectorMaximizer {
 	}
 	
 	//the actual maximization function
+	//calls more maximization functions for each step
+	//this function finds the correct/optimal RCV if applicable
+	//then calls maximize_dive (whether or not to turn dive before cbv)
+	//which calls maximize_hct (hct falling vectoring)
+	//which calls maximize_variableAngle1 (first cap throw angle)
 	public void maximize() {
 		long startTime = System.currentTimeMillis();
 		
@@ -866,7 +883,7 @@ public class VectorMaximizer {
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 
-					maximizeOnceHCT();
+					maximize_dive();
 
 					if (once_bestDisp > bestDisp) {
 						bestRCName = Movement.RC_TYPES[i];
@@ -895,7 +912,7 @@ public class VectorMaximizer {
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
 			for (int i = 1; i <= maxCount; i++) {
-				maximizeOnceHCT();
+				maximize_dive();
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
 					unadjustedTargetAngle += Math.PI;
@@ -918,7 +935,7 @@ public class VectorMaximizer {
 				}
 			}
 			rcFinalAngleDiff = bestRCFinalAngleDiff;
-			//maximizeOnce();
+			//maximize_variableAngle1();
 
 			//hopefully it's small by now; fine tune by nudging by the difference between the initial and target angles
 			for (int i = 0; i < 10; i++) {
@@ -926,7 +943,7 @@ public class VectorMaximizer {
 					break;
 				}
 
-				maximizeOnceHCT();
+				maximize_dive();
 
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -944,7 +961,7 @@ public class VectorMaximizer {
 			}
 		}
 		else {
-			maximizeOnceHCT();
+			maximize_dive();
 		}
 
 		bestDispZ = once_bestDispZ;
@@ -1028,10 +1045,22 @@ public class VectorMaximizer {
 		return displacements;
 	}
 
-	//runs maximizeOnce() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
-	private void maximizeOnceHCT() {
+	//optimization step that maximizes the dive turn (on or off)
+	private void maximize_dive() {
+		diveTurn = false;
+		double disp_noDiveTurn = maximize_HCT();
+		diveTurn = true;
+		double disp_diveTurn = maximize_HCT();
+		Debug.println();
+		if (disp_noDiveTurn > disp_diveTurn) {
+			diveTurn = false;
+			maximize_HCT();
+		}
+	}
+	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
+	private double maximize_HCT() {
+		double hct_bestDisp = 0;
 		if (hasVariableHCTFallVector) {
-			double hct_bestDisp = 0;
 			double bestVariableHCTHoldingAngle = 0;
 
 			int numSteps = 20; //do binary search instead?
@@ -1046,7 +1075,7 @@ public class VectorMaximizer {
 				}
 				Debug.println("Testing HCT fall holding angle " + Math.toDegrees(variableHCTHoldingAngle));
 
-				maximizeOnce();
+				maximize_variableAngle1();
 
 				if (once_bestDisp > hct_bestDisp) {
 					hct_bestDisp = once_bestDisp;
@@ -1057,7 +1086,7 @@ public class VectorMaximizer {
 
 			variableHCTHoldingAngle = bestVariableHCTHoldingAngle;
 			switchHCTFallVectorDir = bestSwitchHCTFallVectorDir;
-			maximizeOnce();
+			return maximize_variableAngle1();
 		}
 		//not needed anymore since simple tech doesn't actually have this optimization
 		/* else if (hasRainbowSpin) {
@@ -1073,7 +1102,7 @@ public class VectorMaximizer {
 			for (double i = 0; i <= high; i += .1) {
 				generateSimpleTechRainbowSpinHoldingAngles(i);
 
-				maximizeOnce();
+				maximize_variableAngle1();
 
 				if (once_bestDisp > simple_bestDisp) {
 					simple_bestDisp = once_bestDisp;
@@ -1081,16 +1110,16 @@ public class VectorMaximizer {
 				}
 
 				rainbowSpinHoldingAngles = bestRainbowSpinHoldingAngles;
-				maximizeOnce();
+				maximize_variableAngle1();
 			}
 		} */
 		else {
-			maximizeOnce();
+			return maximize_variableAngle1();
 		}
 	}
 
 	//one iteration of maximization of variable angles 1 and 2 if they exist
-	private double maximizeOnce() {
+	private double maximize_variableAngle1() {
 		currentVectorRight = rightVector;
 
 		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
@@ -1365,7 +1394,7 @@ public class VectorMaximizer {
 		variableMovement2Vector.setInitialAngle(initialAngle); 
 		
 		//binary search to find variableAngle2
-		double low = 0;
+		double low = -Math.PI / 16;
 		double high = Math.PI / 4;
 		variableAngle2 = Math.PI / 8;
 		
