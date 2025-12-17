@@ -46,23 +46,22 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 	
-	static final int X_ROW = 0;
-	static final int Y_ROW = 1;
-	static final int Z_ROW = 2;
-	static final int ANGLE_ROW = 3;
-	static final int ANGLE_TYPE_ROW = 4;
-	static final int INITIAL_MOVEMENT_TYPE_ROW = 5;
-	static final int MOVEMENT_DURATION_TYPE_ROW = 6;
-	static final int MOVEMENT_DURATION_ROW = 7;
-	static final int HOLD_JUMP_FRAMES_ROW = 8;
-	static final int INITIAL_HORIZONTAL_SPEED_ROW = 9;
-	static final int VECTOR_DIRECTION_ROW = 10;
-	static final int DIVE_CAP_BOUNCE_ANGLE_ROW = 11;
-	static final int GRAVITY_ROW = 12;
-	static final int HYPEROPTIMIZE_ROW = 13;
-	static final int AXIS_ORDER_ROW = 14;
-	static final int CAMERA_TYPE_ROW = 15;
-	static final int CAMERA_ROW = 16;
+	static final int INITIAL_COORDINATES_ROW = 0;
+	static final int TARGET_COORDINATES_ROW = 1;
+	static final int ANGLE_ROW = 2;
+	static final int ANGLE_TYPE_ROW = 3;
+	static final int INITIAL_MOVEMENT_TYPE_ROW = 4;
+	static final int MOVEMENT_DURATION_TYPE_ROW = 5;
+	static final int MOVEMENT_DURATION_ROW = 6;
+	static final int HOLD_JUMP_FRAMES_ROW = 7;
+	static final int INITIAL_HORIZONTAL_SPEED_ROW = 8;
+	static final int VECTOR_DIRECTION_ROW = 9;
+	static final int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
+	static final int GRAVITY_ROW = 11;
+	static final int HYPEROPTIMIZE_ROW = 12;
+	static final int AXIS_ORDER_ROW = 13;
+	static final int CAMERA_TYPE_ROW = 14;
+	static final int CAMERA_ROW = 15;
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
@@ -77,6 +76,8 @@ public class VectorCalculator extends JPanel {
 	static final int LOCK_VERTICAL_DISPLACEMENT = 2;
 	
 	static double x0 = 0, y0 = 0, z0 = 0;
+	static double x1 = 0, y1 = 0, z1 = 0;
+	static boolean targetCoordinates = false;
 	static double initialAngle = 0;
 	static double targetAngle = 0;
 	static AngleType angleType = AngleType.TARGET;
@@ -111,14 +112,15 @@ public class VectorCalculator extends JPanel {
 	static JTable genPropertiesTable;
 	static DefaultTableModel genPropertiesModel;
 	static JumpDialogWindow dialogWindow = new JumpDialogWindow("Choose Initial Movement", initialMovementCategories, initialMovementNames);
+	static CoordinateWindow initial_CoordinateWindow = new CoordinateWindow("Initial Coordinates");
+	static CoordinateWindow target_CoordinateWindow = new CoordinateWindow("Target Coordinates");
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
 	static JTable movementTable;
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
 	static Object[][] genProperties =
-		{{"Initial X Position", (int) x0},
-		{"Initial Y Position", (int) y0},
-		{"Initial Z Position", (int) z0},
+		{{"Initial Coordinates", "(0, 0, 0)"},
+		{"Target Coordinates", "None"},
 		{"Target Angle", (int) targetAngle},
 		{"Angle Type", "Target Angle"},
 		{"Initial Movement Type", initialMovementName},
@@ -385,7 +387,7 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
+				if (column == 0 || row == INITIAL_COORDINATES_ROW || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
 					return false;
 				return true;
 			}
@@ -419,55 +421,83 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_MOVEMENT_TYPE_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1)
+				//this used to not be all part of the conditional
+				if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_MOVEMENT_TYPE_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
 					dialogWindow.display();
-				JButton confirm = dialogWindow.getConfirmButton();
-				confirm.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						//Debug.println(dialogWindow.getSelectedMovementName());
-						initialMovementName = dialogWindow.getSelectedMovementName();
-						initialMovement = new Movement(initialMovementName);
-						genPropertiesModel.setValueAt(initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
-						double suggestedSpeed = initialMovement.getSuggestedSpeed();
-						initialHorizontalSpeed = suggestedSpeed;
-						if (!chooseJumpFrames && initialMovement.variableJumpFrames()) {
-							chooseJumpFrames = true;
-							genPropertiesModel.setValueAt(10, HOLD_JUMP_FRAMES_ROW, 1);
-							framesJump = 10;
+					JButton confirm = dialogWindow.getConfirmButton();
+					confirm.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							//Debug.println(dialogWindow.getSelectedMovementName());
+							initialMovementName = dialogWindow.getSelectedMovementName();
+							initialMovement = new Movement(initialMovementName);
+							genPropertiesModel.setValueAt(initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
+							double suggestedSpeed = initialMovement.getSuggestedSpeed();
+							initialHorizontalSpeed = suggestedSpeed;
+							if (!chooseJumpFrames && initialMovement.variableJumpFrames()) {
+								chooseJumpFrames = true;
+								genPropertiesModel.setValueAt(10, HOLD_JUMP_FRAMES_ROW, 1);
+								framesJump = 10;
+							}
+							else if (chooseJumpFrames && !initialMovement.variableJumpFrames()) {
+								chooseJumpFrames = false;
+								genPropertiesModel.setValueAt("N/A", HOLD_JUMP_FRAMES_ROW, 1);
+							}
+							if (initialMovement.variableInitialHorizontalSpeed()) {
+								chooseInitialHorizontalSpeed = true;
+								if (suggestedSpeed == (int) suggestedSpeed)
+									genPropertiesModel.setValueAt((int) initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
+								else
+									genPropertiesModel.setValueAt(initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
+								//TODO
+							}
+							else {
+								chooseInitialHorizontalSpeed = false;
+								genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
+								initialHorizontalSpeed = 0;
+							}
+							if (initialMovementName.contains("RCV")) {
+								setAngleType(AngleType.BOTH);
+							}
+							else if (angleType == AngleType.BOTH) { //switch back to just Initial or Target angle
+								setAngleType(AngleType.TARGET);
+							}
+							
+							if (initialMovementName.contains("Optimal Distance")) {
+								lockDurationType(LOCK_VERTICAL_DISPLACEMENT);
+							}
+							else {
+								lockDurationType(LOCK_NONE);
+							}
+							dialogWindow.close();	
 						}
-						else if (chooseJumpFrames && !initialMovement.variableJumpFrames()) {
-							chooseJumpFrames = false;
-							genPropertiesModel.setValueAt("N/A", HOLD_JUMP_FRAMES_ROW, 1);
+					});
+				}
+				else if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_COORDINATES_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
+					initial_CoordinateWindow.display(x0, y0, z0);
+					(initial_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							initial_CoordinateWindow.findCoordinates();
+							x0 = initial_CoordinateWindow.x;
+							y0 = initial_CoordinateWindow.y;
+							z0 = initial_CoordinateWindow.z;
+							genPropertiesModel.setValueAt(initial_CoordinateWindow.coordinates, INITIAL_COORDINATES_ROW, 1);
+							initial_CoordinateWindow.close();
 						}
-						if (initialMovement.variableInitialHorizontalSpeed()) {
-							chooseInitialHorizontalSpeed = true;
-							if (suggestedSpeed == (int) suggestedSpeed)
-								genPropertiesModel.setValueAt((int) initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
-							else
-								genPropertiesModel.setValueAt(initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
-							//TODO
+					});
+				}
+				else if (genPropertiesTable.rowAtPoint(evt.getPoint()) == TARGET_COORDINATES_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
+					target_CoordinateWindow.display(x1, y1, z1);
+					(target_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							target_CoordinateWindow.findCoordinates();
+							x1 = target_CoordinateWindow.x;
+							y1 = target_CoordinateWindow.y;
+							z1 = target_CoordinateWindow.z;
+							genPropertiesModel.setValueAt(target_CoordinateWindow.coordinates, TARGET_COORDINATES_ROW, 1);
+							target_CoordinateWindow.close();
 						}
-						else {
-							chooseInitialHorizontalSpeed = false;
-							genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
-							initialHorizontalSpeed = 0;
-						}
-						if (initialMovementName.contains("RCV")) {
-							setAngleType(AngleType.BOTH);
-						}
-						else if (angleType == AngleType.BOTH) { //switch back to just Initial or Target angle
-							setAngleType(AngleType.TARGET);
-						}
-						
-						if (initialMovementName.contains("Optimal Distance")) {
-							lockDurationType(LOCK_VERTICAL_DISPLACEMENT);
-						}
-						else {
-							lockDurationType(LOCK_NONE);
-						}
-						dialogWindow.close();	
-					}
-				});
+					});
+				}
 			}
 		});
 			
@@ -484,7 +514,7 @@ public class VectorCalculator extends JPanel {
 				}
 
 				if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
-					if (row == X_ROW || row == Y_ROW || row == Z_ROW) {
+					/* if (row == INITIAL_COORDINATES_ROW || row == Y_ROW || row == Z_ROW) {
 						double value = 0;
 						try {
 							value = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
@@ -492,16 +522,17 @@ public class VectorCalculator extends JPanel {
 						catch (NumberFormatException ex) {
 							genPropertiesTable.setValueAt(0, row, 1);
 						}
-						if (row == X_ROW) {
+						if (row == INITIAL_COORDINATES_ROW) {
 							x0 = value;
 						}
 						else if (row == Y_ROW) {
 							y0 = value;
+							System.out.println("y0 set");
 						}
 						else {
 							z0 = value;
 						}
-					}
+					} */
 					if (row == ANGLE_ROW) {
 						if (angleType == angleType.TARGET) {
 							try {
@@ -670,11 +701,13 @@ public class VectorCalculator extends JPanel {
 				}
 				
 				//make whole numbers not have decimal places
-				String setString = genPropertiesTable.getValueAt(row, 1).toString();
-				if (setString.contains(".")) {
-					double setValue = Double.parseDouble(setString);
-					if (setValue == (int) setValue)
-						genPropertiesTable.setValueAt((int) setValue, row, 1);
+				if (row != INITIAL_COORDINATES_ROW) {
+					String setString = genPropertiesTable.getValueAt(row, 1).toString();
+					if (setString.contains(".")) {
+						double setValue = Double.parseDouble(setString);
+						if (setValue == (int) setValue)
+							genPropertiesTable.setValueAt((int) setValue, row, 1);
+					}
 				}
 
 				initialMovement = new Movement(initialMovementName, initialHorizontalSpeed, framesJump);
