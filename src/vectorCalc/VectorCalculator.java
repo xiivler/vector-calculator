@@ -46,22 +46,59 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 	
-	static final int INITIAL_COORDINATES_ROW = 0;
-	static final int TARGET_COORDINATES_ROW = 1;
-	static final int ANGLE_ROW = 2;
-	static final int ANGLE_TYPE_ROW = 3;
-	static final int INITIAL_MOVEMENT_TYPE_ROW = 4;
-	static final int MOVEMENT_DURATION_TYPE_ROW = 5;
-	static final int MOVEMENT_DURATION_ROW = 6;
-	static final int HOLD_JUMP_FRAMES_ROW = 7;
-	static final int INITIAL_HORIZONTAL_SPEED_ROW = 8;
-	static final int VECTOR_DIRECTION_ROW = 9;
-	static final int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
-	static final int GRAVITY_ROW = 11;
-	static final int HYPEROPTIMIZE_ROW = 12;
-	static final int AXIS_ORDER_ROW = 13;
-	static final int CAMERA_TYPE_ROW = 14;
-	static final int CAMERA_ROW = 15;
+	static int INITIAL_COORDINATES_ROW = 0;
+	static int ANGLE_TYPE_ROW = 1;
+	static int ANGLE_ROW = 2;
+	static int INITIAL_MOVEMENT_TYPE_ROW = 3;
+	static int MOVEMENT_DURATION_TYPE_ROW = 4;
+	static int MOVEMENT_DURATION_ROW = 5;
+	static int HOLD_JUMP_FRAMES_ROW = 6;
+	static int INITIAL_HORIZONTAL_SPEED_ROW = 7;
+	static int VECTOR_DIRECTION_ROW = 8;
+	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 9;
+	static int GRAVITY_ROW = 10;
+	static int HYPEROPTIMIZE_ROW = 11;
+	static int AXIS_ORDER_ROW = 12;
+	static int CAMERA_TYPE_ROW = 13;
+	static int CAMERA_ROW = 14;
+
+	static int ANGLE_2_ROW = -1;
+
+	static void addAngle2Row() {
+		genPropertiesModel.insertRow(ANGLE_ROW, new Object[]{"", 0});
+		ANGLE_2_ROW = 2;
+		ANGLE_ROW++;
+		INITIAL_MOVEMENT_TYPE_ROW++;
+		MOVEMENT_DURATION_TYPE_ROW++;
+		MOVEMENT_DURATION_ROW++;
+		HOLD_JUMP_FRAMES_ROW++;
+		INITIAL_HORIZONTAL_SPEED_ROW++;
+		VECTOR_DIRECTION_ROW++;
+		DIVE_CAP_BOUNCE_ANGLE_ROW++;
+		GRAVITY_ROW++;
+		HYPEROPTIMIZE_ROW++;
+		AXIS_ORDER_ROW++;
+		CAMERA_TYPE_ROW++;
+		CAMERA_ROW++;
+	}
+
+	static void removeAngle2Row() {
+		genPropertiesModel.removeRow(ANGLE_2_ROW);
+		ANGLE_2_ROW = -1;
+		ANGLE_ROW--;
+		INITIAL_MOVEMENT_TYPE_ROW--;
+		MOVEMENT_DURATION_TYPE_ROW--;
+		MOVEMENT_DURATION_ROW--;
+		HOLD_JUMP_FRAMES_ROW--;
+		INITIAL_HORIZONTAL_SPEED_ROW--;
+		VECTOR_DIRECTION_ROW--;
+		DIVE_CAP_BOUNCE_ANGLE_ROW--;
+		GRAVITY_ROW--;
+		HYPEROPTIMIZE_ROW--;
+		AXIS_ORDER_ROW--;
+		CAMERA_TYPE_ROW--;
+		CAMERA_ROW--;
+	}
 
 	static enum AngleType {
 		INITIAL, TARGET, BOTH
@@ -76,8 +113,8 @@ public class VectorCalculator extends JPanel {
 	static final int LOCK_VERTICAL_DISPLACEMENT = 2;
 	
 	static double x0 = 0, y0 = 0, z0 = 0;
-	static double x1 = 0, y1 = 0, z1 = 0;
-	static boolean targetCoordinates = false;
+	static double x1 = 0, y1 = 0, z1 = 3000;
+	static boolean targetCoordinates = true;
 	static double initialAngle = 0;
 	static double targetAngle = 0;
 	static AngleType angleType = AngleType.TARGET;
@@ -102,6 +139,8 @@ public class VectorCalculator extends JPanel {
 	static int lockDurationType = LOCK_NONE;
 	
 	static boolean forceEdit = false;
+	static boolean add_ic_listener = true;
+	static boolean add_tc_listener = true;
 
 	static JLabel errorMessage;
 	
@@ -120,9 +159,8 @@ public class VectorCalculator extends JPanel {
 	static String[] genPropertiesTitles = {"Property", "Value"};
 	static Object[][] genProperties =
 		{{"Initial Coordinates", "(0, 0, 0)"},
-		{"Target Coordinates", "None"},
-		{"Target Angle", (int) targetAngle},
-		{"Angle Type", "Target Angle"},
+		{"Calculate Using", "Target Coordinates"},
+		{"Target Coordinates", "(0, 0, 3000)"},
 		{"Initial Movement Type", initialMovementName},
 		{"Initial Movement Duration Type", "Frames"},
 		{"Initial Movement Frames", initialFrames},
@@ -164,34 +202,36 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void setAngleType(AngleType type) {
+	public static void setAngleType(AngleType type, boolean coordinates) {
 		forceEdit = true;
 		AngleType oldAngleType = angleType;
 		Debug.println(oldAngleType);
 		Debug.println(type);
 		angleType = type;
 		if (oldAngleType != AngleType.BOTH && type == AngleType.BOTH) {
-			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
-			genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 0);
+			addAngle2Row();
+			genPropertiesTable.setValueAt("Initial Angle", ANGLE_2_ROW, 0);
 			if (oldAngleType == AngleType.INITIAL) {
 				targetAngle = initialAngle;
+				genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 1);
+				genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+				genPropertiesTable.setValueAt(targetAngle, ANGLE_ROW, 1);
 			}
 			else if (oldAngleType == AngleType.TARGET) {
 				initialAngle = targetAngle;
 			}
-			genPropertiesTable.setValueAt(initialAngle, ANGLE_ROW, 1);
-			genPropertiesTable.setValueAt(targetAngle, ANGLE_TYPE_ROW, 1);
+			genPropertiesTable.setValueAt(initialAngle, ANGLE_2_ROW, 1);
 		}
 		else if (oldAngleType == AngleType.BOTH && type == AngleType.TARGET) {
-			genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
-			genPropertiesTable.setValueAt(targetAngle, ANGLE_ROW, 1);
-			genPropertiesTable.setValueAt("Angle Type", ANGLE_TYPE_ROW, 0);
-			genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 1);
+			removeAngle2Row();
+			//genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+			//genPropertiesTable.setValueAt(targetAngle, ANGLE_ROW, 1);
+			//genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 1);
 		}
 		else if (oldAngleType == AngleType.BOTH && type == AngleType.INITIAL) {
+			removeAngle2Row();
 			genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
 			genPropertiesTable.setValueAt(initialAngle, ANGLE_ROW, 1);
-			genPropertiesTable.setValueAt("Angle Type", ANGLE_TYPE_ROW, 0);
 			genPropertiesTable.setValueAt("Initial Angle", ANGLE_TYPE_ROW, 1);
 		}
 		else if (oldAngleType == AngleType.TARGET && type == AngleType.INITIAL) {
@@ -199,11 +239,38 @@ public class VectorCalculator extends JPanel {
 			initialAngle = targetAngle;
 		}
 		else if (oldAngleType == AngleType.INITIAL && type == AngleType.TARGET) {
-			genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
-			targetAngle = initialAngle;
+			if (coordinates) {
+				genPropertiesTable.setValueAt("Target Coordinates", ANGLE_ROW, 0);
+				genPropertiesTable.setValueAt("(0, 0, 0)", ANGLE_ROW, 1);
+				x1 = 0;
+				y1 = 0;
+				z1 = 0;
+			}
+			else {
+				genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+				targetAngle = initialAngle;
+			}
+		}
+		else if (oldAngleType == AngleType.TARGET && type == AngleType.TARGET || oldAngleType == AngleType.BOTH && type == AngleType.BOTH) {
+			if (!targetCoordinates && coordinates) {
+				genPropertiesTable.setValueAt("Target Coordinates", ANGLE_ROW, 0);
+				genPropertiesTable.setValueAt("(0, 0, 0)", ANGLE_ROW, 1);
+				x1 = 0;
+				y1 = 0;
+				z1 = 0;
+			}
+			else if (targetCoordinates && !coordinates) {
+				genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
+				if (targetAngle == (int) targetAngle)
+					genPropertiesTable.setValueAt((int) targetAngle, ANGLE_ROW, 1);
+				else {
+					genPropertiesTable.setValueAt(targetAngle, ANGLE_ROW, 1);
+				}
+			}
 		}
 		Debug.println("Initial Angle: " + initialAngle);
 		Debug.println("Target Angle: " + targetAngle);
+		targetCoordinates = coordinates;
 		forceEdit = false;
 	}
 
@@ -222,6 +289,17 @@ public class VectorCalculator extends JPanel {
 		else if (cameraType != CameraType.CUSTOM && oldCameraType == CameraType.CUSTOM) {
 			genPropertiesModel.removeRow(genPropertiesModel.getRowCount() - 1);
 		}
+	}
+
+	public static void targetCoordinatesToTargetAngle() {
+		targetAngle = Math.toDegrees(Math.atan2(x1 - x0, z1 - z0));
+		if (xAxisZeroDegrees) {
+			targetAngle = 90 - targetAngle;
+		}
+		if (targetAngle < 0) {
+			targetAngle += 360;
+		}
+		Debug.println("Target Angle from Coordinates: " + targetAngle);
 	}
 	
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -272,6 +350,9 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "calculate") {
 				VectorMaximizer maximizer = null;
+				if (targetCoordinates) {
+					targetCoordinatesToTargetAngle();
+				}
 				if (initialMovementName.equals("Optimal Distance Motion")) {
 					initialMovementName = "Triple Jump";
 					framesJump = 10;
@@ -335,9 +416,13 @@ public class VectorCalculator extends JPanel {
             {
                 int modelColumn = convertColumnIndexToModel( column );
 
-                if (modelColumn == 1 && row == ANGLE_TYPE_ROW && angleType != AngleType.BOTH)
+                if (modelColumn == 1 && row == ANGLE_TYPE_ROW)
                 {
-                	String[] options = {"Target Angle", "Initial Angle"};
+					String[] options;
+					if (angleType == AngleType.BOTH)
+						options = new String[]{"Target Angle", "Target Coordinates"};
+					else
+						options = new String[]{"Initial Angle", "Target Angle", "Target Coordinates"};
                     JComboBox<String> angle = new JComboBox<String>(options);
                     return new DefaultCellEditor(angle);
                 }
@@ -387,7 +472,7 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 || row == INITIAL_COORDINATES_ROW || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
+				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
 					return false;
 				return true;
 			}
@@ -456,10 +541,10 @@ public class VectorCalculator extends JPanel {
 								initialHorizontalSpeed = 0;
 							}
 							if (initialMovementName.contains("RCV")) {
-								setAngleType(AngleType.BOTH);
+								setAngleType(AngleType.BOTH, targetCoordinates);
 							}
 							else if (angleType == AngleType.BOTH) { //switch back to just Initial or Target angle
-								setAngleType(AngleType.TARGET);
+								setAngleType(AngleType.TARGET, targetCoordinates);
 							}
 							
 							if (initialMovementName.contains("Optimal Distance")) {
@@ -474,29 +559,42 @@ public class VectorCalculator extends JPanel {
 				}
 				else if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_COORDINATES_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
 					initial_CoordinateWindow.display(x0, y0, z0);
-					(initial_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							initial_CoordinateWindow.findCoordinates();
-							x0 = initial_CoordinateWindow.x;
-							y0 = initial_CoordinateWindow.y;
-							z0 = initial_CoordinateWindow.z;
-							genPropertiesModel.setValueAt(initial_CoordinateWindow.coordinates, INITIAL_COORDINATES_ROW, 1);
-							initial_CoordinateWindow.close();
-						}
-					});
+					if (add_ic_listener) {
+						(initial_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent e) {
+								initial_CoordinateWindow.findCoordinates();
+								x0 = initial_CoordinateWindow.x;
+								y0 = initial_CoordinateWindow.y;
+								z0 = initial_CoordinateWindow.z;
+								genPropertiesModel.setValueAt(initial_CoordinateWindow.coordinates, INITIAL_COORDINATES_ROW, 1);
+								initial_CoordinateWindow.close();
+							}
+						});
+					}
+					add_ic_listener = false;
 				}
-				else if (genPropertiesTable.rowAtPoint(evt.getPoint()) == TARGET_COORDINATES_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
+				else if (targetCoordinates && genPropertiesTable.rowAtPoint(evt.getPoint()) == ANGLE_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
 					target_CoordinateWindow.display(x1, y1, z1);
-					(target_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							target_CoordinateWindow.findCoordinates();
-							x1 = target_CoordinateWindow.x;
-							y1 = target_CoordinateWindow.y;
-							z1 = target_CoordinateWindow.z;
-							genPropertiesModel.setValueAt(target_CoordinateWindow.coordinates, TARGET_COORDINATES_ROW, 1);
-							target_CoordinateWindow.close();
-						}
-					});
+					// JButton target_confirm = target_CoordinateWindow.getConfirmButton();
+					// for (ActionListener al : target_confirm.getActionListeners()) {
+					// 	target_confirm.removeActionListener(al);
+					// }
+					if (add_tc_listener) {
+						(target_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent e) {
+								target_CoordinateWindow.findCoordinates();
+								x1 = target_CoordinateWindow.x;
+								y1 = target_CoordinateWindow.y;
+								z1 = target_CoordinateWindow.z;
+								targetCoordinatesToTargetAngle();
+								genPropertiesModel.setValueAt(target_CoordinateWindow.coordinates, ANGLE_ROW, 1);
+								target_CoordinateWindow.close();
+								System.out.println("Coords: " + target_CoordinateWindow.coordinates);
+								System.out.println("Angle row: " + ANGLE_ROW);
+							}
+						});
+					}
+					add_tc_listener = false;
 				}
 			}
 		});
@@ -514,33 +612,16 @@ public class VectorCalculator extends JPanel {
 				}
 
 				if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
-					/* if (row == INITIAL_COORDINATES_ROW || row == Y_ROW || row == Z_ROW) {
-						double value = 0;
-						try {
-							value = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
-						}
-						catch (NumberFormatException ex) {
-							genPropertiesTable.setValueAt(0, row, 1);
-						}
-						if (row == INITIAL_COORDINATES_ROW) {
-							x0 = value;
-						}
-						else if (row == Y_ROW) {
-							y0 = value;
-							System.out.println("y0 set");
-						}
-						else {
-							z0 = value;
-						}
-					} */
 					if (row == ANGLE_ROW) {
-						if (angleType == angleType.TARGET) {
-							try {
-								targetAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
-							}
-							catch (NumberFormatException ex) {
-								targetAngle = 0;
-								genPropertiesTable.setValueAt(0, row, 1);
+						if (angleType == AngleType.TARGET || angleType == AngleType.BOTH) {
+							if (!targetCoordinates) {
+								try {
+									targetAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+								}
+								catch (NumberFormatException ex) {
+									targetAngle = 0;
+									genPropertiesTable.setValueAt(0, row, 1);
+								}
 							}
 						}
 						else {
@@ -553,26 +634,35 @@ public class VectorCalculator extends JPanel {
 							}
 						}
 					}
-					else if (row == ANGLE_TYPE_ROW) {
+					else if (row == ANGLE_2_ROW) {
 						if (angleType == AngleType.BOTH) {
 							try {
-								targetAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+								initialAngle = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
 							}
 							catch (NumberFormatException ex) {
-								targetAngle = 0;
+								initialAngle = 0;
 								genPropertiesTable.setValueAt(0, row, 1);
 							}
 						}
-						if (angleType != AngleType.BOTH) {
-							if (genPropertiesTable.getValueAt(row, 1).equals("Initial Angle")) {
-								setAngleType(AngleType.INITIAL);
-							}
-							else {
-								setAngleType(AngleType.TARGET);
-							}
+					}
+					else if (row == ANGLE_TYPE_ROW) {
+						if (genPropertiesTable.getValueAt(row, 1).equals("Initial Angle")) {
+							setAngleType(AngleType.INITIAL, targetCoordinates);
+						}
+						else if (genPropertiesTable.getValueAt(row, 1).equals("Target Angle")) {
+							if (angleType != AngleType.BOTH)
+								setAngleType(AngleType.TARGET, false);
+							else
+								setAngleType(AngleType.BOTH, false);
+						}
+						else if (genPropertiesTable.getValueAt(row, 1).equals("Target Coordinates")) {
+							if (angleType != AngleType.BOTH)
+								setAngleType(AngleType.TARGET, true);
+							else
+								setAngleType(AngleType.BOTH, true);
 						}
 					}
-					if (row == INITIAL_MOVEMENT_TYPE_ROW || row == MOVEMENT_DURATION_ROW) {
+					else if (row == INITIAL_MOVEMENT_TYPE_ROW || row == MOVEMENT_DURATION_ROW) {
 						try {
 							//movementType = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
 							int minFrames = initialMovement.minFrames;
@@ -701,7 +791,7 @@ public class VectorCalculator extends JPanel {
 				}
 				
 				//make whole numbers not have decimal places
-				if (row != INITIAL_COORDINATES_ROW) {
+				if (row != INITIAL_COORDINATES_ROW && (row != ANGLE_ROW || !targetCoordinates)) {
 					String setString = genPropertiesTable.getValueAt(row, 1).toString();
 					if (setString.contains(".")) {
 						double setValue = Double.parseDouble(setString);

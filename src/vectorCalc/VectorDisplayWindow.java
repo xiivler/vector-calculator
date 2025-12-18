@@ -51,14 +51,12 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final X Position", ""}, {"Final Y Position", ""}, {"Final Z Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}};
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}};
 	static final int INFO_ANGLE_TYPE_ROW = 0;
-	static final int XF_ROW = 1;
-	static final int YF_ROW = 2;
-	static final int ZF_ROW = 3;
-	static final int HORIZONTAL_DISPLACEMENT_ROW = 4;
-	static final int VERTICAL_DISPLACEMENT_ROW = 5;
-	static final int TOTAL_FRAMES_ROW = 6;
+	static final int FINAL_POSITION_ROW = 1;
+	static final int HORIZONTAL_DISPLACEMENT_ROW = 2;
+	static final int VERTICAL_DISPLACEMENT_ROW = 3;
+	static final int TOTAL_FRAMES_ROW = 4;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -112,12 +110,12 @@ public class VectorDisplayWindow {
 		infoTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane infoScrollPane = new JScrollPane(infoTable);
-		infoScrollPane.setPreferredSize(new Dimension(500, 151));
+		infoScrollPane.setPreferredSize(new Dimension(500, 115));
 		
 		
 		//DATA TABLE
 		
-		dataTableModel = new DefaultTableModel(0, 7);
+		dataTableModel = new DefaultTableModel(0, 5);
 		dataTableModel.setColumnIdentifiers(dataColumnTitles);
 		JTable dataTable = new JTable(dataTableModel) {
 			
@@ -430,9 +428,7 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Target Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
-		infoTableModel.setValueAt(shorten(x, 3), XF_ROW, 1);
-		infoTableModel.setValueAt(shorten(y, 3), YF_ROW, 1);
-		infoTableModel.setValueAt(shorten(z, 3), ZF_ROW, 1);
+		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - VectorCalculator.x0, 2) + Math.pow(z - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - VectorCalculator.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
