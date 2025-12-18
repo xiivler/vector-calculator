@@ -1,6 +1,7 @@
 package vectorCalc;
 
 import java.util.ArrayList;
+import java.util.Vector;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -34,7 +35,13 @@ public class MovementNameListPreparer {
 		}
 		else {
 			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(VectorCalculator.initialFrames, false, false);
-			frames = VectorCalculator.initialMotion.calcFrames(VectorCalculator.initialDispY);
+			frames = VectorCalculator.initialMotion.calcFrames(VectorCalculator.initialDispY - VectorCalculator.getMoonwalkDisp());
+		}
+
+		//add moonwalk if one is present
+		if (VectorCalculator.canMoonwalk && VectorCalculator.framesMoonwalk > 0) {
+			movementNames.add("Moonwalk");
+			movementFrames.add(VectorCalculator.framesMoonwalk);
 		}
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt

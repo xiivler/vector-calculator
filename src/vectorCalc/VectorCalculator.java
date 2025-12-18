@@ -53,14 +53,15 @@ public class VectorCalculator extends JPanel {
 	static int MOVEMENT_DURATION_TYPE_ROW = 4;
 	static int MOVEMENT_DURATION_ROW = 5;
 	static int HOLD_JUMP_FRAMES_ROW = 6;
-	static int INITIAL_HORIZONTAL_SPEED_ROW = 7;
-	static int VECTOR_DIRECTION_ROW = 8;
-	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 9;
-	static int GRAVITY_ROW = 10;
-	static int HYPEROPTIMIZE_ROW = 11;
-	static int AXIS_ORDER_ROW = 12;
-	static int CAMERA_TYPE_ROW = 13;
-	static int CAMERA_ROW = 14;
+	static int MOONWALK_FRAMES_ROW = 7;
+	static int INITIAL_HORIZONTAL_SPEED_ROW = 8;
+	static int VECTOR_DIRECTION_ROW = 9;
+	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
+	static int GRAVITY_ROW = 11;
+	static int HYPEROPTIMIZE_ROW = 12;
+	static int AXIS_ORDER_ROW = 13;
+	static int CAMERA_TYPE_ROW = 14;
+	static int CAMERA_ROW = 15;
 
 	static int ANGLE_2_ROW = -1;
 
@@ -72,6 +73,7 @@ public class VectorCalculator extends JPanel {
 		MOVEMENT_DURATION_TYPE_ROW++;
 		MOVEMENT_DURATION_ROW++;
 		HOLD_JUMP_FRAMES_ROW++;
+		MOONWALK_FRAMES_ROW++;
 		INITIAL_HORIZONTAL_SPEED_ROW++;
 		VECTOR_DIRECTION_ROW++;
 		DIVE_CAP_BOUNCE_ANGLE_ROW++;
@@ -90,6 +92,7 @@ public class VectorCalculator extends JPanel {
 		MOVEMENT_DURATION_TYPE_ROW--;
 		MOVEMENT_DURATION_ROW--;
 		HOLD_JUMP_FRAMES_ROW--;
+		MOONWALK_FRAMES_ROW--;
 		INITIAL_HORIZONTAL_SPEED_ROW--;
 		VECTOR_DIRECTION_ROW--;
 		DIVE_CAP_BOUNCE_ANGLE_ROW--;
@@ -123,6 +126,8 @@ public class VectorCalculator extends JPanel {
 	static int initialFrames = 70;
 	static double initialDispY = 0;
 	static int framesJump = 10;
+	static boolean canMoonwalk = true;
+	static int framesMoonwalk = 0;
 	static double initialHorizontalSpeed = 24;
 	static boolean rightVector = false;
 	static double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
@@ -165,6 +170,7 @@ public class VectorCalculator extends JPanel {
 		{"Initial Movement Duration Type", "Frames"},
 		{"Initial Movement Frames", initialFrames},
 		{"Frames of Holding A/B", framesJump},
+		{"Moonwalk Frames", framesMoonwalk},
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
 		{"Edge Cap Bounce Angle", "0"},
@@ -302,6 +308,23 @@ public class VectorCalculator extends JPanel {
 		Debug.println("Target Angle from Coordinates: " + targetAngle);
 	}
 	
+	public static int getMoonwalkDisp() {
+		if (framesMoonwalk == 0)
+			return 0;
+		else if (framesMoonwalk == 1)
+			return -3;
+		else if (framesMoonwalk == 2)
+			return -9;
+		else if (framesMoonwalk == 3)
+			return -18;
+		else if (framesMoonwalk == 4)
+			return -30;
+		else if (framesMoonwalk == 5)
+			return -45;
+		else //impossible case
+			return 0;
+	}
+
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
 		  public MyComboBoxRenderer(String[] items) {
 		    super(items);
@@ -472,7 +495,7 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
+				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == MOONWALK_FRAMES_ROW && !canMoonwalk) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
 					return false;
 				return true;
 			}
@@ -526,6 +549,16 @@ public class VectorCalculator extends JPanel {
 							else if (chooseJumpFrames && !initialMovement.variableJumpFrames()) {
 								chooseJumpFrames = false;
 								genPropertiesModel.setValueAt("N/A", HOLD_JUMP_FRAMES_ROW, 1);
+							}
+							if (!canMoonwalk && initialMovement.canMoonwalk) {
+								canMoonwalk = true;
+								framesMoonwalk = 0;
+								genPropertiesModel.setValueAt(0, MOONWALK_FRAMES_ROW, 1);
+							}
+							else if (canMoonwalk && !initialMovement.canMoonwalk) {
+								canMoonwalk = false;
+								framesMoonwalk = 0;
+								genPropertiesModel.setValueAt("N/A", MOONWALK_FRAMES_ROW, 1);
 							}
 							if (initialMovement.variableInitialHorizontalSpeed()) {
 								chooseInitialHorizontalSpeed = true;
@@ -695,12 +728,12 @@ public class VectorCalculator extends JPanel {
 							initialMotion = initialMovement.getMotion(initialFrames, false, false);//new SimpleMotion(initialMovement, initialFrames);
 							if (durationFrames && !oldDurationFrames) {
 								genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
-								initialFrames = initialMotion.calcFrames(initialDispY);
+								initialFrames = initialMotion.calcFrames(initialDispY - getMoonwalkDisp());
 								genPropertiesTable.setValueAt(initialFrames, MOVEMENT_DURATION_ROW, 1);
 							}
 							else if (!durationFrames && oldDurationFrames) {
 								genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
-								initialDispY = initialMotion.calcDispY(initialFrames);
+								initialDispY = initialMotion.calcDispY(initialFrames) + getMoonwalkDisp();
 								genPropertiesTable.setValueAt(initialDispY, MOVEMENT_DURATION_ROW, 1);
 							}
 						}
@@ -721,6 +754,23 @@ public class VectorCalculator extends JPanel {
 								genPropertiesTable.setValueAt(framesJump, row, 1);
 							}
 							//genPropertiesTable.setValueAt(framesJump, row, 1);
+						}
+					}
+					else if (row == MOONWALK_FRAMES_ROW) {
+						if (canMoonwalk) {
+							framesMoonwalk = 0;
+							try {
+								framesMoonwalk = Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString());
+							}
+							catch (NumberFormatException ex) {};
+							if (framesMoonwalk > 5) {
+								framesMoonwalk = 5;
+								genPropertiesTable.setValueAt(framesMoonwalk, row, 1);
+							}
+							if (framesMoonwalk < 0) {
+								framesMoonwalk = 0;
+								genPropertiesTable.setValueAt(framesMoonwalk, row, 1);
+							}
 						}
 					}
 					else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {

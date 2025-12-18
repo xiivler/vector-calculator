@@ -23,6 +23,8 @@ public class Movement {
 	double maxRotationalSpeed = Math.toRadians(6);
 	double rotationalSpeedAfterMax = Math.toRadians(3.5);
 	boolean hasRotationalAccel = true;
+
+	boolean canMoonwalk = false;
 	
 	double initialHorizontalSpeed = 0;
 	double initialVerticalSpeed = 0;
@@ -88,6 +90,7 @@ public class Movement {
 				initialVerticalSpeed = 17 + 5 * (initialHorizontalSpeed - 3) / 22;
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
+			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
@@ -101,6 +104,7 @@ public class Movement {
 				initialVerticalSpeed = 19.5 + 3 * (initialHorizontalSpeed - 3) / 22;
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
+			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
@@ -113,8 +117,18 @@ public class Movement {
 			gravity = 1;
 			moonGravity = .3;
 			variableJumpFrames = true;
+			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
+		}
+
+		else if (movementType.equals("Moonwalk")) {
+			forwardAccel = 0;
+			vectorAccel = 0;
+			defaultSpeedCap = initialHorizontalSpeed;
+			trueSpeedCap = initialHorizontalSpeed;
+			gravity = 3;
+			moonGravity = 3;
 		}
 		
 		else if (movementType.equals("Cap Return Jump")) {
@@ -123,6 +137,7 @@ public class Movement {
 			gravity = 1.3;
 			moonGravity = .6;
 			variableJumpFrames = true;
+			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}

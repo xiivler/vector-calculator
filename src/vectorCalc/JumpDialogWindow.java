@@ -63,12 +63,12 @@ public class JumpDialogWindow implements ActionListener {
 		frame.add(confirmPanel, BorderLayout.SOUTH);
 		frame.setSize(300, 205);
 		frame.setResizable(false);
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		//frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.getRootPane().setDefaultButton(confirm);
 	}
 	
 	public void display() {
-		frame.setLocationRelativeTo(null);
+		frame.setLocationRelativeTo(VectorCalculator.f);
 		frame.getRootPane().setDefaultButton(confirm);
 		frame.setVisible(true);
 		movementList.requestFocus();

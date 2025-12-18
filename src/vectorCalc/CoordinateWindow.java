@@ -5,17 +5,24 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -90,8 +97,21 @@ public class CoordinateWindow implements ActionListener {
 		frame.add(all);
 		frame.setSize(200, 180);
 		frame.setResizable(false);
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		//frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.getRootPane().setDefaultButton(confirm);
+
+		Action dispatchClosing = new AbstractAction() {
+			public void actionPerformed(ActionEvent event) {
+				frame.dispatchEvent(
+					new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				}
+			};
+
+		KeyStroke escape = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0);
+
+		JRootPane rootPane = frame.getRootPane();
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escape, "closeWindow");
+		rootPane.getActionMap().put("closeWindow", dispatchClosing); 
 	}
 
 	public String numberToString(double v) {
@@ -116,7 +136,7 @@ public class CoordinateWindow implements ActionListener {
 		x_field.setText(numberToString(x));
 		y_field.setText(numberToString(y));
 		z_field.setText(numberToString(z));
-		frame.setLocationRelativeTo(null);
+		frame.setLocationRelativeTo(VectorCalculator.f);
 		frame.getRootPane().setDefaultButton(confirm);
 		frame.setVisible(true);
 		x_field.requestFocus();
