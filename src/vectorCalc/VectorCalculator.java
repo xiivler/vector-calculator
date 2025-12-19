@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -44,8 +45,31 @@ public class VectorCalculator extends JPanel {
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
-	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
+	//static String[] midairPresetCategories = {"Distance Jumps"};
+	static String[] midairPresetNames = {"Custom", "Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
 	
+	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
+
+	static final int MCCT = 0, TT = 1, HMCCT = 2, HTT = 3, RS = 4, DIVE = 5, CB = 6, P2CB = 7;
+
+	static final int[][][] midairPresets =
+		//custom (nothing to start)
+		{new int[0][0],
+		//spinless
+	 	{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		//simple tech
+		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
+		//simple tech rainbow spin first
+		{{RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		//mcct first
+		{{HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		//tt first
+		{{HTT, 31}, {RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		//cbv first
+		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
+		//cbv first tt
+		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {HTT, 31}, {RS, 32}, {MCCT, 31}, {DIVE, 25}}};
+
 	static int INITIAL_COORDINATES_ROW = 0;
 	static int ANGLE_TYPE_ROW = 1;
 	static int ANGLE_ROW = 2;
@@ -57,11 +81,12 @@ public class VectorCalculator extends JPanel {
 	static int INITIAL_HORIZONTAL_SPEED_ROW = 8;
 	static int VECTOR_DIRECTION_ROW = 9;
 	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
-	static int GRAVITY_ROW = 11;
-	static int HYPEROPTIMIZE_ROW = 12;
-	static int AXIS_ORDER_ROW = 13;
-	static int CAMERA_TYPE_ROW = 14;
-	static int CAMERA_ROW = 15;
+	static int MIDAIR_TYPE_ROW = 11;
+	static int GRAVITY_ROW = 12;
+	static int HYPEROPTIMIZE_ROW = 13;
+	static int AXIS_ORDER_ROW = 14;
+	static int CAMERA_TYPE_ROW = 15;
+	static int CAMERA_ROW = 16;
 
 	static int ANGLE_2_ROW = -1;
 
@@ -77,6 +102,7 @@ public class VectorCalculator extends JPanel {
 		INITIAL_HORIZONTAL_SPEED_ROW++;
 		VECTOR_DIRECTION_ROW++;
 		DIVE_CAP_BOUNCE_ANGLE_ROW++;
+		MIDAIR_TYPE_ROW++;
 		GRAVITY_ROW++;
 		HYPEROPTIMIZE_ROW++;
 		AXIS_ORDER_ROW++;
@@ -96,6 +122,7 @@ public class VectorCalculator extends JPanel {
 		INITIAL_HORIZONTAL_SPEED_ROW--;
 		VECTOR_DIRECTION_ROW--;
 		DIVE_CAP_BOUNCE_ANGLE_ROW--;
+		MIDAIR_TYPE_ROW--;
 		GRAVITY_ROW--;
 		HYPEROPTIMIZE_ROW--;
 		AXIS_ORDER_ROW--;
@@ -131,6 +158,7 @@ public class VectorCalculator extends JPanel {
 	static double initialHorizontalSpeed = 24;
 	static boolean rightVector = false;
 	static double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
+	static int currentPresetIndex = 1;
 	static boolean onMoon = false;
 	static boolean hyperoptimize = true;
 	static boolean xAxisZeroDegrees = true;
@@ -156,10 +184,15 @@ public class VectorCalculator extends JPanel {
 	static JTable genPropertiesTable;
 	static DefaultTableModel genPropertiesModel;
 	static JumpDialogWindow dialogWindow = new JumpDialogWindow("Choose Initial Movement", initialMovementCategories, initialMovementNames);
+	//static JumpDialogWindow presetsWindow = new JumpDialogWindow("Choose Midair Preset", midairPresetCategories, midairPresetNames);
 	static CoordinateWindow initial_CoordinateWindow = new CoordinateWindow("Initial Coordinates");
 	static CoordinateWindow target_CoordinateWindow = new CoordinateWindow("Target Coordinates");
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
 	static JTable movementTable;
+
+	static JButton add;
+	static JButton remove;
+	static JButton calculateVector;
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
 	static Object[][] genProperties =
@@ -174,6 +207,7 @@ public class VectorCalculator extends JPanel {
 		{"Initial Horizontal Speed", (int) initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
 		{"Edge Cap Bounce Angle", "0"},
+		{"Midairs", "Spinless"},
 		{"Gravity", "Regular"},
 		{"Hyperoptimize Cap Throws", "True"},
 		{"0 Degree Axis", "X"},
@@ -325,6 +359,24 @@ public class VectorCalculator extends JPanel {
 			return 0;
 	}
 
+	//replaces the current midairs with the preset of the given index
+	public static void addPreset(int index) {
+		Debug.println("Switching to preset " + index);
+		movementModel.setRowCount(0);
+		for (int[] row : midairPresets[index]) {
+			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
+		}
+		if (index == 0) {
+			add.setEnabled(true);
+			remove.setEnabled(true);
+		}
+		else {
+			add.setEnabled(false);
+			remove.setEnabled(false);
+		}
+		currentPresetIndex = index;
+	}
+
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
 		  public MyComboBoxRenderer(String[] items) {
 		    super(items);
@@ -466,11 +518,16 @@ public class VectorCalculator extends JPanel {
                     JComboBox<String> angle = new JComboBox<String>(options);
                     return new DefaultCellEditor(angle);
                 }
+				else if (modelColumn == 1 && row == MIDAIR_TYPE_ROW)
+                {
+                    JComboBox<String> angle = new JComboBox<String>(midairPresetNames);
+                    return new DefaultCellEditor(angle);
+                }
                 else if (modelColumn == 1 && row == GRAVITY_ROW)
                 {
                 	String[] options = {"Regular", "Moon"};
-                    JComboBox<String> angle = new JComboBox<String>(options);
-                    return new DefaultCellEditor(angle);
+                    JComboBox<String> gravity = new JComboBox<String>(options);
+                    return new DefaultCellEditor(gravity);
                 }
 				else if (modelColumn == 1 && row == HYPEROPTIMIZE_ROW)
                 {
@@ -804,6 +861,12 @@ public class VectorCalculator extends JPanel {
 						else if (diveCapBounceAngle < 0)
 							genPropertiesTable.setValueAt(0, row, 1);
 					}
+					else if (row == MIDAIR_TYPE_ROW) {
+						int presetIndex = Arrays.asList(midairPresetNames).indexOf((String) genPropertiesTable.getValueAt(row, 1));
+						if (presetIndex != currentPresetIndex) {
+							addPreset(presetIndex);
+						}
+					}
 					else if (row == GRAVITY_ROW) {
 						onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
 						Movement.onMoon = onMoon;
@@ -869,7 +932,13 @@ public class VectorCalculator extends JPanel {
 			    } 
 			    return c;
 			}
-			
+
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				if (column == 0 && currentPresetIndex > 0)
+					return false;
+				return true;
+			}
 		};
 		
 		movementTable.setFillsViewportHeight(true);
@@ -888,6 +957,12 @@ public class VectorCalculator extends JPanel {
 		movementModel.addTableModelListener(new TableModelListener() {
 
 			public void tableChanged(TableModelEvent e) {
+				/* if (movementModel.getRowCount() == 0) {
+					remove.setEnabled(false);
+				}
+				else if (currentPresetIndex == 0) {
+					remove.setEnabled(true);
+				} */
 				if (e.getType() == TableModelEvent.UPDATE) {
 					int row = e.getFirstRow();
 					Movement changedRowMovement = new Movement(movementTable.getValueAt(row, 0).toString());
@@ -923,9 +998,9 @@ public class VectorCalculator extends JPanel {
 		error.add(errorMessage);
 		buttons.add(error, BorderLayout.SOUTH);
 		
-		JButton add = new JButton("+");
-		JButton remove = new JButton("-");
-		JButton calculateVector = new JButton("Calculate Vectors");
+		add = new JButton("+");
+		remove = new JButton("-");
+		calculateVector = new JButton("Calculate Vectors");
 		add.setActionCommand("add");
 		remove.setActionCommand("remove");
 		calculateVector.setActionCommand("calculate");
@@ -939,6 +1014,8 @@ public class VectorCalculator extends JPanel {
 		remove.addActionListener(buttonListen);
 		calculateVector.addActionListener(buttonListen);
 		
+		addPreset(1);
+
 		//CREATING THE WINDOW
 		
 		JPanel nonResize = new JPanel(new BorderLayout());
@@ -965,10 +1042,10 @@ public class VectorCalculator extends JPanel {
 		
 		//DEBUG PREPOLUATE MOVEMENT
 		
-/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "21"});
+/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "32"});
+		movementModel.addRow(new String[]{"Dive", "25"});
 		movementModel.addRow(new String[]{"Cap Bounce", "42"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
+		movementModel.addRow(new String[]{"Motion Cap Throw", "32"});
 		movementModel.addRow(new String[]{"Dive", "25"}); */
 
 /* 		movementModel.addRow(new String[]{"Motion Cap Throw", "9"});
@@ -991,13 +1068,13 @@ public class VectorCalculator extends JPanel {
 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
 		movementModel.addRow(new String[]{"Dive", "25"}); */
 
-		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
+/* 		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
 		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
 		movementModel.addRow(new String[]{"Dive", "21"});
 		movementModel.addRow(new String[]{"Cap Bounce", "42"});
 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "25"});
+		movementModel.addRow(new String[]{"Dive", "25"}); */
 		
 
 /* 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
