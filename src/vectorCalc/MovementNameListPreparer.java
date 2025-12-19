@@ -16,6 +16,8 @@ public class MovementNameListPreparer {
 	
 	double initialVelocity = 0;
 	int framesJump = 0;
+
+	int lastInitialMovementFrame = 0;
 	
 	String invalidMessage = "";
 	
@@ -146,6 +148,12 @@ public class MovementNameListPreparer {
 		if (VectorCalculator.chooseJumpFrames) {
 			//framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
 			framesJump = VectorCalculator.framesJump;
+		}
+
+		//calculate last initial movement frame
+		lastInitialMovementFrame = -1;
+		for (int duration : movementFrames) {
+			lastInitialMovementFrame += duration;
 		}
 		
 		//midair movement

@@ -142,6 +142,8 @@ public class VectorCalculator extends JPanel {
 	static final int LOCK_FRAMES = 1;
 	static final int LOCK_VERTICAL_DISPLACEMENT = 2;
 	
+	static boolean solve = true; //placeholder until a solve button is added
+
 	static double x0 = 0, y0 = 0, z0 = 0;
 	static double x1 = 0, y1 = 0, z1 = 3000;
 	static boolean targetCoordinates = true;
@@ -164,6 +166,8 @@ public class VectorCalculator extends JPanel {
 	static boolean xAxisZeroDegrees = true;
 	static CameraType cameraType = CameraType.TARGET;
 	static double customCameraAngle = 0;
+
+	static int lastInitialMovementFrame;
 	
 	static Movement initialMovement = new Movement(initialMovementName);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, initialFrames);
@@ -192,6 +196,7 @@ public class VectorCalculator extends JPanel {
 
 	static JButton add;
 	static JButton remove;
+	static JButton solveVector;
 	static JButton calculateVector;
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
@@ -362,10 +367,9 @@ public class VectorCalculator extends JPanel {
 	//replaces the current midairs with the preset of the given index
 	public static void addPreset(int index) {
 		Debug.println("Switching to preset " + index);
-		movementModel.setRowCount(0);
-		for (int[] row : midairPresets[index]) {
-			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
-		}
+		
+		addPreset(midairPresets[index]);
+
 		if (index == 0) {
 			add.setEnabled(true);
 			remove.setEnabled(true);
@@ -375,6 +379,13 @@ public class VectorCalculator extends JPanel {
 			remove.setEnabled(false);
 		}
 		currentPresetIndex = index;
+	}
+
+	public static void addPreset(int[][] preset) {
+		movementModel.setRowCount(0);
+		for (int[] row : preset) {
+			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
+		}
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -423,6 +434,16 @@ public class VectorCalculator extends JPanel {
 								 movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
 					 }
 			 }
+			 else if (evt.getActionCommand() == "solve") {
+				Solver solver = new Solver();
+				solver.solve();
+				VectorMaximizer maximizer = calculate();
+				if (maximizer != null) {
+					VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+					VectorDisplayWindow.display();
+				}
+				Debug.println();
+			 }
 			 else if (evt.getActionCommand() == "calculate") {
 				VectorMaximizer maximizer = null;
 				if (targetCoordinates) {
@@ -463,6 +484,7 @@ public class VectorCalculator extends JPanel {
 		Movement.onMoon = onMoon;
 		MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
 		String errorText = movementPreparer.prepareList();
+		lastInitialMovementFrame = movementPreparer.lastInitialMovementFrame;
 		movementPreparer.print();
 
 		if (errorText.equals("")) {
@@ -679,8 +701,8 @@ public class VectorCalculator extends JPanel {
 								targetCoordinatesToTargetAngle();
 								genPropertiesModel.setValueAt(target_CoordinateWindow.coordinates, ANGLE_ROW, 1);
 								target_CoordinateWindow.close();
-								System.out.println("Coords: " + target_CoordinateWindow.coordinates);
-								System.out.println("Angle row: " + ANGLE_ROW);
+								Debug.println("Coords: " + target_CoordinateWindow.coordinates);
+								Debug.println("Angle row: " + ANGLE_ROW);
 							}
 						});
 					}
@@ -1000,18 +1022,22 @@ public class VectorCalculator extends JPanel {
 		
 		add = new JButton("+");
 		remove = new JButton("-");
+		solveVector = new JButton("Solve");
 		calculateVector = new JButton("Calculate Vectors");
 		add.setActionCommand("add");
 		remove.setActionCommand("remove");
 		calculateVector.setActionCommand("calculate");
+		solveVector.setActionCommand("solve");
 		
 		movementEdit.add(add);
 		movementEdit.add(remove);
+		calculateVectorPanel.add(solveVector);
 		calculateVectorPanel.add(calculateVector);
 		
 		ButtonListener buttonListen = new ButtonListener();
 		add.addActionListener(buttonListen);
 		remove.addActionListener(buttonListen);
+		solveVector.addActionListener(buttonListen);
 		calculateVector.addActionListener(buttonListen);
 		
 		addPreset(1);
