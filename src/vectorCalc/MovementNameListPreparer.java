@@ -38,6 +38,7 @@ public class MovementNameListPreparer {
 		else {
 			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(VectorCalculator.initialFrames, false, false);
 			frames = VectorCalculator.initialMotion.calcFrames(VectorCalculator.initialDispY - VectorCalculator.getMoonwalkDisp());
+			VectorCalculator.initialFrames = frames;
 		}
 
 		//add moonwalk if one is present

@@ -6,30 +6,62 @@ import java.util.Vector;
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class Solver {
 
+    static final double LIMIT = 5; //if the final y height of the test is above this number, assume it can't be optimal
+    //this limit takes a while for TT jumps
+
     int[][] preset;
     int[] durations;
+    int[] lastFrames;
+    double[] y_vels;
+    double[] efficiencies;
 
-    int rainbowSpinIndex;
-    int homingMCCTIndex;
+    int rainbowSpinIndex = -1;
+    int homingMCCTIndex = -1;
 
-    public void solve() {
+    int iterations = 0;
+    int innerCalls = 0;
+    int badCalls = 0;
+
+    public boolean solve(int delta) {
+        long startTime = System.currentTimeMillis();
+
         //custom presets not yet supported
         if (VectorCalculator.currentPresetIndex == 0) {
-            return;
+            return false;
         }
         else {
             //first, select midair durations for a jump that's flat or downward (which are the midair presets)
             VectorCalculator.addPreset(VectorCalculator.currentPresetIndex);
         }
-        preset = VectorCalculator.midairPresets[VectorCalculator.currentPresetIndex];
+        int[][] unmodifiedPreset = VectorCalculator.midairPresets[VectorCalculator.currentPresetIndex];
+        preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
+        for (int i = 0; i < preset.length; i++) {
+            preset[i][0] = unmodifiedPreset[i][0];
+            if (preset[i][0] == VectorCalculator.RS) {
+                rainbowSpinIndex = i + 1;
+                preset[i][1] = unmodifiedPreset[i][1];
+            }
+            else if (preset[i][0] == VectorCalculator.HMCCT) {
+                homingMCCTIndex = i + 1;
+                preset[i][1] = unmodifiedPreset[i][1];
+            }
+            else {
+                preset[i][1] = unmodifiedPreset[i][1] + delta;
+            }
+        } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
+        VectorCalculator.addPreset(preset);
+
+        //now set the initial movement so the whole jump ends up lower than the target y position
+        //the spinless preset results in 129.2 height gain and 200 is bigger so Mario will always start lower (could have different numbers for each preset)
+        VectorCalculator.initialDispY = VectorCalculator.y1 - VectorCalculator.y0 - 1000; //could maybe be less, but want to make sure all movements can be shortened a lot
+        VectorCalculator.durationFrames = false;
+
         VectorMaximizer initialMaximizer = VectorCalculator.calculate();
         
         //find last frames of each piece of the movement
         durations = new int[preset.length + 1]; //the durations that a user would enter
-        int[] lastFrames = new int[preset.length + 1]; //the last frames of each motion taking into account added frames for ground pounds, crouches, moonwalks, etc.
+        lastFrames = new int[preset.length + 1]; //the last frames of each motion taking into account added frames for ground pounds, crouches, moonwalks, etc.
         int currentMotionLastFrame = VectorCalculator.lastInitialMovementFrame;
-        rainbowSpinIndex = -1;
-        homingMCCTIndex = -1;
         durations[0] = VectorCalculator.initialFrames;
         lastFrames[0] = currentMotionLastFrame;
         for (int i = 0; i < preset.length; i++) {
@@ -38,26 +70,24 @@ public class Solver {
             if (preset[i][0] == VectorCalculator.DIVE) {
                 currentMotionLastFrame++; //the ground pound adds a frame
             }
-            else if (preset[i][0] == VectorCalculator.RS) {
-                rainbowSpinIndex = i;
-            }
-            else if (preset[i][0] == VectorCalculator.HMCCT) {
-                homingMCCTIndex = i;
-            }
             lastFrames[i + 1] = currentMotionLastFrame;
         }
 
-        //System.out.println(Arrays.toString(lastFrames));
+        System.out.println("Initial Durations: " + Arrays.toString(durations));
+        System.out.println("Initial Frames: " + Arrays.toString(lastFrames));
 
-        double x = VectorCalculator.x0;
-        double y = VectorCalculator.y0;
-        double z = VectorCalculator.z0;
+        System.out.println("Rainbow Spin Index: " + rainbowSpinIndex);
+        System.out.println("Homing MCCT Index: " + homingMCCTIndex);
 
         double[][] info = null;
 
         //calculate efficiencies from every frame of the jump
-        double[] y_vels = new double[currentMotionLastFrame + 1];
-        double[] efficiencies = new double[currentMotionLastFrame + 1];
+        y_vels = new double[currentMotionLastFrame + 1];
+        efficiencies = new double[currentMotionLastFrame + 1];
+
+        double x = VectorCalculator.x0;
+        double y = VectorCalculator.y0;
+        double z = VectorCalculator.z0;
 
         SimpleMotion[] simpleMotions = initialMaximizer.getMotions();
 
@@ -90,9 +120,24 @@ public class Solver {
 
         //System.out.println(Arrays.toString(efficiencies));
 
+        //remove extra frames from adding them before to help with later calculations
+        for (int i = 0; i < delta; i++) {
+            for (int j = 0; j < preset.length + 1; j++) {
+                if (j != rainbowSpinIndex && j != homingMCCTIndex) {
+                    y -= y_vels[lastFrames[j]];
+                    lastFrames[j]--;
+                    durations[j]--;
+                }
+            }
+        }
+
+        System.out.println("Updated Durations: " + Arrays.toString(durations));
+        System.out.println("Updated Last Frames: " + Arrays.toString(lastFrames));
+
         //remove the frames with the weakest efficiencies until Mario's height is above the target y position
         //this gives a ballpark estimate of the optimal frames
         //TODO figure out if this needs a tiny bit of wiggle room ex .0001
+        
         while (y < y_target) {
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
@@ -102,16 +147,26 @@ public class Solver {
                     worstEfficiencyIndex = i;
                 }
             }
+            System.out.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
+            if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
+                VectorCalculator.durationFrames = true;
+                return false;
+            }
             y -= y_vels[lastFrames[worstEfficiencyIndex]];
             durations[worstEfficiencyIndex]--;
             lastFrames[worstEfficiencyIndex]--;
             //we can keep the "removed" frames in the arrays, as they won't be considered anymore
         }
 
+        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
+        System.out.println("Ballpark Y Height: " + y);
+
         //System.out.println(test(durations));
 
         //now test adding and subtracting some frames to get a better result
-        DoubleIntArray best = test(durations, 2, 0, durations.length - 1);
+        VectorCalculator.durationFrames = true;
+        DoubleIntArray best = test(durations, delta, 0, y);
         System.out.println(test(best.intArray));
 
         //possible improvements: some of these combinations will obviously not work
@@ -121,6 +176,14 @@ public class Solver {
         //and then only check combos that have positive displacement
         //might also be best just to pick the options that are closest to the target displacement, as those are likely to be best
         //another option is to run worse versions of maximize() to start off with, and then for the best options run it again more accurately
+
+        System.out.println("Delta: " + delta);
+        System.out.println("Iterations: " + iterations);
+        System.out.println("Inner Calls: " + innerCalls);
+        System.out.println("Bad Calls: " + badCalls);
+        System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+
+        return true;
     }
 
     public class DoubleIntArray {
@@ -133,29 +196,93 @@ public class Solver {
         }
     }
 
-    public DoubleIntArray test(int[] durations, int delta, int index, int maxIndex) {
+    public DoubleIntArray test(int[] durations, int delta, int index, double y_pos) {
+        if (index == durations.length - 1) {
+            innerCalls++;
+        }
         DoubleIntArray best = new DoubleIntArray(0, durations);
         if (index == rainbowSpinIndex || index == homingMCCTIndex) {
-            return test(durations, delta, index + 1, maxIndex);
+            return test(durations, delta, index + 1, y_pos);
         }
-        for (int i = durations[index] - delta; i <= durations[index] + delta; i++) {
+        
+        if (index < durations.length - 1) {
+            for (int i = -delta; i <= delta; i++) {
+                double test_y_pos = y_pos;
+                int[] testDurations = durations.clone();
+                testDurations[index] = durations[index] + i;
+                DoubleIntArray result;
+                int lastFrame = lastFrames[index];
+                if (i < 0) {
+                    for (int j = 0; j > i; j--) {
+                        test_y_pos -= y_vels[lastFrame + j];
+                    }
+                }
+                else if (i > 0) {
+                    for (int j = 1; j <= i; j++) {
+                        test_y_pos += y_vels[lastFrame + j]; //something is broken here
+                    }
+                }
+                //System.out.println(lastFrames[index] + ", " + y_vels[lastFrame + 1]);
+                //System.out.println("Index " + index + " Delta " + i + " YPos " + test_y_pos);
+                // if (index == durations.length - 1) {
+                //     result = new DoubleIntArray(test(testDurations), testDurations);
+                // }
+                // else {
+                result = test(testDurations, delta, index + 1, test_y_pos);
+                // }
+                if (result.d > best.d) {
+                    best = result;
+                }
+            }
+            return best;
+        }
+        else { //make the final movement as low as it can be
+            double test_y_pos = y_pos;
+            int test_delta = 0;
+            int lastFrame = lastFrames[index];
+
+            if (y_pos > VectorCalculator.y1) {
+                // System.out.println();
+                // System.out.println(test_y_pos);
+                for (test_delta = 1; test_delta <= delta; test_delta++) {
+                    test_y_pos += y_vels[lastFrame + test_delta];
+                    // System.out.println(test_y_pos);
+                    if (test_y_pos < VectorCalculator.y1) {
+                        test_y_pos -= y_vels[lastFrame + test_delta];
+                        break;
+                    }
+                }
+                test_delta--;
+            }
+            else if (y_pos < VectorCalculator.y1) {
+                for (test_delta = 1; test_delta <= delta; test_delta++) {
+                    test_y_pos -= y_vels[lastFrame - test_delta + 1];
+                    if (test_y_pos >= VectorCalculator.y1) {
+                        break;
+                    }
+                }
+                test_delta *= -1; //so we subtract the frames instead of adding them
+                if (test_y_pos < VectorCalculator.y1) { //not possible to be high enough so just return 0
+                    return new DoubleIntArray(0, durations);
+                }
+            }
+            if (test_y_pos > VectorCalculator.y1 + LIMIT) { //almost certainly won't be optimal
+                return new DoubleIntArray(0, durations);
+            }
+            // System.out.println();
+            // System.out.println(test_y_pos);
             int[] testDurations = durations.clone();
-            testDurations[index] = i;
-            DoubleIntArray result;
-            if (index < maxIndex) {
-                result = test(testDurations, delta, index + 1, maxIndex);
-            }
-            else {
-                result = new DoubleIntArray(test(testDurations), testDurations);
-            }
-            if (result.d > best.d) {
-                best = result;
-            }
+            testDurations[index] = durations[index] + test_delta;
+            // if (test_y_pos >= .19 && test_y_pos <= .21) {
+            //      System.out.println(Arrays.toString(testDurations));
+            //      System.out.println(test(testDurations));
+            // }
+            return new DoubleIntArray(test(testDurations), testDurations);
         }
-        return best;
     }
 
     public double test(int[] testDurations) {
+        iterations++;
         VectorCalculator.initialFrames = testDurations[0];
         VectorCalculator.genPropertiesTable.setValueAt(testDurations[0], VectorCalculator.MOVEMENT_DURATION_ROW, 1);
         int[][] midairs = preset.clone();
@@ -170,7 +297,10 @@ public class Solver {
         for (SimpleMotion m : motions) {
             y += m.calcDispY();
         }
+        // System.out.println(y);
         if (y < VectorCalculator.y1) { //too low so won't work
+            badCalls++;
+            System.out.println(Arrays.toString(testDurations) + ", " + y);
             return 0.0;
         }
         else {

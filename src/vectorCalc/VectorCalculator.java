@@ -436,11 +436,15 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				solver.solve();
-				VectorMaximizer maximizer = calculate();
-				if (maximizer != null) {
-					VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-					VectorDisplayWindow.display();
+				if (solver.solve(2)) {
+					VectorMaximizer maximizer = calculate();
+					if (maximizer != null) {
+						VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.display();
+					}
+				}
+				else {
+					errorMessage.setText("Error: Movement cannot reach target height");
 				}
 				Debug.println();
 			 }
