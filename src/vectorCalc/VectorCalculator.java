@@ -150,7 +150,7 @@ public class VectorCalculator extends JPanel {
 	static double x1 = 0, y1 = 0, z1 = 3000;
 	static boolean targetCoordinates = true;
 	static double initialAngle = 0;
-	static double targetAngle = 0;
+	static double targetAngle = 90;
 	static AngleType angleType = AngleType.TARGET;
 	static String initialMovementName = "Triple Jump";
 	static boolean durationFrames = true;
@@ -438,21 +438,21 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				for (double i = 0; i <= 1000;) {
-					y1 = i;
-					if (solver.solve(3)) {
-						VectorMaximizer maximizer = calculate();
-						if (maximizer != null) {
-							VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-							VectorDisplayWindow.display();
-						}
+				// for (double i = -200; i <= 200;) {
+				// 	y1 = i;
+				if (solver.solve(3)) {
+					VectorMaximizer maximizer = calculate();
+					if (maximizer != null) {
+						VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.display();
 					}
-					else {
-						errorMessage.setText("Error: Movement cannot reach target height");
-					}
-					//i = y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
-					i += 10000;
 				}
+				else {
+					errorMessage.setText("Error: Movement cannot reach target height");
+				}
+					//i = y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
+				// 	i += 10;
+				// }
 				
 				//Debug.println();
 			 }
