@@ -438,9 +438,9 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				for (double i = -1000; i <= 1000;) {
+				for (double i = 0; i <= 1000;) {
 					y1 = i;
-					if (solver.solve(2)) {
+					if (solver.solve(3)) {
 						VectorMaximizer maximizer = calculate();
 						if (maximizer != null) {
 							VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
@@ -451,7 +451,7 @@ public class VectorCalculator extends JPanel {
 						errorMessage.setText("Error: Movement cannot reach target height");
 					}
 					//i = y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
-					i += 100;
+					i += 10000;
 				}
 				
 				//Debug.println();
@@ -492,7 +492,7 @@ public class VectorCalculator extends JPanel {
 		 }
 	}
 
-	public static VectorMaximizer calculate() {
+	public static VectorMaximizer getMaximizer() {
 		Movement.onMoon = onMoon;
 		MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
 		String errorText = movementPreparer.prepareList();
@@ -502,13 +502,19 @@ public class VectorCalculator extends JPanel {
 		if (errorText.equals("")) {
 			errorMessage.setText("");
 			VectorMaximizer maximizer = new VectorMaximizer(movementPreparer);
-			maximizer.maximize(); 
 			return maximizer;
 		}
 		else {
 			errorMessage.setText("Error: " + errorText);
 			return null;
 		}
+	}
+
+	public static VectorMaximizer calculate() {
+		VectorMaximizer maximizer = getMaximizer();
+		if (maximizer != null)
+			maximizer.maximize();
+		return maximizer;
 	}
 
 	public static void main(String[] args) {

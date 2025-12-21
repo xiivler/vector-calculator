@@ -25,6 +25,7 @@ public class VectorMaximizer {
 	//public static int numSteps = 901;
 	
 	boolean alwaysDiveTurn = false; //set to true to only test with dive turn, which is faster for Solver
+	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
 	SimpleVector[] vectors;
 	double[] angles;
@@ -1089,8 +1090,9 @@ public class VectorMaximizer {
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
 	private double maximize_HCT() {
 		if (hasVariableHCTFallVector) {
-			double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, Math.toRadians(2));
-			System.out.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
+			//System.out.println(maximize_HCT_limit);
+			double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, maximize_HCT_limit);
+			//Debug.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
 			return results[0];
 		}
 		//not needed anymore since simple tech doesn't actually have this optimization

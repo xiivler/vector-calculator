@@ -305,8 +305,9 @@ public class Solver {
             midairs[i][1] = testDurations[i + 1];
         }
         VectorCalculator.addPreset(midairs);
-        VectorMaximizer maximizer = VectorCalculator.calculate();
+        VectorMaximizer maximizer = VectorCalculator.getMaximizer();
         maximizer.alwaysDiveTurn = true;
+        maximizer.maximize_HCT_limit = Math.toRadians(8);
         double disp = maximizer.maximize();
         double y = VectorCalculator.y0;
         SimpleMotion[] motions = maximizer.getMotions();
