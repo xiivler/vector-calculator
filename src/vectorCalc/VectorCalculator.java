@@ -34,6 +34,8 @@ import javax.swing.text.JTextComponent;
 
 public class VectorCalculator extends JPanel {
 	
+	static boolean stop = false;
+
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
 	
 	//category for falling for height calculator?
@@ -436,17 +438,23 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				if (solver.solve(2)) {
-					VectorMaximizer maximizer = calculate();
-					if (maximizer != null) {
-						VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-						VectorDisplayWindow.display();
+				for (double i = -1000; i <= 1000;) {
+					y1 = i;
+					if (solver.solve(2)) {
+						VectorMaximizer maximizer = calculate();
+						if (maximizer != null) {
+							VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+							VectorDisplayWindow.display();
+						}
 					}
+					else {
+						errorMessage.setText("Error: Movement cannot reach target height");
+					}
+					//i = y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
+					i += 100;
 				}
-				else {
-					errorMessage.setText("Error: Movement cannot reach target height");
-				}
-				Debug.println();
+				
+				//Debug.println();
 			 }
 			 else if (evt.getActionCommand() == "calculate") {
 				VectorMaximizer maximizer = null;
@@ -1044,7 +1052,7 @@ public class VectorCalculator extends JPanel {
 		solveVector.addActionListener(buttonListen);
 		calculateVector.addActionListener(buttonListen);
 		
-		addPreset(1);
+		addPreset(7);
 
 		//CREATING THE WINDOW
 		

@@ -23,7 +23,9 @@ public class VectorMaximizer {
 
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	//public static int numSteps = 901;
-			
+	
+	boolean alwaysDiveTurn = false; //set to true to only test with dive turn, which is faster for Solver
+
 	SimpleVector[] vectors;
 	double[] angles;
 	SimpleMotion[] motions;
@@ -230,7 +232,14 @@ public class VectorMaximizer {
 	//applies the binary serach value based on what is being optimized
 	public void applyBinarySearchValue(double value, int optID) {
 		if (optID == 0) {
-			//generateSimpleTechRainbowSpinHoldingAngles(value);
+			if (value < 0) {
+				switchHCTFallVectorDir = true;
+				variableHCTHoldingAngle = -value;
+			}
+			else {
+				switchHCTFallVectorDir = false;
+				variableHCTHoldingAngle = value;
+			}
 		}
 	}
 
@@ -254,8 +263,9 @@ public class VectorMaximizer {
 			Debug.println("BS vals: " + lowMed + ", " + highMed);
 			applyBinarySearchValue(lowMed, optID);
 			lowMedDisp = maximize(optID);
-			applyBinarySearchValue(lowMed, optID);
+			applyBinarySearchValue(highMed, optID);
 			highMedDisp = maximize(optID);
+			Debug.println(lowMedDisp + ", " + highMedDisp);
 			if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
 				low = low;
 				med = lowMed;
@@ -698,23 +708,23 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			if (movementNames.get(startIndex).equals("Triple Jump") && true) {
-				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
-				double[] holdingAngles = new double[movementFrames.get(startIndex)];
-				int framesCountervector = 1;
-				// for (int a = 0; a < 5; a++) {
-				// 	holdingAngles[a] = SimpleMotion.NO_ANGLE;
-				// }
-				for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
-					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-				}
-				for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
-					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-				}
-				((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
-			}
-			else
-				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+			// if (movementNames.get(startIndex).equals("Triple Jump") && true) {
+			// 	motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
+			// 	double[] holdingAngles = new double[movementFrames.get(startIndex)];
+			// 	int framesCountervector = 1;
+			// 	// for (int a = 0; a < 5; a++) {
+			// 	// 	holdingAngles[a] = SimpleMotion.NO_ANGLE;
+			// 	// }
+			// 	for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			// 	}
+			// 	((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
+			// }
+			//else
+			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
 			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || (diveTurn && movementNames.get(startIndex).equals("Ground Pound")))
@@ -761,8 +771,12 @@ public class VectorMaximizer {
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 			else
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
-			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall
+			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall	
 				((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
+				// Debug.println("Testing: " + variableHCTHoldingAngle);
+				if (movementFrames.get(j) <= 3) {
+					((SimpleVector) motionGroup[i]).optimalForwardAccel = false; //may need to not hold straight ahead in the falling frames even though under max speed
+				}
 				if (!switchHCTFallVectorDir) {
 					currentVectorRight = !currentVectorRight;
 				}
@@ -1057,45 +1071,27 @@ public class VectorMaximizer {
 
 	//optimization step that maximizes the dive turn (on or off)
 	private void maximize_dive() {
-		diveTurn = false;
-		double disp_noDiveTurn = maximize_HCT();
-		diveTurn = true;
-		double disp_diveTurn = maximize_HCT();
-		if (disp_noDiveTurn > disp_diveTurn) {
-			diveTurn = false;
+		if (alwaysDiveTurn) { //only test with dive turn if this boolean is true
+			diveTurn = true;
 			maximize_HCT();
+		}
+		else {
+			diveTurn = false;
+			double disp_noDiveTurn = maximize_HCT();
+			diveTurn = true;
+			double disp_diveTurn = maximize_HCT();
+			if (disp_noDiveTurn > disp_diveTurn) {
+				diveTurn = false;
+				maximize_HCT();
+			}
 		}
 	}
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
 	private double maximize_HCT() {
-		double hct_bestDisp = 0;
 		if (hasVariableHCTFallVector) {
-			double bestVariableHCTHoldingAngle = 0;
-
-			int numSteps = 20; //do binary search instead?
-			for (int i = -numSteps / 2; i <= numSteps / 2; i++) {
-				variableHCTHoldingAngle = Math.PI / 2 / numSteps * i; //range from -90 degrees to 90 degrees
-				if (variableHCTHoldingAngle < 0) {
-					switchHCTFallVectorDir = true;
-					variableHCTHoldingAngle = -variableHCTHoldingAngle;
-				}
-				else {
-					switchHCTFallVectorDir = false;
-				}
-				Debug.println("Testing HCT fall holding angle " + Math.toDegrees(variableHCTHoldingAngle));
-
-				maximize_variableAngle1();
-
-				if (once_bestDisp > hct_bestDisp) {
-					hct_bestDisp = once_bestDisp;
-					bestVariableHCTHoldingAngle = variableHCTHoldingAngle;
-					bestSwitchHCTFallVectorDir = switchHCTFallVectorDir;
-				}
-			}
-
-			variableHCTHoldingAngle = bestVariableHCTHoldingAngle;
-			switchHCTFallVectorDir = bestSwitchHCTFallVectorDir;
-			return maximize_variableAngle1();
+			double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, Math.toRadians(2));
+			System.out.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
+			return results[0];
 		}
 		//not needed anymore since simple tech doesn't actually have this optimization
 		/* else if (hasRainbowSpin) {
