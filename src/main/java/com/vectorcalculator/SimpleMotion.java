@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 //calculates the behavior of movement without vectoring
 public class SimpleMotion {

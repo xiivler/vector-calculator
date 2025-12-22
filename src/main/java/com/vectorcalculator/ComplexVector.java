@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 //calculates the motion for a vector where the joystick angles vary from frame to frame
 public class ComplexVector extends SimpleVector {

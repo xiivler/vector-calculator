@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.util.ArrayList;
 

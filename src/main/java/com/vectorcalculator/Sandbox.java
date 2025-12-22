@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 public class Sandbox {
     

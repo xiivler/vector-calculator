@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

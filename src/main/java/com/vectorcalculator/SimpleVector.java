@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 //calculates the behavior of vectorable movement if the joystick angle is consistent
 public class SimpleVector extends SimpleMotion {

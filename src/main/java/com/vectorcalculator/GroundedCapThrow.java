@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 //motion for a roll cancel up to once Mario starts Falling instead
 public class GroundedCapThrow extends SimpleMotion {

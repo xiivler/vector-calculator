@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -6,8 +6,12 @@ import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
+import com.vectorcalculator.Properties.AngleType;
+
 public class MovementNameListPreparer {
 
+	Properties p = Properties.p;
+	
 	//TableModel genPropertiesModel;
 	DefaultTableModel movementModel;
 	
@@ -30,21 +34,21 @@ public class MovementNameListPreparer {
 
 		//initial movement
 		//String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
-		String name = VectorCalculator.initialMovementName;
+		String name = p.initialMovementName;
 		int frames = 0;
-		if (VectorCalculator.durationFrames) {
-			frames = VectorCalculator.initialFrames;
+		if (p.durationFrames) {
+			frames = p.initialFrames;
 		}
 		else {
-			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(VectorCalculator.initialFrames, false, false);
-			frames = VectorCalculator.initialMotion.calcFrames(VectorCalculator.initialDispY - VectorCalculator.getMoonwalkDisp());
-			VectorCalculator.initialFrames = frames;
+			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false);
+			frames = VectorCalculator.initialMotion.calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+			p.initialFrames = frames;
 		}
 
 		//add moonwalk if one is present
-		if (VectorCalculator.canMoonwalk && VectorCalculator.framesMoonwalk > 0) {
+		if (p.canMoonwalk && p.framesMoonwalk > 0) {
 			movementNames.add("Moonwalk");
-			movementFrames.add(VectorCalculator.framesMoonwalk);
+			movementFrames.add(p.framesMoonwalk);
 		}
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt
@@ -119,8 +123,8 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
 		}
 		else if (name.contains("RCV")) {
-			if (VectorCalculator.angleType == VectorCalculator.AngleType.BOTH) {
-				double difference = VectorCalculator.initialAngle - VectorCalculator.targetAngle;
+			if (p.angleType == AngleType.BOTH) {
+				double difference = p.initialAngle - p.targetAngle;
 				while (difference >= 180) {
 					difference -= 360;
 				}
@@ -144,11 +148,11 @@ public class MovementNameListPreparer {
 		
 		if (VectorCalculator.chooseInitialHorizontalSpeed) {
 			//initialVelocity = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
-			initialVelocity = VectorCalculator.initialHorizontalSpeed;
+			initialVelocity = p.initialHorizontalSpeed;
 		}
 		if (VectorCalculator.chooseJumpFrames) {
 			//framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
-			framesJump = VectorCalculator.framesJump;
+			framesJump = p.framesJump;
 		}
 
 		//calculate last initial movement frame

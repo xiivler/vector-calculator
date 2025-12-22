@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -114,16 +114,7 @@ public class CoordinateWindow implements ActionListener {
 		rootPane.getActionMap().put("closeWindow", dispatchClosing); 
 	}
 
-	public String numberToString(double v) {
-		if ((int) v == v) {
-			return Integer.toString((int) v);
-		}
-		else {
-			return Double.toString(v);
-		}
-	}
-
-	public Double stringToDouble(String s) {
+	public static Double stringToDouble(String s) {
 		try {
 			return Double.parseDouble(s);
 		}
@@ -133,9 +124,9 @@ public class CoordinateWindow implements ActionListener {
 	}
 	
 	public void display(double x, double y, double z) {
-		x_field.setText(numberToString(x));
-		y_field.setText(numberToString(y));
-		z_field.setText(numberToString(z));
+		x_field.setText(VectorCalculator.numberToString(x));
+		y_field.setText(VectorCalculator.numberToString(y));
+		z_field.setText(VectorCalculator.numberToString(z));
 		frame.setLocationRelativeTo(VectorCalculator.f);
 		frame.getRootPane().setDefaultButton(confirm);
 		frame.setVisible(true);
@@ -146,7 +137,7 @@ public class CoordinateWindow implements ActionListener {
 		x = stringToDouble(x_field.getText());
 		y = stringToDouble(y_field.getText());
 		z = stringToDouble(z_field.getText());
-		coordinates = "(" + numberToString(x) + ", " + numberToString(y) + ", " + numberToString(z) + ")";
+		coordinates = VectorCalculator.toCoordinateString(x, y, z);
 	}
 	
 	public JButton getConfirmButton() {

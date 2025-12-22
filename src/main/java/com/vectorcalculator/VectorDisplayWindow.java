@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -34,9 +34,12 @@ import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import vectorCalc.VectorCalculator.CameraType;
+import com.vectorcalculator.Properties.CameraType;
+import com.vectorcalculator.Properties.AngleType;
 
 public class VectorDisplayWindow {
+
+	static Properties p = Properties.p;
 
 	static PrintWriter print = null;
 	static boolean printTSV = true;
@@ -282,33 +285,33 @@ public class VectorDisplayWindow {
 		VectorDisplayWindow.simpleMotions = simpleMotions;
 		VectorDisplayWindow.initialAngle = initialAngle;
 		VectorDisplayWindow.targetAngle = targetAngle;
-		if (VectorCalculator.cameraType == CameraType.ABSOLUTE) {
+		if (p.cameraType == CameraType.ABSOLUTE) {
 			cameraAngle = Math.PI / 2;
 		}
 		else {
-			if (VectorCalculator.cameraType == CameraType.INITIAL) {
+			if (p.cameraType == CameraType.INITIAL) {
 				cameraAngle = initialAngle;
 			}
-			else if (VectorCalculator.cameraType == CameraType.TARGET) {
+			else if (p.cameraType == CameraType.TARGET) {
 				cameraAngle = targetAngle;
 			}
 			else {
-				cameraAngle = Math.toRadians(VectorCalculator.customCameraAngle);
+				cameraAngle = Math.toRadians(p.customCameraAngle);
 			}
-			if (VectorCalculator.xAxisZeroDegrees) {
+			if (p.xAxisZeroDegrees) {
 				cameraAngle = Math.PI / 2 - cameraAngle;
 			}
 		}
 		
-		v0 = VectorCalculator.initialHorizontalSpeed;
+		v0 = p.initialHorizontalSpeed;
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(VectorCalculator.x0, VectorCalculator.y0, VectorCalculator.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(p.x0, p.y0, p.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
 		
-		double x = VectorCalculator.x0;
-		double y = VectorCalculator.y0;
-		double z = VectorCalculator.z0;
+		double x = p.x0;
+		double y = p.y0;
+		double z = p.z0;
 		
 		double[][] info = null;
 
@@ -341,14 +344,14 @@ public class VectorDisplayWindow {
 				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
 				double velocityAngle;
-				if (VectorCalculator.xAxisZeroDegrees) {
+				if (p.xAxisZeroDegrees) {
 					velocityAngle = reduceAngle(Math.atan2(info[i][5], info[i][3]));
 				}
 				else {
 					velocityAngle = reduceAngle(Math.atan2(info[i][3], info[i][5]));
 				}
 				if (info[i][6] == 0) {
-					if (VectorCalculator.xAxisZeroDegrees) {
+					if (p.xAxisZeroDegrees) {
 						rowContents[6] = toPolarCoordinates(info[i][6], reduceAngle(Math.PI / 2 - motion.initialAngle));
 					}
 					else {
@@ -359,7 +362,7 @@ public class VectorDisplayWindow {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][5], info[i][3]) - Math.toRadians(VectorCalculator.targetAngle));
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][5], info[i][3]) - Math.toRadians(p.targetAngle));
 					double value = -1 / ((info[i][4] / speedInTargetDirection) - 1);
 					rowContents[7] = String.format("%.3f", value);
 				}
@@ -420,7 +423,7 @@ public class VectorDisplayWindow {
 			dataTableModel.setValueAt(displayString, i, 2);
 		}
 	
-		if (VectorCalculator.angleType == VectorCalculator.AngleType.TARGET) {
+		if (p.angleType == AngleType.TARGET) {
 			infoTableModel.setValueAt("Initial Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
@@ -429,8 +432,8 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
-		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - VectorCalculator.x0, 2) + Math.pow(z - VectorCalculator.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
-		infoTableModel.setValueAt(shorten(y - VectorCalculator.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
 	}
 	

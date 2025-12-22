@@ -1,14 +1,16 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.table.TableModel;
 
-import vectorCalc.VectorCalculator.AngleType;
+import com.vectorcalculator.Properties.AngleType;
 
 public class VectorMaximizer {
 
+	Properties p = Properties.p;
+	
 	public static final double RCV_ERROR = .001; //acceptable Z axis error when trying to make a RCV go straight
     public static final int RCV_MAX_ITERATIONS = 100; //stop after this many iterations no matter what when trying to make a RCV go straight
 
@@ -140,19 +142,19 @@ public class VectorMaximizer {
 		
 		this.listPreparer = listPreparer;
 		
-		//TableModel genPropertiesModel = VectorCalculator.genPropertiesModel;
-		targetAngleGiven = VectorCalculator.angleType == AngleType.TARGET; //keep this logic; if it's both, you want to conform to the initial
-		if (VectorCalculator.xAxisZeroDegrees) { //vector calculator cacluates as if the order is ZXY (i.e. 0 degrees is the positive Z axis, and 90 degrees is the positive X axis)
-			initialAngle = Math.PI / 2 - Math.toRadians(VectorCalculator.initialAngle);
-			targetAngle = Math.PI / 2 - Math.toRadians(VectorCalculator.targetAngle);
+		//TableModel genPropertiesModel = p.genPropertiesModel;
+		targetAngleGiven = p.angleType == AngleType.TARGET; //keep this logic; if it's both, you want to conform to the initial
+		if (p.xAxisZeroDegrees) { //vector calculator cacluates as if the order is ZXY (i.e. 0 degrees is the positive Z axis, and 90 degrees is the positive X axis)
+			initialAngle = Math.PI / 2 - Math.toRadians(p.initialAngle);
+			targetAngle = Math.PI / 2 - Math.toRadians(p.targetAngle);
 		}
 		else {
-			initialAngle = Math.toRadians(VectorCalculator.initialAngle);
-			targetAngle = Math.toRadians(VectorCalculator.targetAngle);
+			initialAngle = Math.toRadians(p.initialAngle);
+			targetAngle = Math.toRadians(p.targetAngle);
 		}
-		//givenAngle = Math.toRadians(Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.ANGLE_ROW, 1).toString()));
-		//targetAngleGiven = genPropertiesModel.getValueAt(VectorCalculator.ANGLE_TYPE_ROW, 1).toString().equals("Target Angle");
-		rightVector = VectorCalculator.rightVector;
+		//givenAngle = Math.toRadians(Double.parseDouble(genPropertiesModel.getValueAt(p.ANGLE_ROW, 1).toString()));
+		//targetAngleGiven = genPropertiesModel.getValueAt(p.ANGLE_TYPE_ROW, 1).toString().equals("Target Angle");
+		rightVector = p.rightVector;
 		
 		movementNames = listPreparer.movementNames;
 		movementFrames = listPreparer.movementFrames;
@@ -375,11 +377,11 @@ public class VectorMaximizer {
 	//angle is the angle of the dive
 	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
 		double throwAngle = angle;
-		if (VectorCalculator.hyperoptimize && frames > 14)
-			throwAngle += Math.toRadians(VectorCalculator.diveCapBounceAngle);
+		if (p.hyperoptimize && frames > 14)
+			throwAngle += Math.toRadians(p.diveCapBounceAngle);
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = throwAngle;
-		if (VectorCalculator.hyperoptimize || frames <= 8) {
+		if (p.hyperoptimize || frames <= 8) {
 			if (frames < 7) {
 				for (int i = 1; i < frames; i++) {
 					holdingAngles[i] = angle;
@@ -480,7 +482,7 @@ public class VectorMaximizer {
 			else {
 				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
 				Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
-				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(VectorCalculator.diveCapBounceAngle) + minRotation);
+				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(p.diveCapBounceAngle) + minRotation);
 				Debug.println("Additional rotation: " + Math.toDegrees(additionalRotation));
 				double rotationSum = 0;
 				double rotationalVelocity = 0;
@@ -532,7 +534,7 @@ public class VectorMaximizer {
 	//it seems that turnaroundFrames is always 3
 	private void setFinalCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
 		double[] holdingAngles = new double[frames];
-		if (VectorCalculator.hyperoptimize) {
+		if (p.hyperoptimize) {
 			double initialHoldingAngle = SimpleMotion.NORMAL_ANGLE;
 			double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
 			Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
@@ -839,7 +841,7 @@ public class VectorMaximizer {
 	}
 	
 	public double getInitialAngle() {
-		if (VectorCalculator.xAxisZeroDegrees) {
+		if (p.xAxisZeroDegrees) {
 			return Math.PI / 2 - initialAngle;
 		}
 		else {
@@ -848,7 +850,7 @@ public class VectorMaximizer {
 	}
 	
 	public double getTargetAngle() {
-		if (VectorCalculator.xAxisZeroDegrees) {
+		if (p.xAxisZeroDegrees) {
 			return Math.PI / 2 - targetAngle;
 		}
 		else {
@@ -871,7 +873,7 @@ public class VectorMaximizer {
 		
 		//currentVectorRight = rightVector;
 
-		if (VectorCalculator.angleType == AngleType.BOTH) {
+		if (p.angleType == AngleType.BOTH) {
 			if (rightVector) {
 				rcTrueInitialAngleDiff = initialAngle - targetAngle;
 				//initialAngle -= rcTrueInitialAngleDiff;
@@ -901,7 +903,7 @@ public class VectorMaximizer {
 					movementNames.set(0, Movement.RC_TYPES[i]);
 					Movement rc = new Movement(Movement.RC_TYPES[i]);
 					GroundedCapThrow rcMotion = new GroundedCapThrow(rc, false);
-					int totalFrames = rcMotion.calcFrames(VectorCalculator.initialDispY);
+					int totalFrames = rcMotion.calcFrames(p.initialDispY);
 					movementFrames.set(0, rc.minFrames);
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
@@ -1130,7 +1132,7 @@ public class VectorMaximizer {
 		currentVectorRight = rightVector;
 
 		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
-		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), listPreparer.initialVelocity, VectorCalculator.framesJump);
+		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), listPreparer.initialVelocity, p.framesJump);
 		sumXDisps(motionGroup1);
 		sumYDisps(motionGroup1);
 		dispZMotionGroup1 = dispZ;

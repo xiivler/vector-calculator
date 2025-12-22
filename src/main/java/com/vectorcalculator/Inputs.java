@@ -1,4 +1,4 @@
-package vectorCalc;
+package com.vectorcalculator;
 
 class Inputs {
     public static final int NONE = 0, A = 1, B = 2, X = 3, Y = 4, ZL = 5, ZR = 6, M = 7, MU = 8, MD = 9, ML = 10, MR = 11, MUU = 12, MDD = 13, MLL = 14, MRR = 15;
