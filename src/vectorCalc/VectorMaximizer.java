@@ -563,11 +563,11 @@ public class VectorMaximizer {
 			Debug.println("Turnaround Frames: " + turnaroundFrames);
 			holdingAngles[frames - turnaroundFrames] = initialHoldingAngle + Math.PI * 181/180.0;
 			if (turnaroundFrames > 1)
-				holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle - Math.PI * 1/180.0;
+				holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle + Math.PI * 2/180.0;
 			if (turnaroundFrames > 2)
-				holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle + Math.PI * 3/180.0;
+				holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle - Math.PI * 5/180.0;
 			if (turnaroundFrames > 3)
-				holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle + Math.PI * 7/180.0;
+				holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle - Math.PI * 9/180.0;
 			if (difference < -1) {
 				holdingAngles[frames - 1] = angle;
 			}
