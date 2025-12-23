@@ -10,17 +10,20 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@EqualsAndHashCode
 @XmlRootElement
 public class Properties {
     static Properties p;
+    static Properties p_saved;
+
+    @XmlTransient
+    File file = null;
 
     public static Properties getInstance() {
         if (p == null) {
@@ -63,32 +66,41 @@ public class Properties {
 
     //select the initial movement once these properties are saved
 
-    public static void save() {
+    public static boolean save(File file) {
         try {
             JAXBContext jxbc = JAXBContext.newInstance(Properties.class);
             Marshaller m = jxbc.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            File f = new File("properties.xml");
-            m.marshal(p, f);
+            //File f = new File("properties.xml");
+            //p.file = file;
+            m.marshal(p, file);
+            return true;
         }
-        catch (JAXBException ex) {
+        catch (Exception ex) {
             Debug.println("XML Save Failed");
+            return false;
         }
     }
 
-    public static Properties load() {
+    public static Properties load(File file) {
         try {
             JAXBContext jxbc = JAXBContext.newInstance(Properties.class);
             Unmarshaller um = jxbc.createUnmarshaller();
             //um.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            File f = new File("properties.xml");
-            return (Properties) um.unmarshal(f);
+            //File f = new File("properties.xml");
+            //p.file = file;
+            p_saved = (Properties) um.unmarshal(file);
+            return p_saved;
             //System.out.println(p.x0);
         }
-        catch (JAXBException ex) {
+        catch (Exception ex) {
             Debug.println("XML Load Failed");
             return null;
         }
+    }
+
+    public static boolean isUnsaved() {
+        return !p.equals(p_saved);
     }
 
     public static void copyAttributes(Object from, Object to) {

@@ -8,6 +8,9 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -40,6 +43,10 @@ public class VectorCalculator extends JPanel {
 	
 	static Properties p = Properties.getInstance();
 	static boolean stop = false;
+	static boolean saved = true;
+	static boolean initialized = false;
+
+	static String projectName = "Untitled Project";
 
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
 	
@@ -146,7 +153,6 @@ public class VectorCalculator extends JPanel {
 		}
 		/* for (int i = 0; i < p.midairs.length; i++)
 			System.out.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
-		Properties.save();
 	}
 
 	static final int LOCK_NONE = 0;
@@ -204,7 +210,7 @@ public class VectorCalculator extends JPanel {
 		{"0 Degree Axis", "X"},
 		{"Camera Angle", "Target Angle"}};
 	
-	static JFrame f = new JFrame("Configure Movement");
+	static JFrame f = new JFrame(projectName);
 
 	public static double round(double d, int places) {
 		return ((int) (d * Math.pow(10, places) + .5)) / (double) Math.pow(10, places);
@@ -456,10 +462,30 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void loadProperties() {
-		Properties pl = Properties.load();
+	public static void saveProperties(File file, boolean updateCurrentFile) {
+		boolean saveSuccess = Properties.save(file);
+		if (updateCurrentFile) {
+			saved = saveSuccess;
+			if (saved) {
+				projectName = file.getName();
+				f.setTitle(projectName);
+				VectorDisplayWindow.frame.setTitle("Calculations: " + VectorCalculator.projectName);
+			}
+		}
+		else if (!saveSuccess) {
+			errorMessage.setText("Error: Save failed");
+		}
+	}
+
+	public static void loadProperties(File file, boolean defaults) {
+		Properties pl = Properties.load(file);
 		if (pl == null) {
-			errorMessage.setText("Error: File could not be loaded");
+			if (defaults) {
+				errorMessage.setText("Error: Defaults could not be loaded");
+			}
+			else {
+				errorMessage.setText("Error: File could not be loaded");
+			}
 		}
 
 		p.x0 = pl.x0;
@@ -498,7 +524,7 @@ public class VectorCalculator extends JPanel {
 		if (p.durationFrames) {
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Initial Movement Frames", MOVEMENT_DURATION_ROW, 0);
-			genPropertiesTable.setValueAt(pl.framesJump, MOVEMENT_DURATION_ROW, 1);
+			genPropertiesTable.setValueAt(pl.initialFrames, MOVEMENT_DURATION_ROW, 1);
 		}
 		else {
 			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_TYPE_ROW, 1);
@@ -557,6 +583,19 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.setValueAt(cameraString, CAMERA_TYPE_ROW, 1);
 		p.midairs = pl.midairs;
 		addPreset(p.midairs);
+		
+		if (initialized && defaults && Properties.isUnsaved()) {
+			saved = false;
+			f.setTitle("*" + projectName);
+		}
+		else {
+			saved = true;
+			if (!defaults) {
+				projectName = file.getName();
+				f.setTitle(projectName);
+				VectorDisplayWindow.frame.setTitle("Calculations: " + VectorCalculator.projectName);
+			}
+		}
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -1076,6 +1115,12 @@ public class VectorCalculator extends JPanel {
 				}
 
 				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+
+				if (initialized && saved && Properties.isUnsaved()) {
+					System.out.println("Unsaved");
+					saved = false;
+					f.setTitle("*" + projectName);
+				}
 			}
 		});	
 		
@@ -1142,6 +1187,12 @@ public class VectorCalculator extends JPanel {
 						}
 					}
 				}
+
+				saveMidairs();
+				if (initialized && saved && Properties.isUnsaved()) {
+					saved = false;
+					f.setTitle("*" + projectName);
+				}
 			}
 		});
 		
@@ -1181,7 +1232,10 @@ public class VectorCalculator extends JPanel {
 		calculateVector.addActionListener(buttonListen);
 		
 		//addPreset(7);
-		loadProperties();
+
+		loadProperties(new File("user-defaults.xml"), true);
+		p.file = null; //so we don't save to it
+		initialized = true;
 
 		//CREATING THE WINDOW
 		
@@ -1198,12 +1252,21 @@ public class VectorCalculator extends JPanel {
 		resize.add(infoScrollPane, BorderLayout.NORTH);
 		resize.add(dataScrollPane, BorderLayout.CENTER);
 		*/
-		
+
+		MainJMenuBar menuBar = new MainJMenuBar();
+		f.setJMenuBar(menuBar);
+		f.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {
+					menuBar.promptSaveAndClose();
+				}
+			});
+
 		f.add(nonResize, BorderLayout.CENTER);
+		
 		//f.add(resize, BorderLayout.CENTER);
 		f.setSize(600, 577);
 		//f.setResizable(false);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		f.setLocationRelativeTo(null);
 		f.setVisible(true);
 		

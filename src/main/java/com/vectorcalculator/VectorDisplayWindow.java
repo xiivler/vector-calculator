@@ -196,7 +196,7 @@ public class VectorDisplayWindow {
 		create.addActionListener(buttonListen);
 		copy.addActionListener(buttonListen);
 		
-		frame = new JFrame("Vector Calculations");
+		frame = new JFrame("Calculations: " + VectorCalculator.projectName);
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
@@ -282,6 +282,8 @@ public class VectorDisplayWindow {
 	}
 	
 	public static void generateData(SimpleMotion[] simpleMotions, double initialAngle, double targetAngle) {
+		frame.setTitle("Calculations: " + VectorCalculator.projectName);
+
 		VectorDisplayWindow.simpleMotions = simpleMotions;
 		VectorDisplayWindow.initialAngle = initialAngle;
 		VectorDisplayWindow.targetAngle = targetAngle;
@@ -362,7 +364,7 @@ public class VectorDisplayWindow {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][5], info[i][3]) - Math.toRadians(p.targetAngle));
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngle);
 					double value = -1 / ((info[i][4] / speedInTargetDirection) - 1);
 					rowContents[7] = String.format("%.3f", value);
 				}

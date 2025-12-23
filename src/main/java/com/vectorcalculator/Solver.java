@@ -108,7 +108,7 @@ public class Solver {
 			for (int i = 0; i < info.length; i++, row++) {
                 y_vels[row] = info[i][4];
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][5], info[i][3]) - Math.toRadians(p.targetAngle));
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - initialMaximizer.getTargetAngle());
 					efficiencies[row] = -1 / ((info[i][4] / speedInTargetDirection) - 1); //ranges from 0 to 1
                     //maybe a more efficient calculation?
 				}
