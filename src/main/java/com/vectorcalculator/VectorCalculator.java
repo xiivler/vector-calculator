@@ -49,6 +49,10 @@ public class VectorCalculator extends JPanel {
 	static String projectName = "Untitled Project";
 
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
+
+	static String jarParentFolder;
+	static File userDefaults;
+	static File factoryDefaults;
 	
 	//category for falling for height calculator?
 	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
@@ -727,6 +731,15 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void main(String[] args) {
+		try {
+			jarParentFolder = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+		}
+		catch (Exception ex) {
+			jarParentFolder = "~";
+		}
+		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
+		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
+		userDefaults = new File("/Users/jacob/Documents/GitHub/vector-calculator/user-defaults.xml");
 
 		JPanel all = new JPanel();
 		all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
@@ -1233,7 +1246,7 @@ public class VectorCalculator extends JPanel {
 		
 		//addPreset(7);
 
-		loadProperties(new File("user-defaults.xml"), true);
+		loadProperties(userDefaults, true);
 		p.file = null; //so we don't save to it
 		initialized = true;
 
@@ -1264,7 +1277,7 @@ public class VectorCalculator extends JPanel {
 		f.add(nonResize, BorderLayout.CENTER);
 		
 		//f.add(resize, BorderLayout.CENTER);
-		f.setSize(600, 577);
+		f.setSize(600, 600);
 		//f.setResizable(false);
 		f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		f.setLocationRelativeTo(null);

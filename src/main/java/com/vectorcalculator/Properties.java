@@ -94,6 +94,7 @@ public class Properties {
             //System.out.println(p.x0);
         }
         catch (Exception ex) {
+            System.out.println(ex);
             Debug.println("XML Load Failed");
             return null;
         }

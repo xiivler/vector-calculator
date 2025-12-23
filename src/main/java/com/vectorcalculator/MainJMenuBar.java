@@ -38,7 +38,7 @@ public class MainJMenuBar extends JMenuBar {
                 j = new JFileChooser(p.file.getParent());
             }
             else {
-                j = new JFileChooser(".");
+                j = new JFileChooser(VectorCalculator.jarParentFolder);
             }
             j.setDialogTitle("Choose XML File");
             j.setDialogType(JFileChooser.OPEN_DIALOG);
@@ -88,17 +88,17 @@ public class MainJMenuBar extends JMenuBar {
 
         saveAsDefaults = fileJMenu.add("Save As User Defaults");
 		saveAsDefaults.addActionListener(e -> {
-			VectorCalculator.saveProperties(new File("user-defaults.xml"), false);
+			VectorCalculator.saveProperties(VectorCalculator.userDefaults, false);
 		});
 
         resetToDefaults = fileJMenu.add("Reset to User Defaults");
 		resetToDefaults.addActionListener(e -> {
-			VectorCalculator.loadProperties(new File("user-defaults.xml"), true);
+			VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
 		});
 
         resetToFactory = fileJMenu.add("Reset to Factory Defaults");
 		resetToFactory.addActionListener(e -> {
-			VectorCalculator.loadProperties(new File("factory-defaults.xml"), true);
+			VectorCalculator.loadProperties(VectorCalculator.factoryDefaults, true);
 		});
 
 		fileJMenu.addSeparator();
@@ -112,7 +112,7 @@ public class MainJMenuBar extends JMenuBar {
 	}
 
     private File saveAsDialog() {
-        JFileChooser j = new JFileChooser(".");
+        JFileChooser j = new JFileChooser(VectorCalculator.jarParentFolder);
         j.setDialogTitle("Choose Save Location");
         j.setDialogType(JFileChooser.SAVE_DIALOG);
         if (p.file != null)
