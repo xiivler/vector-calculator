@@ -62,7 +62,8 @@ public class Properties {
 	boolean xAxisZeroDegrees = true;
 	CameraType cameraType = CameraType.TARGET;
 	double customCameraAngle = 0;
-    int[][] midairs;
+    int[][] midairs = new int[][] { { VectorCalculator.MCCT, 31 }, { VectorCalculator.DIVE, 25 },
+            { VectorCalculator.CB, 43 }, { VectorCalculator.MCCT, 31 }, { VectorCalculator.DIVE, 25 } };
 
     //select the initial movement once these properties are saved
 

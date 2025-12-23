@@ -403,6 +403,10 @@ public class VectorCalculator extends JPanel {
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
+		if (p.currentPresetIndex >= 0) {
+			add.setEnabled(false);
+			remove.setEnabled(false);
+		}
 	}
 
 	public static void updateInitialMovement(boolean suggestSpeed) {
@@ -739,7 +743,6 @@ public class VectorCalculator extends JPanel {
 		}
 		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
 		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
-		userDefaults = new File("/Users/jacob/Documents/GitHub/vector-calculator/user-defaults.xml");
 
 		JPanel all = new JPanel();
 		all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
