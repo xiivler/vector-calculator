@@ -290,6 +290,10 @@ public class ComplexVector extends SimpleVector {
 		holdingMinRadius = radii;
 	}
 
+	public double[] getCappyPosition(int throwType) {
+		
+	}
+
 	// public void setHoldingAngle(double angle) {
 	// 	holdingAngle = angle;
 	// 	holdingAngles = new double[frames];

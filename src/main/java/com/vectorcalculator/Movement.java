@@ -4,6 +4,19 @@ import java.util.ArrayList;
 
 public class Movement {
 	
+	public static final int MCCTU = 0;
+	public static final int MCCTD = 1;
+	public static final int MCCTL = 2;
+	public static final int MCCTR = 3;
+	public static final double MCCT_DISP_F = 678;
+	public static final double MCCTU_DISP_V = 70 - 2.181;
+	public static final double MCCTU_DISP_S = -10.332;
+	public static final double MCCTD_DISP_V = 70 + 2.181;
+	public static final double MCCTD_DISP_S = -10.332;
+	public static final double MCCTL_DISP_V = 70;
+	public static final double MCCTL_DISP_S = -6.988;
+	public static final double MCCTR_DISP_V = 70;
+	public static final double MCCTR_DISP_S = 6.988;
 	public static boolean onMoon = false;
 
 	//no downthrow or fakethrow because these are equivalent to others

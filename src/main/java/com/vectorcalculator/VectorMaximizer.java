@@ -59,6 +59,7 @@ public class VectorMaximizer {
 	boolean hasVariableHCTFallVector = false;
 	boolean hasRainbowSpin = false;
 	boolean simpleTech = false;
+	boolean hasDiveCapBounce = true;
 	
 	int variableCapThrow1Index;
 	int variableMovement2Index;
@@ -66,6 +67,7 @@ public class VectorMaximizer {
 	int variableHCTFallIndex;
 	//int motionGroup3Index;
 	int rainbowSpinFrames;
+	int preCapBounceDiveIndex = -1;
 
 	ComplexVector variableCapThrow1Vector;
 	int variableCapThrow1Frames;
@@ -214,6 +216,10 @@ public class VectorMaximizer {
 			else if (movementNames.get(i).equals("Rainbow Spin")) {
 				hasRainbowSpin = true;
 				rainbowSpinFrames = movementFrames.get(i);
+			}
+			else if (movementNames.get(i).equals("Dive Cap Bounce")) {
+				hasDiveCapBounce = true;
+				preCapBounceDiveIndex = i;
 			}
 		}
 		
@@ -1466,6 +1472,15 @@ public class VectorMaximizer {
 			variableAngle2 = (high + low) / 2;
 		}
 		return false;
+	}
+
+	//calculates how many frames of the dive there really are before the cap bounce
+	public int getCapBounceFrame(int throwType) {
+		if (hasVariableCapThrow1 && hasDiveCapBounce) {
+			ComplexVector ct = (ComplexVector) motions[variableCapThrow1Index];
+			DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
+
+		}
 	}
 	
 }

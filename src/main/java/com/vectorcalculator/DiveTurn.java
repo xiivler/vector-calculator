@@ -13,6 +13,8 @@ public class DiveTurn extends SimpleMotion {
 	double finalSidewaysVelocity;
 	
 	boolean rightTurn;
+
+	double cappyX, cappyY, cappyZ;
 	
 	public DiveTurn(Movement movement, boolean rightTurn, int frames) {
 		
@@ -164,6 +166,77 @@ public class DiveTurn extends SimpleMotion {
 		}	
 		return info;
 	}
+
+	public int getCapBounceFrame() {
+		dispForward = 0;
+		dispSideways = 0;
+		dispX = x0;
+		dispY = y0;
+		dispZ = z0;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		double cosInitialAngle = Math.cos(initialAngle);
+		double sinInitialAngle = Math.sin(initialAngle);
+		double cosNormalAngle = Math.cos(normalAngle);
+		double sinNormalAngle = Math.sin(normalAngle);
+		double forwardVelocity = initialForwardVelocity;
+		double sidewaysVelocity = 0;
+		double zVelocity;
+		double yVelocity = movement.initialVerticalSpeed;
+		double xVelocity;
+
+		double holdingAngleAdjusted;
+		if (rightTurn)
+			holdingAngleAdjusted = initialAngle - holdingAngle;
+		else
+			holdingAngleAdjusted = initialAngle + holdingAngle;
+
+		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
+		double velocityAngle = 0;
+
+		double deltaVelocityAngle = Math.atan(sidewaysAccel / initialForwardVelocity);
+
+		for (int i = 0; i < frames; i++) {
+			forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
+			sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+			velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
+
+			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
+			xVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
+
+			dispX += xVelocity;
+			if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			dispZ += zVelocity;
+
+			double diffX = dispX - cappyX;
+			double diffZ = dispZ - cappyZ;
+			double hDistToCappy = Math.sqrt(diffX * diffX + diffZ * diffZ);
+			double footY = dispY + 40;
+			double bodyY = dispY + 75;
+			double headY = dispY + 110;
+			double cappyCatchY = cappyY + 20;
+			if (distance(dispX, bodyY, dispZ, cappyX, cappyY, cappyZ) < 150 ||
+				distance(dispX, headY, dispZ, cappyX, cappyY, cappyZ) < 140 ||
+				(footY - cappyCatchY < 70 && Math.atan2(footY - cappyCatchY, hDistToCappy) >= Math.toRadians(20))) {
+					return i + 1;
+			}
+		}
+		return -1; //won't bounce
+	}
+
+	public double distance(double x0, double y0, double z0, double x1, double y1, double z1) {
+		double diffX = x1 - x0;
+		double diffY = y1 - y0;
+		double diffZ = z1 - z0;
+		return Math.sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
+	} 
 	
 	public void setInitialAngle(double angle) {
 	
