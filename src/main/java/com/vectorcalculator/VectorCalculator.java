@@ -1075,8 +1075,8 @@ public class VectorCalculator extends JPanel {
 							p.diveCapBounceAngle = 0;
 							genPropertiesTable.setValueAt(0, row, 1);
 						}
-						if (p.diveCapBounceAngle > 18.4)
-							genPropertiesTable.setValueAt(18.4, row, 1);
+						if (p.diveCapBounceAngle > 41.2)
+							genPropertiesTable.setValueAt(41.2, row, 1);
 						else if (p.diveCapBounceAngle < 0)
 							genPropertiesTable.setValueAt(0, row, 1);
 					}

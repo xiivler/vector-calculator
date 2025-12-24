@@ -489,9 +489,15 @@ public class VectorMaximizer {
 				holdingAngles[13] = angle;
 			}
 			else {
-				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame is a fast turnaround
+				int turnaroundFrames = 1;
+				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame (or two) is a fast turnaround
 				Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
-				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) + minRotation);
+				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) + minRotation);	
+				if (additionalRotation < 0) {
+					turnaroundFrames = 2;
+					additionalRotation += FAST_TURNAROUND_VELOCITY - Math.toRadians(2.5);
+					minRotation = motion.rotationalAccel * (frames - 3);
+				}
 				Debug.println("Additional rotation: " + Math.toDegrees(additionalRotation));
 				double rotationSum = 0;
 				double rotationalVelocity = 0;
@@ -501,23 +507,30 @@ public class VectorMaximizer {
 					rotationSum += rotationalVelocity;
 					additionalRotationFrames++;
 				}
+				double totalRotation = minRotation + additionalRotation;
 				double overshoot = rotationSum - additionalRotation;
 				Debug.println("Overshoot: " + Math.toDegrees(overshoot));
 				//how much counterrotation there should be on the first frame of acceleration
 				double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
-				int firstAdditionalRotationFrame = frames - 1 - additionalRotationFrames;
+				int firstAdditionalRotationFrame = frames - turnaroundFrames - additionalRotationFrames;
 				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
 				for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 					holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 				}
 				holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
 				Debug.println(holdingAngles[firstAdditionalRotationFrame]);
-				for (int i = firstAdditionalRotationFrame + 1; i < frames - 1; i++) {
+				for (int i = firstAdditionalRotationFrame + 1; i < frames - turnaroundFrames; i++) {
 					holdingAngles[i] = holdingAngles[i - 1];
 				}
-				holdingAngles[frames - 1] = angle + FAST_TURNAROUND_VELOCITY - FAST_TURNAROUND_ANGLE;
+				if (turnaroundFrames == 1) {
+					holdingAngles[frames - 1] = throwAngle + totalRotation - 136 / 180.0 * Math.PI; //hold as little back as you can
+				}
+				else { //2 turnaround frames; second should be forward, turnaround as much as you can so it accelerates mario forward
+					holdingAngles[frames - 2] = holdingAngles[frames - turnaroundFrames - 1] - 179/180.0 * Math.PI;
+					holdingAngles[frames - 1] = holdingAngles[frames - 2] - 179/180.0 * Math.PI;
+				}
 				boolean[] holdingMinRadius = new boolean[frames];
-				holdingMinRadius[frames - 1] = true;
+				holdingMinRadius[frames - turnaroundFrames] = true;
 				Debug.println(holdingAngles[firstAdditionalRotationFrame]);
 				motion.setHolding(holdingAngles, holdingMinRadius);
 				return;
@@ -1537,7 +1550,9 @@ public class VectorMaximizer {
 			for (int i = 0; i < edgeCBSteps; i++) {
 				diveCapBounceAngle += edgeCBIncrement;
 				setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
-				if (getCapBounceFrame(ct) == targetCBFrame) {
+				int cbFrame = getCapBounceFrame(ct);
+				System.out.println("Cap Bounce Frame: " + cbFrame);
+				if (cbFrame == targetCBFrame) {
 					if (!found) {
 						found = true;
 						lowAngle = diveCapBounceAngle;

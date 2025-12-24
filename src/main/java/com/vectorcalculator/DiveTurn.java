@@ -215,7 +215,7 @@ public class DiveTurn extends SimpleMotion {
 			double distHeadCappy = distance(dispX, headY, dispZ, cappyPos[0], cappyPos[1], cappyPos[2]);
 			double diffYFootCappyCatch = footY - cappyCatchY;
 			double footCappyCatchAngle = Math.atan2(diffYFootCappyCatch, hDistToCappy);
-			System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+			//System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
 			if (distBodyCappy < 150 || distHeadCappy < 140 || (diffYFootCappyCatch < 70 && footCappyCatchAngle >= Math.toRadians(20))) {
 					return i + 1;
 			}

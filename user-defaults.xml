@@ -5,9 +5,8 @@
     <canMoonwalk>true</canMoonwalk>
     <currentPresetIndex>1</currentPresetIndex>
     <customCameraAngle>0.0</customCameraAngle>
-    <diveCapBounceAngle>18.4</diveCapBounceAngle>
+    <diveCapBounceAngle>19.0</diveCapBounceAngle>
     <durationFrames>true</durationFrames>
-    <file>/Users/jacob/Documents/GitHub/vector-calculator/./spinless-dive-bounce-testing.xml</file>
     <framesJump>10</framesJump>
     <framesMoonwalk>0</framesMoonwalk>
     <hyperoptimize>true</hyperoptimize>
