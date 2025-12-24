@@ -1,4 +1,7 @@
 *.DS_Store
+*.xml
+!factory-defaults.xml
+!user-defaults.xml
 
 # Compiled class file
 *.class

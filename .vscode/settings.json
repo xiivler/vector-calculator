@@ -1,3 +1,18 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.project.referencedLibraries": [
+        "/Users/jacob/Documents/GitHub/Intellij test/vector-calculator/libraries/jaxb-api-2.3.1.jar",
+        "/Users/jacob/Documents/GitHub/Intellij test/vector-calculator/libraries/jakarta.xml.bind-api-4.0.4.jar",
+        "/Users/jacob/Documents/GitHub/Intellij test/vector-calculator/libraries/istack-commons-runtime-3.0.12.jar",
+        "/Users/jacob/Documents/GitHub/Intellij test/vector-calculator/libraries/lombok.jar",
+        "libraries/istack-commons-runtime-3.0.12.jar",
+        "libraries/jakarta.xml.bind-api-4.0.4.jar",
+        "libraries/jaxb-api-2.3.1.jar",
+        "libraries/jaxb-runtime-2.3.2.jar",
+        "libraries/lombok.jar",
+        "libraries/activation-1.1.1.jar"
+    ],
+    "java.project.sourcePaths": [
+        "src/main/java"
+    ]
 }

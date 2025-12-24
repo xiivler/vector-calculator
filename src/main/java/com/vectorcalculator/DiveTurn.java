@@ -47,6 +47,9 @@ public class DiveTurn extends SimpleMotion {
 		double sidewaysVelocity = 0;
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 
+		//cap at 20 u/fr speed
+		//double multiplier
+
 		double velocityAngle = 0;
 		for (int i = 0; i < frames; i++) {
 			forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
@@ -119,6 +122,8 @@ public class DiveTurn extends SimpleMotion {
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double velocityAngle = 0;
 
+		double deltaVelocityAngle = Math.atan(sidewaysAccel / initialForwardVelocity);
+
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
 			forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
@@ -147,10 +152,14 @@ public class DiveTurn extends SimpleMotion {
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
 			info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
-			if (rightTurn)
-				info[i][7] = holdingAngleAdjusted - velocityAngle;
-			else
-				info[i][7] = holdingAngleAdjusted + velocityAngle;
+			if (rightTurn) {
+				info[i][7] = holdingAngleAdjusted;
+				holdingAngleAdjusted -= deltaVelocityAngle;
+			}
+			else {
+				info[i][7] = holdingAngleAdjusted;
+				holdingAngleAdjusted += deltaVelocityAngle;
+			}
 			info[i][8] = 1;
 		}	
 		return info;

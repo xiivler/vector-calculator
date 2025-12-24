@@ -79,7 +79,7 @@ public class SimpleVector extends SimpleMotion {
 		
 		int framesToMaxSidewaysSpeed = (int) (sidewaysVelocityCap / sidewaysAccel);
 		if (vectorFrames >= 0) {
-			if (vectorFrames <= (int) (sidewaysVelocityCap / sidewaysAccel))
+			if (vectorFrames <= (int) (sidewaysVelocityCap / sidewaysAccel) || movement.movementType.equals("Sideflip"))
 				return sidewaysAccel / 2 * vectorFrames * (vectorFrames + 1);
 			else
 				return sidewaysAccel * (framesToMaxSidewaysSpeed + 1) / 2 * framesToMaxSidewaysSpeed + sidewaysVelocityCap * (vectorFrames - framesToMaxSidewaysSpeed);

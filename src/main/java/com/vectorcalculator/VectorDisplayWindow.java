@@ -149,7 +149,7 @@ public class VectorDisplayWindow {
 
 		JPanel export = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JLabel scriptTypeLabel = new JLabel("Script Format: ", JLabel.RIGHT);
-		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS", "TSV-TAS-2"});
+		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS (Practice Mod)", "TSV-TAS (Lunakit)"});
 		scriptTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS_2) {
@@ -321,10 +321,17 @@ public class VectorDisplayWindow {
 		inputs.add(new Inputs());
 
 		int row = 1;
+		boolean firstDive = true;
 		for (int index = 0; index < simpleMotions.length; index++) {
 			SimpleMotion motion = simpleMotions[index];
 			if (motion.frames == 0) {
 				continue;
+			}
+			if (motion.movement.movementType.equals("Dive") && firstDive) {
+				firstDive = false;
+				for (int i = 0; i < motion.frames - 1; i++) {
+					motion.movement.inputs1.add(Inputs.Y);
+				}
 			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);

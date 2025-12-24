@@ -654,8 +654,8 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				// for (double i = -200; i <= 200;) {
-				// 	p.y1 = i;
+				 //for (double i = -200; i <= 0;) {
+				 	//p.y1 = i;
 				if (solver.solve(3)) {
 					VectorMaximizer maximizer = calculate();
 					if (maximizer != null) {
@@ -667,8 +667,8 @@ public class VectorCalculator extends JPanel {
 					errorMessage.setText("Error: Movement cannot reach target height");
 				}
 					//i = p.y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
-				// 	i += 10;
-				// }
+				 	//i += 1;
+				//}
 				
 				//Debug.println();
 			 }
@@ -741,6 +741,8 @@ public class VectorCalculator extends JPanel {
 		catch (Exception ex) {
 			jarParentFolder = "~";
 		}
+		//for debugging
+		jarParentFolder = ".";
 		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
 		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
 

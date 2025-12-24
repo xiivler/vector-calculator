@@ -192,11 +192,12 @@ public class Solver {
 
         // System.out.println("Delta: " + delta);
         //System.out.println("Max Delta: " + maxDelta);
-        System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
+        //System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
+        System.out.println("Durations: " + Arrays.toString(best.intArray) + ", " + bestYDisp);
         // System.out.println("Iterations: " + iterations);
         // System.out.println("Inner Calls: " + innerCalls);
         // System.out.println("Bad Calls: " + badCalls);
-        System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+        //System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
         
 
         return true;
