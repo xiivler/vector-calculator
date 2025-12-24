@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"file"})
 @XmlRootElement
 public class Properties {
     static Properties p;

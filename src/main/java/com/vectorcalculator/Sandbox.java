@@ -3,17 +3,18 @@ package com.vectorcalculator;
 public class Sandbox {
     
     public static void main(String[] args) {
-        System.out.println("Sandbox testing");
-
-        DiveTurn dive = (DiveTurn) (new Movement("Dive")).getMotion(20, true, true);
-        
-        dive.calcDispDispCoordsAngleSpeed();
-
-        double[][] data = dive.calcFrameByFrame();
-        for(int i = 0; i < 20; i++) {
-            System.out.println("Hold: " + Math.toDegrees(data[i][7]));
-            System.out.println("x: " + data[i][0]);
-            System.out.println("z: " + data[i][2]);
+        VectorCalculator.main(null);
+        int[][] preset = VectorCalculator.midairPresets[1];
+        preset[1][1] = 24;
+        VectorCalculator.addPreset(preset);
+        VectorMaximizer maximizer = VectorCalculator.calculate();
+        if (maximizer != null) {
+            System.out.println(maximizer.isDiveCapBouncePossible(true, true, false, false));
+            System.out.println("Angle: " + Properties.p.diveCapBounceAngle);
+            System.out.println("Type: " + maximizer.ctType);
+            VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+            VectorDisplayWindow.display();
+            ((DiveTurn) maximizer.getMotions()[maximizer.preCapBounceDiveIndex]).getCapBounceFrame(((ComplexVector) maximizer.getMotions()[maximizer.variableCapThrow1Index]).getCappyPosition(0));
         }
     }
 }

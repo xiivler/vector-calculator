@@ -46,7 +46,16 @@ public class MainJMenuBar extends JMenuBar {
             if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
                 File file = j.getSelectedFile();
                 if (!VectorCalculator.saved && saveBeforeLoading(file)) {
-                    VectorCalculator.saveProperties(p.file, true);
+                    if (p.file == null) {
+                        File save_file = saveAsDialog();
+                        if (save_file != null && (!save_file.exists() || overwrite(save_file))) {
+                            p.file = save_file;
+                            VectorCalculator.saveProperties(save_file, true);
+                        }
+                    }
+                    else {
+                        VectorCalculator.saveProperties(p.file, true);
+                    }
                 }
                 VectorCalculator.loadProperties(file, false);
                 p.file = file;
@@ -135,7 +144,10 @@ public class MainJMenuBar extends JMenuBar {
     }
 
     private boolean saveBeforeLoading(File f) {
-        return (JOptionPane.showOptionDialog(VectorCalculator.f, "\"" + p.file.getName() + "\" is unsaved. Save before opening \"" + f.getName() + "\"?",
+        String messageStr = "Save the current project before opening \"" + f.getName() + "\"?";
+        if (p.file != null)
+            messageStr = "\"" + p.file.getName() + "\" is unsaved. Save before opening \"" + f.getName() + "\"?";
+        return (JOptionPane.showOptionDialog(VectorCalculator.f, messageStr,
             "Save?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[]{"No", "Yes"}, 1) == 1);
     }
 

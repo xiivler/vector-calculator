@@ -13,8 +13,6 @@ public class DiveTurn extends SimpleMotion {
 	double finalSidewaysVelocity;
 	
 	boolean rightTurn;
-
-	double cappyX, cappyY, cappyZ;
 	
 	public DiveTurn(Movement movement, boolean rightTurn, int frames) {
 		
@@ -167,12 +165,10 @@ public class DiveTurn extends SimpleMotion {
 		return info;
 	}
 
-	public int getCapBounceFrame() {
-		dispForward = 0;
-		dispSideways = 0;
-		dispX = x0;
-		dispY = y0;
-		dispZ = z0;
+	public int getCapBounceFrame(double cappyPos[]) {
+		double dispX = x0;
+		double dispY = y0;
+		double dispZ = z0;
 		double gravity;
 		if (Movement.onMoon)
 			gravity = movement.moonGravity;
@@ -188,16 +184,8 @@ public class DiveTurn extends SimpleMotion {
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
 
-		double holdingAngleAdjusted;
-		if (rightTurn)
-			holdingAngleAdjusted = initialAngle - holdingAngle;
-		else
-			holdingAngleAdjusted = initialAngle + holdingAngle;
-
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double velocityAngle = 0;
-
-		double deltaVelocityAngle = Math.atan(sidewaysAccel / initialForwardVelocity);
 
 		for (int i = 0; i < frames; i++) {
 			forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
@@ -213,18 +201,22 @@ public class DiveTurn extends SimpleMotion {
 				if (yVelocity < movement.fallSpeedCap)
 					yVelocity = movement.fallSpeedCap;
 			}
+			dispY += yVelocity;
 			dispZ += zVelocity;
 
-			double diffX = dispX - cappyX;
-			double diffZ = dispZ - cappyZ;
+			double diffX = dispX - cappyPos[0];
+			double diffZ = dispZ - cappyPos[2];
 			double hDistToCappy = Math.sqrt(diffX * diffX + diffZ * diffZ);
 			double footY = dispY + 40;
 			double bodyY = dispY + 75;
 			double headY = dispY + 110;
-			double cappyCatchY = cappyY + 20;
-			if (distance(dispX, bodyY, dispZ, cappyX, cappyY, cappyZ) < 150 ||
-				distance(dispX, headY, dispZ, cappyX, cappyY, cappyZ) < 140 ||
-				(footY - cappyCatchY < 70 && Math.atan2(footY - cappyCatchY, hDistToCappy) >= Math.toRadians(20))) {
+			double cappyCatchY = cappyPos[1] + 20;
+			double distBodyCappy = distance(dispX, bodyY, dispZ, cappyPos[0], cappyPos[1], cappyPos[2]);
+			double distHeadCappy = distance(dispX, headY, dispZ, cappyPos[0], cappyPos[1], cappyPos[2]);
+			double diffYFootCappyCatch = footY - cappyCatchY;
+			double footCappyCatchAngle = Math.atan2(diffYFootCappyCatch, hDistToCappy);
+			System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+			if (distBodyCappy < 150 || distHeadCappy < 140 || (diffYFootCappyCatch < 70 && footCappyCatchAngle >= Math.toRadians(20))) {
 					return i + 1;
 			}
 		}

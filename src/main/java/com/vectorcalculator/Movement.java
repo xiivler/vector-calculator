@@ -4,11 +4,12 @@ import java.util.ArrayList;
 
 public class Movement {
 	
-	public static final int MCCTU = 0;
-	public static final int MCCTD = 1;
-	public static final int MCCTL = 2;
-	public static final int MCCTR = 3;
-	public static final double MCCT_DISP_F = 678;
+	public static final int CT = 0, MCCTU = 1, MCCTD = 2, MCCTL = 3, MCCTR = 4, DT = 5,
+							TT = 5, TTU = 6, TTD = 7, TTL = 8, TTR = 9;
+	public static final int CT_COUNT = 10; //number of possibilities
+	public static final double CT_DISP_F = 678;
+	public static final double CT_DISP_V = 70;
+	public static final double CT_DISP_S = 0;
 	public static final double MCCTU_DISP_V = 70 - 2.181;
 	public static final double MCCTU_DISP_S = -10.332;
 	public static final double MCCTD_DISP_V = 70 + 2.181;
@@ -17,6 +18,29 @@ public class Movement {
 	public static final double MCCTL_DISP_S = -6.988;
 	public static final double MCCTR_DISP_V = 70;
 	public static final double MCCTR_DISP_S = 6.988;
+	public static final double TT_DISP_F = 694;
+	public static final double TT_DISP_V = 70;
+	public static final double TT_DISP_S = 0;
+	public static final double TTU_DISP_V = 70 - 8.78;
+	public static final double TTU_DISP_S = -6.447;
+	public static final double TTD_DISP_V = 70 + 8.78;
+	public static final double TTD_DISP_S = -6.447;
+	public static final double TTL_DISP_V = 70;
+	public static final double TTL_DISP_S = -10.641;
+	public static final double TTR_DISP_V = 70;
+	public static final double TTR_DISP_S = 10.641;
+	public static final int[] CT_FRAMES = {9, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3};
+	public static final double[][] CT_DISPS = 	{{CT_DISP_F, CT_DISP_V, CT_DISP_S},
+												{CT_DISP_F, MCCTU_DISP_V, MCCTU_DISP_S},
+												{CT_DISP_F, MCCTD_DISP_V, MCCTD_DISP_S},
+												{CT_DISP_F, MCCTL_DISP_V, MCCTL_DISP_S},
+												{CT_DISP_F, MCCTR_DISP_V, MCCTR_DISP_S},
+												{CT_DISP_F, CT_DISP_V, CT_DISP_S},
+												{TT_DISP_F, TT_DISP_V, TT_DISP_S},
+												{TT_DISP_F, TTU_DISP_V, TTU_DISP_S},
+												{TT_DISP_F, TTD_DISP_V, TTD_DISP_S},
+												{TT_DISP_F, TTL_DISP_V, TTL_DISP_S},
+												{TT_DISP_F, TTR_DISP_V, TTR_DISP_S}};
 	public static boolean onMoon = false;
 
 	//no downthrow or fakethrow because these are equivalent to others

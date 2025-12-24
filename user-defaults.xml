@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <properties>
-    <angleType>TARGET</angleType>
-    <cameraType>TARGET</cameraType>
+    <angleType>INITIAL</angleType>
+    <cameraType>INITIAL</cameraType>
     <canMoonwalk>true</canMoonwalk>
     <currentPresetIndex>1</currentPresetIndex>
     <customCameraAngle>0.0</customCameraAngle>
     <diveCapBounceAngle>18.4</diveCapBounceAngle>
     <durationFrames>true</durationFrames>
-    <file>/Users/jacob/vc.xml</file>
+    <file>/Users/jacob/Documents/GitHub/vector-calculator/./spinless-dive-bounce-testing.xml</file>
     <framesJump>10</framesJump>
-    <framesMoonwalk>5</framesMoonwalk>
+    <framesMoonwalk>0</framesMoonwalk>
     <hyperoptimize>true</hyperoptimize>
-    <initialAngle>0.0</initialAngle>
-    <initialDispY>0.0</initialDispY>
-    <initialFrames>70</initialFrames>
+    <initialAngle>90.0</initialAngle>
+    <initialDispY>-950.0</initialDispY>
+    <initialFrames>66</initialFrames>
     <initialHorizontalSpeed>24.0</initialHorizontalSpeed>
     <initialMovementName>Triple Jump</initialMovementName>
     <midairs>
@@ -22,7 +22,7 @@
     </midairs>
     <midairs>
         <item>5</item>
-        <item>25</item>
+        <item>24</item>
     </midairs>
     <midairs>
         <item>6</item>
@@ -39,12 +39,12 @@
     <onMoon>false</onMoon>
     <rightVector>false</rightVector>
     <targetAngle>0.0</targetAngle>
-    <targetCoordinates>true</targetCoordinates>
-    <x0>0.0</x0>
+    <targetCoordinates>false</targetCoordinates>
+    <x0>-40401.719</x0>
     <x1>0.0</x1>
     <XAxisZeroDegrees>false</XAxisZeroDegrees>
-    <y0>0.0</y0>
-    <y1>0.0</y1>
-    <z0>0.0</z0>
+    <y0>10000.0</y0>
+    <y1>50.0</y1>
+    <z0>-6398.166</z0>
     <z1>3000.0</z1>
 </properties>

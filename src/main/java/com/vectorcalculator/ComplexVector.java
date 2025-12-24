@@ -291,7 +291,102 @@ public class ComplexVector extends SimpleVector {
 	}
 
 	public double[] getCappyPosition(int throwType) {
+		double throwAngle; //adjusted for the initial angle of the movement
+		if (rightVector)
+			throwAngle = initialAngle - holdingAngles[0];
+		else
+			throwAngle = initialAngle + holdingAngles[0];
+		double throwNormalAngle = throwAngle - Math.PI / 2;
+		int throwFrame = Movement.CT_FRAMES[throwType] - 1;
+
+		//get position at frame of cap throw
+		double dispX = x0;
+		double dispY = y0;
+		double dispZ = z0;
+		double gravity;
+		if (Movement.onMoon)
+			gravity = movement.moonGravity;
+		else
+			gravity = movement.gravity;
+		double cosInitialAngle = Math.cos(initialAngle);
+		double sinInitialAngle = Math.sin(initialAngle);
+		double cosNormalAngle = Math.cos(normalAngle);
+		double sinNormalAngle = Math.sin(normalAngle);
+		double forwardVelocity = initialForwardVelocity;
+		double sidewaysVelocity = 0;
+		double zVelocity;
+		double xVelocity;
+		double yVelocity = movement.initialVerticalSpeed;
+		int nonVectorFrames = frames - vectorFrames;
 		
+		double[] holdingAnglesAdjusted = new double[frames];
+		for (int i = 0; i <= throwFrame; i++)
+			if (i < nonVectorFrames)
+				holdingAnglesAdjusted[i] = initialAngle;
+			else if (holdingAngles[i] == NO_ANGLE)
+				holdingAnglesAdjusted[i] = NO_ANGLE;
+			else if (rightVector)
+				holdingAnglesAdjusted[i] = initialAngle - holdingAngles[i];
+			else
+				holdingAnglesAdjusted[i] = initialAngle + holdingAngles[i];
+		
+		for (int i = 0; i <= throwFrame; i++) {	
+			//apply forward/backward accel
+			if (i >= nonVectorFrames) {
+				if (holdingAngles[i] != NO_ANGLE) {
+					double accelValue;
+					if (holdingAngles[i] <= NORMAL_ANGLE && holdingAngles[i] >= -NORMAL_ANGLE) {
+						accelValue = baseForwardAccel;
+					}
+					else {
+						accelValue = baseBackwardAccel;
+					}
+					if (holdingMinRadius[i]) {
+						accelValue *= MIN_RADIUS;
+					}
+					forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
+				}
+			}
+			else
+				forwardVelocity += baseForwardAccel;
+			if (forwardVelocity > forwardVelocityCap)
+				forwardVelocity = forwardVelocityCap;
+			//apply sideways accel
+			if (i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
+				if (holdingMinRadius[i]) {
+					sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
+				}
+				else {
+					sidewaysVelocity += baseSidewaysAccel * Math.sin(holdingAngles[i]);
+				}
+				if (sidewaysVelocity > forwardVelocityCap)
+					sidewaysVelocity = forwardVelocityCap;
+			}
+			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
+			xVelocity = forwardVelocity * sinInitialAngle + sidewaysVelocity * sinNormalAngle;
+			if (i >= movement.framesAtMaxVerticalSpeed + movement.frameOffset) {
+				yVelocity -= gravity;
+				if (yVelocity < movement.fallSpeedCap)
+					yVelocity = movement.fallSpeedCap;
+			}
+			dispZ += zVelocity;
+			if (i >= movement.frameOffset) {
+				dispY += yVelocity;
+			}
+			dispX += xVelocity;
+		}
+
+		//simulate throwing cappy
+		double cappyDispF = Movement.CT_DISPS[throwType][0];
+		double cappyDispV = Movement.CT_DISPS[throwType][1];
+		double cappyDispS = Movement.CT_DISPS[throwType][2];
+		
+		double[] cappyPos = new double[3];
+		cappyPos[0] = dispX + cappyDispF * Math.sin(throwAngle) + cappyDispS * Math.sin(throwNormalAngle);
+		cappyPos[1] = dispY + cappyDispV;
+		cappyPos[2] = dispZ + cappyDispF * Math.cos(throwAngle) + cappyDispS * Math.cos(throwNormalAngle);
+		System.out.printf("Cappy Pos: %.3f %.3f %.3f\n", cappyPos[0], cappyPos[1], cappyPos[2]);
+		return cappyPos;
 	}
 
 	// public void setHoldingAngle(double angle) {
