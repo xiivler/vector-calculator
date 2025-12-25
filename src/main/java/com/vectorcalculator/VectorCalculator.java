@@ -74,19 +74,19 @@ public class VectorCalculator extends JPanel {
 		//custom (nothing to start)
 		{new int[0][0],
 		//spinless
-	 	{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+	 	{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}},
 		//simple tech
-		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
+		{{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}},
 		//simple tech rainbow spin first
-		{{RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}},
 		//mcct first
-		{{HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
 		//tt first
-		{{HTT, 31}, {RS, 32}, {MCCT, 31}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 25}},
+		{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
 		//cbv first
-		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
+		{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
 		//cbv first tt
-		{{MCCT, 31}, {DIVE, 25}, {CB, 43}, {HTT, 31}, {RS, 32}, {MCCT, 31}, {DIVE, 25}}};
+		{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}}};
 
 	static int INITIAL_COORDINATES_ROW = 0;
 	static int ANGLE_TYPE_ROW = 1;
@@ -654,18 +654,20 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
-				 //for (double i = -200; i <= 0;) {
-				 	//p.y1 = i;
-				if (solver.solve(3)) {
+				//  for (double i = -50; i <= 50; i += 1) {
+				//  	p.y1 = i;
+				if (solver.solve(3)) { //2 might even be okay for jumps with HCT
 					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
 						maximizer.maximize();
 						maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+						maximizer.alwaysDiveTurn = true;
 						maximizer.maximize();
-						System.out.println("Possible: " + maximizer.isDiveCapBouncePossible(true, true, true, false));
+						maximizer.alwaysDiveTurn = true;
+						//System.out.println("Possible: " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
 						maximizer.maximize();
-						VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
 					}
 				}
@@ -706,7 +708,7 @@ public class VectorCalculator extends JPanel {
 					maximizer = calculate();
 				}
 				if (maximizer != null) {
-					VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+					VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 					VectorDisplayWindow.display();
 				}
 				 

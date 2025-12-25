@@ -6,7 +6,7 @@ import java.util.Vector;
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class Solver {
 
-    static final double LIMIT = 2; //if the final y height of the test is above this number, assume it can't be optimal
+    static final double LIMIT = 4; //if the final y height of the test is above this number, assume it can't be optimal
     //this limit takes a while for TT jumps
     static final double ERROR = .0001; //acceptable amount of error on double addition/subtraction
 
@@ -31,7 +31,7 @@ public class Solver {
     double bestYDisp = 0; //for debug
 
     public boolean solve(int delta) {
-        System.out.println(ctDivePossible[29][23]);
+        //System.out.println(ctDivePossible[29][23]);
         long startTime = System.currentTimeMillis();
 
         //custom presets not yet supported
@@ -63,7 +63,7 @@ public class Solver {
             }
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
         VectorCalculator.addPreset(preset);
-        System.out.println("DCBI " + diveCapBounceIndex);
+        //System.out.println("DCBI " + diveCapBounceIndex);
 
         //now set the initial movement so the whole jump ends up lower than the target y position
         //the spinless preset results in 129.2 height gain and 200 is bigger so Mario will always start lower (could have different numbers for each preset)
@@ -201,12 +201,12 @@ public class Solver {
 
         // System.out.println("Delta: " + delta);
         //System.out.println("Max Delta: " + maxDelta);
-        //System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
-        System.out.println("Durations: " + Arrays.toString(best.intArray) + ", " + bestYDisp);
+        System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
+        //System.out.println("Durations: " + Arrays.toString(best.intArray) + ", " + bestYDisp);
         // System.out.println("Iterations: " + iterations);
         // System.out.println("Inner Calls: " + innerCalls);
         // System.out.println("Bad Calls: " + badCalls);
-        //System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+        System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
         
 
         return true;

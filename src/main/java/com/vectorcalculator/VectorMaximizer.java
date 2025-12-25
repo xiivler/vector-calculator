@@ -76,6 +76,7 @@ public class VectorMaximizer {
 
 	ComplexVector variableCapThrow1Vector;
 	int variableCapThrow1Frames;
+	int variableCapThrow1FallingFrames;
 	double motionGroup1FinalAngle;
 	boolean variableCapThrow1VectorRight;
 
@@ -386,7 +387,7 @@ public class VectorMaximizer {
 	} */
 	
 	//angle is the angle of the dive
-	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames) {
+	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames, int fallingFrames) {
 		double throwAngle = angle;
 		if (p.hyperoptimize && frames > 14)
 			throwAngle += Math.toRadians(diveCapBounceAngle);
@@ -494,10 +495,14 @@ public class VectorMaximizer {
 				int turnaroundFrames = 1;
 				double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame (or two) is a fast turnaround
 				Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
-				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) + minRotation);	
+				double unneededRotation = 0;
+				if (fallingFrames >= 4) {
+					unneededRotation = Math.toRadians(2.9); //this rotation can all happen during the falling
+				}
+				double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) - unneededRotation + minRotation);	
 				if (additionalRotation < 0) {
 					turnaroundFrames = 2;
-					additionalRotation += FAST_TURNAROUND_VELOCITY - Math.toRadians(2.5);
+					additionalRotation += FAST_TURNAROUND_VELOCITY - Math.toRadians(2.5) + Math.toRadians(.3); //add .3 because the minimum rotation is now .3 less
 					minRotation = motion.rotationalAccel * (frames - 3);
 				}
 				Debug.println("Additional rotation: " + Math.toDegrees(additionalRotation));
@@ -594,7 +599,7 @@ public class VectorMaximizer {
 				holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle - Math.PI * 5/180.0;
 			if (turnaroundFrames > 3)
 				holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle - Math.PI * 9/180.0;
-			if (difference < -1) {
+			if (difference < -0.001) {
 				holdingAngles[frames - 1] = angle;
 			}
 			boolean[] holdingMinRadius = new boolean[frames];
@@ -1361,7 +1366,11 @@ public class VectorMaximizer {
 			//}
 			
 			//set cap throw 1 vector and falling vector to the correct angles
-			setCapThrowHoldingAngles(variableCapThrow1Vector, once_bestAngle1, variableCapThrow1Frames);
+			int capThrow1FallingFrames = 0;
+			if (hasVariableCapThrow1Falling) {
+				capThrow1FallingFrames = movementFrames.get(variableCapThrow1Index + 1);
+			}
+			setCapThrowHoldingAngles(variableCapThrow1Vector, once_bestAngle1, variableCapThrow1Frames, capThrow1FallingFrames);
 			variableCapThrow1Vector.calcDisp();
 			if (hasVariableCapThrow1Falling)
 				calcFallingDisplacements(variableCapThrow1Vector, variableCapThrow1Index, once_bestAngle1Adjusted, !variableCapThrow1VectorRight, false);
@@ -1411,7 +1420,7 @@ public class VectorMaximizer {
 	}
 
 	private double calcDisp(double variableAngle1) {
-		setCapThrowHoldingAngles(variableCapThrow1Vector, variableAngle1, variableCapThrow1Frames);
+		setCapThrowHoldingAngles(variableCapThrow1Vector, variableAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 				
 		variableCapThrow1Vector.calcDisp();
 		variableCapThrow1Vector.calcDispCoords();
@@ -1596,7 +1605,7 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .2;
+	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .05;
 	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowCT = can check for regular single throws
@@ -1610,9 +1619,15 @@ public class VectorMaximizer {
 		double lowAngle = Double.MIN_VALUE;
 		double highAngle = Double.MIN_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
+		DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
 		for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += .01) {
 		//for (double endDecel = 0; endDecel <= 15; endDecel += .5) {
-			((DiveTurn) motions[preCapBounceDiveIndex]).firstFrameDecel = firstFrameDecel;
+			if (firstFrameDecel > 0 && firstFrameDecel / .5 <= .1) { //can't hold back this shallow
+				continue;
+			}
+			//System.out.println("hi");
+			//System.out.print(preCapBounceDiveIndex);
+			dive.firstFrameDecel = firstFrameDecel;
 			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
 			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
 				if (!allowST && ct == Movement.CT) {
@@ -1634,7 +1649,7 @@ public class VectorMaximizer {
 				boolean overshot = false;
 				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += edgeCBIncrement) {
 					diveCapBounceAngle = edgeCB;
-					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
+					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					int cbFrame = getCapBounceFrame(ct);
 					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
 					if (cbFrame == targetCBFrame) {
@@ -1651,7 +1666,10 @@ public class VectorMaximizer {
 						overshot = true;
 					//diveCapBounceAngle += edgeCBIncrement;
 				}
-				if (found) {
+				if (found && highAngle > lowAngle) { //too high of a risk it won't actually work in game if they are the same
+					// System.out.println("Decel: " + firstFrameDecel);
+					// System.out.println("Found high: " + highAngle);
+					// System.out.println("Found low: " + lowAngle);
 					if (highAngle - lowAngle < Math.toRadians(2)) { //if high and low angles are close pick the middle for most reliable result
 						diveCapBounceAngle = (highAngle + lowAngle) / 2;
 					}
@@ -1659,7 +1677,7 @@ public class VectorMaximizer {
 						diveCapBounceAngle = highAngle - Math.toRadians(1);
 					}
 					p.diveCapBounceAngle = diveCapBounceAngle;
-					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
+					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					return true;
 				}
 			}

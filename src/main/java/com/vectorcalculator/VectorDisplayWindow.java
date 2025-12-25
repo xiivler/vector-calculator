@@ -80,6 +80,7 @@ public class VectorDisplayWindow {
 	static JButton create;
 	static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
+	static VectorMaximizer maximizer;
 	static SimpleMotion[] simpleMotions;
 	static double initialAngle;
 	static double targetAngle;
@@ -226,7 +227,7 @@ public class VectorDisplayWindow {
 	private static void setShiftMotion(boolean b) {
 		if (shiftMotion != b) {
 			shiftMotion = b;
-			generateData(simpleMotions, initialAngle, targetAngle);
+			generateData(maximizer, initialAngle, targetAngle);
 		}
 	}
 
@@ -281,10 +282,11 @@ public class VectorDisplayWindow {
 		dataTableModel.setRowCount(0);
 	}
 	
-	public static void generateData(SimpleMotion[] simpleMotions, double initialAngle, double targetAngle) {
+	public static void generateData(VectorMaximizer maximizer, double initialAngle, double targetAngle) {
 		frame.setTitle("Calculations: " + VectorCalculator.projectName);
 
-		VectorDisplayWindow.simpleMotions = simpleMotions;
+		VectorDisplayWindow.maximizer = maximizer;
+		VectorDisplayWindow.simpleMotions = maximizer.getMotions();
 		VectorDisplayWindow.initialAngle = initialAngle;
 		VectorDisplayWindow.targetAngle = targetAngle;
 		if (p.cameraType == CameraType.ABSOLUTE) {
@@ -383,6 +385,9 @@ public class VectorDisplayWindow {
 				if (i < motion.movement.inputs1.size()) {
 					int offset = -1;
 					int input1 = motion.movement.inputs1.get(i);
+					if (index == maximizer.variableCapThrow1Index) {
+						input1 = Movement.CT_INPUT[maximizer.ctType];
+					}
 					if (input1 >= Inputs.M && shiftMotion) {
 						offset = -2;
 					}
