@@ -27,6 +27,7 @@ public class VectorMaximizer {
 	//public static int numSteps = 901;
 	
 	boolean alwaysDiveTurn = false; //set to true to only test with dive turn, which is faster for Solver
+	boolean neverDiveTurn = false;
 	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
 	SimpleVector[] vectors;
@@ -36,6 +37,7 @@ public class VectorMaximizer {
 
 	double diveCapBounceAngle;
 	int ctType = Movement.MCCTU;
+	double firstFrameDecel = 0; //for the dive before the cap bounce
 	
 	double dispZ;
 	double dispX;
@@ -792,8 +794,10 @@ public class VectorMaximizer {
 			// 	}
 			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
 			// }
-			else if (movementNames.get(j).equals("Dive") && diveTurn)
+			else if (movementNames.get(j).equals("Dive") && diveTurn) {
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
+			}
 			else
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
 			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall	
@@ -1100,6 +1104,10 @@ public class VectorMaximizer {
 	private void maximize_dive() {
 		if (alwaysDiveTurn) { //only test with dive turn if this boolean is true
 			diveTurn = true;
+			maximize_HCT();
+		}
+		else if (neverDiveTurn) {
+			diveTurn = false;
 			maximize_HCT();
 		}
 		else {
@@ -1437,8 +1445,10 @@ public class VectorMaximizer {
 		// Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
-			
-			if (hasVariableCapThrow2)
+			boolean turnDuringFall = hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableCapThrow1Index + 1) >= 4;
+			//if (turnDuringFall)
+				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
+			/* else */ if (hasVariableCapThrow2)
 				setFinalCapThrowHoldingAngles(variableMovement2Vector, variableAngle2, movementFrames.get(variableMovement2Index));
 			else
 				setOtherMovementHoldingAngles(variableMovement2Vector, motionGroup, variableMovement2Index, variableAngle2, initialAngle, initialRotation, currentVectorRight);
@@ -1497,6 +1507,7 @@ public class VectorMaximizer {
 		if (hasVariableCapThrow1 && hasDiveCapBounce) {
 			ComplexVector ct = (ComplexVector) motions[variableCapThrow1Index];
 			DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
+			dive.firstFrameDecel = firstFrameDecel;
 			ct.calcDispDispCoordsAngleSpeed();
 			ct.calcDispY();
 			if (hasVariableCapThrow1Falling) {
@@ -1516,8 +1527,8 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 30;
-	public int edgeCBSteps = 30 * 101;
+	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .2;
+	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowCT = can check for regular single throws
 	//allowST = can check for motion or regular single throws
@@ -1530,8 +1541,10 @@ public class VectorMaximizer {
 		double lowAngle = Double.MIN_VALUE;
 		double highAngle = Double.MIN_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
-		for (double firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += .05) {
+		for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += .025) {
+		//for (double endDecel = 0; endDecel <= 15; endDecel += .5) {
 			((DiveTurn) motions[preCapBounceDiveIndex]).firstFrameDecel = firstFrameDecel;
+			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
 			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
 				if (!allowST && ct == Movement.CT) {
 					continue;
@@ -1546,11 +1559,12 @@ public class VectorMaximizer {
 					continue;
 				}
 				//System.out.println("Testing throw type " + ct);
-				double edgeCBIncrement = (edgeCBMax - edgeCBMin) / (edgeCBSteps - 1);
-				diveCapBounceAngle = edgeCBMin;
+				//double edgeCBIncrement = (edgeCBMax - edgeCBMin) / (edgeCBSteps - 1);
+				
 				boolean found = false;
 				boolean overshot = false;
-				for (int i = 0; i < edgeCBSteps; i++) {
+				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += edgeCBIncrement) {
+					diveCapBounceAngle = edgeCB;
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
 					int cbFrame = getCapBounceFrame(ct);
 					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
@@ -1566,7 +1580,7 @@ public class VectorMaximizer {
 					}
 					else if (highAngle != Double.MIN_VALUE)
 						overshot = true;
-					diveCapBounceAngle += edgeCBIncrement;
+					//diveCapBounceAngle += edgeCBIncrement;
 				}
 				if (found) {
 					if (highAngle - lowAngle < Math.toRadians(2)) { //if high and low angles are close pick the middle for most reliable result

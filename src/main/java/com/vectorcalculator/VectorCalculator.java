@@ -657,8 +657,14 @@ public class VectorCalculator extends JPanel {
 				 //for (double i = -200; i <= 0;) {
 				 	//p.y1 = i;
 				if (solver.solve(3)) {
-					VectorMaximizer maximizer = calculate();
+					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
+						maximizer.maximize();
+						maximizer.isDiveCapBouncePossible(true, true, true, false);
+						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+						maximizer.maximize();
+						System.out.println("Possible: " + maximizer.isDiveCapBouncePossible(true, true, true, false));
+						maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
 					}

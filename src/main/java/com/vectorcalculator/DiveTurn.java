@@ -15,7 +15,8 @@ public class DiveTurn extends SimpleMotion {
 	boolean rightTurn;
 
 	double firstFrameDecel = 0; //how much to decelerate on the first frame to allow certain cap bounces to work
-	
+	double endDecel = 0; //how many frames to decelerate at the end instead of turning (partial frames = partial decel)
+
 	public DiveTurn(Movement movement, boolean rightTurn, int frames) {
 		
 		super(movement, frames);
@@ -52,15 +53,26 @@ public class DiveTurn extends SimpleMotion {
 		//cap at 20 u/fr speed
 		//double multiplier
 
+		int endDecelFrames = (int) (endDecel + .999);
+
 		double velocityAngle = 0;
 		for (int i = 0; i < frames; i++) {
 			if (i == 0 && firstFrameDecel > 0) {
 				forwardVelocity -= firstFrameDecel;
 			}
-			else {
+			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
+			}
+			else if (i == frames - endDecelFrames) {
+				double backwardAccel = baseBackwardAccel * (endDecel - (endDecelFrames - 1));
+				forwardVelocity -= backwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= backwardAccel * Math.sin(velocityAngle);
+			}
+			else {
+				forwardVelocity -= baseBackwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= baseBackwardAccel * Math.sin(velocityAngle);
 			}
 			dispForward += forwardVelocity;
 			dispSideways += sidewaysVelocity;
@@ -100,6 +112,7 @@ public class DiveTurn extends SimpleMotion {
 	//must run calcDisp() first to calculate acceleration values and vectorFrames
 	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding angle, column 8: holding radius
 	public double[][] calcFrameByFrame() {
+		int endDecelFrames = (int) (endDecel + .999);
 		dispForward = 0;
 		dispSideways = 0;
 		dispX = x0;
@@ -129,7 +142,7 @@ public class DiveTurn extends SimpleMotion {
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double velocityAngle = 0;
 
-		double deltaVelocityAngle = Math.atan(sidewaysAccel / initialForwardVelocity);
+		double deltaVelocityAngle = Math.atan(sidewaysAccel / (initialForwardVelocity - firstFrameDecel));
 
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
@@ -137,9 +150,19 @@ public class DiveTurn extends SimpleMotion {
 				forwardVelocity -= firstFrameDecel;
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
-			else {
+			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
+			}
+			else if (i == frames - endDecelFrames) {
+				double backwardAccel = baseBackwardAccel * (endDecel - (endDecelFrames - 1));
+				forwardVelocity -= backwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= backwardAccel * Math.sin(velocityAngle);
+			}
+			else {
+				forwardVelocity -= baseBackwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= baseBackwardAccel * Math.sin(velocityAngle);
 			}
 			
 			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
@@ -168,7 +191,7 @@ public class DiveTurn extends SimpleMotion {
 				info[i][7] = initialAngle - Math.PI;
 				info[i][8] = firstFrameDecel / baseBackwardAccel;
 			}
-			else {
+			else if (i < frames - endDecelFrames) {
 				if (rightTurn) {
 					info[i][7] = holdingAngleAdjusted;
 					holdingAngleAdjusted -= deltaVelocityAngle;
@@ -179,11 +202,23 @@ public class DiveTurn extends SimpleMotion {
 				}
 				info[i][8] = 1;
 			}
+			else if (i == frames - endDecelFrames) {
+				if (rightTurn)
+					info[i][7] = initialAngle - deltaVelocityAngle * i - Math.PI;
+				else
+					info[i][7] = initialAngle + deltaVelocityAngle * i - Math.PI;
+				info[i][8] = (endDecel - (endDecelFrames - 1));
+			}
+			else {
+				info[i][7] = info[i - 1][7];
+				info[i][8] = 1;
+			}
 		}	
 		return info;
 	}
 
 	public int getCapBounceFrame(double cappyPos[]) {
+		int endDecelFrames = (int) (endDecel + .999);
 		double dispX = x0;
 		double dispY = y0;
 		double dispZ = z0;
@@ -210,9 +245,19 @@ public class DiveTurn extends SimpleMotion {
 				forwardVelocity -= firstFrameDecel;
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
-			else {
+			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
+			}
+			else if (i == frames - endDecelFrames) {
+				double backwardAccel = baseBackwardAccel * (endDecel - (endDecelFrames - 1));
+				forwardVelocity -= backwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= backwardAccel * Math.sin(velocityAngle);
+			}
+			else {
+				forwardVelocity -= baseBackwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity -= baseBackwardAccel * Math.sin(velocityAngle);
 			}
 
 			zVelocity = forwardVelocity * cosInitialAngle + sidewaysVelocity * cosNormalAngle;
@@ -238,10 +283,13 @@ public class DiveTurn extends SimpleMotion {
 			double distHeadCappy = distance(dispX, headY, dispZ, cappyPos[0], cappyPos[1], cappyPos[2]);
 			double diffYFootCappyCatch = footY - cappyCatchY;
 			double footCappyCatchAngle = Math.atan2(diffYFootCappyCatch, hDistToCappy);
-			//System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
 			if (distBodyCappy < 150 || distHeadCappy < 140 || (diffYFootCappyCatch < 70 && footCappyCatchAngle >= Math.toRadians(20))) {
-					return i + 1;
+				//System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+				return i + 1;
 			}
+			// if (i == frames - 1 && Math.toDegrees(footCappyCatchAngle) > -5) {
+			// 	System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+			// }
 		}
 		return -1; //won't bounce
 	}

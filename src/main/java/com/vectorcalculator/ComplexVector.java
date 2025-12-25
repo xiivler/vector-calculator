@@ -389,12 +389,12 @@ public class ComplexVector extends SimpleVector {
 		return cappyPos;
 	}
 
-	// public void setHoldingAngle(double angle) {
-	// 	holdingAngle = angle;
-	// 	holdingAngles = new double[frames];
-	// 	for (int i = 0; i < frames; i++) {
-	// 		holdingAngles[i] = angle;
-	// 	}
-	// 	holdingMinRadius = new boolean[frames];
-	// }
+	public void setHoldingAngle(double angle) {
+		holdingAngle = angle;
+		holdingAngles = new double[frames];
+		for (int i = 0; i < frames; i++) {
+			holdingAngles[i] = angle;
+		}
+		holdingMinRadius = new boolean[frames];
+	}
 }
