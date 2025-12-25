@@ -12,7 +12,7 @@
     <hyperoptimize>true</hyperoptimize>
     <initialAngle>90.0</initialAngle>
     <initialDispY>-950.0</initialDispY>
-    <initialFrames>66</initialFrames>
+    <initialFrames>72</initialFrames>
     <initialHorizontalSpeed>24.0</initialHorizontalSpeed>
     <initialMovementName>Triple Jump</initialMovementName>
     <midairs>
@@ -21,7 +21,7 @@
     </midairs>
     <midairs>
         <item>5</item>
-        <item>24</item>
+        <item>23</item>
     </midairs>
     <midairs>
         <item>6</item>

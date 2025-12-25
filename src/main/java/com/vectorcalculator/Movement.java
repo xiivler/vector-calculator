@@ -323,6 +323,7 @@ public class Movement {
 				initialHorizontalSpeed = 20;
 			}
 			forwardAccel = 0;
+			backwardAccel = .5;
 			vectorAccel = 0;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;

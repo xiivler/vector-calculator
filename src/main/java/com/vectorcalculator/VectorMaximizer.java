@@ -1516,8 +1516,8 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 18.4;
-	public int edgeCBSteps = 21;
+	public double edgeCBMin = 0, edgeCBMax = 30;
+	public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowCT = can check for regular single throws
 	//allowST = can check for motion or regular single throws
@@ -1530,51 +1530,55 @@ public class VectorMaximizer {
 		double lowAngle = Double.MIN_VALUE;
 		double highAngle = Double.MIN_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
-		for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
-			if (!allowST && ct == Movement.CT) {
-				continue;
-			}
-			else if (!allowCT && ct == Movement.CT || ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR) {
-				continue;
-			}
-			else if (!allowDT && ct == Movement.DT) {
-				continue;
-			}
-			else if (!allowTT && ct == Movement.TT || ct == Movement.TTU || ct == Movement.TTD || ct == Movement.TTL || ct == Movement.TTR) {
-				continue;
-			}
-			double edgeCBIncrement = (edgeCBMax - edgeCBMin) / (edgeCBSteps - 1);
-			diveCapBounceAngle = edgeCBMin;
-			boolean found = false;
-			boolean overshot = false;
-			for (int i = 0; i < edgeCBSteps; i++) {
-				diveCapBounceAngle += edgeCBIncrement;
-				setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
-				int cbFrame = getCapBounceFrame(ct);
-				System.out.println("Cap Bounce Frame: " + cbFrame);
-				if (cbFrame == targetCBFrame) {
-					if (!found) {
-						found = true;
-						lowAngle = diveCapBounceAngle;
+		for (double firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += .05) {
+			((DiveTurn) motions[preCapBounceDiveIndex]).firstFrameDecel = firstFrameDecel;
+			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
+				if (!allowST && ct == Movement.CT) {
+					continue;
+				}
+				else if (!allowCT && (ct == Movement.CT || ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR)) {
+					continue;
+				}
+				else if (!allowDT && ct == Movement.DT) {
+					continue;
+				}
+				else if (!allowTT && (ct == Movement.TT || ct == Movement.TTU || ct == Movement.TTD || ct == Movement.TTL || ct == Movement.TTR)) {
+					continue;
+				}
+				//System.out.println("Testing throw type " + ct);
+				double edgeCBIncrement = (edgeCBMax - edgeCBMin) / (edgeCBSteps - 1);
+				diveCapBounceAngle = edgeCBMin;
+				boolean found = false;
+				boolean overshot = false;
+				for (int i = 0; i < edgeCBSteps; i++) {
+					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
+					int cbFrame = getCapBounceFrame(ct);
+					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
+					if (cbFrame == targetCBFrame) {
+						if (!found) {
+							found = true;
+							lowAngle = diveCapBounceAngle;
+						}
+						if (!overshot) {
+							highAngle = diveCapBounceAngle;
+						}
+						ctType = ct;
 					}
-					if (!overshot) {
-						highAngle = diveCapBounceAngle;
+					else if (highAngle != Double.MIN_VALUE)
+						overshot = true;
+					diveCapBounceAngle += edgeCBIncrement;
+				}
+				if (found) {
+					if (highAngle - lowAngle < Math.toRadians(2)) { //if high and low angles are close pick the middle for most reliable result
+						diveCapBounceAngle = (highAngle + lowAngle) / 2;
 					}
-					ctType = ct;
+					else { //otherwise pick an angle close to the high for a better vector
+						diveCapBounceAngle = highAngle - Math.toRadians(1);
+					}
+					p.diveCapBounceAngle = diveCapBounceAngle;
+					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
+					return true;
 				}
-				else if (highAngle != Double.MIN_VALUE)
-					overshot = true;
-			}
-			if (found) {
-				if (highAngle - lowAngle < Math.toRadians(2)) { //if high and low angles are close pick the middle for most reliable result
-					diveCapBounceAngle = (highAngle + lowAngle) / 2;
-				}
-				else { //otherwise pick an angle close to the high for a better vector
-					diveCapBounceAngle = highAngle - Math.toRadians(1);
-				}
-				p.diveCapBounceAngle = diveCapBounceAngle;
-				setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames);
-				return true;
 			}
 		}
 		return false;
