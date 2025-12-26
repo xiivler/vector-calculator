@@ -669,6 +669,8 @@ public class VectorCalculator extends JPanel {
 						maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
+						//System.out.println("Cappy position: " + );
+						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
 				}
 				else {
