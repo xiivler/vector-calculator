@@ -119,6 +119,11 @@ public class Movement {
 		this.movementType = movementType;
 		displayName = movementType;
 		
+		if (movementType.equals("Optimal Distance Motion")) {
+			initialHorizontalSpeed = 29.94;
+			recommendedInitialHorizontalSpeed = 29.94;
+			trueSpeedCap = 100;
+		}
 		if (movementType.equals("Single Jump")) {
 			if (initialHorizontalSpeed <= 3)
 				initialVerticalSpeed = 17;

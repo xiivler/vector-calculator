@@ -398,7 +398,7 @@ public class VectorMaximizer {
 		for (int i = 0; i < frames - 2; i++) {
 			rotationalVelocity += .3; //fix if really long?
 			maxRotation += rotationalVelocity;
-			//System.out.println("Max rotation: " + maxRotation);
+			//Debug.println("Max rotation: " + maxRotation);
 			if (maxRotation + diveCapBounceAngle > 24.999) { //if we can get to the dive angle with at least 1f of fast turnaround
 				standardTurnaround = true;
 			}
@@ -444,6 +444,8 @@ public class VectorMaximizer {
 					}
 					double totalRotation = minRotation + additionalRotation;
 					double overshoot = rotationSum - additionalRotation;
+					Debug.println("DCBA: " + diveCapBounceAngle);
+					Debug.println("Total rotation: " + Math.toDegrees(totalRotation));
 					Debug.println("Overshoot: " + Math.toDegrees(overshoot));
 					//how much counterrotation there should be on the first frame of acceleration
 					double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
@@ -676,8 +678,8 @@ public class VectorMaximizer {
 	}
 
 	private void setFinalFallingHoldingAngles(ComplexVector motion, double neededRotation, double initialHoldingAngle, int frames) {
-		System.out.println("Needed Rotation: " + Math.toDegrees(neededRotation));
-		System.out.println("Initial Holding Angle: " + Math.toDegrees(initialHoldingAngle));
+		Debug.println("Needed Rotation: " + Math.toDegrees(neededRotation));
+		Debug.println("Initial Holding Angle: " + Math.toDegrees(initialHoldingAngle));
 		double[] holdingAngles = new double[frames];
 		for (int i = 0; i < holdingAngles.length; i++) {
 			holdingAngles[i] = initialHoldingAngle;
@@ -702,7 +704,7 @@ public class VectorMaximizer {
 				ang_deg -= rotationalVelocity;
 			}
 		}
-		System.out.println("Turanround Frames: " + turnaroundFrames);
+		Debug.println("Turanround Frames: " + turnaroundFrames);
 		holdingAngles[frames - turnaroundFrames] = initialHoldingAngle - Math.toRadians(ang_deg) + Math.PI * 136/180.0;
 		if (turnaroundFrames > 1)
 			holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle + Math.PI * 2/180.0;
@@ -1250,8 +1252,8 @@ public class VectorMaximizer {
 			double disp_noDiveTurn = maximize_HCT();
 			diveTurn = true;
 			double disp_diveTurn = maximize_HCT();
-			//System.out.println("With dive turn %.3f\n: " + disp_diveTurn);
-			//System.out.println("Without dive turn %.3f\n: " + disp_noDiveTurn);
+			//Debug.println("With dive turn %.3f\n: " + disp_diveTurn);
+			//Debug.println("Without dive turn %.3f\n: " + disp_noDiveTurn);
 			if (disp_noDiveTurn > disp_diveTurn) {
 				diveTurn = false;
 				maximize_HCT();
@@ -1261,7 +1263,7 @@ public class VectorMaximizer {
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
 	private double maximize_HCT() {
 		if (hasVariableHCTFallVector) {
-			//System.out.println(maximize_HCT_limit);
+			//Debug.println(maximize_HCT_limit);
 			double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, maximize_HCT_limit);
 			//Debug.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
 			return results[0];
@@ -1659,7 +1661,7 @@ public class VectorMaximizer {
 				//falling.setInitialAngle(ct.finalAngle);
 				falling.calcDispDispCoordsAngleSpeed();
 				falling.calcDispY();
-				//System.out.println(falling.dispX + ", " + falling.dispY + ", " + falling.dispZ);
+				//Debug.println(falling.dispX + ", " + falling.dispY + ", " + falling.dispZ);
 				dive.setInitialCoordinates(falling.x0 + falling.dispX, falling.y0 + falling.dispY, falling.z0 + falling.dispZ);
 			}
 			else {
@@ -1690,7 +1692,7 @@ public class VectorMaximizer {
 			if (firstFrameDecel > 0 && firstFrameDecel / .5 <= .1) { //can't hold back this shallow
 				continue;
 			}
-			//System.out.println("hi");
+			//Debug.println("hi");
 			//System.out.print(preCapBounceDiveIndex);
 			dive.firstFrameDecel = firstFrameDecel;
 			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
@@ -1707,13 +1709,16 @@ public class VectorMaximizer {
 				else if (!allowTT && (ct == Movement.TT || ct == Movement.TTU || ct == Movement.TTD || ct == Movement.TTL || ct == Movement.TTR)) {
 					continue;
 				}
-				//System.out.println("Testing throw type " + ct);
+				//Debug.println("Testing throw type " + ct);
 				//double edgeCBIncrement = (edgeCBMax - edgeCBMin) / (edgeCBSteps - 1);
 				
 				boolean found = false;
 				boolean overshot = false;
 				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += p.diveCapBounceTolerance) {
 					diveCapBounceAngle = edgeCB;
+					if (variableCapThrow1Frames <= 14 && edgeCB > 20) { //these cannot be turned as much without developing another method of turning
+						break;
+					}
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					int cbFrame = getCapBounceFrame(ct);
 					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
@@ -1732,9 +1737,9 @@ public class VectorMaximizer {
 					//diveCapBounceAngle += edgeCBIncrement;
 				}
 				if (found && highAngle > lowAngle) { //too high of a risk it won't actually work in game if they are the same
-					 System.out.println("Decel: " + firstFrameDecel);
-					 System.out.println("Found low: " + lowAngle);
-					 System.out.println("Found high: " + highAngle);
+					 Debug.println("Decel: " + firstFrameDecel);
+					 Debug.println("Found low: " + lowAngle);
+					 Debug.println("Found high: " + highAngle);
 					if (highAngle - lowAngle < 2) { //if high and low angles are close pick the middle for most reliable result
 						diveCapBounceAngle = (highAngle + lowAngle) / 2;
 					}
@@ -1743,12 +1748,13 @@ public class VectorMaximizer {
 					}
 					p.diveCapBounceAngle = diveCapBounceAngle;
 					p.diveFirstFrameDecel = firstFrameDecel;
-					System.out.println(p.diveCapBounceAngle);
+					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					return true;
 				}
 			}
 		}
+		// System.out.println("NO!");
 		return false;
 	}
 }

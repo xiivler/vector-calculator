@@ -5,42 +5,149 @@ import java.util.Arrays;
 public class Sandbox {
     
     public static void main(String[] args) {
+        test();
+    }
+
+    public static void test() {
         VectorCalculator.main(null);
         int[][] preset = VectorCalculator.midairPresets[1];
         
-        boolean[][] possible = new boolean[35][35];
-        double[][] firstFrameDecels = new double[35][35];
-
-        /* for (int i = 24; i <= 32; i++) {
-            for (int j = 18; j <= 27; j++) {
-                preset[0][1] = i;
-                preset[1][1] = j;
-                VectorCalculator.addPreset(preset);
-                VectorMaximizer maximizer = VectorCalculator.calculate();
-                if (maximizer != null) {
-                    possible[i][j] = maximizer.isDiveCapBouncePossible(true, true, false, false);
-                    firstFrameDecels[i][j] = maximizer.firstFrameDecel;
-                    //System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, true) + " " + maximizer.ctType + " " + maximizer.firstFrameDecel);
-                    //System.out.println("Angle: " + Properties.p.diveCapBounceAngle);
-                    //System.out.println("Type: " + maximizer.ctType);
-                    //VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-                    //VectorDisplayWindow.display();
-                    ((DiveTurn) maximizer.getMotions()[maximizer.preCapBounceDiveIndex]).getCapBounceFrame(((ComplexVector) maximizer.getMotions()[maximizer.variableCapThrow1Index]).getCappyPosition(0));
+        int[][] possible = new int[41][41];
+        double[][] firstFrameDecels = new double[41][41];
+        
+        for (int i = 0; i <= 40; i++) {
+            for (int j = 0; j <= 40; j++) {
+                //try {
+                if (i < 8 || j < 11) {
+                    possible[i][j] = -1;
+                    continue;
                 }
+                    System.out.println(i + ", " + j);
+                    preset[0][1] = i;
+                    preset[1][1] = j;
+                    VectorCalculator.addPreset(preset);
+                    Properties.p.rightVector = false;
+                    VectorMaximizer maximizer = VectorCalculator.getMaximizer();
+                    //maximizer.alwaysDiveTurn = true;
+                    maximizer.neverDiveTurn = true;
+                    Properties.p.diveCapBounceTolerance = 0.02;
+                    Properties.p.diveFirstFrameDecel = 0;
+                    Properties.p.diveCapBounceAngle = 12;
+                    maximizer.maximize();
+                    if (maximizer != null) {
+                        if (maximizer.isDiveCapBouncePossible(true, (i >= 9), false, false)) {
+                            possible[i][j] = maximizer.ctType;
+                        }
+                        else {
+                            possible[i][j] = -1;
+                        }
+                        firstFrameDecels[i][j] = maximizer.firstFrameDecel;
+                        //System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, true) + " " + maximizer.ctType + " " + maximizer.firstFrameDecel);
+                        //System.out.println("Angle: " + Properties.p.diveCapBounceAngle);
+                        //System.out.println("Type: " + maximizer.ctType);
+                        //VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
+                        //VectorDisplayWindow.display();
+                        //((DiveTurn) maximizer.getMotions()[maximizer.preCapBounceDiveIndex]).getCapBounceFrame(((ComplexVector) maximizer.getMotions()[maximizer.variableCapThrow1Index]).getCappyPosition(0));
+                    }
+                //}
+                // catch (Exception ex) {
+                //     System.out.println("Exception on (" + i + ", " + j + ")");
+                //     System.out.println(ex);
+                // }
             }
         }
-        for (int i = 0; i < 34; i++) {
-            //System.out.println(Arrays.toString(possible[i]) + ", ");
-            System.out.println(Arrays.toString(firstFrameDecels[i]) + ", ");
-        } */
-         preset[0][1] = 28;
-         preset[1][1] = 25;
-         VectorCalculator.addPreset(preset);
-         VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-         //maximizer.neverDiveTurn = true;
-         maximizer.maximize();
-         System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
-         //VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
-         VectorDisplayWindow.display();
+        System.out.print("{");
+        for (int i = 0; i < 40; i++) {
+            String end = ", ";
+            if (i == 39) {
+                end = "}";
+            }
+            System.out.println(Arrays.toString(possible[i]).replace('[','{').replace(']','}') + end);
+        }
+        System.out.println();
+        System.out.print("{");
+        for (int i = 0; i < 40; i++) {
+            String end = ", ";
+            if (i == 39) {
+                end = "}";
+            }
+            System.out.println(Arrays.toString(firstFrameDecels[i]).replace('[','{').replace(']','}') + end);
+        }
+       
+         
+        //  preset[0][1] = 13;
+        //  preset[1][1] = 25;
+        //  VectorCalculator.addPreset(preset);
+        //  VectorMaximizer maximizer = VectorCalculator.getMaximizer();
+        //  //maximizer.neverDiveTurn = true;
+        //  maximizer.maximize();
+        //  System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
+        //  VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+        //  VectorDisplayWindow.display();
+    }
+
+    public static void fixArray() {
+        int[][] arr = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, 2, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 2, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+        for (int i = 0; i <= 7; i++) {
+            for (int j = 0; j <= 40; j++) {
+                arr[i][j] = -1;
+            }
+        }
+        for (int i = 0; i <= 39; i++) {
+            for (int j = 0; j <= 11; j++) {
+                arr[i][j] = -1;
+            }
+        }
+        printArray(arr);
+    }
+
+    public static void printArray(int[][] arr) {
+        System.out.print("{");
+        for (int i = 0; i < 40; i++) {
+            String end = ", ";
+            if (i == 39) {
+                end = "}";
+            }
+            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+        }
     }
 }

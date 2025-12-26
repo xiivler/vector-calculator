@@ -711,12 +711,21 @@ public class VectorCalculator extends JPanel {
 					p.initialMovementName = "Optimal Distance RCV";
 					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 					VectorMaximizer maximizerRC = calculate();
-					if (maximizerTJ != null && maximizerRC != null) {
-						if (maximizerTJ.bestDisp > maximizerRC.bestDisp) {
+					p.initialMovementName = "Sideflip";
+					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+					VectorMaximizer maximizerSideflip = calculate();
+					System.out.println("TJ: " + maximizerTJ.bestDisp);
+					System.out.println("RC: " + maximizerRC.bestDisp);
+					System.out.println("SF: " + maximizerSideflip.bestDisp);
+					if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
+						if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
 							maximizer = maximizerTJ;
 						}
-						else {
+						else if (maximizerRC.bestDisp > maximizerTJ.bestDisp && maximizerRC.bestDisp > maximizerSideflip.bestDisp) {
 							maximizer = maximizerRC;
+						}
+						else {
+							maximizer = maximizerSideflip;
 						}
 					}
 					p.initialMovementName = "Optimal Distance Motion";

@@ -221,7 +221,7 @@ public class SimpleMotion {
 		double xVelocity;
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
-			if (forwardVelocity < forwardVelocityCap) {
+			if (forwardVelocity < forwardVelocityCap || (movement.movementType.equals("Moonwalk") && i > 0) ){
 				info[i][7] = initialAngle;
 				info[i][8] = 1;
 				forwardVelocity += forwardAccel;

@@ -75,7 +75,7 @@ public class SimpleVector extends SimpleMotion {
 		else
 			sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle); //holding angle is the angle away from the initial angle you are holding
 		
-		if (optimalForwardAccel)
+		if (optimalForwardAccel && !movement.movementType.equals("Sideflip"))
 			vectorFrames = Math.max(frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0), 0);
 		else
 			vectorFrames = frames;
@@ -99,8 +99,12 @@ public class SimpleVector extends SimpleMotion {
 		dispForward = calcDispForward();
 		dispSideways = calcDispSideways();
 		
-		finalSidewaysVelocity = Math.min(sidewaysAccel * vectorFrames, Math.min(finalForwardVelocity, sidewaysVelocityCap));
-		
+		if (movement.movementType.equals("Sideflip")) {
+			finalSidewaysVelocity = sidewaysAccel * frames;
+		}
+		else {
+			finalSidewaysVelocity = Math.min(sidewaysAccel * vectorFrames, Math.min(finalForwardVelocity, sidewaysVelocityCap));
+		}
 	}
 	
 	public void calcDispCoords() {
@@ -113,9 +117,9 @@ public class SimpleVector extends SimpleMotion {
 	//requires calcDisp() to be called first
 	public double calcFinalAngle() {		
 		if (rightVector)
-			finalAngle = initialAngle - Math.atan(finalSidewaysVelocity / finalForwardVelocity);
+			finalAngle = initialAngle - Math.atan2(finalSidewaysVelocity, finalForwardVelocity);
 		else
-			finalAngle = initialAngle + Math.atan(finalSidewaysVelocity / finalForwardVelocity);
+			finalAngle = initialAngle + Math.atan2(finalSidewaysVelocity, finalForwardVelocity);
 		return finalAngle;
 		
 	}

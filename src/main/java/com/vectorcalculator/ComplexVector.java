@@ -298,6 +298,8 @@ public class ComplexVector extends SimpleVector {
 			throwAngle = initialAngle + holdingAngles[0];
 		double throwNormalAngle = throwAngle - Math.PI / 2;
 		int throwFrame = Movement.CT_FRAMES[throwType] - 1;
+		// System.out.println("Throw Type" + throwType);
+		// System.out.println(frames);
 
 		//get position at frame of cap throw
 		double dispX = x0;
