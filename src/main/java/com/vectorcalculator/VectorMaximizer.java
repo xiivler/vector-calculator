@@ -405,9 +405,9 @@ public class VectorMaximizer {
 		}
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = throwAngle;
-		//we need at least 5 frames to apply the non-standard turnaround
+		//we need at least 6 frames to apply the non-standard turnaround
 		//if the divecapbounceangle is 0 and the movement is not more than 10 frames, those have better solutions
-		if (p.hyperoptimize && !(diveCapBounceAngle == 0 && frames <= 14) && !(frames <= 5 && !standardTurnaround)) { //we can rotate enough away from the dive angle that we can use 1 or 2 frames of fast turnaround to get there
+		if (p.hyperoptimize && !(diveCapBounceAngle == 0 && frames <= 14) && !(frames <= 6 && !standardTurnaround)) { //we can rotate enough away from the dive angle that we can use 1 or 2 frames of fast turnaround to get there
 			if (standardTurnaround) {
 				if (maxRotation + diveCapBounceAngle < 25.001) { //shortcut if we can just hold one direction
 					for (int i = 1; i < frames - 1; i++) {
@@ -474,21 +474,25 @@ public class VectorMaximizer {
 			else { //we need to fast turnaround both directions to get to the dive angle
 				rotationalVelocity = 0;
 				double rotation = 0;
-				for (int i = 0; i < frames - 4; i++) {
-					rotationalVelocity += Math.toRadians(3); //fix if really long?
-					rotation += rotationalVelocity;
-				}
+				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE;
 				for (int i = 1; i < frames - 4; i++) {
-					holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+					rotation += Math.toRadians(.3);
+					if (i > 1) {
+						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
+					}
 				}
+				rotation -= Math.toRadians(.075); //rotation on frames - 4 frame
+				// for (int i = 1; i < frames - 4; i++) {
+					
+				// }
 				// holdingAngles[frames - 4] = diveAngle - FAST_TURNAROUND_VELOCITY;
 				// holdingAngles[frames - 3] = diveAngle - FAST_TURNAROUND_VELOCITY - 179 / 180.0 * Math.PI;
 				// holdingAngles[frames - 2] = diveAngle - FAST_TURNAROUND_VELOCITY;
 				// holdingAngles[frames - 1] = holdingAngles[frames - 2] + 136 / 180.0 * Math.PI;
-				holdingAngles[frames - 3] = throwAngle + Math.toRadians(rotation) + 136 / 180.0 * Math.PI;
+				holdingAngles[frames - 3] = throwAngle + rotation + 135.1 / 180.0 * Math.PI;
 				holdingAngles[frames - 4] = holdingAngles[frames - 3] + 179 / 180.0 * Math.PI;
 				holdingAngles[frames - 2] = diveAngle - FAST_TURNAROUND_VELOCITY;
-				holdingAngles[frames - 1] = holdingAngles[frames - 2] + 136 / 180.0 * Math.PI;
+				holdingAngles[frames - 1] = holdingAngles[frames - 2] + 135.1 / 180.0 * Math.PI;
 				boolean[] holdingMinRadius = new boolean[frames];
 				holdingMinRadius[frames - 4] = true;
 				holdingMinRadius[frames - 3] = true;
