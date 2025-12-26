@@ -660,13 +660,14 @@ public class VectorCalculator extends JPanel {
 					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
 						maximizer.maximize();
-						maximizer.isDiveCapBouncePossible(true, true, true, false);
+						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
+						maximizer.alwaysDiveTurn = true;
+						maximizer.maximize();
+						maximizer.alwaysDiveTurn = true;
+						possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
-						maximizer.alwaysDiveTurn = true;
-						maximizer.maximize();
-						maximizer.alwaysDiveTurn = true;
-						//System.out.println("Possible: " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
-						maximizer.maximize();
+						System.out.println("Possible: " + possible + " " + maximizer.ctType);
+						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
 						//System.out.println("Cappy position: " + );

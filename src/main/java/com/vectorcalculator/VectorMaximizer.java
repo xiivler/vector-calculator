@@ -398,7 +398,7 @@ public class VectorMaximizer {
 		for (int i = 0; i < frames - 2; i++) {
 			rotationalVelocity += .3; //fix if really long?
 			maxRotation += rotationalVelocity;
-			System.out.println("Max rotation: " + maxRotation);
+			//System.out.println("Max rotation: " + maxRotation);
 			if (maxRotation + diveCapBounceAngle > 24.999) { //if we can get to the dive angle with at least 1f of fast turnaround
 				standardTurnaround = true;
 			}
@@ -1665,7 +1665,7 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .05;
+	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .04;
 	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowCT = can check for regular single throws
@@ -1730,13 +1730,14 @@ public class VectorMaximizer {
 					 System.out.println("Decel: " + firstFrameDecel);
 					 System.out.println("Found low: " + lowAngle);
 					 System.out.println("Found high: " + highAngle);
-					if (highAngle - lowAngle < Math.toRadians(2)) { //if high and low angles are close pick the middle for most reliable result
+					if (highAngle - lowAngle < 2) { //if high and low angles are close pick the middle for most reliable result
 						diveCapBounceAngle = (highAngle + lowAngle) / 2;
 					}
 					else { //otherwise pick an angle close to the high for a better vector
 						diveCapBounceAngle = highAngle - 1;
 					}
 					p.diveCapBounceAngle = diveCapBounceAngle;
+					System.out.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					return true;
 				}
