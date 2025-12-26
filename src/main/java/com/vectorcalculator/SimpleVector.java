@@ -38,7 +38,10 @@ public class SimpleVector extends SimpleMotion {
 			this.holdingAngle -= Math.toRadians(.5);
 		}
 		vectorFrames = frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
-		sidewaysVelocityCap = forwardVelocityCap;
+		if (movement.movementType.equals("Sideflip"))
+			sidewaysVelocityCap = Double.MAX_VALUE;
+		else
+			sidewaysVelocityCap = forwardVelocityCap;
 	}
 	
 	

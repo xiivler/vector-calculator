@@ -34,6 +34,9 @@ public class Solver {
         //System.out.println(ctDivePossible[29][23]);
         long startTime = System.currentTimeMillis();
 
+        p.diveFirstFrameDecel = 0;
+        p.diveCapBounceAngle = 12;
+
         //custom presets not yet supported
         if (p.currentPresetIndex == 0) {
             return false;
@@ -330,7 +333,8 @@ public class Solver {
         maximizer.alwaysDiveTurn = true;
         maximizer.maximize_HCT_limit = Math.toRadians(8);
         if (diveCapBounceIndex >= 0) {
-            maximizer.firstFrameDecel = firstFrameDecels[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
+            p.diveFirstFrameDecel = firstFrameDecels[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
+            //maximizer.firstFrameDecel = p.diveFirstFrameDecel;
         }
         double disp = maximizer.maximize();
         double y = p.y0;

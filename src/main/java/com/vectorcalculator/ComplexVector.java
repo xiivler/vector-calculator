@@ -385,9 +385,9 @@ public class ComplexVector extends SimpleVector {
 		cappyPos[0] = dispX + cappyDispF * Math.sin(throwAngle) + cappyDispS * Math.sin(throwNormalAngle);
 		cappyPos[1] = dispY + cappyDispV;
 		cappyPos[2] = dispZ + cappyDispF * Math.cos(throwAngle) + cappyDispS * Math.cos(throwNormalAngle);
-		System.out.printf("Mario Pos: %.3f %.3f %.3f\n", dispX, dispY, dispZ);
-		System.out.printf("Cappy Pos: %.3f %.3f %.3f\n", cappyPos[0], cappyPos[1], cappyPos[2]);
-		System.out.printf("Cappy Throw Angle: %.3f\n", Math.toDegrees(throwAngle));
+		//System.out.printf("Mario Pos: %.3f %.3f %.3f\n", dispX, dispY, dispZ);
+		//System.out.printf("Cappy Pos: %.3f %.3f %.3f\n", cappyPos[0], cappyPos[1], cappyPos[2]);
+		//System.out.printf("Cappy Throw Angle: %.3f\n", Math.toDegrees(throwAngle));
 		return cappyPos;
 	}
 

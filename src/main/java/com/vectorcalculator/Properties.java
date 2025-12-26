@@ -56,6 +56,8 @@ public class Properties {
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
+    double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
+    double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
 	int currentPresetIndex = 1;
 	boolean onMoon = false;
 	boolean hyperoptimize = true;

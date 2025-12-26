@@ -99,12 +99,14 @@ public class VectorCalculator extends JPanel {
 	static int INITIAL_HORIZONTAL_SPEED_ROW = 8;
 	static int VECTOR_DIRECTION_ROW = 9;
 	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
-	static int MIDAIR_TYPE_ROW = 11;
-	static int GRAVITY_ROW = 12;
-	static int HYPEROPTIMIZE_ROW = 13;
-	static int AXIS_ORDER_ROW = 14;
-	static int CAMERA_TYPE_ROW = 15;
-	static int CAMERA_ROW = 16;
+	static int DIVE_CAP_BOUNCE_TOLERANCE_ROW = 11;
+	static int DIVE_DECEL_ROW = 12;
+	static int MIDAIR_TYPE_ROW = 13;
+	static int GRAVITY_ROW = 14;
+	static int HYPEROPTIMIZE_ROW = 15;
+	static int AXIS_ORDER_ROW = 16;
+	static int CAMERA_TYPE_ROW = 17;
+	static int CAMERA_ROW = 18;
 
 	static int ANGLE_2_ROW = -1;
 
@@ -120,9 +122,11 @@ public class VectorCalculator extends JPanel {
 		INITIAL_HORIZONTAL_SPEED_ROW++;
 		VECTOR_DIRECTION_ROW++;
 		DIVE_CAP_BOUNCE_ANGLE_ROW++;
+		DIVE_CAP_BOUNCE_TOLERANCE_ROW++;
+		DIVE_DECEL_ROW++;
 		MIDAIR_TYPE_ROW++;
 		GRAVITY_ROW++;
-		HYPEROPTIMIZE_ROW++;
+		HYPEROPTIMIZE_ROW++;		
 		AXIS_ORDER_ROW++;
 		CAMERA_TYPE_ROW++;
 		CAMERA_ROW++;
@@ -140,6 +144,8 @@ public class VectorCalculator extends JPanel {
 		INITIAL_HORIZONTAL_SPEED_ROW--;
 		VECTOR_DIRECTION_ROW--;
 		DIVE_CAP_BOUNCE_ANGLE_ROW--;
+		DIVE_CAP_BOUNCE_TOLERANCE_ROW--;
+		DIVE_DECEL_ROW--;
 		MIDAIR_TYPE_ROW--;
 		GRAVITY_ROW--;
 		HYPEROPTIMIZE_ROW--;
@@ -207,7 +213,9 @@ public class VectorCalculator extends JPanel {
 		{"Moonwalk Frames", p.framesMoonwalk},
 		{"Initial Horizontal Speed", (int) p.initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
-		{"Edge Cap Bounce Angle", "0"},
+		{"Edge Cap Bounce Angle", p.diveCapBounceAngle},
+		{"Edge Cap Bounce Tolerance", p.diveCapBounceTolerance},
+		{"First Dive Deceleration", "0"},
 		{"Midairs", "Spinless"},
 		{"Gravity", "Regular"},
 		{"Hyperoptimize Cap Throws", "True"},
@@ -553,7 +561,11 @@ public class VectorCalculator extends JPanel {
 			genPropertiesTable.setValueAt("Left", VECTOR_DIRECTION_ROW, 1);
 		}
 		p.diveCapBounceAngle = pl.diveCapBounceAngle;
+		p.diveCapBounceTolerance = pl.diveCapBounceTolerance;
+		p.diveFirstFrameDecel = pl.diveFirstFrameDecel;
 		genPropertiesTable.setValueAt(p.diveCapBounceAngle, DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+		genPropertiesTable.setValueAt(p.diveCapBounceTolerance, DIVE_CAP_BOUNCE_TOLERANCE_ROW, 1);
+		genPropertiesTable.setValueAt(p.diveFirstFrameDecel, DIVE_DECEL_ROW, 1);
 		p.currentPresetIndex = pl.currentPresetIndex;
 		genPropertiesTable.setValueAt(midairPresetNames[p.currentPresetIndex], MIDAIR_TYPE_ROW, 1);
 		p.onMoon = pl.onMoon;
@@ -659,13 +671,15 @@ public class VectorCalculator extends JPanel {
 				if (solver.solve(3)) { //2 might even be okay for jumps with HCT
 					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
+						maximizer.alwaysDiveTurn = true;
 						maximizer.maximize();
 						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
-						maximizer.alwaysDiveTurn = true;
+						//maximizer.alwaysDiveTurn = true;
 						maximizer.maximize();
-						maximizer.alwaysDiveTurn = true;
+						//maximizer.alwaysDiveTurn = true;
 						possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+						genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
 						System.out.println("Possible: " + possible + " " + maximizer.ctType);
 						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
@@ -1086,10 +1100,48 @@ public class VectorCalculator extends JPanel {
 							p.diveCapBounceAngle = 0;
 							genPropertiesTable.setValueAt(0, row, 1);
 						}
-						if (p.diveCapBounceAngle > 41.2)
+						if (p.diveCapBounceAngle > 41.2) {
+							p.diveCapBounceAngle = 41.2;
 							genPropertiesTable.setValueAt(41.2, row, 1);
-						else if (p.diveCapBounceAngle < 0)
+						}
+						else if (p.diveCapBounceAngle < 0) {
+							p.diveCapBounceAngle = 0;
 							genPropertiesTable.setValueAt(0, row, 1);
+						}
+					}
+					else if (row == DIVE_CAP_BOUNCE_TOLERANCE_ROW) {
+						try {
+							p.diveCapBounceTolerance = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+						}
+						catch (NumberFormatException ex) {
+							p.diveCapBounceTolerance = 0;
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
+						if (p.diveCapBounceTolerance > 1) {
+							p.diveCapBounceTolerance = 1;
+							genPropertiesTable.setValueAt(1, row, 1);
+						}
+						else if (p.diveCapBounceTolerance < 0) {
+							p.diveCapBounceTolerance = 0;
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
+					}
+					else if (row == DIVE_DECEL_ROW) {
+						try {
+							p.diveFirstFrameDecel = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
+						}
+						catch (NumberFormatException ex) {
+							p.diveFirstFrameDecel = 0;
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
+						if (p.diveFirstFrameDecel > .5) {
+							p.diveFirstFrameDecel = .5;
+							genPropertiesTable.setValueAt(1, row, 1);
+						}
+						else if (p.diveFirstFrameDecel <= .05 && p.diveFirstFrameDecel != 0) { //can't have strength of less than or equal to .1 unless it is 0
+							p.diveFirstFrameDecel = 0;
+							genPropertiesTable.setValueAt(0, row, 1);
+						}
 					}
 					else if (row == MIDAIR_TYPE_ROW) {
 						int presetIndex = Arrays.asList(midairPresetNames).indexOf((String) genPropertiesTable.getValueAt(row, 1));

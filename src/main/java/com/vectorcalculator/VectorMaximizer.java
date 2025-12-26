@@ -223,10 +223,10 @@ public class VectorMaximizer {
 				hasRainbowSpin = true;
 				rainbowSpinFrames = movementFrames.get(i);
 			}
-			else if (movementNames.get(i).equals("Dive Cap Bounce")) {
-				hasDiveCapBounce = true;
-				preCapBounceDiveIndex = i - 1;
-			}
+			// else if (movementNames.get(i).equals("Dive Cap Bounce")) {
+			// 	hasDiveCapBounce = true;
+			// 	preCapBounceDiveIndex = i - 1;
+			// }
 		}
 		
 		motions = new SimpleMotion[movementNames.size()];
@@ -899,9 +899,13 @@ public class VectorMaximizer {
 			// 	}
 			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
 			// }
-			else if (movementNames.get(j).equals("Dive") && diveTurn) {
+			else if (movementNames.get(j).equals("Dive")) {
+				preCapBounceDiveIndex = j;
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
+				if (!diveTurn) {
+					((DiveTurn) motionGroup[i]).setHoldingAngle(0);
+				}
 			}
 			else
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
@@ -1005,6 +1009,7 @@ public class VectorMaximizer {
 		//currentVectorRight = rightVector;
 
 		diveCapBounceAngle = p.diveCapBounceAngle;
+		firstFrameDecel = p.diveFirstFrameDecel;
 
 		if (p.angleType == AngleType.BOTH) {
 			if (rightVector) {
@@ -1665,7 +1670,7 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 30, edgeCBIncrement = .04;
+	public double edgeCBMin = 0, edgeCBMax = 30;
 	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowCT = can check for regular single throws
@@ -1707,7 +1712,7 @@ public class VectorMaximizer {
 				
 				boolean found = false;
 				boolean overshot = false;
-				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += edgeCBIncrement) {
+				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += p.diveCapBounceTolerance) {
 					diveCapBounceAngle = edgeCB;
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					int cbFrame = getCapBounceFrame(ct);
@@ -1737,6 +1742,7 @@ public class VectorMaximizer {
 						diveCapBounceAngle = highAngle - 1;
 					}
 					p.diveCapBounceAngle = diveCapBounceAngle;
+					p.diveFirstFrameDecel = firstFrameDecel;
 					System.out.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					return true;
