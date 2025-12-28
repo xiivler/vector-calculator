@@ -1165,44 +1165,7 @@ public class VectorMaximizer {
 		}
 
 		//rotating motions to the right angle
-		adjustAngle();
-		/* 
-		double unadjustedTargetAngle = Math.atan(bestDispX / bestDispZ);
-		if (unadjustedTargetAngle < 0)
-			unadjustedTargetAngle += Math.PI;
-		Debug.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
-		double adjustment;
-		if (targetAngleGiven) {
-			//adjustment = givenAngle - unadjustedTargetAngle;
-			adjustment = targetAngle - unadjustedTargetAngle;
-			initialAngle = Math.PI / 2 + adjustment;
-			//targetAngle = givenAngle;
-		}
-		else {
-			Debug.println("hi");
-			//adjustment = givenAngle - Math.PI / 2;
-			adjustment = initialAngle - Math.PI / 2;
-			if (rightVector) {
-				adjustment -= rcTrueInitialAngleDiff;
-			}
-			else {
-				adjustment += rcTrueInitialAngleDiff;
-			}
-			//initialAngle = givenAngle;
-			targetAngle = unadjustedTargetAngle + adjustment;
-		}
-		for (int i = 0; i < motions.length; i++) {
-			motions[i].adjustInitialAngle(adjustment);
-			if (motions[i].movement.movementType.equals("Falling") && i > 0)
-				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
-			Debug.println(motions[i].movement.movementType + " motion angle:" + Math.toDegrees(motions[i].initialAngle));
-		}
-		if (initialAngle < 0)
-			initialAngle += 2 * Math.PI;
-		if (targetAngle < 0)
-			targetAngle += 2 * Math.PI;
-		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
-		Debug.println("Target angle:" + Math.toDegrees(targetAngle)); */
+		adjustToGivenAngle();
 		
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
@@ -1670,8 +1633,8 @@ public class VectorMaximizer {
 			ct.calcDispY();
 			if (hasVariableCapThrow1Falling) {
 				SimpleMotion falling = motions[variableCapThrow1Index + 1];
+				falling.setInitialAngle(ct.finalAngle);
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
-				//falling.setInitialAngle(ct.finalAngle);
 				falling.calcDispDispCoordsAngleSpeed();
 				falling.calcDispY();
 				//Debug.println(falling.dispX + ", " + falling.dispY + ", " + falling.dispZ);
@@ -1701,6 +1664,7 @@ public class VectorMaximizer {
 		double highAngle = Double.MIN_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
 		DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
+		//ComplexVector capThrow = (ComplexVector) motions[variableCapThrow1Index];
 		for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += firstFrameDecelIncrement) {
 		//for (double endDecel = 0; endDecel <= 15; endDecel += .5) {
 			if (firstFrameDecel > 0 && firstFrameDecel / .5 <= .1) { //can't hold back this shallow
@@ -1735,6 +1699,7 @@ public class VectorMaximizer {
 						break;
 					}
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
+
 					int cbFrame = getCapBounceFrame(ct);
 					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
 					if (cbFrame == targetCBFrame) {
@@ -1765,7 +1730,7 @@ public class VectorMaximizer {
 					p.diveFirstFrameDecel = firstFrameDecel;
 					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
-					adjustAngle();
+					//adjustToGivenAngle();
 					
 					return true;
 				}
@@ -1776,7 +1741,7 @@ public class VectorMaximizer {
 	}
 
 	//adjusts the angle of everything so it is in the direction of the given target or initial angle
-	public void adjustAngle() {
+	public void adjustToGivenAngle() {
 		motions[0].adjustInitialAngle(-angleAdjustment); //undo any previous angle adjustment
 		for (int i = 0; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
