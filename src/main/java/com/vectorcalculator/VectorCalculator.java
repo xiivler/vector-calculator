@@ -673,11 +673,11 @@ public class VectorCalculator extends JPanel {
 					if (maximizer != null) {
 						maximizer.alwaysDiveTurn = true;
 						maximizer.maximize();
+						//System.out.println(maximizer.variableCapThrow1FallingFrames);
+						//System.out.println(maximizer.fallingFrames);
 						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
-						//maximizer.alwaysDiveTurn = true;
-						maximizer.maximize();
-						//maximizer.alwaysDiveTurn = true;
-						possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
+						//maximizer.maximize();
+						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
 						genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
 						System.out.println("Possible: " + possible + " " + maximizer.ctType);

@@ -387,6 +387,7 @@ public class VectorDisplayWindow {
 					int input1 = motion.movement.inputs1.get(i);
 					if (index == maximizer.variableCapThrow1Index) {
 						input1 = Movement.CT_INPUT[maximizer.ctType];
+						motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
 					}
 					if (input1 >= Inputs.M && shiftMotion) {
 						offset = -2;

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class Movement {
 	
-	public static final int CT = 0, MCCTU = 1, MCCTD = 2, MCCTL = 3, MCCTR = 4, DT = 5,
-							TT = 5, TTU = 6, TTD = 7, TTL = 8, TTR = 9;
-	public static final int CT_COUNT = 10; //number of possibilities
+	public static final int MCCTU = 0, MCCTD = 1, MCCTL = 2, MCCTR = 3, CT = 4, DT = 5,
+							TT = 6, TTU = 7, TTD = 8, TTL = 9, TTR = 10;
+	public static final int CT_COUNT = 11; //number of possibilities
 	public static final double CT_DISP_F = 678;
 	public static final double CT_DISP_V = 70;
 	public static final double CT_DISP_S = 0;
@@ -29,13 +29,14 @@ public class Movement {
 	public static final double TTL_DISP_S = -10.641;
 	public static final double TTR_DISP_V = 70;
 	public static final double TTR_DISP_S = 10.641;
-	public static final int[] CT_FRAMES = {9, 8, 8, 8, 8, 8, 3, 3, 3, 3, 3};
-	public static final int[] CT_INPUT = {Inputs.Y, Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR, Inputs.Y, Inputs.Y, Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR};
-	public static final double[][] CT_DISPS = 	{{CT_DISP_F, CT_DISP_V, CT_DISP_S},
-												{CT_DISP_F, MCCTU_DISP_V, MCCTU_DISP_S},
+	public static final int[] CT_FRAMES = {8, 8, 8, 8, 9, 8, 3, 3, 3, 3, 3};
+	public static final int[] CT_INPUT = {Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR, Inputs.Y, Inputs.Y, Inputs.Y, Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR};
+	public static final String[] CT_NAMES = {"Down MCCT", "Up MCCT", "Left MCCT", "Right MCCT", "Button Single Throw", "Button Double Throw", "Button TT", "Down TT", "Up TT", "Left TT", "Right TT"};
+	public static final double[][] CT_DISPS = 	{{CT_DISP_F, MCCTU_DISP_V, MCCTU_DISP_S},
 												{CT_DISP_F, MCCTD_DISP_V, MCCTD_DISP_S},
 												{CT_DISP_F, MCCTL_DISP_V, MCCTL_DISP_S},
 												{CT_DISP_F, MCCTR_DISP_V, MCCTR_DISP_S},
+												{CT_DISP_F, CT_DISP_V, CT_DISP_S},
 												{CT_DISP_F, CT_DISP_V, CT_DISP_S},
 												{TT_DISP_F, TT_DISP_V, TT_DISP_S},
 												{TT_DISP_F, TTU_DISP_V, TTU_DISP_S},
