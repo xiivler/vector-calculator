@@ -66,6 +66,8 @@ public class VectorMaximizer {
 	boolean hasRainbowSpin = false;
 	boolean simpleTech = false;
 	boolean hasDiveCapBounce = true;
+
+	boolean only_maximize_variableAngle1 = false;
 	
 	int variableCapThrow1Index;
 	int variableMovement2Index;
@@ -76,6 +78,7 @@ public class VectorMaximizer {
 	int preCapBounceDiveIndex = -1;
 
 	ComplexVector variableCapThrow1Vector;
+	ComplexVector variableMovement2Vector;
 	int variableCapThrow1Frames;
 	int variableCapThrow1FallingFrames;
 	double motionGroup1FinalAngle;
@@ -1035,7 +1038,10 @@ public class VectorMaximizer {
 		}
 
 		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
-		if (hasVariableRollCancel) {
+		if (only_maximize_variableAngle1) {
+			maximize_variableAngle1();
+		}
+		else if (hasVariableRollCancel) {
 			if (movementNames.get(0).equals("Optimal Distance RCV")) {
 				String bestRCName = "";
 				int bestRCFrames = 0;
@@ -1167,6 +1173,8 @@ public class VectorMaximizer {
 		//rotating motions to the right angle
 		adjustToGivenAngle();
 		
+		System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
+		System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
 		return bestDisp;
@@ -1350,6 +1358,7 @@ public class VectorMaximizer {
 			//test various angles for the first cap throw
 			//for (int i = 0; i < numSteps; i++) {
 		//	for (int i = 0; i < 1; i++) {
+		
 			double low = 0;
 			double high = Math.PI / 2;
 			double med = Math.PI / 4;
@@ -1360,10 +1369,16 @@ public class VectorMaximizer {
 			double highMedDisp;
 			double radius = Math.PI / 8;
 
+			//skips this step
+			if (only_maximize_variableAngle1) {
+				med = bestAngle1;
+				radius = 0;
+			}
+
 			//binary search-ish algorithm to find maximum
 			//this works because the function is increasing/flat until the maximum, then decreasing/flat after
 			while (radius > Math.toRadians(.05)) {
-				//Debug.println("Med: " + Math.toDegrees(med));
+				Debug.println("Med: " + Math.toDegrees(med));
 				lowMed = med - radius;
 				highMed = med + radius;
 				lowMedDisp = calcDisp(lowMed);
@@ -1549,7 +1564,7 @@ public class VectorMaximizer {
 			initialForwardVelocity = listPreparer.initialVelocity;
 		
 		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity);
-		ComplexVector variableMovement2Vector = (ComplexVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, true);
+		variableMovement2Vector = (ComplexVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, true);
 		motions[variableMovement2Index] = variableMovement2Vector;
 		variableMovement2Vector.setInitialAngle(initialAngle); 
 		
@@ -1632,12 +1647,17 @@ public class VectorMaximizer {
 			ct.calcDispDispCoordsAngleSpeed();
 			ct.calcDispY();
 			if (hasVariableCapThrow1Falling) {
-				SimpleMotion falling = motions[variableCapThrow1Index + 1];
+				SimpleVector falling = (SimpleVector) motions[variableCapThrow1Index + 1];
 				falling.setInitialAngle(ct.finalAngle);
+				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
+				//System.out.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
+				//System.out.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
+				falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
 				falling.calcDispDispCoordsAngleSpeed();
 				falling.calcDispY();
 				//Debug.println(falling.dispX + ", " + falling.dispY + ", " + falling.dispZ);
+				//dive.setInitialAngle(bestAngle1Adjusted);
 				dive.setInitialCoordinates(falling.x0 + falling.dispX, falling.y0 + falling.dispY, falling.z0 + falling.dispZ);
 			}
 			else {
@@ -1660,6 +1680,20 @@ public class VectorMaximizer {
 	//ctType is the ct that worked;
 	//currently does not recalculate rest of jump to be optimal, but maybe it should
 	public boolean isDiveCapBouncePossible(boolean allowButtonST, boolean allowST, boolean allowDT, boolean allowTT) {
+		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
+		for (int i = 0; i < motions.length; i++) {
+			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle1Adjusted);
+			}
+			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle2Adjusted);
+			}
+			else if (i > 0) {
+				motions[i].setInitialAngle(motions[i - 1].finalAngle);
+			}
+			motions[i].calcDispDispCoordsAngleSpeed();
+		}
+
 		double lowAngle = Double.MIN_VALUE;
 		double highAngle = Double.MIN_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
@@ -1730,8 +1764,12 @@ public class VectorMaximizer {
 					p.diveFirstFrameDecel = firstFrameDecel;
 					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
-					//adjustToGivenAngle();
-					
+					getCapBounceFrame(ct); //run again to adjust the falling vector to be correct
+					only_maximize_variableAngle1 = true;
+					maximize();
+					//maximize_variableAngle1();					
+					//calcDisp(bestAngle1);
+					adjustToGivenAngle();
 					return true;
 				}
 			}
@@ -1742,7 +1780,7 @@ public class VectorMaximizer {
 
 	//adjusts the angle of everything so it is in the direction of the given target or initial angle
 	public void adjustToGivenAngle() {
-		motions[0].adjustInitialAngle(-angleAdjustment); //undo any previous angle adjustment
+		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
 		for (int i = 0; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
 				motions[i].setInitialAngle(bestAngle1Adjusted);
