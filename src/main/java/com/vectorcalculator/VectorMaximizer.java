@@ -48,6 +48,7 @@ public class VectorMaximizer {
 	boolean targetAngleGiven;
 	double initialAngle;
 	double targetAngle;
+	double angleAdjustment = 0;
 	
 	boolean rightVector;
 	boolean currentVectorRight;
@@ -1157,8 +1158,15 @@ public class VectorMaximizer {
 				motionGroup2[i].adjustInitialAngle(adjustment);
 		}
 		
+		//calculating vertical velocity
+		for (int i = 0; i < motions.length; i++) {
+			if (motions[i].movement.movementType.equals("Falling") && i > 0)
+				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
+		}
+
 		//rotating motions to the right angle
-		
+		adjustAngle();
+		/* 
 		double unadjustedTargetAngle = Math.atan(bestDispX / bestDispZ);
 		if (unadjustedTargetAngle < 0)
 			unadjustedTargetAngle += Math.PI;
@@ -1194,7 +1202,7 @@ public class VectorMaximizer {
 		if (targetAngle < 0)
 			targetAngle += 2 * Math.PI;
 		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
-		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
+		Debug.println("Target angle:" + Math.toDegrees(targetAngle)); */
 		
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
@@ -1757,11 +1765,60 @@ public class VectorMaximizer {
 					p.diveFirstFrameDecel = firstFrameDecel;
 					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
+					adjustAngle();
+					
 					return true;
 				}
 			}
 		}
 		// System.out.println("NO!");
 		return false;
+	}
+
+	//adjusts the angle of everything so it is in the direction of the given target or initial angle
+	public void adjustAngle() {
+		motions[0].adjustInitialAngle(-angleAdjustment); //undo any previous angle adjustment
+		for (int i = 0; i < motions.length; i++) {
+			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle1Adjusted);
+			}
+			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle2Adjusted);
+			}
+			else if (i > 0) {
+				motions[i].setInitialAngle(motions[i - 1].finalAngle);
+			}
+			motions[i].calcDispDispCoordsAngleSpeed();
+		}
+		sumXDisps(motions);
+		sumYDisps(motions);
+		double unadjustedTargetAngle = Math.atan(dispX / dispZ);
+		if (unadjustedTargetAngle < 0)
+			unadjustedTargetAngle += Math.PI;
+		Debug.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
+		if (targetAngleGiven) {
+			angleAdjustment = targetAngle - unadjustedTargetAngle;
+			initialAngle = Math.PI / 2 + angleAdjustment;
+		}
+		else {
+			Debug.println("hi");
+			angleAdjustment = initialAngle - Math.PI / 2;
+			if (rightVector) {
+				angleAdjustment -= rcTrueInitialAngleDiff;
+			}
+			else {
+				angleAdjustment += rcTrueInitialAngleDiff;
+			}
+			targetAngle = unadjustedTargetAngle + angleAdjustment;
+		}
+		for (int i = 0; i < motions.length; i++) {
+			motions[i].adjustInitialAngle(angleAdjustment);
+		}
+		if (initialAngle < 0)
+			initialAngle += 2 * Math.PI;
+		if (targetAngle < 0)
+			targetAngle += 2 * Math.PI;
+		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
+		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
 	}
 }
