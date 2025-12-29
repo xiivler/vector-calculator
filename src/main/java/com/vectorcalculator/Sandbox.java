@@ -17,15 +17,15 @@ public class Sandbox {
         int[][] possible = new int[41][41];
         double[][] firstFrameDecels = new double[41][41];
         
-        for (int i = 20; i <= 40; i++) {
-            for (int j = 20; j <= 40; j++) {
+        for (int i = 31; i <= 31; i++) {
+            for (int j = 25; j <= 25; j++) {
                 //try {
                 if (i < 3 || j < 11) {
                     possible[i][j] = -1;
                     continue;
                 }
                     //System.out.println(i + ", " + j);
-                    Properties.p.initialFrames = 90;
+                    Properties.p.initialFrames = 73;
                     preset[0][1] = i;
                     preset[1][1] = j;
                     VectorCalculator.addPreset(preset);
@@ -39,12 +39,7 @@ public class Sandbox {
                     Properties.p.diveCapBounceAngle = 12;
                     maximizer.maximize();
                     if (maximizer != null) {
-                        if (maximizer.isDiveCapBouncePossible(true, true, true, true)) {
-                            possible[i][j] = maximizer.ctType;
-                        }
-                        else {
-                            possible[i][j] = -1;
-                        }
+                        possible[i][j] = maximizer.isDiveCapBouncePossible(true, true, true, true, true);
                         if (i < 40 && possible[i][j] != basePossible[i][j]) {
                             System.out.println("Difference at (" + i + ", " + j + "): " + possible[i][j] + " vs " + basePossible[i][j]);
                         }
@@ -111,9 +106,20 @@ public class Sandbox {
 
     public static void printArray(int[][] arr) {
         System.out.print("{");
-        for (int i = 0; i <= 40; i++) {
+        for (int i = 0; i < arr.length; i++) {
             String end = ", ";
-            if (i == 39) {
+            if (i == arr.length - 1) {
+                end = "}";
+            }
+            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+        }
+    }
+
+    public static void printArray(double[][] arr) {
+        System.out.print("{");
+        for (int i = 0; i < arr.length; i++) {
+            String end = ", ";
+            if (i == arr.length - 1) {
                 end = "}";
             }
             System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);

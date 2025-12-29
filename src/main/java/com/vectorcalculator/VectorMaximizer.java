@@ -1669,7 +1669,8 @@ public class VectorMaximizer {
 	}
 
 	public double edgeCBMin = 0, edgeCBMax = 30;
-	public double firstFrameDecelIncrement = 0.02;
+	public double firstFrameDecelIncrement = 0.005;
+	public double edgeCBAngleIncrement = 0.01;
 	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//allowButtonST = can check for regular single throws
@@ -1679,7 +1680,7 @@ public class VectorMaximizer {
 	//diveCapBounceAngle is now one that works (also the value in Properties is this)
 	//ctType is the ct that worked;
 	//currently does not recalculate rest of jump to be optimal, but maybe it should
-	public boolean isDiveCapBouncePossible(boolean allowButtonST, boolean allowST, boolean allowDT, boolean allowTT) {
+	public int isDiveCapBouncePossible(boolean allowButtonST, boolean allowSideThrow, boolean allowST, boolean allowDT, boolean allowTT) {
 		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
 		for (int i = 0; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
@@ -1710,10 +1711,13 @@ public class VectorMaximizer {
 			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
 			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
 				// System.out.println("Testing throw type " + ct);
-				if ((!allowST || variableCapThrow1Frames < 9) && ct == Movement.CT) {
+				if ((!allowButtonST || variableCapThrow1Frames < 9) && ct == Movement.CT) {
 					continue;
 				}
-				else if ((!allowButtonST || variableCapThrow1Frames < 8) && (ct == Movement.CT || ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR)) {
+				else if (!allowSideThrow && (ct == Movement.MCCTL || ct == Movement.MCCTR || ct == Movement.TTL || ct == Movement.TTR)) {
+					continue;
+				}
+				else if ((!allowST || variableCapThrow1Frames < 8) && (ct == Movement.CT || ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR)) {
 					continue;
 				}
 				else if ((!allowDT || variableCapThrow1Frames < 8) && ct == Movement.DT) {
@@ -1727,7 +1731,7 @@ public class VectorMaximizer {
 				
 				boolean found = false;
 				boolean overshot = false;
-				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += p.diveCapBounceTolerance) {
+				for (double edgeCB = edgeCBMin; edgeCB <= edgeCBMax; edgeCB += edgeCBAngleIncrement) {
 					diveCapBounceAngle = edgeCB;
 					if (variableCapThrow1Frames <= 14 && edgeCB > 20) { //these cannot be turned as much without developing another method of turning
 						break;
@@ -1750,7 +1754,7 @@ public class VectorMaximizer {
 						overshot = true;
 					//diveCapBounceAngle += edgeCBIncrement;
 				}
-				if (found && highAngle > lowAngle) { //too high of a risk it won't actually work in game if they are the same
+				if (found && highAngle >= lowAngle + p.diveCapBounceTolerance) { //too high of a risk it won't actually work in game if they are the same
 					 Debug.println("Decel: " + firstFrameDecel);
 					 Debug.println("Found low: " + lowAngle);
 					 Debug.println("Found high: " + highAngle);
@@ -1771,12 +1775,12 @@ public class VectorMaximizer {
 					//maximize_variableAngle1();					
 					//calcDisp(bestAngle1);
 					adjustToGivenAngle();
-					return true;
+					return ctType;
 				}
 			}
 		}
 		// System.out.println("NO!");
-		return false;
+		return -1;
 	}
 
 	//adjusts the angle of everything so it is in the direction of the given target or initial angle

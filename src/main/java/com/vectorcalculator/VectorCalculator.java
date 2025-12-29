@@ -675,14 +675,14 @@ public class VectorCalculator extends JPanel {
 				Solver solver = new Solver();
 				//  for (double i = -50; i <= 50; i += 1) {
 				//  	p.y1 = i;
-				if (solver.solve(3)) { //2 might even be okay for jumps with HCT
+				if (solver.solve(4)) { //2 might even be okay for jumps with HCT
 					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
 						maximizer.alwaysDiveTurn = true;
 						maximizer.maximize();
 						//System.out.println(maximizer.variableCapThrow1FallingFrames);
 						//System.out.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
+						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, true, false) >= 0;
 						//maximizer.maximize();
 						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
