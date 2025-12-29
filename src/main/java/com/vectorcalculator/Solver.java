@@ -1,5 +1,6 @@
 package com.vectorcalculator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 
@@ -9,6 +10,7 @@ public class Solver {
     static final double LIMIT = 4; //if the final y height of the test is above this number, assume it can't be optimal
     //this limit takes a while for TT jumps
     static final double ERROR = .0001; //acceptable amount of error on double addition/subtraction
+    static final double BEST_RESULTS_RANGE = 5; //range of values worse than the current best to still test in full
 
     boolean singleThrowAllowed = true;
     boolean ttAllowed = false;
@@ -42,6 +44,8 @@ public class Solver {
     int delta = 0;
 
     double bestYDisp = 0; //for debug
+
+    ArrayList<DoubleIntArray> bestResults;
 
     public boolean solve(int delta) {
         //System.out.println(ctDivePossible[29][23]);
@@ -221,7 +225,7 @@ public class Solver {
                 // ctTypes[ctDuration][diveDuration] = ballparkMaximizer.isDiveCapBouncePossible(singleThrowAllowed, false, true, false, ttAllowed);
                 // diveDecels[ctDuration][diveDuration] = ballparkMaximizer.firstFrameDecel;
                 if (testCT(-1, .02, .1, true) >= 0) { //test quick and dirty first just to figure out if it is possible
-                    testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
+                    //testCT(ctType, .01, .05, false); //only test with smaller increment if it's already possible with larger increment
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -238,19 +242,35 @@ public class Solver {
 
         //while (singleThrowAllowed) {}
 
+        bestResults = new ArrayList<DoubleIntArray>();
+        bestResults.add(new DoubleIntArray(0, durations));
+
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
-        DoubleIntArray best = test(durations, delta, 0, y);
-        test(best.intArray);
+        int[] bestDurations = test(durations, delta, 0, y).intArray;
+        double bestDisp = test(bestDurations, true);
         //System.out.println(test(best.intArray));
+
+        //test the runner-ups in more detail to see if any are actually better
+        for (int i = 1; i < bestResults.size(); i++) {
+            testDurations = bestResults.get(i).intArray;
+            double testDisp = test(testDurations, true);
+            if (testDisp > bestDisp) {
+                bestDisp = testDisp;
+                bestDurations = testDurations;
+            }
+            //System.out.println("Best Results " + i + ": " + testDisp);
+            //System.out.println(Arrays.toString(testDurations));
+        }
+        test(bestDurations, true);
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
         for (int i = 0; i < durations.length; i++) {
-            maxDelta = Math.max(maxDelta, Math.abs(durations[i] - best.intArray[i]));
-            deltas[i] = best.intArray[i] - durations[i];
+            maxDelta = Math.max(maxDelta, Math.abs(durations[i] - bestDurations[i]));
+            deltas[i] = bestDurations[i] - durations[i];
         }
-        double bestDisp = test(best.intArray); //for bestydisp debug
+        //double bestDisp = test(bestDurations, false); //for bestydisp debug
 
         System.out.println("Best Disp: " + bestDisp);
         // System.out.println("Delta: " + delta);
@@ -391,12 +411,31 @@ public class Solver {
             //      System.out.println(Arrays.toString(testDurations));
             //      System.out.println(test(testDurations));
             // }
-            return new DoubleIntArray(test(testDurations), testDurations);
+            DoubleIntArray result = new DoubleIntArray(test(testDurations, false), testDurations);
+            double currentBest = bestResults.get(0).d;
+            if (result.d > 0) {
+                if (result.d > currentBest) {
+                    // if (result.d >= currentBest + 1 || currentBest == 0) { //clearly better
+                    //     bestResults.clear();
+                    // }
+                    for (int i = bestResults.size() - 1; i >= 0; i--) { //remove ones it is clearly better than
+                        if (result.d >= bestResults.get(i).d + BEST_RESULTS_RANGE) {
+                            bestResults.remove(i);
+                        }
+                    }
+                    bestResults.add(0, result);
+                }
+                else if (result.d >= currentBest - BEST_RESULTS_RANGE) {
+                    bestResults.add(result);
+                }
+            }
+            return result;
         }
     }
 
-    public double test(int[] testDurations) {
+    public double test(int[] testDurations, boolean fullAccuracy) {
         iterations++;
+        boolean possible = true;
         // p.initialFrames = testDurations[0];
         // VectorCalculator.genPropertiesTable.setValueAt(testDurations[0], VectorCalculator.MOVEMENT_DURATION_ROW, 1);
         // int[][] midairs = preset.clone();
@@ -407,7 +446,9 @@ public class Solver {
         setDurations(testDurations);
         VectorMaximizer maximizer = VectorCalculator.getMaximizer();
         maximizer.alwaysDiveTurn = true;
-        maximizer.maximize_HCT_limit = Math.toRadians(8);
+        if (!fullAccuracy) {
+            maximizer.maximize_HCT_limit = Math.toRadians(8);
+        }
         if (diveCapBounceIndex >= 0) {
             p.diveFirstFrameDecel = diveDecels[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
             p.diveCapBounceAngle = edgeCBAngles[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
@@ -415,6 +456,14 @@ public class Solver {
             //maximizer.firstFrameDecel = p.diveFirstFrameDecel;
         }
         double disp = maximizer.maximize();
+        if (fullAccuracy) {
+            if (maximizer.isDiveCapBouncePossible(ctTypes[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]], singleThrowAllowed, false, true, false, ttAllowed) >= -1) { //also conforms the motion correctly
+                disp = maximizer.bestDisp;
+            }
+            else {
+                possible = false;
+            }
+        }
         double y = p.y0;
         SimpleMotion[] motions = maximizer.getMotions();
         if (VectorCalculator.stop) {
@@ -425,7 +474,7 @@ public class Solver {
             y += m.calcDispY();
         }
         // System.out.println(y);
-        if (y < p.y1 - ERROR) { //too low so won't work
+        if (y < p.y1 - ERROR || possible == false) { //too low so won't work
             badCalls++;
             System.out.println(Arrays.toString(testDurations) + ", " + y);
             return 0.0;
