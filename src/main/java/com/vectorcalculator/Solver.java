@@ -220,8 +220,8 @@ public class Solver {
                 // ballparkMaximizer.maximize();
                 // ctTypes[ctDuration][diveDuration] = ballparkMaximizer.isDiveCapBouncePossible(singleThrowAllowed, false, true, false, ttAllowed);
                 // diveDecels[ctDuration][diveDuration] = ballparkMaximizer.firstFrameDecel;
-                if (testCT(-1, .1) >= 0) {
-                    testCT(ctType, .01); //only test with smaller increment if it's already possible with larger increment
+                if (testCT(-1, .02, .1, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                    testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -266,7 +266,7 @@ public class Solver {
         return true;
     }
 
-    public int testCT(int throwType, double firstFrameDecelIncrement) {
+    public int testCT(int throwType, double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean zeroAngleTolerance) {
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
         ballparkMaximizer.alwaysDiveTurn = true;
@@ -274,8 +274,9 @@ public class Solver {
         ballparkMaximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
-        p.diveCapBounceTolerance = 0;
-        ballparkMaximizer.edgeCBAngleIncrement = 0.02;
+        if (zeroAngleTolerance)
+            p.diveCapBounceTolerance = 0;
+        ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();
         ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, true, false, ttAllowed);
         diveDecel = ballparkMaximizer.firstFrameDecel;
