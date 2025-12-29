@@ -66,6 +66,8 @@ public class Properties {
 	double customCameraAngle = 0;
     int[][] midairs = new int[][] { { VectorCalculator.MCCT, 31 }, { VectorCalculator.DIVE, 25 },
             { VectorCalculator.CB, 43 }, { VectorCalculator.MCCT, 31 }, { VectorCalculator.DIVE, 25 } };
+    int scriptType = VectorDisplayWindow.NX_TAS;
+    String scriptPath = "";
 
     //select the initial movement once these properties are saved
 

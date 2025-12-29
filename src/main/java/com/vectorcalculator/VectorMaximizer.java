@@ -67,7 +67,7 @@ public class VectorMaximizer {
 	boolean simpleTech = false;
 	boolean hasDiveCapBounce = true;
 
-	boolean only_maximize_variableAngle1 = false;
+	boolean only_maximize_variableAngle2 = false;
 	
 	int variableCapThrow1Index;
 	int variableMovement2Index;
@@ -1038,7 +1038,7 @@ public class VectorMaximizer {
 		}
 
 		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
-		if (only_maximize_variableAngle1) {
+		if (only_maximize_variableAngle2) {
 			maximize_variableAngle1();
 		}
 		else if (hasVariableRollCancel) {
@@ -1173,8 +1173,8 @@ public class VectorMaximizer {
 		//rotating motions to the right angle
 		adjustToGivenAngle();
 		
-		System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
-		System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
+		//System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
+		//System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
 		return bestDisp;
@@ -1370,7 +1370,7 @@ public class VectorMaximizer {
 			double radius = Math.PI / 8;
 
 			//skips this step
-			if (only_maximize_variableAngle1) {
+			if (only_maximize_variableAngle2) {
 				med = bestAngle1;
 				radius = 0;
 			}
@@ -1378,7 +1378,7 @@ public class VectorMaximizer {
 			//binary search-ish algorithm to find maximum
 			//this works because the function is increasing/flat until the maximum, then decreasing/flat after
 			while (radius > Math.toRadians(.05)) {
-				Debug.println("Med: " + Math.toDegrees(med));
+				//Debug.println("Med: " + Math.toDegrees(med));
 				lowMed = med - radius;
 				highMed = med + radius;
 				lowMedDisp = calcDisp(lowMed);
@@ -1765,8 +1765,9 @@ public class VectorMaximizer {
 					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					getCapBounceFrame(ct); //run again to adjust the falling vector to be correct
-					only_maximize_variableAngle1 = true;
+					only_maximize_variableAngle2 = true;
 					maximize();
+					only_maximize_variableAngle2 = false;
 					//maximize_variableAngle1();					
 					//calcDisp(bestAngle1);
 					adjustToGivenAngle();

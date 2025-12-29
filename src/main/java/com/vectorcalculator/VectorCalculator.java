@@ -214,7 +214,7 @@ public class VectorCalculator extends JPanel {
 		{"Initial Horizontal Speed", (int) p.initialHorizontalSpeed},
 		{"Initial Vector Direction", "Left"},
 		{"Edge Cap Bounce Angle", p.diveCapBounceAngle},
-		{"Edge Cap Bounce Tolerance", p.diveCapBounceTolerance},
+		{"Edge Cap Bounce Angle Tolerance", p.diveCapBounceTolerance},
 		{"First Dive Deceleration", "0"},
 		{"Midairs", "Spinless"},
 		{"Gravity", "Regular"},
@@ -604,6 +604,13 @@ public class VectorCalculator extends JPanel {
 		p.midairs = pl.midairs;
 		addPreset(p.midairs);
 		
+		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
+
+		p.scriptType = pl.scriptType;
+		p.scriptPath = pl.scriptPath;
+
+		VectorDisplayWindow.initialize();
+		
 		if (initialized && defaults && Properties.isUnsaved()) {
 			saved = false;
 			f.setTitle("*" + projectName);
@@ -875,8 +882,8 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.setColumnSelectionAllowed(true);
 		genPropertiesTable.getTableHeader().setReorderingAllowed(false);
 		
-		genPropertiesTable.getColumnModel().getColumn(0).setMinWidth(260);
-		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(260);
+		genPropertiesTable.getColumnModel().getColumn(0).setMinWidth(265);
+		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(265);
 		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
 		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * (genProperties.length + 2) + 25));
@@ -1326,6 +1333,8 @@ public class VectorCalculator extends JPanel {
 		loadProperties(userDefaults, true);
 		p.file = null; //so we don't save to it
 		initialized = true;
+
+		System.out.println("Script Type: " + p.scriptType);
 
 		//CREATING THE WINDOW
 		

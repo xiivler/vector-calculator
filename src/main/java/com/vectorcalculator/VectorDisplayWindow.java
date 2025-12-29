@@ -153,11 +153,16 @@ public class VectorDisplayWindow {
 		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS (Practice Mod)", "TSV-TAS (Lunakit)"});
 		scriptTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (scriptTypeComboBox.getSelectedIndex() == TSV_TAS_2) {
+				p.scriptType = scriptTypeComboBox.getSelectedIndex();
+				if (p.scriptType == TSV_TAS_2) {
 					setShiftMotion(true);
 				}
 				else {
 					setShiftMotion(false);
+				}
+				if (Properties.isUnsaved()) {
+					VectorCalculator.saved = false;
+					VectorCalculator.f.setTitle("*" + VectorCalculator.projectName);
 				}
 			}
 		});
@@ -216,6 +221,11 @@ public class VectorDisplayWindow {
 			}
 			else {
 				create.setText("Create");
+			}
+			p.scriptPath = scriptPath;
+			if (Properties.isUnsaved()) {
+				VectorCalculator.saved = false;
+				VectorCalculator.f.setTitle("*" + VectorCalculator.projectName);
 			}
 		}
 		else {
@@ -280,6 +290,14 @@ public class VectorDisplayWindow {
 	
 	public static void clearDataTable() {
 		dataTableModel.setRowCount(0);
+	}
+
+	public static void initialize() {
+		shiftMotion = (p.scriptType == TSV_TAS_2);
+		scriptPath = p.scriptPath;
+		scriptPathField.setText(p.scriptPath);
+		scriptFile = new File(p.scriptPath);
+		scriptTypeComboBox.setSelectedIndex(p.scriptType);
 	}
 	
 	public static void generateData(VectorMaximizer maximizer, double initialAngle, double targetAngle) {
