@@ -427,7 +427,7 @@ public class VectorCalculator extends JPanel {
 				chooseJumpFrames = true;
 				p.framesJump = 10;
 			}
-			genPropertiesModel.setValueAt(p.framesJump, HOLD_JUMP_FRAMES_ROW, 1);	
+			genPropertiesModel.setValueAt(p.framesJump, HOLD_JUMP_FRAMES_ROW, 1);
 		}
 		else {
 			chooseJumpFrames = false;
@@ -682,7 +682,7 @@ public class VectorCalculator extends JPanel {
 						maximizer.maximize();
 						//System.out.println(maximizer.variableCapThrow1FallingFrames);
 						//System.out.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(true, true, true, true, false) >= 0;
+						boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
 						//maximizer.maximize();
 						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
@@ -1334,7 +1334,7 @@ public class VectorCalculator extends JPanel {
 		p.file = null; //so we don't save to it
 		initialized = true;
 
-		System.out.println("Script Type: " + p.scriptType);
+		//System.out.println("Script Type: " + p.scriptType);
 
 		//CREATING THE WINDOW
 		

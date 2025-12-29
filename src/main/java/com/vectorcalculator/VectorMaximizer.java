@@ -1668,11 +1668,12 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 0, edgeCBMax = 30;
+	public double edgeCBMin = 12, edgeCBMax = 26;
 	public double firstFrameDecelIncrement = 0.005;
 	public double edgeCBAngleIncrement = 0.01;
 	//public int edgeCBSteps = 30 * 101;
 	//sees if the dive will actually bounce on cappy in the requested number of frames
+	//throwType is the type of throw to check (set to -1 to check all throw types that satisfy the booleans afterward)
 	//allowButtonST = can check for regular single throws
 	//allowST = can check for motion or regular single throws
 	//allowDT = can check for double throws
@@ -1680,7 +1681,7 @@ public class VectorMaximizer {
 	//diveCapBounceAngle is now one that works (also the value in Properties is this)
 	//ctType is the ct that worked;
 	//currently does not recalculate rest of jump to be optimal, but maybe it should
-	public int isDiveCapBouncePossible(boolean allowButtonST, boolean allowSideThrow, boolean allowST, boolean allowDT, boolean allowTT) {
+	public int isDiveCapBouncePossible(int throwType, boolean allowButtonST, boolean allowSideThrow, boolean allowST, boolean allowDT, boolean allowTT) {
 		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
 		for (int i = 0; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
@@ -1711,6 +1712,9 @@ public class VectorMaximizer {
 			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
 			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
 				// System.out.println("Testing throw type " + ct);
+				if (throwType != -1 && ct != throwType) {
+					continue;
+				}
 				if ((!allowButtonST || variableCapThrow1Frames < 9) && ct == Movement.CT) {
 					continue;
 				}

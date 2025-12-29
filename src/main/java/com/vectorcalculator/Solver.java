@@ -220,8 +220,8 @@ public class Solver {
                 // ballparkMaximizer.maximize();
                 // ctTypes[ctDuration][diveDuration] = ballparkMaximizer.isDiveCapBouncePossible(singleThrowAllowed, false, true, false, ttAllowed);
                 // diveDecels[ctDuration][diveDuration] = ballparkMaximizer.firstFrameDecel;
-                if (testCT(.1) >= 0) {
-                    testCT(.01); //only test with smaller increment if it's already possible with larger increment
+                if (testCT(-1, .1) >= 0) {
+                    testCT(ctType, .01); //only test with smaller increment if it's already possible with larger increment
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -243,14 +243,6 @@ public class Solver {
         DoubleIntArray best = test(durations, delta, 0, y);
         test(best.intArray);
         //System.out.println(test(best.intArray));
-
-        //possible improvements: some of these combinations will obviously not work
-        //every part of the motion should just have precalculated displacement tables so that the appropriate displacements can be added on
-        //one way to do this is to create a second maximizer at the start that has every input with the delta added on
-        //split this into however many separate arrays for easier use, one for each motion
-        //and then only check combos that have positive displacement
-        //might also be best just to pick the options that are closest to the target displacement, as those are likely to be best
-        //another option is to run worse versions of maximize() to start off with, and then for the best options run it again more accurately
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
@@ -274,7 +266,7 @@ public class Solver {
         return true;
     }
 
-    public int testCT(double firstFrameDecelIncrement) {
+    public int testCT(int throwType, double firstFrameDecelIncrement) {
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
         ballparkMaximizer.alwaysDiveTurn = true;
@@ -282,9 +274,10 @@ public class Solver {
         ballparkMaximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
-        //p.diveCapBounceTolerance = 0;
+        p.diveCapBounceTolerance = 0;
+        ballparkMaximizer.edgeCBAngleIncrement = 0.02;
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(singleThrowAllowed, false, true, false, ttAllowed);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, true, false, ttAllowed);
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;

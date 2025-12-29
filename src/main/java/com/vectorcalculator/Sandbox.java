@@ -39,7 +39,7 @@ public class Sandbox {
                     Properties.p.diveCapBounceAngle = 12;
                     maximizer.maximize();
                     if (maximizer != null) {
-                        possible[i][j] = maximizer.isDiveCapBouncePossible(true, true, true, true, true);
+                        possible[i][j] = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, true);
                         if (i < 40 && possible[i][j] != basePossible[i][j]) {
                             System.out.println("Difference at (" + i + ", " + j + "): " + possible[i][j] + " vs " + basePossible[i][j]);
                         }
