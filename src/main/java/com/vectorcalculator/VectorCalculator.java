@@ -742,7 +742,9 @@ public class VectorCalculator extends JPanel {
 					p.initialMovementName = "Optimal Distance Motion";
 				}
 				else {
-					maximizer = calculate();
+					maximizer = getMaximizer();
+					maximizer.maximize();
+					maximizer.adjustToGivenAngle();
 				}
 				if (maximizer != null) {
 					VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());

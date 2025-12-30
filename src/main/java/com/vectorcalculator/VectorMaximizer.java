@@ -1777,6 +1777,8 @@ public class VectorMaximizer {
 					maximize();
 					only_maximize_variableAngle2 = false;
 
+					//now recalculate the displacement of the full jump with the new cap throw angle, dive decel, etc.
+					//so that it can later be adjusted to the correct angle with a call to adjustToGivenAngle()
 					for (int i = variableCapThrow1Index; i < motions.length; i++) {
 						if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
 							motions[i].setInitialAngle(bestAngle1Adjusted);
@@ -1789,6 +1791,10 @@ public class VectorMaximizer {
 						}
 						motions[i].calcDispDispCoordsAngleSpeed();
 					}
+					sumXDisps(motions);
+					sumYDisps(motions);
+					bestDispX = dispX;
+					bestDispZ = dispZ;
 					//maximize_variableAngle1();					
 					//calcDisp(bestAngle1);
 					//adjustToGivenAngle();
@@ -1815,9 +1821,7 @@ public class VectorMaximizer {
 		// 	}
 		// 	motions[i].calcDispDispCoordsAngleSpeed();
 		// }
-		sumXDisps(motions);
-		sumYDisps(motions);
-		double unadjustedTargetAngle = Math.atan(dispX / dispZ);
+		double unadjustedTargetAngle = Math.atan(bestDispX / bestDispZ);
 		if (unadjustedTargetAngle < 0)
 			unadjustedTargetAngle += Math.PI;
 		Debug.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
