@@ -69,6 +69,17 @@ public class Properties {
     int scriptType = VectorDisplayWindow.NX_TAS;
     String scriptPath = "";
 
+    //static final double NO_GROUND = -1000000;
+
+    //new experimental settings
+    double groundUnderFirstGP = 0;
+    double groundUnderCB = 0;
+    double groundUnderSecondGP = 0;
+    boolean hasGroundUnderFirstGP = false;
+    boolean hasGroundUnderCB = false;
+    boolean hasGroundUnderSecondGP = false;
+    double upwarp = 0;
+
     //select the initial movement once these properties are saved
 
     public static boolean save(File file) {

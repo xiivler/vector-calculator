@@ -83,6 +83,8 @@ public class Movement {
 	double trueSpeedCap = 24; //jumps are always capped to 24
 	double recommendedInitialHorizontalSpeed = Double.MAX_VALUE; //only used for some movement types to suggest what the initial speed should be if it is less than their true speed cap
 	double fallSpeedCap = -35;
+
+	public static final double MIN_GP_HEIGHT = 40;
 	
 	String movementType;
 	String displayName;

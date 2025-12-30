@@ -29,6 +29,8 @@ public class Solver {
     int[] lastFrames;
     double[] y_vels;
     double[] efficiencies;
+    double[] final_y_heights; //the end y height of each motion
+    double[] y_heights;
 
     int[][] ctTypes;
     double[][] diveDecels;
@@ -38,7 +40,9 @@ public class Solver {
     double firstFrameDecel;
 
     int rainbowSpinIndex = -1;
-    int homingMCCTDuration = -1;
+    int homingMCCTIndex = -1;
+    int firstDiveIndex = -1;
+    int secondDiveIndex = -1;
     int diveCapBounceIndex = -1;
 
     int iterations = 0;
@@ -51,6 +55,18 @@ public class Solver {
 
     ArrayList<DoubleIntArray> bestResults;
 
+    public double[] getFinalYHeights(VectorMaximizer maximizer) {
+        maximizer.calcYDisps();
+        SimpleMotion[] motions = maximizer.getMotions();
+        //System.out.println(motions.length);
+        double y = p.y0 + VectorCalculator.getMoonwalkDisp();
+        final_y_heights = new double[motions.length];
+        for (int i = 0; i < motions.length; i++) {
+            y += motions[i].dispY;
+            final_y_heights[i] = y;
+        }
+        return final_y_heights;
+    }
     public boolean solve(int delta) {
         //System.out.println(ctDivePossible[29][23]);
         long startTime = System.currentTimeMillis();
@@ -74,6 +90,115 @@ public class Solver {
             singleThrowAllowed = true;
         int[][] unmodifiedPreset = VectorCalculator.midairPresets[p.currentPresetIndex];
         preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
+
+        //find locations of movements in the presets
+        for (int i = 0; i < preset.length; i++) {
+            preset[i][0] = unmodifiedPreset[i][0];
+            preset[i][1] = unmodifiedPreset[i][1];
+            if (preset[i][0] == VectorCalculator.RS)
+                rainbowSpinIndex = i + 1;
+            else if (preset[i][0] == VectorCalculator.HMCCT)
+                homingMCCTIndex = i + 1;
+            else if (preset[i][0] == VectorCalculator.CB && i > 0 && preset[i - 1][0] == VectorCalculator.DIVE) {
+                diveCapBounceIndex = i + 1;
+                firstDiveIndex = i;
+            }
+            else if (i == preset.length - 1 && preset[i][0] == VectorCalculator.DIVE)
+                secondDiveIndex = i + 1;
+        } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
+
+        //first, fix the preset so that it makes sense with the height of the ground
+        Movement.onMoon = p.onMoon;
+		//MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
+        //presetMaximizer.maximize();
+        
+        p.initialDispY = p.y1 - p.y0 - 1000;
+        p.initialFrames = VectorCalculator.initialMotion.calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+
+        p.durationFrames = true;
+
+        VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
+
+        p.hasGroundUnderFirstGP = true;
+        p.hasGroundUnderCB = true;
+        p.hasGroundUnderSecondGP = true;
+        p.groundUnderFirstGP = 100;
+        p.groundUnderCB = 300;
+        p.groundUnderSecondGP = -100;
+
+        double[] final_y_heights = getFinalYHeights(presetMaximizer);
+        int maximizer_firstGPIndex;
+        if (presetMaximizer.hasVariableCapThrow1Falling)
+            maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 2;
+        else
+            maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 1;
+        int maximizer_firstDiveIndex = -1;
+        int maximizer_capBounceIndex = -1;
+        if (presetMaximizer.movementNames.get(maximizer_firstGPIndex + 1).equals("Dive")) {
+            maximizer_firstDiveIndex = maximizer_firstGPIndex + 1; //different than later firstDiveIndex (do note)
+            maximizer_capBounceIndex = maximizer_firstDiveIndex + 1;
+        }
+        int maximizer_secondGPIndex;
+        if (presetMaximizer.hasVariableMovement2Falling)
+            maximizer_secondGPIndex = presetMaximizer.variableMovement2Index + 2;
+        else
+            maximizer_secondGPIndex = presetMaximizer.variableMovement2Index + 1;
+        int maximizer_secondDiveIndex = maximizer_secondGPIndex + 1;
+        if (p.hasGroundUnderFirstGP) {
+            while (final_y_heights[maximizer_firstGPIndex] < p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT) {
+                p.initialFrames--;
+                presetMaximizer.movementFrames.set(0, p.initialFrames);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+        }
+        if (p.hasGroundUnderCB) {
+            while (final_y_heights[maximizer_firstDiveIndex] <= p.groundUnderCB) {
+                p.initialFrames--;
+                presetMaximizer.movementFrames.set(0, p.initialFrames);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+        }
+        if (p.hasGroundUnderSecondGP) {
+            while (final_y_heights[maximizer_secondGPIndex] > Math.max(p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT,p.y1 - p.upwarp - 100)) {
+                preset[diveCapBounceIndex - 1][1]++;
+                presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+            while (final_y_heights[maximizer_secondGPIndex] < p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT) {
+                preset[diveCapBounceIndex - 1][1]--;
+                presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+            while (final_y_heights[maximizer_secondDiveIndex] > p.y1 - p.upwarp - 100) { //extend dive to target
+                System.out.println(final_y_heights[maximizer_secondDiveIndex]);
+                preset[secondDiveIndex - 1][1]++;
+                presetMaximizer.movementFrames.set(maximizer_secondDiveIndex, preset[secondDiveIndex - 1][1]);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+        }
+        else {
+            while (final_y_heights[maximizer_secondDiveIndex] > p.y1 - p.upwarp - 100) {
+                System.out.println(final_y_heights[maximizer_secondDiveIndex]);
+                preset[diveCapBounceIndex - 1][1]++;
+                presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
+                final_y_heights = getFinalYHeights(presetMaximizer);
+            }
+        }
+
+        System.out.println(Arrays.toString(final_y_heights));
+        VectorCalculator.addPreset(preset);
+        if (final_y_heights[0] != 0) {
+            return false;
+        }
+
+        //get the jump into shape with respect to ground height
+        //initial movement should be reduced until first cap throw final height is above the ground by 40 units (same with cb)
+        //cap bounce length should be reduced or increased until final cap throw height is above the ground by 40 units or final dive is more than 200? units below the end
+        //extend dive length until target height is reached if necessasry
+        //then recalculate
+
+        //IMPORTANT: at this point it is probably better just to get everything set up first, and THEN after all of the ballpark durations have been calculated run another calculation with the extra delta stuff for easier computation
+
         for (int i = 0; i < preset.length; i++) {
             preset[i][0] = unmodifiedPreset[i][0];
             if (preset[i][0] == VectorCalculator.RS) {
@@ -81,11 +206,16 @@ public class Solver {
                 preset[i][1] = unmodifiedPreset[i][1];
             }
             else if (preset[i][0] == VectorCalculator.HMCCT) {
-                homingMCCTDuration = i + 1;
+                homingMCCTIndex = i + 1;
                 preset[i][1] = unmodifiedPreset[i][1];
             }
             else if (preset[i][0] == VectorCalculator.CB && i > 0 && preset[i - 1][0] == VectorCalculator.DIVE) {
                 diveCapBounceIndex = i + 1;
+                firstDiveIndex = i;
+                preset[i][1] = unmodifiedPreset[i][1] + delta;
+            }
+            else if (i == preset.length - 1 && preset[i][0] == VectorCalculator.DIVE) {
+                secondDiveIndex = i + 1;
                 preset[i][1] = unmodifiedPreset[i][1] + delta;
             }
             else {
@@ -107,6 +237,9 @@ public class Solver {
         //now set the initial movement so the whole jump ends up lower than the target y position
         //the spinless preset results in 129.2 height gain and 200 is bigger so Mario will always start lower (could have different numbers for each preset)
         p.initialDispY = p.y1 - p.y0 - 1000; //could maybe be less, but want to make sure all movements can be shortened a lot
+        // if (p.hasGroundUnderFirstGP) { //make sure it ends 
+        //     p.initialDispY = Math.min(p.initialDispY, p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT - p.y0);
+        // }
         p.durationFrames = false;
 
         VectorMaximizer initialMaximizer = VectorCalculator.getMaximizer();
@@ -131,13 +264,14 @@ public class Solver {
         // System.out.println("Initial Frames: " + Arrays.toString(lastFrames));
 
         // System.out.println("Rainbow Spin Index: " + rainbowSpinIndex);
-        // System.out.println("Homing MCCT Index: " + homingMCCTDuration);
+        // System.out.println("Homing MCCT Index: " + homingMCCTIndex);
 
         double[][] info = null;
 
         //calculate efficiencies from every frame of the jump
         y_vels = new double[currentMotionLastFrame + 1];
         efficiencies = new double[currentMotionLastFrame + 1];
+        final_y_heights = new double[preset.length + 1];
 
         double x = p.x0;
         double y = p.y0;
@@ -156,6 +290,7 @@ public class Solver {
 			info = motion.calcFrameByFrame(); //seems inefficient because not all these values are needed
 			for (int i = 0; i < info.length; i++, row++) {
                 y_vels[row] = info[i][4];
+                //y_heights[row] = info[i][1];
 				if (info[i][4] < 0) { //how efficient the jump is
 					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - initialMaximizer.getTargetAngle());
 					efficiencies[row] = -1 / ((info[i][4] / speedInTargetDirection) - 1); //ranges from 0 to 1
@@ -168,16 +303,45 @@ public class Solver {
 			x = info[info.length - 1][0];
 			y = info[info.length - 1][1];
 			z = info[info.length - 1][2];
+            for (int i = 0; i < lastFrames.length; i++) {
+                if (row == lastFrames[i] + 1) {
+                    final_y_heights[i] = y;
+                }
+            }
 		}
+
+        //System.out.println(Arrays.toString(final_y_heights));
 
         double y_target = p.y1;
 
         //System.out.println(Arrays.toString(efficiencies));
 
+        //get the jump into shape with respect to ground height
+        //initial movement should be reduced until first cap throw final height is above the ground by 40 units
+        //cap bounce length should be reduced or increased until final cap throw height is above the ground by 40 units or final dive is more than 200? units below the end
+        //extend dive length until target height is reached if necessasry
+        //then recalculate
+
+        // if (p.hasGroundUnderFirstGP) {
+        //     while (final_y_heights[0] )
+        // }
+
+        //note: a frame of falling will still begin as long as rainbow spin ends above the ground
+
+        //conform rules:
+        //second to last frame of initial movement must be above the ground
+        //second to last frame of rainbow spin must be above the ground
+        //second to last frame of cap bounce must be above the ground
+        //second to last frame of each cap throw must be >= ground + MIN_GP_HEIGHT
+        //last frame of first dive must be above the ground
+
         //remove extra frames from adding them before to help with later calculations
+        
+        //while ()
+
         for (int i = 0; i < delta; i++) {
             for (int j = 0; j < preset.length + 1; j++) {
-                if (j != rainbowSpinIndex && j != homingMCCTDuration) {
+                if (j != rainbowSpinIndex && j != homingMCCTIndex) {
                     y -= y_vels[lastFrames[j]];
                     lastFrames[j]--;
                     durations[j]--;
@@ -185,8 +349,8 @@ public class Solver {
             }
         }
 
-        // System.out.println("Updated Durations: " + Arrays.toString(durations));
-        // System.out.println("Updated Last Frames: " + Arrays.toString(lastFrames));
+        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
 
         //remove the frames with the weakest efficiencies until Mario's height is above the target y position
         //this gives a ballpark estimate of the optimal frames
@@ -195,7 +359,7 @@ public class Solver {
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastFrames.length; i++) {
-                if (i != rainbowSpinIndex && i != homingMCCTDuration && efficiencies[lastFrames[i]] < worstEfficiency) {
+                if (i != rainbowSpinIndex && i != homingMCCTIndex && efficiencies[lastFrames[i]] < worstEfficiency) {
                     worstEfficiency = efficiencies[lastFrames[i]];
                     worstEfficiencyIndex = i;
                 }
@@ -345,7 +509,7 @@ public class Solver {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if (index == rainbowSpinIndex || index == homingMCCTDuration) {
+        if (index == rainbowSpinIndex || index == homingMCCTIndex) {
             return test(durations, delta, index + 1, y_pos);
         }
         if (index < durations.length - 1) {

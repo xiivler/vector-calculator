@@ -1166,7 +1166,7 @@ public class VectorMaximizer {
 				motionGroup2[i].adjustInitialAngle(adjustment);
 		}
 		
-		//calculating vertical velocity
+		//set up for calculating vertical velocity
 		for (int i = 0; i < motions.length; i++) {
 			if (motions[i].movement.movementType.equals("Falling") && i > 0)
 				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
@@ -1855,5 +1855,14 @@ public class VectorMaximizer {
 			targetAngle += 2 * Math.PI;
 		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
 		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
+	}
+
+	public void calcYDisps() { //calculates Y disps of every motion
+		calcMotionGroup(0, movementNames.size(), listPreparer.initialVelocity, p.framesJump);
+		for (int i = 0; i < motions.length; i++) {
+			if (motions[i].movement.movementType.equals("Falling") && i > 0)
+				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
+			motions[i].calcDispY();
+		}
 	}
 }
