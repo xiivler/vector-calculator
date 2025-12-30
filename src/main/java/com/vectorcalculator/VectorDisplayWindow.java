@@ -54,12 +54,13 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}};
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
 	static final int INFO_ANGLE_TYPE_ROW = 0;
 	static final int FINAL_POSITION_ROW = 1;
 	static final int HORIZONTAL_DISPLACEMENT_ROW = 2;
 	static final int VERTICAL_DISPLACEMENT_ROW = 3;
 	static final int TOTAL_FRAMES_ROW = 4;
+	static final int MADE_JUMP_ROW = 5;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -114,7 +115,7 @@ public class VectorDisplayWindow {
 		infoTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane infoScrollPane = new JScrollPane(infoTable);
-		infoScrollPane.setPreferredSize(new Dimension(500, 115));
+		infoScrollPane.setPreferredSize(new Dimension(500, 135));
 		
 		
 		//DATA TABLE
@@ -303,6 +304,8 @@ public class VectorDisplayWindow {
 	public static void generateData(VectorMaximizer maximizer, double initialAngle, double targetAngle) {
 		frame.setTitle("Calculations: " + VectorCalculator.projectName);
 
+		boolean madeJump = false;
+
 		VectorDisplayWindow.maximizer = maximizer;
 		VectorDisplayWindow.simpleMotions = maximizer.getMotions();
 		VectorDisplayWindow.initialAngle = initialAngle;
@@ -334,6 +337,10 @@ public class VectorDisplayWindow {
 		double x = p.x0;
 		double y = p.y0;
 		double z = p.z0;
+
+		double targetXDisp = p.x1 - p.x0;
+		double targetZDisp = p.z1 - p.z0;
+		double targetDisp = Math.sqrt(targetXDisp * targetXDisp + targetZDisp * targetZDisp);
 		
 		double[][] info = null;
 
@@ -434,10 +441,18 @@ public class VectorDisplayWindow {
 						}
 					}
 				}
+				x = info[i][0];
+				y = info[i][1];
+				z = info[i][2];
+				double dispX = p.x0 - x;
+				double dispZ = p.z0 - z;
+				if (y >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
+					madeJump = true;
+				}
 			}
-			x = info[info.length - 1][0];
-			y = info[info.length - 1][1];
-			z = info[info.length - 1][2];
+			//x = info[info.length - 1][0];
+			//y = info[info.length - 1][1];
+			//z = info[info.length - 1][2];
 			Debug.println(motion.movement.displayName);
 			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
@@ -468,6 +483,10 @@ public class VectorDisplayWindow {
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
+		if (madeJump)
+			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);
+		else
+			infoTableModel.setValueAt("No", MADE_JUMP_ROW, 1);
 	}
 	
 	public static void display() {

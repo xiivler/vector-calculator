@@ -10,10 +10,13 @@ public class Solver {
     static final double LIMIT = 4; //if the final y height of the test is above this number, assume it can't be optimal
     //this limit takes a while for TT jumps
     static final double ERROR = .0001; //acceptable amount of error on double addition/subtraction
-    static final double BEST_RESULTS_RANGE = 5; //range of values worse than the current best to still test in full
+    
+    double bestResultsRange = 5; //range of values worse than the current best to still test in full
 
     boolean singleThrowAllowed = true;
     boolean ttAllowed = false;
+
+    boolean hasRCV;
 
     Properties p = Properties.p;
 
@@ -91,6 +94,15 @@ public class Solver {
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
         VectorCalculator.addPreset(preset);
         //System.out.println("DCBI " + diveCapBounceIndex);
+
+        hasRCV = p.initialMovementName.contains("RCV");
+
+        // if (hasRCV) {
+        //     bestResultsRange = 3;
+        // }
+        // else {
+        //     bestResultsRange = 5;
+        // }
 
         //now set the initial movement so the whole jump ends up lower than the target y position
         //the spinless preset results in 129.2 height gain and 200 is bigger so Mario will always start lower (could have different numbers for each preset)
@@ -228,7 +240,7 @@ public class Solver {
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
                     diveTurns[ctDuration][diveDuration] = true;
                 }
-                else if (testCT(-1, .1, 1, true, false) >= 0) { //now test without turning the dive
+                else if (!hasRCV && testCT(-1, .1, 1, true, false) >= 0) { //now test without turning the dive (don't with RCVs because these can never be optimal for them)
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -303,6 +315,7 @@ public class Solver {
             ballparkMaximizer.edgeCBMax = 12;
         }
         ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
+        //ballparkMaximizer.maxRCVNudges = 5;
         ballparkMaximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
@@ -427,13 +440,13 @@ public class Solver {
                     //     bestResults.clear();
                     // }
                     for (int i = bestResults.size() - 1; i >= 0; i--) { //remove ones it is clearly better than
-                        if (result.d >= bestResults.get(i).d + BEST_RESULTS_RANGE) {
+                        if (result.d >= bestResults.get(i).d + bestResultsRange) {
                             bestResults.remove(i);
                         }
                     }
                     bestResults.add(0, result);
                 }
-                else if (result.d >= currentBest - BEST_RESULTS_RANGE) {
+                else if (result.d >= currentBest - bestResultsRange) {
                     bestResults.add(result);
                 }
             }
@@ -468,6 +481,8 @@ public class Solver {
 
         if (!fullAccuracy) {
             maximizer.maximize_HCT_limit = Math.toRadians(8);
+            maximizer.maxRCVNudges = 5;
+            maximizer.maxRCVFineNudges = 1;
         }
         if (diveCapBounceIndex >= 0) {
             p.diveFirstFrameDecel = diveDecels[ctDuration][diveDuration];
@@ -476,6 +491,7 @@ public class Solver {
         double disp = maximizer.maximize();
         if (fullAccuracy) {
             if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, true, false, ttAllowed) >= -1) { //also conforms the motion correctly
+                maximizer.recalculateDisps();
                 disp = maximizer.bestDisp;
             }
             else {

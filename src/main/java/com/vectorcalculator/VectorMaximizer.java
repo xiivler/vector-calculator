@@ -77,6 +77,9 @@ public class VectorMaximizer {
 	int rainbowSpinFrames;
 	int preCapBounceDiveIndex = -1;
 
+	int maxRCVNudges = 20;
+	int maxRCVFineNudges = 10;
+
 	ComplexVector variableCapThrow1Vector;
 	ComplexVector variableMovement2Vector;
 	int variableCapThrow1Frames;
@@ -1085,10 +1088,9 @@ public class VectorMaximizer {
 			double bestUnadjustedTargetAngle = Math.PI;
 			double unadjustedTargetAngle = Math.PI;
 			double increment = 0;
-			int maxCount = 20;
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
-			for (int i = 1; i <= maxCount; i++) {
+			for (int i = 1; i <= maxRCVNudges; i++) {
 				maximize_dive();
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -1102,7 +1104,7 @@ public class VectorMaximizer {
 					}
 				}
 				if (i == 1) {
-					increment = unadjustedTargetAngle * 2 / maxCount;
+					increment = unadjustedTargetAngle * 2 / maxRCVNudges;
 				}
 				if (rightVector) {
 					rcFinalAngleDiff -= increment;
@@ -1115,7 +1117,7 @@ public class VectorMaximizer {
 			//maximize_variableAngle1();
 
 			//hopefully it's small by now; fine tune by nudging by the difference between the initial and target angles
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < maxRCVFineNudges; i++) {
 				if (Math.abs(unadjustedTargetAngle) < Math.toRadians(0.00005)) {
 					break;
 				}
@@ -1773,37 +1775,41 @@ public class VectorMaximizer {
 					Debug.println(p.diveCapBounceAngle);
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 					getCapBounceFrame(ct); //run again to adjust the falling vector to be correct
-					only_maximize_variableAngle2 = true;
-					maximize();
-					only_maximize_variableAngle2 = false;
-
-					//now recalculate the displacement of the full jump with the new cap throw angle, dive decel, etc.
-					//so that it can later be adjusted to the correct angle with a call to adjustToGivenAngle()
-					for (int i = variableCapThrow1Index; i < motions.length; i++) {
-						if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
-							motions[i].setInitialAngle(bestAngle1Adjusted);
-						}
-						else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
-							motions[i].setInitialAngle(bestAngle2Adjusted);
-						}
-						else if (i > 0) {
-							motions[i].setInitialAngle(motions[i - 1].finalAngle);
-						}
-						motions[i].calcDispDispCoordsAngleSpeed();
-					}
-					sumXDisps(motions);
-					sumYDisps(motions);
-					bestDispX = dispX;
-					bestDispZ = dispZ;
-					//maximize_variableAngle1();					
-					//calcDisp(bestAngle1);
-					//adjustToGivenAngle();
 					return ctType;
 				}
 			}
 		}
 		// System.out.println("NO!");
 		return -1;
+	}
+
+	//recalculates displacement after calling isDiveCapBouncePossible()
+	public void recalculateDisps() {
+		only_maximize_variableAngle2 = true;
+		maximize();
+		only_maximize_variableAngle2 = false;
+
+		//now recalculate the displacement of the full jump with the new cap throw angle, dive decel, etc.
+		//so that it can later be adjusted to the correct angle with a call to adjustToGivenAngle()
+		for (int i = variableCapThrow1Index; i < motions.length; i++) {
+			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle1Adjusted);
+			}
+			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+				motions[i].setInitialAngle(bestAngle2Adjusted);
+			}
+			else if (i > 0) {
+				motions[i].setInitialAngle(motions[i - 1].finalAngle);
+			}
+			motions[i].calcDispDispCoordsAngleSpeed();
+		}
+		sumXDisps(motions);
+		sumYDisps(motions);
+		bestDispX = dispX;
+		bestDispZ = dispZ;
+		//maximize_variableAngle1();					
+		//calcDisp(bestAngle1);
+		//adjustToGivenAngle();
 	}
 
 	//adjusts the angle of everything so it is in the direction of the given target or initial angle

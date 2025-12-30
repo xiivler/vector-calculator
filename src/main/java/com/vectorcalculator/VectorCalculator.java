@@ -417,11 +417,12 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void updateInitialMovement(boolean suggestSpeed) {
+	public static void updateInitialMovement(boolean suggestSpeed, boolean capSpeed) {
 		initialMovement = new Movement(p.initialMovementName);
 		genPropertiesModel.setValueAt(p.initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
 		double suggestedSpeed = initialMovement.getSuggestedSpeed();
-		p.initialHorizontalSpeed = suggestedSpeed;
+		if (suggestSpeed)
+			p.initialHorizontalSpeed = suggestedSpeed;
 		if (initialMovement.variableJumpFrames()) {
 			if (!chooseJumpFrames) {
 				chooseJumpFrames = true;
@@ -453,7 +454,9 @@ public class VectorCalculator extends JPanel {
 				else
 					genPropertiesModel.setValueAt(initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
 			}
-			//TODO
+			else if (capSpeed) {
+				genPropertiesModel.setValueAt(Math.min(p.initialHorizontalSpeed, initialMovement.trueSpeedCap), INITIAL_HORIZONTAL_SPEED_ROW, 1);
+			}
 			else {
 				genPropertiesModel.setValueAt(p.initialHorizontalSpeed, INITIAL_HORIZONTAL_SPEED_ROW, 1);
 			}
@@ -539,7 +542,7 @@ public class VectorCalculator extends JPanel {
 		p.durationFrames = pl.durationFrames;
 		p.initialFrames = pl.initialFrames;
 		p.initialHorizontalSpeed = pl.initialHorizontalSpeed;
-		updateInitialMovement(false);
+		updateInitialMovement(false, false);
 		if (p.durationFrames) {
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Initial Movement Frames", MOVEMENT_DURATION_ROW, 0);
@@ -676,9 +679,13 @@ public class VectorCalculator extends JPanel {
 			 }
 			 else if (evt.getActionCommand() == "solve") {
 				Solver solver = new Solver();
+				int delta = 4;
+				if (p.initialMovementName.contains("RCV")) {
+					delta = 3;
+				}
 				//  for (double i = -50; i <= 50; i += 1) {
 				//  	p.y1 = i;
-				if (solver.solve(4)) { //2 might even be okay for jumps with HCT
+				if (solver.solve(delta)) { //2 might even be okay for jumps with HCT
 					VectorMaximizer maximizer = getMaximizer();
 					if (maximizer != null) {
 						maximizer.alwaysDiveTurn = true;
@@ -686,6 +693,7 @@ public class VectorCalculator extends JPanel {
 						//System.out.println(maximizer.variableCapThrow1FallingFrames);
 						//System.out.println(maximizer.fallingFrames);
 						boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
+						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 						//maximizer.maximize();
 						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
@@ -910,7 +918,7 @@ public class VectorCalculator extends JPanel {
 						public void actionPerformed(ActionEvent e) {
 							//Debug.println(dialogWindow.getSelectedMovementName());
 							p.initialMovementName = dialogWindow.getSelectedMovementName();
-							updateInitialMovement(true);
+							updateInitialMovement(p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed(), true); //update to have suggested speed if the player currently has the suggested speed for the current movement
 							dialogWindow.close();	
 						}
 					});
