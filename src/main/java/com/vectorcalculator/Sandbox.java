@@ -115,6 +115,17 @@ public class Sandbox {
         }
     }
 
+    public static void printArray(boolean[][] arr) {
+        System.out.print("{");
+        for (int i = 0; i < arr.length; i++) {
+            String end = ", ";
+            if (i == arr.length - 1) {
+                end = "}";
+            }
+            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+        }
+    }
+
     public static void printArray(double[][] arr) {
         System.out.print("{");
         for (int i = 0; i < arr.length; i++) {

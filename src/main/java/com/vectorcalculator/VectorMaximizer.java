@@ -1171,7 +1171,7 @@ public class VectorMaximizer {
 		}
 
 		//rotating motions to the right angle
-		adjustToGivenAngle();
+		//adjustToGivenAngle();
 		
 		//System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
 		//System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
@@ -1682,8 +1682,8 @@ public class VectorMaximizer {
 	//ctType is the ct that worked;
 	//currently does not recalculate rest of jump to be optimal, but maybe it should
 	public int isDiveCapBouncePossible(int throwType, boolean allowButtonST, boolean allowSideThrow, boolean allowST, boolean allowDT, boolean allowTT) {
-		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
-		for (int i = 0; i < motions.length; i++) {
+		//motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
+		for (int i = variableCapThrow1Index; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
 				motions[i].setInitialAngle(bestAngle1Adjusted);
 			}
@@ -1776,9 +1776,22 @@ public class VectorMaximizer {
 					only_maximize_variableAngle2 = true;
 					maximize();
 					only_maximize_variableAngle2 = false;
+
+					for (int i = variableCapThrow1Index; i < motions.length; i++) {
+						if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+							motions[i].setInitialAngle(bestAngle1Adjusted);
+						}
+						else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+							motions[i].setInitialAngle(bestAngle2Adjusted);
+						}
+						else if (i > 0) {
+							motions[i].setInitialAngle(motions[i - 1].finalAngle);
+						}
+						motions[i].calcDispDispCoordsAngleSpeed();
+					}
 					//maximize_variableAngle1();					
 					//calcDisp(bestAngle1);
-					adjustToGivenAngle();
+					//adjustToGivenAngle();
 					return ctType;
 				}
 			}
@@ -1789,19 +1802,19 @@ public class VectorMaximizer {
 
 	//adjusts the angle of everything so it is in the direction of the given target or initial angle
 	public void adjustToGivenAngle() {
-		motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
-		for (int i = 0; i < motions.length; i++) {
-			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
-				motions[i].setInitialAngle(bestAngle1Adjusted);
-			}
-			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
-				motions[i].setInitialAngle(bestAngle2Adjusted);
-			}
-			else if (i > 0) {
-				motions[i].setInitialAngle(motions[i - 1].finalAngle);
-			}
-			motions[i].calcDispDispCoordsAngleSpeed();
-		}
+		// motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
+		// for (int i = 0; i < motions.length; i++) {
+		// 	if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+		// 		motions[i].setInitialAngle(bestAngle1Adjusted);
+		// 	}
+		// 	else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
+		// 		motions[i].setInitialAngle(bestAngle2Adjusted);
+		// 	}
+		// 	else if (i > 0) {
+		// 		motions[i].setInitialAngle(motions[i - 1].finalAngle);
+		// 	}
+		// 	motions[i].calcDispDispCoordsAngleSpeed();
+		// }
 		sumXDisps(motions);
 		sumYDisps(motions);
 		double unadjustedTargetAngle = Math.atan(dispX / dispZ);

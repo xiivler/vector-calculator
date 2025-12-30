@@ -302,7 +302,6 @@ public class DiveTurn extends SimpleMotion {
 	} 
 	
 	public void setInitialAngle(double angle) {
-	
 		initialAngle = angle;
 		
 		if (rightTurn)
@@ -313,7 +312,6 @@ public class DiveTurn extends SimpleMotion {
 	}
 	
 	public void adjustInitialAngle(double angle) {
-		
 		initialAngle += angle;
 		
 		if (rightTurn)

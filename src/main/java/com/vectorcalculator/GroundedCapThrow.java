@@ -463,4 +463,18 @@ public class GroundedCapThrow extends SimpleMotion {
 		initialAngle += amount;
 		trueInitialAngle += amount;
 	}
+
+	public void setInitialAngle(double angle) {
+		initialAngle = angle;
+		if (goRight) {
+			trueInitialAngle = initialAngle - trueInitialAngleDiff;
+			normalAngle = initialAngle - Math.PI / 2;
+			finalAngle = initialAngle - finalAngleDiff; //TODO: reduce angle?
+		}
+		else {
+			trueInitialAngle = initialAngle + trueInitialAngleDiff;
+			normalAngle = initialAngle + Math.PI / 2;
+			finalAngle = initialAngle + finalAngleDiff;
+		}
+	}
 }

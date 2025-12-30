@@ -509,6 +509,7 @@ public class VectorCalculator extends JPanel {
 		p.z0 = pl.z0;
 		genPropertiesTable.setValueAt(toCoordinateString(p.x0, p.y0, p.z0), INITIAL_COORDINATES_ROW, 1);
 
+		setAngleType(p.angleType, pl.targetCoordinates); //first make it so targetCoordinates match with pl to handle RCV case
 		setAngleType(pl.angleType, pl.targetCoordinates);
 		p.x1 = pl.x1;
 		p.y1 = pl.y1;
@@ -522,11 +523,13 @@ public class VectorCalculator extends JPanel {
 			}
 			else {
 				genPropertiesTable.setValueAt("Target Angle", ANGLE_TYPE_ROW, 1);
+				//genPropertiesTable.setValueAt("Target Angle", ANGLE_ROW, 0);
 				genPropertiesTable.setValueAt(p.targetAngle, ANGLE_ROW, 1);
 			}
 		}
 		if (p.angleType == AngleType.INITIAL) {
 			genPropertiesTable.setValueAt("Initial Angle", ANGLE_TYPE_ROW, 1);
+			//genPropertiesTable.setValueAt("Initial Angle", ANGLE_ROW, 0);
 			genPropertiesTable.setValueAt(p.initialAngle, ANGLE_ROW, 1);
 		}
 		if (p.angleType == AngleType.BOTH) {
@@ -683,6 +686,7 @@ public class VectorCalculator extends JPanel {
 						//System.out.println(maximizer.variableCapThrow1FallingFrames);
 						//System.out.println(maximizer.fallingFrames);
 						boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
+						maximizer.adjustToGivenAngle();
 						//maximizer.maximize();
 						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
@@ -768,10 +772,12 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
+	//runs the maximizer and adjusts it to the given initial or target angle
 	public static VectorMaximizer calculate() {
 		VectorMaximizer maximizer = getMaximizer();
 		if (maximizer != null)
 			maximizer.maximize();
+		maximizer.adjustToGivenAngle();
 		return maximizer;
 	}
 

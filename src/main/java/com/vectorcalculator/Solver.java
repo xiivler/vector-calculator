@@ -30,11 +30,12 @@ public class Solver {
     int[][] ctTypes;
     double[][] diveDecels;
     double[][] edgeCBAngles;
+    boolean[][] diveTurns;
 
     double firstFrameDecel;
 
     int rainbowSpinIndex = -1;
-    int homingMCCTIndex = -1;
+    int homingMCCTDuration = -1;
     int diveCapBounceIndex = -1;
 
     int iterations = 0;
@@ -77,7 +78,7 @@ public class Solver {
                 preset[i][1] = unmodifiedPreset[i][1];
             }
             else if (preset[i][0] == VectorCalculator.HMCCT) {
-                homingMCCTIndex = i + 1;
+                homingMCCTDuration = i + 1;
                 preset[i][1] = unmodifiedPreset[i][1];
             }
             else if (preset[i][0] == VectorCalculator.CB && i > 0 && preset[i - 1][0] == VectorCalculator.DIVE) {
@@ -96,7 +97,8 @@ public class Solver {
         p.initialDispY = p.y1 - p.y0 - 1000; //could maybe be less, but want to make sure all movements can be shortened a lot
         p.durationFrames = false;
 
-        VectorMaximizer initialMaximizer = VectorCalculator.calculate();
+        VectorMaximizer initialMaximizer = VectorCalculator.getMaximizer();
+        initialMaximizer.maximize();
         
         //find last frames of each piece of the movement
         durations = new int[preset.length + 1]; //the durations that a user would enter
@@ -117,7 +119,7 @@ public class Solver {
         // System.out.println("Initial Frames: " + Arrays.toString(lastFrames));
 
         // System.out.println("Rainbow Spin Index: " + rainbowSpinIndex);
-        // System.out.println("Homing MCCT Index: " + homingMCCTIndex);
+        // System.out.println("Homing MCCT Index: " + homingMCCTDuration);
 
         double[][] info = null;
 
@@ -163,7 +165,7 @@ public class Solver {
         //remove extra frames from adding them before to help with later calculations
         for (int i = 0; i < delta; i++) {
             for (int j = 0; j < preset.length + 1; j++) {
-                if (j != rainbowSpinIndex && j != homingMCCTIndex) {
+                if (j != rainbowSpinIndex && j != homingMCCTDuration) {
                     y -= y_vels[lastFrames[j]];
                     lastFrames[j]--;
                     durations[j]--;
@@ -181,7 +183,7 @@ public class Solver {
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastFrames.length; i++) {
-                if (i != rainbowSpinIndex && i != homingMCCTIndex && efficiencies[lastFrames[i]] < worstEfficiency) {
+                if (i != rainbowSpinIndex && i != homingMCCTDuration && efficiencies[lastFrames[i]] < worstEfficiency) {
                     worstEfficiency = efficiencies[lastFrames[i]];
                     worstEfficiencyIndex = i;
                 }
@@ -206,29 +208,32 @@ public class Solver {
         //test cap throw and dive combinations that will be used using the ballpark durations
         
         int[] testDurations = durations.clone();
-        ctTypes = new int[41][41];
-        diveDecels = new double[41][41];
-        edgeCBAngles = new double[41][41];
+        int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
+        int maxDiveDuration = durations[diveCapBounceIndex - 1] + delta;
+        ctTypes = new int[maxCTDuration + 1][maxDiveDuration + 1];
+        diveDecels = new double[maxCTDuration + 1][maxDiveDuration + 1];
+        edgeCBAngles = new double[maxCTDuration + 1][maxDiveDuration + 1];
+        diveTurns = new boolean[maxCTDuration + 1][maxDiveDuration + 1];
         for (int i = -delta; i <= delta; i++) {
             for (int j = -delta; j <= delta; j++) {
                 int ctDuration = durations[diveCapBounceIndex - 2] + i;
                 int diveDuration = durations[diveCapBounceIndex - 1] + j;
                 testDurations[diveCapBounceIndex - 2] = ctDuration;
                 testDurations[diveCapBounceIndex - 1] = diveDuration;
-                //System.out.println(Arrays.toString(testDurations));
                 setDurations(testDurations);
-                // VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
-                // ballparkMaximizer.alwaysDiveTurn = true;
-                // ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
-                // ballparkMaximizer.firstFrameDecelIncrement = .01;
-                // ballparkMaximizer.maximize();
-                // ctTypes[ctDuration][diveDuration] = ballparkMaximizer.isDiveCapBouncePossible(singleThrowAllowed, false, true, false, ttAllowed);
-                // diveDecels[ctDuration][diveDuration] = ballparkMaximizer.firstFrameDecel;
-                if (testCT(-1, .02, .1, true) >= 0) { //test quick and dirty first just to figure out if it is possible
-                    //testCT(ctType, .01, .05, false); //only test with smaller increment if it's already possible with larger increment
+                if (testCT(-1, .02, .1, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                    //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
+                    diveTurns[ctDuration][diveDuration] = true;
+                }
+                else if (testCT(-1, .1, 1, true, false) >= 0) { //now test without turning the dive
+                    ctTypes[ctDuration][diveDuration] = ctType;
+                    diveDecels[ctDuration][diveDuration] = diveDecel;
+                    edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
+                    diveTurns[ctDuration][diveDuration] = false;
+                    System.out.println("Wahoo");
                 }
                 else {
                     ctTypes[ctDuration][diveDuration] = -1;
@@ -236,8 +241,9 @@ public class Solver {
             }
         }
         //Sandbox.printArray(ctTypes);
+        //Sandbox.printArray(diveTurns);
         //Sandbox.printArray(diveDecels);
-        //System.out.println("28 25 dive decel: " + diveDecels[28][25]);
+        //System.out.println("28 20 possible: " + ctTypes[28][20]);
         //System.out.println("28 26 dive decel: " + diveDecels[28][26]);
 
         //while (singleThrowAllowed) {}
@@ -281,15 +287,21 @@ public class Solver {
         // System.out.println("Inner Calls: " + innerCalls);
         // System.out.println("Bad Calls: " + badCalls);
         System.out.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
-        
-
+    
         return true;
     }
 
-    public int testCT(int throwType, double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean zeroAngleTolerance) {
+    public int testCT(int throwType, double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean zeroAngleTolerance, boolean diveTurn) {
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
-        ballparkMaximizer.alwaysDiveTurn = true;
+        if (diveTurn) {
+            ballparkMaximizer.alwaysDiveTurn = true;
+        }
+        else {
+            ballparkMaximizer.neverDiveTurn = true;
+            ballparkMaximizer.edgeCBMin = 6;
+            ballparkMaximizer.edgeCBMax = 12;
+        }
         ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
         ballparkMaximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
@@ -320,7 +332,7 @@ public class Solver {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if (index == rainbowSpinIndex || index == homingMCCTIndex) {
+        if (index == rainbowSpinIndex || index == homingMCCTDuration) {
             return test(durations, delta, index + 1, y_pos);
         }
         if (index < durations.length - 1) {
@@ -407,10 +419,6 @@ public class Solver {
             // System.out.println(test_y_pos);
             int[] testDurations = durations.clone();
             testDurations[index] = durations[index] + test_delta;
-            // if (test_y_pos >= .19 && test_y_pos <= .21) {
-            //      System.out.println(Arrays.toString(testDurations));
-            //      System.out.println(test(testDurations));
-            // }
             DoubleIntArray result = new DoubleIntArray(test(testDurations, false), testDurations);
             double currentBest = bestResults.get(0).d;
             if (result.d > 0) {
@@ -443,21 +451,31 @@ public class Solver {
         //     midairs[i][1] = testDurations[i + 1];
         // }
         // VectorCalculator.addPreset(midairs);
+        int ctDuration = testDurations[diveCapBounceIndex - 2];
+        int diveDuration = testDurations[diveCapBounceIndex - 1];
+
         setDurations(testDurations);
         VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-        maximizer.alwaysDiveTurn = true;
+
+        if (diveTurns[ctDuration][diveDuration]) {
+            maximizer.alwaysDiveTurn = true;
+        }
+        else {
+            maximizer.neverDiveTurn = true;
+            maximizer.edgeCBMin = 6;
+            maximizer.edgeCBMax = 12;
+        }
+
         if (!fullAccuracy) {
             maximizer.maximize_HCT_limit = Math.toRadians(8);
         }
         if (diveCapBounceIndex >= 0) {
-            p.diveFirstFrameDecel = diveDecels[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
-            p.diveCapBounceAngle = edgeCBAngles[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
-            //p.diveFirstFrameDecel = firstFrameDecels[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]];
-            //maximizer.firstFrameDecel = p.diveFirstFrameDecel;
+            p.diveFirstFrameDecel = diveDecels[ctDuration][diveDuration];
+            p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(ctTypes[testDurations[diveCapBounceIndex - 2]][testDurations[diveCapBounceIndex - 1]], singleThrowAllowed, false, true, false, ttAllowed) >= -1) { //also conforms the motion correctly
+            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, true, false, ttAllowed) >= -1) { //also conforms the motion correctly
                 disp = maximizer.bestDisp;
             }
             else {
