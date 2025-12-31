@@ -35,6 +35,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import com.vectorcalculator.Properties.CameraType;
+import com.vectorcalculator.Properties.Mode;
 import com.vectorcalculator.Properties.AngleType;
 
 public class VectorDisplayWindow {
@@ -483,7 +484,7 @@ public class VectorDisplayWindow {
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
-		if (!p.targetCoordinates)
+		if (!p.targetCoordinates || p.mode != Mode.SOLVE)
 			infoTableModel.setValueAt("N/A", MADE_JUMP_ROW, 1);
 		else if (madeJump)
 			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);

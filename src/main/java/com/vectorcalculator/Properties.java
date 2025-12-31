@@ -40,6 +40,10 @@ public class Properties {
 		INITIAL, TARGET, ABSOLUTE, CUSTOM
 	}
 
+    static enum Mode {
+        SOLVE, SOLVE_CB, CALCULATE
+    }
+
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;
 	boolean targetCoordinates = true;
@@ -79,6 +83,7 @@ public class Properties {
     boolean hasGroundUnderCB = false;
     boolean hasGroundUnderSecondGP = false;
     double upwarp = 0;
+    Mode mode = Mode.SOLVE;
 
     //select the initial movement once these properties are saved
 

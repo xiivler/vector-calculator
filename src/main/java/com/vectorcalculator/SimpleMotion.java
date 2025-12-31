@@ -155,6 +155,7 @@ public class SimpleMotion {
 				dispY += yVelocity;
 			}
 		}
+		finalVerticalVelocity = yVelocity;
 		return dispY;
 	}
 

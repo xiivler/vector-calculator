@@ -76,6 +76,7 @@ public class VectorMaximizer {
 	//int motionGroup3Index;
 	int rainbowSpinFrames;
 	int preCapBounceDiveIndex = -1;
+	int rainbowSpinIndex = -1;
 
 	int maxRCVNudges = 20;
 	int maxRCVFineNudges = 10;
@@ -228,6 +229,7 @@ public class VectorMaximizer {
 			}
 			else if (movementNames.get(i).equals("Rainbow Spin")) {
 				hasRainbowSpin = true;
+				rainbowSpinIndex = i;
 				rainbowSpinFrames = movementFrames.get(i);
 			}
 			// else if (movementNames.get(i).equals("Dive Cap Bounce")) {
