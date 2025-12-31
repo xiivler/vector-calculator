@@ -9,10 +9,12 @@ import com.vectorcalculator.Properties.GroundType;
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class Solver {
 
-    static final double LIMIT = 20; //if the final y height of the test is above this number, assume it can't be optimal
+    //static final double limit = 20; 
     //this limit takes a while for TT jumps
     static final double ERROR = .0001; //acceptable amount of error on double addition/subtraction
     static final int REFRESH_RATE = 5; //after how many iterations the values are recaluclated when getting a ballpark estimate
+
+    double limit = 20; //if the final y height of the test is above this number, assume it can't be optimal
 
     double bestResultsRange = 5; //range of values worse than the current best to still test in full
 
@@ -80,14 +82,26 @@ public class Solver {
         //System.out.println(ctDivePossible[29][23]);
         long startTime = System.currentTimeMillis();
 
+        if (p.hasGroundUnderCB || p.hasGroundUnderFirstGP || p.hasGroundUnderSecondGP) {
+            limit = 20;
+        }
+        else {
+            limit = 4;
+        }
+
         this.delta = delta;
 
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
 
+        if (VectorCalculator.chooseJumpFrames) {
+            p.framesJump = 10;
+            VectorCalculator.genPropertiesModel.setValueAt(p.framesJump, VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1);
+        }
+
         //custom presets not yet supported
         if (p.currentPresetIndex == 0) {
-            return false;
+            return true;
         }
         else {
             //first, select midair durations for a jump that's flat or downward (which are the midair presets)
@@ -258,6 +272,9 @@ public class Solver {
             }
         }
 
+        VectorCalculator.addPreset(preset);
+        initialMaximizer = VectorCalculator.getMaximizer();         
+        calcFrameByFrame(initialMaximizer);
         //calculate the y displacement of each piece of movement
         y_disps = new double[preset.length + 1];
         for (int i = 0; i < preset.length + 1; i++) {
@@ -290,6 +307,10 @@ public class Solver {
         VectorMaximizer testMaximizer = VectorCalculator.getMaximizer();         
         calcFrameByFrame(testMaximizer);
 
+        System.out.println("Test Start Durations: " + Arrays.toString(durations));
+        System.out.println("Test Start Last Frames: " + Arrays.toString(lastFrames));
+        System.out.println(Arrays.toString(y_vels));
+
         //durations = ballparkDurations; //use the old durations still as the basis for testing though
 
         for (int i = 0; i < delta; i++) { //the new last frames are different
@@ -302,6 +323,7 @@ public class Solver {
             }
         }
 
+        System.out.println(y_vels[200]);
         System.out.println("Test Durations: " + Arrays.toString(durations));
         System.out.println("Test Last Frames: " + Arrays.toString(lastFrames));
         System.out.println("Test Y Height: " + y);
@@ -528,16 +550,17 @@ public class Solver {
                     }
                 }
                 test_y_pos = validateHeight(index, test_y_pos, y_vels[lastFrame + i], testDurations);
+                //System.out.println("Index " + index + " Delta " + i + " YPos " + test_y_pos);
                 if (test_y_pos == FALSE) { //we were too low with respect to the ground
                     result = new DoubleIntArray(0, testDurations);
                 }
                 //System.out.println(lastFrames[index] + ", " + y_vels[lastFrame + 1]);
-                //System.out.println("Index " + index + " Delta " + i + " YPos " + test_y_pos);
+                //
                 // if (index == durations.length - 1) {
                 //     result = new DoubleIntArray(test(testDurations), testDurations);
                 // }
                 // else {
-                if (index == diveCapBounceIndex - 1) { //make sure ct dive into cb is possible
+                else if (index == diveCapBounceIndex - 1) { //make sure ct dive into cb is possible
                     int ctType = ctTypes[testDurations[index - 1]][testDurations[index]];
                     //if (ctType == -1 || (!singleThrowAllowed && ctType == Movement.CT) ||
                     //    (!ttAllowed && (ctType == Movement.TT || ctType == Movement.TTU || ctType == Movement.TTD || ctType == Movement.TTL || ctType == Movement.TTR))) {
@@ -562,27 +585,29 @@ public class Solver {
             return best;
         }
         else { //make the final movement as low as it can be
-            double test_y_pos = y_pos + y_disps[index];
+            //System.out.println("Start Y Pos: " + y_pos);
+            double base_y_pos = y_pos + y_disps[index];
+            double test_y_pos = base_y_pos;
             int test_delta = 0;
             int lastFrame = lastFrames[index];
-
-            if (y_pos + p.upwarp > p.y1) {
+            //System.out.println("Base Y Pos: " + base_y_pos);
+            if (base_y_pos + p.upwarp > p.y1) {
                 // System.out.println();
                 // System.out.println(test_y_pos);
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos += y_vels[lastFrame + test_delta];
                     // System.out.println(test_y_pos);
-                    if (test_y_pos < p.y1 - ERROR) {
+                    if (test_y_pos + p.upwarp < p.y1 - ERROR) {
                         test_y_pos -= y_vels[lastFrame + test_delta];
                         break;
                     }
                 }
                 test_delta--;
             }
-            else if (y_pos + p.upwarp < p.y1 - ERROR) {
+            else if (base_y_pos + p.upwarp < p.y1 - ERROR) {
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos -= y_vels[lastFrame - test_delta + 1];
-                    if (test_y_pos >= p.y1) {
+                    if (test_y_pos + p.upwarp >= p.y1) {
                         break;
                     }
                 }
@@ -591,14 +616,15 @@ public class Solver {
                     return new DoubleIntArray(0, durations);
                 }
             }
-            if (test_y_pos + p.upwarp > p.y1 + LIMIT) { //almost certainly won't be optimal
+            if (test_y_pos + p.upwarp > p.y1 + limit) { //almost certainly won't be optimal
                 return new DoubleIntArray(0, durations);
             }
             // System.out.println();
-            // System.out.println(test_y_pos);
+            
             int[] testDurations = durations.clone();
             testDurations[index] = durations[index] + test_delta;
             DoubleIntArray result = new DoubleIntArray(test(testDurations, false), testDurations);
+            //System.out.println(Arrays.toString(testDurations) + ", " + test_y_pos + ", " + result.d);
             double currentBest = bestResults.get(0).d;
             if (result.d > 0) {
                 if (result.d > currentBest) {
@@ -649,7 +675,7 @@ public class Solver {
         iterations++;
         boolean possible = true;
 
-
+        //System.out.println(Arrays.toString(testDurations));
         // p.initialFrames = testDurations[0];
         // VectorCalculator.genPropertiesTable.setValueAt(testDurations[0], VectorCalculator.MOVEMENT_DURATION_ROW, 1);
         // int[][] midairs = preset.clone();
@@ -662,11 +688,13 @@ public class Solver {
 
         setDurations(testDurations);
         VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-        if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
-            if (!validateDurations(testDurations, maximizer)) {
-                return 0.0;
-            }
+        //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
+        double dispY = validateHeights(testDurations, maximizer);
+        if (dispY == FALSE) {
+            return 0.0;
         }
+        //}
+        bestYDisp = dispY; //for debugging
 
         if (diveTurns[ctDuration][diveDuration]) {
             maximizer.alwaysDiveTurn = true;
@@ -697,44 +725,44 @@ public class Solver {
                 return 0.0;
             }
         }
-        double y = p.y0;
-        SimpleMotion[] motions = maximizer.getMotions();
-        if (VectorCalculator.stop) {
-            System.out.println(Arrays.toString(testDurations));
-            System.exit(-1);
-        }
-        for (SimpleMotion m : motions) {
-            y += m.calcDispY();
-        }
-        // System.out.println(y);
-        if (y < p.y1 - ERROR || possible == false) { //too low so won't work
-            badCalls++;
-            System.out.println(Arrays.toString(testDurations) + ", " + y);
-            return 0.0;
-        }
-        else {
-            bestYDisp = y - p.y1;
-            return disp;
-        }
+        // double y = p.y0;
+        // SimpleMotion[] motions = maximizer.getMotions();
+        // if (VectorCalculator.stop) {
+        //     System.out.println(Arrays.toString(testDurations));
+        //     System.exit(-1);
+        // }
+        // for (SimpleMotion m : motions) {
+        //     y += m.calcDispY();
+        // }
+        // // System.out.println(y);
+        // if (y < p.y1 - ERROR || possible == false) { //too low so won't work
+        //     badCalls++;
+        //     System.out.println(Arrays.toString(testDurations) + ", " + y);
+        //     return 0.0;
+        // }
+        // else {
+        //bestYDisp = y - p.y1;
+        return disp;
+        // }
     }
 
     //if height is not possible because of the ground, returns FALSE constant
     //otherwise returns the height, adjusted if the ground was touched
     public static final double FALSE = -Double.MAX_VALUE;
     public double validateHeight(int motionIndex, double y_pos, double y_vel, int[] durations) {
-        if (durations[0] == 68) {
-            System.out.println("68 made to index " + motionIndex);
-        }
+        // if (durations[0] == 68) {
+        //     System.out.println("68 made to index " + motionIndex);
+        // }
         double yDiff = -Double.MAX_VALUE;
         if (motionIndex == 0) { //initial movement
-            System.out.println(y_pos);
+            //System.out.println(y_pos);
             if (p.groundTypeFirstGP == GroundType.NONE)
                 return y_pos;
             else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundUnderFirstGP)
                 return FALSE;
             else
                 yDiff = p.groundUnderFirstGP - y_pos;
-            System.out.println(yDiff);
+            //System.out.println(yDiff);
         }
         else if (motionIndex == homingMCCTIndex || motionIndex == homingTTIndex) { //failures here will be caught by the rainbow spin because it is even lower
             return y_pos;
@@ -779,10 +807,10 @@ public class Solver {
         }
         else if (motionIndex == secondDiveIndex - 1) { //second CT
             if (p.groundTypeSecondGP == GroundType.NONE || y_pos - y_vel >= p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT) {
-                if (durations[0] == 68) {
-                    System.out.println("68 Passed index " + motionIndex);
-                    System.out.println(y_pos);
-                }
+                // if (durations[0] == 68) {
+                //     System.out.println("68 Passed index " + motionIndex);
+                //     System.out.println(y_pos);
+                // }
                 return y_pos;
             }
             else
@@ -805,10 +833,10 @@ public class Solver {
     }
     
     //make sure the durations are actually possible
-    public boolean validateDurations(int[] testDurations, VectorMaximizer maximizer) {
+    public double validateHeights(int[] testDurations, VectorMaximizer maximizer) {
         double[] final_y_heights = getFinalYHeights(maximizer);
         if (final_y_heights[final_y_heights.length - 1] < p.y1 - p.upwarp) {
-            return false;
+            return FALSE;
         }
         SimpleMotion[] motions = maximizer.getMotions();
 
@@ -866,37 +894,38 @@ public class Solver {
             }
         }
 
-        if (p.initialFrames == 68 || testDurations[0] == 68) {
-            System.out.println("68 height w/ " + final_y_heights[maximizer_initialMovementIndex]);
-        }
-        
+        // if (p.initialFrames == 68 || testDurations[0] == 68) {
+        //     System.out.println("68 height w/ " + final_y_heights[maximizer_initialMovementIndex]);
+        // }
         if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] <= p.groundUnderFirstGP) //maybe should be <
-            return false;
+            return FALSE;
         if (p.groundTypeFirstGP == GroundType.DAMAGING && final_y_heights[maximizer_initialMovementIndex] <= p.groundUnderFirstGP) //maybe should be <
-            return false;
+            return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.GROUND && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundUnderFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
-            return false;
+            return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.GROUND && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundUnderSecondGP)
-            return false;
+            return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.DAMAGING && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundUnderFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
-            return false;
+            return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.DAMAGING && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundUnderSecondGP)
-            return false;
+            return FALSE;
         if (p.groundTypeFirstGP != GroundType.NONE && penultimate_y_heights[maximizer_firstGPIndex - 1] < p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT)
-            return false;
+            return FALSE;
         if (p.groundTypeCB != GroundType.NONE && final_y_heights[maximizer_firstDiveIndex] <= p.groundUnderCB)
-            return false;
+            return FALSE;
         if (p.groundTypeSecondGP == GroundType.GROUND && penultimate_y_heights[maximizer_capBounceIndex] <= p.groundUnderSecondGP)
-            return false;
+            return FALSE;
         if (p.groundTypeSecondGP == GroundType.DAMAGING && final_y_heights[maximizer_capBounceIndex] <= p.groundUnderSecondGP)
-            return false;
+            return FALSE;
         if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT)
-            return false;
+            return FALSE;
+        if (final_y_heights[final_y_heights.length - 1] + p.upwarp < p.y1 - ERROR)
+            return FALSE;
         //System.out.println(Arrays.toString(final_y_heights) + " " + Arrays.toString(penultimate_y_heights));
         // if (p.initialFrames == 64) {
         //     System.out.println(Arrays.toString(testDurations));
         // }
-        return true;
+        return (final_y_heights[final_y_heights.length - 1] + p.upwarp - p.y1);
     }
 
     //sets Vector Calculator to be using the current durations

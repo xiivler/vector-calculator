@@ -89,6 +89,8 @@ public class Properties {
     boolean hasGroundUnderFirstGP = false;
     boolean hasGroundUnderCB = false;
     boolean hasGroundUnderSecondGP = false;
+    double hctThrowAngle = 60;
+    boolean hctNeutralHoming = true;
 
     //boolean isLavaOrPoison = false;
     double upwarp = 0;

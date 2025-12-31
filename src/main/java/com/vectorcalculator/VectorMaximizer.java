@@ -140,19 +140,9 @@ public class VectorMaximizer {
 	static int[] fastTurnaroundFrames = {4, 3, 3, 3, 2, 2, 1, 0};
 	static int[] maxVelocityFastTurnaroundFrames = {1, 3, 2, 1, 2, 1, 1, 0}; //how many frames you're rotating at 25 deg/fr
 	
-	static double[] homingMotionThrowHoldingAngles;
+	//double[] homingMotionThrowHoldingAngles;
 
 	static boolean diveTurn = true; //whether to turn on dives to optimize them further
-	
-	static {
-		homingMotionThrowHoldingAngles = new double[24];
-		homingMotionThrowHoldingAngles[0] = Math.PI / 3;
-		for (int j = 1; j <= 18; j++)
-			homingMotionThrowHoldingAngles[j] = SimpleMotion.NORMAL_ANGLE;
-		homingMotionThrowHoldingAngles[19] = SimpleMotion.NO_ANGLE;
-		for (int j = 20; j <= 23; j++)
-			homingMotionThrowHoldingAngles[j] = SimpleMotion.NORMAL_ANGLE;
-	}
 	
 	public VectorMaximizer(MovementNameListPreparer listPreparer) {
 		
@@ -394,6 +384,17 @@ public class VectorMaximizer {
 			rainbowSpinHoldingAngles[a] = -SimpleMotion.NORMAL_ANGLE;
 		}
 	} */
+
+	private double[] generateHomingMotionThrowHoldingAngles() {
+		double[] homingMotionThrowHoldingAngles = new double[24];
+		homingMotionThrowHoldingAngles[0] = Math.toRadians(p.hctThrowAngle);
+		for (int j = 1; j <= 23; j++)
+			homingMotionThrowHoldingAngles[j] = SimpleMotion.NORMAL_ANGLE;
+		if (p.hctNeutralHoming) {
+			homingMotionThrowHoldingAngles[19] = SimpleMotion.NO_ANGLE;
+		}
+		return homingMotionThrowHoldingAngles;
+	}
 	
 	//angle is the angle of the dive
 	private void setCapThrowHoldingAngles(ComplexVector motion, double angle, int frames, int fallingFrames) {
@@ -884,7 +885,7 @@ public class VectorMaximizer {
 			Movement currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
 			if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-				((ComplexVector) motionGroup[i]).setHoldingAngles(homingMotionThrowHoldingAngles);
+				((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
 			}
 			// else if (movementNames.get(j).equals("Rainbow Spin") && simpleTech) {
 			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
