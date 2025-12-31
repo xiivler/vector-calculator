@@ -82,7 +82,7 @@ public class Solver {
         //System.out.println(ctDivePossible[29][23]);
         long startTime = System.currentTimeMillis();
 
-        if (p.hasGroundUnderCB || p.hasGroundUnderFirstGP || p.hasGroundUnderSecondGP) {
+        if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
             limit = 20;
         }
         else {
@@ -145,12 +145,12 @@ public class Solver {
         // p.hasGroundUnderFirstGP = true;
         // p.hasGroundUnderCB = true;
         // p.hasGroundUnderSecondGP = true;
-        p.groundTypeFirstGP = GroundType.GROUND;
-        p.groundTypeCB = GroundType.GROUND;
-        p.groundTypeSecondGP = GroundType.GROUND;
-        p.groundUnderFirstGP = 0;
-        p.groundUnderCB = 0;
-        p.groundUnderSecondGP = 0;
+        // p.groundTypeFirstGP = GroundType.GROUND;
+        // p.groundTypeCB = GroundType.GROUND;
+        // p.groundTypeSecondGP = GroundType.GROUND;
+        // p.groundUnderFirstGP = 0;
+        // p.groundUnderCB = 0;
+        // p.groundUnderSecondGP = 0;
 
         preset[diveCapBounceIndex - 1][1] = p.initialFrames; //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
