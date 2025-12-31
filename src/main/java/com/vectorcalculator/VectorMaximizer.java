@@ -1700,8 +1700,8 @@ public class VectorMaximizer {
 			motions[i].calcDispDispCoordsAngleSpeed();
 		}
 
-		double lowAngle = Double.MIN_VALUE;
-		double highAngle = Double.MIN_VALUE;
+		double lowAngle = -Double.MAX_VALUE;
+		double highAngle = -Double.MAX_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
 		DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
 		//ComplexVector capThrow = (ComplexVector) motions[variableCapThrow1Index];
@@ -1758,7 +1758,7 @@ public class VectorMaximizer {
 						}
 						ctType = ct;
 					}
-					else if (highAngle != Double.MIN_VALUE)
+					else if (highAngle != -Double.MAX_VALUE)
 						overshot = true;
 					//diveCapBounceAngle += edgeCBIncrement;
 				}

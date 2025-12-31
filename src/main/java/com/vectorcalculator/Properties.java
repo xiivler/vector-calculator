@@ -44,6 +44,10 @@ public class Properties {
         SOLVE, SOLVE_CB, CALCULATE
     }
 
+    static enum GroundType {
+        NONE, GROUND, DAMAGING
+    }
+
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;
 	boolean targetCoordinates = true;
@@ -79,9 +83,14 @@ public class Properties {
     double groundUnderFirstGP = 0;
     double groundUnderCB = 0;
     double groundUnderSecondGP = 0;
+    GroundType groundTypeFirstGP = GroundType.NONE;
+    GroundType groundTypeCB = GroundType.NONE;
+    GroundType groundTypeSecondGP = GroundType.NONE;
     boolean hasGroundUnderFirstGP = false;
     boolean hasGroundUnderCB = false;
     boolean hasGroundUnderSecondGP = false;
+
+    //boolean isLavaOrPoison = false;
     double upwarp = 0;
     Mode mode = Mode.SOLVE;
 

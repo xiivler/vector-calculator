@@ -35,6 +35,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import com.vectorcalculator.Properties.CameraType;
+import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.Mode;
 import com.vectorcalculator.Properties.AngleType;
 
@@ -385,23 +386,23 @@ public class VectorDisplayWindow {
 					}
 				}
 				if (i == info.length - 1) {
-					if (p.hasGroundUnderFirstGP && firstDive) {
+					if (p.groundTypeFirstGP == GroundType.GROUND && firstDive) {
 						if (y < p.groundUnderFirstGP) {
 							y = p.groundUnderFirstGP;
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
-					else if (p.hasGroundUnderSecondGP && motion.movement.movementType.contains("Cap Bounce")) {
+					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce")) {
 						if (y < p.groundUnderSecondGP) {
 							y = p.groundUnderSecondGP;
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
 					else if (maximizer.hasRainbowSpin && index == maximizer.rainbowSpinIndex + 1) {
-						double groundUnderRS;
-						if (index <= maximizer.variableCapThrow1Index)
+						double groundUnderRS = -Double.MAX_VALUE;
+						if (index <= maximizer.variableCapThrow1Index && p.groundTypeFirstGP == GroundType.GROUND)
 							groundUnderRS = p.groundUnderFirstGP;
-						else
+						else if (p.groundTypeSecondGP == GroundType.GROUND)
 							groundUnderRS = p.groundUnderSecondGP;
 						if (y < groundUnderRS) {
 							y = groundUnderRS;

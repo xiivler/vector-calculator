@@ -5,7 +5,7 @@ public class SimpleMotion {
 	
 	public static final double NORMAL_ANGLE = Math.PI / 2;
 	public static final double BACK_ANGLE = Math.PI;
-	public static final double NO_ANGLE = Double.MIN_VALUE;
+	public static final double NO_ANGLE = -Double.MAX_VALUE;
 	
 	double rotationalAccel;
 	double maxRotationalSpeed;
