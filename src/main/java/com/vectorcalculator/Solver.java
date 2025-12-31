@@ -126,9 +126,9 @@ public class Solver {
         p.hasGroundUnderFirstGP = true;
         p.hasGroundUnderCB = true;
         p.hasGroundUnderSecondGP = true;
-        p.groundUnderFirstGP = -2000;
-        p.groundUnderCB = -2000;
-        p.groundUnderSecondGP = -500;
+        p.groundUnderFirstGP = 100;
+        p.groundUnderCB = 100;
+        p.groundUnderSecondGP = 100;
 
         preset[diveCapBounceIndex - 1][1] = p.initialFrames; //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
@@ -731,35 +731,27 @@ public class Solver {
         double[] penultimate_y_heights = new double[final_y_heights.length]; //calculate penultimate heights
         for (int i = 0; i < final_y_heights.length; i++) {
             penultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity;
-            double yDiff;
+            double yDiff = 0;
             if (i == maximizer_initialMovementIndex) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
                 yDiff = p.groundUnderFirstGP - final_y_heights[i];
-                if (yDiff > 0) {
-                    for (int j = i; i < final_y_heights.length; i++) {
-                        final_y_heights[j] += yDiff;
-                    }
-                }
             }
             else if (i == maximizer_capBounceIndex) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
                 yDiff = p.groundUnderSecondGP - final_y_heights[i];
-                if (yDiff > 0) {
-                    for (int j = i; i < final_y_heights.length; i++) {
-                        final_y_heights[j] += yDiff;
-                    }
-                }
             }
-            else if (i == maximizer_rainbowSpinIndex) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
+            else if (maximizer.hasRainbowSpin && i == maximizer_rainbowSpinIndex + 1) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
                 double groundUnderRS;
                 if (rainbowSpinFirst)
                     groundUnderRS = p.groundUnderFirstGP;
                 else
                     groundUnderRS = p.groundUnderSecondGP;
                 yDiff = groundUnderRS - final_y_heights[i];
-                if (yDiff > 0) {
-                    for (int j = i; i < final_y_heights.length; i++) {
-                        final_y_heights[j] += yDiff;
-                    }
+            }
+            if (yDiff > 0) {
+                //System.out.println("Before: " + Arrays.toString(final_y_heights));
+                for (int j = i; j < final_y_heights.length; j++) {
+                    final_y_heights[j] += yDiff;
                 }
+                //System.out.println("After: " + Arrays.toString(final_y_heights));
             }
         }
 

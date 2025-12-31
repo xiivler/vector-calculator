@@ -368,17 +368,55 @@ public class VectorDisplayWindow {
 			//	Debug.println(Arrays.toString(ds));
 			int startRow = row;
 			for (int i = 0; i < info.length; i++, row++) {
+				Object[] rowContents = new Object[8];
+				rowContents[0] = row;
+				rowContents[1] = "";
+				rowContents[2] = "";
+
+				x = info[i][0];
+				y = info[i][1];
+				z = info[i][2];
+				double dispX = p.x0 - x;
+				double dispZ = p.z0 - z;
+				if (y >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
+					if (!madeJump) {
+						madeJump = true;
+						rowContents[1] = "(Made Jump)";
+					}
+				}
+				if (i == info.length - 1) {
+					if (p.hasGroundUnderFirstGP && firstDive) {
+						if (y < p.groundUnderFirstGP) {
+							y = p.groundUnderFirstGP;
+							rowContents[1] = "(Hit Ground)";
+						}
+					}
+					else if (p.hasGroundUnderSecondGP && motion.movement.movementType.contains("Cap Bounce")) {
+						if (y < p.groundUnderSecondGP) {
+							y = p.groundUnderSecondGP;
+							rowContents[1] = "(Hit Ground)";
+						}
+					}
+					else if (maximizer.hasRainbowSpin && index == maximizer.rainbowSpinIndex + 1) {
+						double groundUnderRS;
+						if (index <= maximizer.variableCapThrow1Index)
+							groundUnderRS = p.groundUnderFirstGP;
+						else
+							groundUnderRS = p.groundUnderSecondGP;
+						if (y < groundUnderRS) {
+							y = groundUnderRS;
+							rowContents[1] = "(Hit Ground)";
+						}
+					}
+				}
+
 				double theta = SimpleMotion.NO_ANGLE;
 				if (info[i][7] != SimpleMotion.NO_ANGLE) {
 					theta = reduceAngle(info[i][7] - cameraAngle + Math.PI / 2);
 				}
 
-				Object[] rowContents = new Object[8];
-				rowContents[0] = row;
-				rowContents[1] = "";
-				rowContents[2] = "";
 				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], theta);
-				rowContents[4] = toCoordinates(info[i][0], info[i][1], info[i][2]);
+				rowContents[4] = toCoordinates(x, y, z);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
 				double velocityAngle;
 				if (p.xAxisZeroDegrees) {
@@ -442,20 +480,14 @@ public class VectorDisplayWindow {
 						}
 					}
 				}
-				x = info[i][0];
-				y = info[i][1];
-				z = info[i][2];
-				double dispX = p.x0 - x;
-				double dispZ = p.z0 - z;
-				if (y >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
-					madeJump = true;
-				}
 			}
+			
 			//x = info[info.length - 1][0];
 			//y = info[info.length - 1][1];
 			//z = info[info.length - 1][2];
 			Debug.println(motion.movement.displayName);
-			dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
+			if (!motion.movement.displayName.equals(""))
+				dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
 		}
 
 		//display the inputs
