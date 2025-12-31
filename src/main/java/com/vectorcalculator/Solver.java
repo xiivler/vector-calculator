@@ -323,7 +323,6 @@ public class Solver {
             }
         }
 
-        System.out.println(y_vels[200]);
         System.out.println("Test Durations: " + Arrays.toString(durations));
         System.out.println("Test Last Frames: " + Arrays.toString(lastFrames));
         System.out.println("Test Y Height: " + y);
@@ -406,6 +405,9 @@ public class Solver {
         //double bestDisp = test(bestDurations, false); //for bestydisp debug
 
         System.out.println("Best Disp: " + bestDisp);
+        if (bestDisp == 0) {
+            return false;
+        }
         // System.out.println("Delta: " + delta);
         //System.out.println("Max Delta: " + maxDelta);
         System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
