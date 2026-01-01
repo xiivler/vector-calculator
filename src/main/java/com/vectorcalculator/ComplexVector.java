@@ -3,6 +3,8 @@ package com.vectorcalculator;
 //calculates the motion for a vector where the joystick angles vary from frame to frame
 public class ComplexVector extends SimpleVector {
 	
+	Properties p = Properties.p;
+	
 	double[] holdingAngles;
 	boolean[] holdingMinRadius;
 
@@ -186,7 +188,7 @@ public class ComplexVector extends SimpleVector {
 			dispY = y0;
 			dispZ = z0;
 			double gravity;
-			if (Movement.onMoon)
+			if (p.onMoon)
 				gravity = movement.moonGravity;
 			else
 				gravity = movement.gravity;
@@ -306,7 +308,7 @@ public class ComplexVector extends SimpleVector {
 		double dispY = y0;
 		double dispZ = z0;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;

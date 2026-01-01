@@ -51,9 +51,9 @@ public class Properties {
         }
 	}
 
-    static enum AngleType {
-		INITIAL, TARGET, BOTH
-	}
+    // static enum AngleType {
+	// 	INITIAL, TARGET, BOTH
+	// }
 
 	static enum CameraType {
 		INITIAL("Initial Angle"), TARGET("Target Angle"), ABSOLUTE("Absolute"), CUSTOM("Custom");
@@ -62,6 +62,15 @@ public class Properties {
 
         CameraType(String string) {
             this.name = string;
+        }
+
+        static CameraType fromName(String string) {
+            for (CameraType ct : CameraType.values()) {
+                if (ct.name.equals(string)) {
+                    return ct;
+                }
+            }
+            return INITIAL;
         }
 	}
 
@@ -114,15 +123,19 @@ public class Properties {
         }
     }
 
+    // static enum LockDurationType {
+    //     NONE, FRAMES, VERTICAL_DISPLACEMENT
+    // }
+
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;
 	boolean targetCoordinates = true;
 	double initialAngle = 0;
 	double targetAngle = 90;
     CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;
-	AngleType angleType = AngleType.TARGET;
+	//AngleType angleType = AngleType.TARGET;
 	String initialMovementName = "Triple Jump";
-	int lockDurationType = VectorCalculator.LOCK_NONE;
+	boolean chooseDurationType = true;
 	boolean durationFrames = true;
 	int initialFrames = 70;
 	double initialDispY = 0;

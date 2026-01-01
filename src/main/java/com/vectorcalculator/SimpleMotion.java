@@ -3,6 +3,8 @@ package com.vectorcalculator;
 //calculates the behavior of movement without vectoring
 public class SimpleMotion {
 	
+	Properties p = Properties.p;
+	
 	public static final double NORMAL_ANGLE = Math.PI / 2;
 	public static final double BACK_ANGLE = Math.PI;
 	public static final double NO_ANGLE = -Double.MAX_VALUE;
@@ -130,7 +132,7 @@ public class SimpleMotion {
 		if (frames <= movement.frameOffset)
 			finalVerticalVelocity = 0;
 		else
-			if (Movement.onMoon)
+			if (p.onMoon)
 				finalVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.moonGravity * (frames - movement.frameOffset), movement.fallSpeedCap);
 			else
 				finalVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.gravity * (frames - movement.frameOffset), movement.fallSpeedCap);
@@ -141,7 +143,7 @@ public class SimpleMotion {
 		dispY = 0;
 		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;
@@ -171,7 +173,7 @@ public class SimpleMotion {
 		dispY = 0;
 		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;
@@ -210,7 +212,7 @@ public class SimpleMotion {
 		dispY = y0;
 		dispZ = z0;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;

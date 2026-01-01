@@ -3,6 +3,8 @@ package com.vectorcalculator;
 //calculates the behavior of vectorable movement if the joystick angle is consistent
 public class DiveTurn extends SimpleMotion {
 	
+	Properties p = Properties.p;
+	
 	double baseSidewaysAccel = .125;
 	
 	double normalAngle;
@@ -119,7 +121,7 @@ public class DiveTurn extends SimpleMotion {
 		dispY = y0;
 		dispZ = z0;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;
@@ -223,7 +225,7 @@ public class DiveTurn extends SimpleMotion {
 		double dispY = y0;
 		double dispZ = z0;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;

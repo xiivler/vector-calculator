@@ -6,7 +6,7 @@ import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import com.vectorcalculator.Properties.AngleType;
+//import com.vectorcalculator.Properties.AngleType;
 
 public class MovementNameListPreparer {
 
@@ -73,7 +73,7 @@ public class MovementNameListPreparer {
 		}
 		
 		int flowerFrames = 40;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			flowerFrames = 125;
 		
 		//special cases to say which movements should happen
@@ -123,7 +123,7 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
 		}
 		else if (name.contains("RCV")) {
-			if (p.angleType == AngleType.BOTH) {
+			if (p.initialAndTargetGiven) {
 				double difference = p.initialAngle - p.targetAngle;
 				while (difference >= 180) {
 					difference -= 360;
@@ -146,11 +146,11 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames);
 		}
 		
-		if (VectorCalculator.chooseInitialHorizontalSpeed) {
+		if (p.chooseInitialHorizontalSpeed) {
 			//initialVelocity = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
 			initialVelocity = p.initialHorizontalSpeed;
 		}
-		if (VectorCalculator.chooseJumpFrames) {
+		if (p.chooseJumpFrames) {
 			//framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
 			framesJump = p.framesJump;
 		}

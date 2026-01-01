@@ -5,7 +5,7 @@ import java.util.Vector;
 
 import javax.swing.table.TableModel;
 
-import com.vectorcalculator.Properties.AngleType;
+//import com.vectorcalculator.Properties.AngleType;
 
 public class VectorMaximizer {
 
@@ -45,7 +45,7 @@ public class VectorMaximizer {
 	double angle;
 	
 	double givenAngle;
-	boolean targetAngleGiven;
+	//boolean targetAngleGiven;
 	double initialAngle;
 	double targetAngle;
 	double angleAdjustment = 0;
@@ -149,7 +149,7 @@ public class VectorMaximizer {
 		this.listPreparer = listPreparer;
 		
 		//TableModel genPropertiesModel = p.genPropertiesModel;
-		targetAngleGiven = p.angleType == AngleType.TARGET; //keep this logic; if it's both, you want to conform to the initial
+		//targetAngleGiven = p.targetAngleGiven || p.targetCoordinatesGiven; //keep this logic; if it's both, you want to conform to the initial
 		if (p.xAxisZeroDegrees) { //vector calculator cacluates as if the order is ZXY (i.e. 0 degrees is the positive Z axis, and 90 degrees is the positive X axis)
 			initialAngle = Math.PI / 2 - Math.toRadians(p.initialAngle);
 			targetAngle = Math.PI / 2 - Math.toRadians(p.targetAngle);
@@ -1028,7 +1028,7 @@ public class VectorMaximizer {
 		diveCapBounceAngle = p.diveCapBounceAngle;
 		firstFrameDecel = p.diveFirstFrameDecel;
 
-		if (p.angleType == AngleType.BOTH) {
+		if (p.initialAndTargetGiven) {
 			if (rightVector) {
 				rcTrueInitialAngleDiff = initialAngle - targetAngle;
 				//initialAngle -= rcTrueInitialAngleDiff;
@@ -1834,7 +1834,7 @@ public class VectorMaximizer {
 		if (unadjustedTargetAngle < 0)
 			unadjustedTargetAngle += Math.PI;
 		Debug.println("Unadjusted target angle:" + Math.toDegrees(unadjustedTargetAngle));
-		if (targetAngleGiven) {
+		if (!p.initialAndTargetGiven && (p.targetAngleGiven || p.targetCoordinatesGiven)) { //if we were just given a target angle or target coordinates, shift so motion is moving in that direction
 			angleAdjustment = targetAngle - unadjustedTargetAngle;
 			initialAngle = Math.PI / 2 + angleAdjustment;
 		}

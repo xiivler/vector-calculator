@@ -3,6 +3,8 @@ package com.vectorcalculator;
 //calculates the behavior of vectorable movement if the joystick angle is consistent
 public class SimpleVector extends SimpleMotion {
 	
+	Properties p = Properties.p;
+	
 	boolean optimalForwardAccel = true; //if true, the holding angle will be overridden to be 0 to until full speed is reached from accelerating forward
 	
 	double normalAngle;
@@ -289,7 +291,7 @@ public class SimpleVector extends SimpleMotion {
 		dispY = y0;
 		dispZ = z0;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;

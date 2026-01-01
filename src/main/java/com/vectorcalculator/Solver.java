@@ -94,7 +94,7 @@ public class Solver {
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
 
-        if (VectorCalculator.chooseJumpFrames) {
+        if (p.chooseJumpFrames) {
             p.framesJump = 10;
             VectorCalculator.genPropertiesModel.setValueAt(p.framesJump, VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1);
         }
@@ -133,7 +133,7 @@ public class Solver {
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
 
         //first, fix the preset so that it makes sense with the height of the ground
-        Movement.onMoon = p.onMoon;
+        p.onMoon = p.onMoon;
 		//MovementNameListPreparer movementPreparer = new MovementNameListPreparer();
         //presetMaximizer.maximize();
         

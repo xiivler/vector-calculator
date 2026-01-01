@@ -4,6 +4,8 @@ package com.vectorcalculator;
 public class GroundedCapThrow extends SimpleMotion {
 
 	//TODO: enfoce minframes
+
+	Properties p = Properties.p;
 	
 	double[] velocityAngles;
 	double[] holdingAngles;
@@ -347,7 +349,7 @@ public class GroundedCapThrow extends SimpleMotion {
 		double dispY = 0; //not the real one
 		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;
@@ -373,7 +375,7 @@ public class GroundedCapThrow extends SimpleMotion {
 		dispY = 0;
 		double yVelocity = movement.initialVerticalSpeed;
 		double gravity;
-		if (Movement.onMoon)
+		if (p.onMoon)
 			gravity = movement.moonGravity;
 		else
 			gravity = movement.gravity;

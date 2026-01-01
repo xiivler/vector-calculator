@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class Movement {
 	
+	Properties p = Properties.p;
+	
 	public static final int MCCTU = 0, MCCTD = 1, MCCTL = 2, MCCTR = 3, CT = 4, DT = 5,
 							TT = 6, TTU = 7, TTD = 8, TTL = 9, TTR = 10;
 	public static final int CT_COUNT = 11; //number of possibilities
@@ -43,7 +45,7 @@ public class Movement {
 												{TT_DISP_F, TTD_DISP_V, TTD_DISP_S},
 												{TT_DISP_F, TTL_DISP_V, TTL_DISP_S},
 												{TT_DISP_F, TTR_DISP_V, TTR_DISP_S}};
-	public static boolean onMoon = false;
+	//public static boolean onMoon = false;
 
 	//no downthrow or fakethrow because these are equivalent to others
 	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};
@@ -190,7 +192,7 @@ public class Movement {
 		
 		else if (movementType.equals("Ground Pound Jump")) {
 			displayName = "GP Jump";
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 32;
 			else
 				initialVerticalSpeed = 40;
@@ -222,7 +224,7 @@ public class Movement {
 		}
 	
 		else if (movementType.equals("Vault")) {
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 30;
 			else
 				initialVerticalSpeed = 32;
@@ -323,7 +325,7 @@ public class Movement {
 		
 		else if (movementType.equals("Dive")) {
 			variableInitialHorizontalSpeed = false;
-			if (onMoon) {
+			if (p.onMoon) {
 				initialVerticalSpeed = 17;
 				initialHorizontalSpeed = 18;
 			}
@@ -351,7 +353,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Spinpound")) {
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 0;
 			else
 				initialVerticalSpeed = -35;
@@ -366,7 +368,7 @@ public class Movement {
 		
 		else if (movementType.equals("Ground Pound")) {
 			displayName = "GP";
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 0;
 			else
 				initialVerticalSpeed = -45;
@@ -385,7 +387,7 @@ public class Movement {
 			initialVerticalSpeed = 23;
 			initialHorizontalSpeed = 8.6;
 			recommendedInitialHorizontalSpeed = 0;
-			if (onMoon)
+			if (p.onMoon)
 				framesAtInitialHorizontalSpeed = 30;
 			else
 				framesAtInitialHorizontalSpeed = 25;
@@ -400,7 +402,7 @@ public class Movement {
 			initialVerticalSpeed = 23;
 			initialHorizontalSpeed = 8.6;
 			recommendedInitialHorizontalSpeed = 0;
-			if (onMoon)
+			if (p.onMoon)
 				framesAtInitialHorizontalSpeed = 30;
 			else
 				framesAtInitialHorizontalSpeed = 25;
@@ -442,7 +444,7 @@ public class Movement {
 		
 		else if (movementType.equals("Ground Pound Cap Bounce")) {
 			displayName = "GP Cap Bounce";
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 35;
 			else
 				initialVerticalSpeed = 30;
@@ -480,7 +482,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("2P Midair Vault")) {
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 25;
 			else
 				initialVerticalSpeed = 26;
@@ -492,7 +494,7 @@ public class Movement {
 			trueSpeedCap = 100;
 			recommendedInitialHorizontalSpeed = 29.94;
 			rotationalAccel = Math.toRadians(1.3);
-			if (onMoon) {
+			if (p.onMoon) {
 				initialVerticalSpeed = -1;
 			}
 			else {
@@ -631,7 +633,7 @@ public class Movement {
 		
 		//lasts only until the speed is 0
 		else if (movementType.equals("Flower Bounce")) {
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 50;
 			else
 				initialVerticalSpeed = 60;
@@ -668,7 +670,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Flower Spinpound")) {
-			if (onMoon)
+			if (p.onMoon)
 				initialVerticalSpeed = 0;
 			else
 				initialVerticalSpeed = 15;
@@ -796,7 +798,7 @@ public class Movement {
 		double height;
 		
 		double currentGravity;
-		if (onMoon)
+		if (p.onMoon)
 			currentGravity = moonGravity;
 		else
 			currentGravity = gravity;

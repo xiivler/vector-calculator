@@ -37,7 +37,7 @@ import javax.swing.table.TableModel;
 import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.Mode;
-import com.vectorcalculator.Properties.AngleType;
+//import com.vectorcalculator.Properties.AngleType;
 
 public class VectorDisplayWindow {
 
@@ -505,7 +505,7 @@ public class VectorDisplayWindow {
 			dataTableModel.setValueAt(displayString, i, 2);
 		}
 	
-		if (p.angleType == AngleType.TARGET) {
+		if (p.targetAngleGiven || p.targetCoordinatesGiven) {
 			infoTableModel.setValueAt("Initial Angle", INFO_ANGLE_TYPE_ROW, 0);
 			infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
 		}
