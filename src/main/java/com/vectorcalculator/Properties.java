@@ -40,6 +40,15 @@ public class Properties {
         CalculateUsing(String string) {
             this.name = string;
         }
+
+        static CalculateUsing fromName(String string) {
+            for (CalculateUsing cu : CalculateUsing.values()) {
+                if (cu.name.equals(string)) {
+                    return cu;
+                }
+            }
+            return TARGET_COORDINATES;
+        }
 	}
 
     static enum AngleType {
@@ -47,7 +56,13 @@ public class Properties {
 	}
 
 	static enum CameraType {
-		INITIAL, TARGET, ABSOLUTE, CUSTOM
+		INITIAL("Initial Angle"), TARGET("Target Angle"), ABSOLUTE("Absolute"), CUSTOM("Custom");
+
+        String name;
+
+        CameraType(String string) {
+            this.name = string;
+        }
 	}
 
     static enum Mode {
@@ -58,10 +73,45 @@ public class Properties {
         Mode(String string) {
             this.name = string;
         }
+
+        static Mode fromName(String string) {
+            for (Mode mode : Mode.values()) {
+                if (mode.name.equals(string)) {
+                    return mode;
+                }
+            }
+            return SOLVE;
+        }
+    }
+
+    static enum GroundMode {
+        NONE("None"), UNIFORM("Uniform"), VARIED("Varied");
+
+        String name;
+
+        GroundMode(String string) {
+            this.name = string;
+        }
     }
 
     static enum GroundType {
-        NONE, GROUND, DAMAGING
+        NONE("None"), GROUND("Ground"), DAMAGING("Lava/Poison");
+
+        String name;
+
+        GroundType(String string) {
+            this.name = string;
+        }
+    }
+
+    static enum HctDirection {
+        UP("Up"), DOWN("Down"), LEFT("Left"), RIGHT("Right");
+
+        String name;
+
+        HctDirection(String string) {
+            this.name = string;
+        }
     }
 
     double x0 = 0, y0 = 0, z0 = 0;
@@ -72,17 +122,22 @@ public class Properties {
     CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;
 	AngleType angleType = AngleType.TARGET;
 	String initialMovementName = "Triple Jump";
+	int lockDurationType = VectorCalculator.LOCK_NONE;
 	boolean durationFrames = true;
 	int initialFrames = 70;
 	double initialDispY = 0;
 	int framesJump = 10;
 	boolean canMoonwalk = true;
 	int framesMoonwalk = 0;
+    boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
+
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
     double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
+    boolean diveTurn = true;
+
 	int currentPresetIndex = 1;
 	boolean onMoon = false;
 	boolean hyperoptimize = true;
@@ -100,21 +155,34 @@ public class Properties {
     double groundUnderFirstGP = 0;
     double groundUnderCB = 0;
     double groundUnderSecondGP = 0;
+    GroundType groundType = GroundType.NONE;
     GroundType groundTypeFirstGP = GroundType.NONE;
     GroundType groundTypeCB = GroundType.NONE;
     GroundType groundTypeSecondGP = GroundType.NONE;
     boolean hasGroundUnderFirstGP = false;
     boolean hasGroundUnderCB = false;
     boolean hasGroundUnderSecondGP = false;
+
     double hctThrowAngle = 60;
     boolean hctNeutralHoming = true;
+    HctDirection hctDirection = HctDirection.DOWN;
+    int hctHomingFrame = 19;
+    int hctMinFrames = 36;
+
+    boolean initialAndTargetGiven = false;
+    boolean initialAngleGiven = false;
+    boolean targetAngleGiven = false;
+    boolean targetCoordinatesGiven = true;
 
     //boolean isLavaOrPoison = false;
     double upwarp = 0;
     Mode mode = Mode.SOLVE;
 
-
     int currentTab = 0;
+
+    String initialMovementCategory = "Distance";
+    GroundMode groundMode = GroundMode.NONE;
+	boolean chooseJumpFrames = true;
 
     //select the initial movement once these properties are saved
 

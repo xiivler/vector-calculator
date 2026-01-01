@@ -391,7 +391,7 @@ public class VectorMaximizer {
 		for (int j = 1; j <= 23; j++)
 			homingMotionThrowHoldingAngles[j] = SimpleMotion.NORMAL_ANGLE;
 		if (p.hctNeutralHoming) {
-			homingMotionThrowHoldingAngles[19] = SimpleMotion.NO_ANGLE;
+			homingMotionThrowHoldingAngles[p.hctHomingFrame] = SimpleMotion.NO_ANGLE;
 		}
 		return homingMotionThrowHoldingAngles;
 	}

@@ -13,6 +13,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,6 +41,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
 import com.vectorcalculator.Properties.CameraType;
+import com.vectorcalculator.Properties.GroundMode;
 import com.vectorcalculator.Properties.AngleType;
 
 public class VectorCalculator extends JPanel {
@@ -62,10 +64,10 @@ public class VectorCalculator extends JPanel {
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
-		midairs("Midairs"), gravity("Gravity"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Category"), initial_movement("Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Displacement"),
-		jump_button_frames("Frames of Holding A/B"), initial_speed("Initial Horizontal Speed"),
+		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
 		dive_turn("Turn During First Dive"), hct_angle("Homing Throw Angle"),
@@ -83,32 +85,375 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	static Parameter[] rowParams = new Parameter[]{Parameter.mode};
+	static Parameter[] getRowParams(int tab) {
+		ArrayList<Parameter> params = new ArrayList<Parameter>();
+		if (tab == GENERAL_TAB) {
+			params.add(Parameter.mode);
+			params.add(Parameter.initial_coordinates);
+			params.add(Parameter.calculate_using);
+			if (p.initialAngleGiven)
+				params.add(Parameter.initial_angle);
+			if (p.targetAngleGiven)
+				params.add(Parameter.target_angle);
+			if (p.targetCoordinatesGiven)
+				params.add(Parameter.target_coordinates);
+			params.add(Parameter.midairs);
+			params.add(Parameter.gravity);
+			params.add(Parameter.zero_axis);
+			params.add(Parameter.camera);
+			if (p.cameraType == CameraType.CUSTOM)
+				params.add(Parameter.custom_camera_angle);
+		}
+		else if (tab == INITIAL_TAB) {
+			params.add(Parameter.initial_movement_category);
+			params.add(Parameter.initial_movement);
+			params.add(Parameter.duration_type);
+			if (p.durationFrames)
+				params.add(Parameter.initial_frames);
+			else
+				params.add(Parameter.initial_displacement);
+			if (p.chooseJumpFrames)
+				params.add(Parameter.jump_button_frames);
+			if (p.canMoonwalk)
+				params.add(Parameter.moonwalk_frames);
+			if (p.chooseInitialHorizontalSpeed)
+				params.add(Parameter.initial_speed);
+			params.add(Parameter.vector_direction);
+		}
+		else if (tab == CB_TAB) {
+			rowParams = new Parameter[]{Parameter.dive_angle, Parameter.dive_angle_tolerance, Parameter.dive_deceleration, Parameter.dive_turn};
+			return rowParams;
+		}
+		else if (tab == HCT_TAB) {
+			rowParams = new Parameter[]{Parameter.hct_angle, Parameter.hct_neutral, Parameter.hct_direction, Parameter.hct_homing_frame, Parameter.hct_min_frames};
+			return rowParams;
+		}
+		else if (tab == GROUND_TAB) {
+			params.add(Parameter.ground_mode);
+			if (p.groundMode == GroundMode.UNIFORM) {
+				params.add(Parameter.ground_type);
+				params.add(Parameter.ground_height);
+			}
+			else if (p.groundMode == GroundMode.VARIED) {
+				params.add(Parameter.ground_type_firstGP);
+				params.add(Parameter.ground_height_firstGP);
+				params.add(Parameter.ground_type_CB);
+				params.add(Parameter.ground_height_CB);
+				params.add(Parameter.ground_type_secondGP);
+				params.add(Parameter.ground_height_secondGP);
+			}
+		}
+		rowParams = (Parameter[]) params.toArray();
+		return rowParams;
+	}
+
+	//refreshes property rows to display the parameters in the array
+	static void refreshPropertiesRows(Parameter[] params) {
+		genPropertiesModel.setRowCount(0);
+		for (int i = 0; i < params.length; i++) {
+			genPropertiesModel.addRow(new Object[]{"",""});
+			setPropertiesRow(i);
+		}
+	}
+
+	static Parameter[] rowParams = new Parameter[]{Parameter.initial_coordinates, Parameter.calculate_using, Parameter.target_coordinates, Parameter.initial_movement, Parameter.duration_type, Parameter.initial_frames, Parameter.jump_button_frames, Parameter.moonwalk_frames, Parameter.initial_speed, Parameter.vector_direction, Parameter.dive_angle, Parameter.dive_angle_tolerance, Parameter.dive_deceleration, Parameter.midairs, Parameter.gravity, Parameter.hyperoptimize, Parameter.zero_axis, Parameter.camera};
 	static void setPropertiesRow(int row) {
 		Parameter param = rowParams[row];
 		String key = param.name;
 		Object value = null;
 		switch(param) {
-			case mode:
-				value = p.mode.name;
-			case initial_coordinates:
-				value = toCoordinateString(p.x0, p.y0, p.z0);
-			case calculate_using:
-				value = p.calculateUsing.name;
-			case initial_angle:
-				value = p.initialAngle;
-			case target_angle:
-			case target_coordinates:
-			case midairs:
-			
-			default:
-		setPropertiesRow(row, key, value);
+		case mode:
+			value = p.mode.name;
+			break;
+		case initial_coordinates:
+			value = toCoordinateString(p.x0, p.y0, p.z0);
+			break;
+		case calculate_using:
+			value = p.calculateUsing.name;
+			break;
+		case initial_angle:
+			value = p.initialAngle;
+			break;
+		case target_angle:
+			value = p.targetAngle;
+			break;
+		case target_coordinates:
+			value = toCoordinateString(p.x1, p.y1, p.z1);
+			break;
+		case midairs:
+			value = midairPresetNames[p.currentPresetIndex];
+			break;
+		case gravity:
+			value = p.onMoon ? "Moon" : "Regular";
+			break;
+		case zero_axis:
+			value = p.xAxisZeroDegrees ? "X" : "Z";
+			break;
+		case camera:
+			value = p.cameraType.name;
+			break;
+		case custom_camera_angle:
+			value = p.customCameraAngle;
+			break;
+		case initial_movement_category:
+			value = p.initialMovementCategory;
+			break;
+		case initial_movement:
+			value = p.initialMovementName;
+			break;
+		case duration_type:
+			value = p.durationFrames ? "Frames" : "Vertical Displacement";
+			break;
+		case initial_frames:
+			value = p.initialFrames;
+			break;
+		case initial_displacement:
+			value = p.initialDispY;
+			break;
+		case jump_button_frames:
+			value = p.framesJump;
+			break;
+		case initial_speed:
+			value = p.initialHorizontalSpeed;
+			break;
+		case vector_direction:
+			value = p.rightVector ? "Right" : "Left";
+			break;
+		case dive_angle:
+			value = p.diveCapBounceAngle;
+			break;
+		case dive_angle_tolerance:
+			value = p.diveCapBounceTolerance;
+			break;
+		case dive_deceleration:
+			value = p.diveFirstFrameDecel;
+			break;
+		case dive_turn:
+			value = p.diveTurn;
+			break;
+		case hct_angle:
+			value = p.hctThrowAngle;
+			break;
+		case hct_neutral:
+			value = p.hctNeutralHoming ? "True" : "False";
+			break;
+		case hct_direction:
+			value = p.hctDirection.name;
+			break;
+		case hct_homing_frame:
+			value = p.hctHomingFrame;
+			break;
+		case hct_min_frames:
+			value = p.hctMinFrames;
+			break;
+		case ground_mode:
+			value = p.groundMode.name();
+			break;
+		case ground_type:
+			value = p.groundType.name();
+			break;
+		case ground_height:
+			value = p.groundUnderFirstGP;
+			break;
+		case ground_type_firstGP:
+			value = p.groundTypeFirstGP.name();
+			break;
+		case ground_height_firstGP:
+			value = p.groundUnderFirstGP;
+			break;
+		case ground_type_CB:
+			value = p.groundTypeCB.name();
+			break;
+		case ground_height_CB:
+			value = p.groundUnderCB;
+			break;
+		case ground_type_secondGP:
+			value = p.groundTypeSecondGP.name();
+			break;
+		case ground_height_secondGP:
+			value = p.groundUnderSecondGP;
+			break;
+		default:
+			value = null;
 		}
+		setPropertiesRow(row, key, value);
 	}
 
 	static void setPropertiesRow(int row, String key, Object value) {
 		genPropertiesTable.setValueAt(key, row, 0);
 		genPropertiesTable.setValueAt(value, row, 0);
+	}
+
+	static double parseDoubleWithDefault(Object value, double defaultVal) {
+		try {
+			return Double.parseDouble(value.toString());
+		} catch (NumberFormatException e) {
+			return defaultVal;
+		}
+	}
+
+	static int parseIntWithDefault(Object value, int defaultVal) {
+		try {
+			return Integer.parseInt(value.toString());
+		} catch (NumberFormatException e) {
+			return defaultVal;
+		}
+	}
+
+	static double clampDouble(double val, double min, double max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	static int clampInt(int val, int min, int max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	static void parseCoordinates(String coordString, double[] coords) {
+		try {
+			String s = coordString.replaceAll("[()\\s]", "");
+			String[] parts = s.split(",");
+			for (int i = 0; i < Math.min(3, parts.length); i++) {
+				coords[i] = Double.parseDouble(parts[i].trim());
+			}
+		} catch (Exception e) {
+			// keep defaults
+		}
+	}
+
+	static void setProperty(int row) {
+		Parameter param = rowParams[row];
+		Object value = genPropertiesTable.getValueAt(row, 1);
+		switch(param) {
+		case mode:
+			p.mode = Properties.Mode.fromName(value.toString());
+			break;
+		case initial_coordinates:
+			double[] coords = new double[3];
+			parseCoordinates(value.toString(), coords);
+			p.x0 = coords[0];
+			p.y0 = coords[1];
+			p.z0 = coords[2];
+			break;
+		case calculate_using:
+			String val = value.toString();
+			p.calculateUsing = Properties.CalculateUsing.fromName(val);
+			// String val = value.toString();
+			// if (val.equals("Initial Angle")) {
+			// 	setAngleType(AngleType.INITIAL, p.targetCoordinates);
+			// } else if (val.equals("Target Angle")) {
+			// 	if (p.angleType != AngleType.BOTH)
+			// 		setAngleType(AngleType.TARGET, false);
+			// 	else
+			// 		setAngleType(AngleType.BOTH, false);
+			// } else if (val.equals("Target Coordinates")) {
+			// 	if (p.angleType != AngleType.BOTH)
+			// 		setAngleType(AngleType.TARGET, true);
+			// 	else
+			// 		setAngleType(AngleType.BOTH, true);
+			// }
+			break;
+		case target_coordinates:
+			double[] tcoords = new double[3];
+			parseCoordinates(value.toString(), tcoords);
+			p.x1 = tcoords[0];
+			p.y1 = tcoords[1];
+			p.z1 = tcoords[2];
+			targetCoordinatesToTargetAngle();
+			break;
+		case initial_angle:
+			p.initialAngle = parseDoubleWithDefault(value, 0);
+			break;
+		case target_angle:
+			p.targetAngle = parseDoubleWithDefault(value, 0);
+			break;
+		case initial_movement:
+			p.initialMovementName = value.toString();
+			updateInitialMovement(p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed(), true);
+			break;
+		case duration_type:
+			boolean oldDurationFrames = p.durationFrames;
+			p.durationFrames = value.toString().equals("Frames");
+			initialMovement.initialHorizontalSpeed = p.initialHorizontalSpeed;
+			initialMotion = initialMovement.getMotion(p.initialFrames, false, false);
+			if (p.durationFrames && !oldDurationFrames) {
+				genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
+				p.initialFrames = initialMotion.calcFrames(p.initialDispY - getMoonwalkDisp());
+				genPropertiesTable.setValueAt(p.initialFrames, MOVEMENT_DURATION_ROW, 1);
+			} else if (!p.durationFrames && oldDurationFrames) {
+				genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
+				p.initialDispY = initialMotion.calcDispY(p.initialFrames) + getMoonwalkDisp();
+				genPropertiesTable.setValueAt(p.initialDispY, MOVEMENT_DURATION_ROW, 1);
+			}
+			break;
+		case initial_frames:
+			int minFrames = initialMovement.minFrames;
+			if (p.durationFrames) {
+				p.initialFrames = clampInt(parseIntWithDefault(value, minFrames), minFrames, Integer.MAX_VALUE);
+			} else {
+				p.initialDispY = parseDoubleWithDefault(value, 0);
+			}
+			break;
+		case jump_button_frames:
+			if (p.chooseJumpFrames) {
+				p.framesJump = clampInt(parseIntWithDefault(value, 1), 1, 10);
+			}
+			break;
+		case moonwalk_frames:
+			if (p.canMoonwalk) {
+				p.framesMoonwalk = clampInt(parseIntWithDefault(value, 0), 0, 5);
+			}
+			break;
+		case initial_speed:
+			if (p.chooseInitialHorizontalSpeed) {
+				p.initialHorizontalSpeed = Math.max(0, parseDoubleWithDefault(value, 0));
+			}
+			break;
+		case vector_direction:
+			p.rightVector = value.toString().equals("Right");
+			break;
+		case dive_angle:
+			p.diveCapBounceAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, 41.2);
+			break;
+		case dive_angle_tolerance:
+			p.diveCapBounceTolerance = clampDouble(parseDoubleWithDefault(value, 0), 0, 1);
+			break;
+		case dive_deceleration:
+			double decel = parseDoubleWithDefault(value, 0);
+			if (decel > 0.5) decel = 0.5;
+			else if (decel <= 0.05 && decel != 0) decel = 0;
+			p.diveFirstFrameDecel = decel;
+			break;
+		case midairs:
+			int presetIndex = Arrays.asList(midairPresetNames).indexOf(value.toString());
+			if (presetIndex != -1 && presetIndex != p.currentPresetIndex) {
+				addPreset(presetIndex);
+			}
+			break;
+		case gravity:
+			p.onMoon = value.toString().equals("Moon");
+			Movement.onMoon = p.onMoon;
+			break;
+		case hyperoptimize:
+			p.hyperoptimize = value.toString().equals("True");
+			break;
+		case zero_axis:
+			p.xAxisZeroDegrees = value.toString().equals("X");
+			break;
+		case camera:
+			String choice = value.toString();
+			if (choice.equals("Initial Angle")) {
+				setCameraType(CameraType.INITIAL);
+			} else if (choice.equals("Target Angle")) {
+				setCameraType(CameraType.TARGET);
+			} else if (choice.equals("Absolute")) {
+				setCameraType(CameraType.ABSOLUTE);
+			} else if (choice.equals("Custom")) {
+				setCameraType(CameraType.CUSTOM);
+			}
+			break;
+		default:
+			break;
+		}
 	}
 
 	//category for falling for height calculator?
@@ -230,9 +575,6 @@ public class VectorCalculator extends JPanel {
 	
 	static Movement initialMovement = new Movement(p.initialMovementName);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, p.initialFrames);
-	static boolean chooseJumpFrames = true;
-	static boolean chooseInitialHorizontalSpeed = true;
-	static int lockDurationType = LOCK_NONE;
 	
 	static boolean forceEdit = false;
 	static boolean add_ic_listener = true;
@@ -300,9 +642,9 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void lockDurationType(int value) {
-		lockDurationType = value;
-		Debug.println(lockDurationType);
-		if (lockDurationType == LOCK_FRAMES) {
+		p.lockDurationType = value;
+		Debug.println(p.lockDurationType);
+		if (p.lockDurationType == LOCK_FRAMES) {
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Frames", MOVEMENT_DURATION_ROW, 0);
 			if (p.durationFrames == false) {
@@ -311,7 +653,7 @@ public class VectorCalculator extends JPanel {
 				p.initialFrames = initialMovement.minRecommendedFrames;
 			}
 		}
-		else if (lockDurationType == LOCK_VERTICAL_DISPLACEMENT) {
+		else if (p.lockDurationType == LOCK_VERTICAL_DISPLACEMENT) {
 			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_TYPE_ROW, 1);
 			genPropertiesTable.setValueAt("Vertical Displacement", MOVEMENT_DURATION_ROW, 0);
 			if (p.durationFrames == true) {
@@ -482,14 +824,14 @@ public class VectorCalculator extends JPanel {
 		if (suggestSpeed)
 			p.initialHorizontalSpeed = suggestedSpeed;
 		if (initialMovement.variableJumpFrames()) {
-			if (!chooseJumpFrames) {
-				chooseJumpFrames = true;
+			if (!p.chooseJumpFrames) {
+				p.chooseJumpFrames = true;
 				p.framesJump = 10;
 			}
 			genPropertiesModel.setValueAt(p.framesJump, HOLD_JUMP_FRAMES_ROW, 1);
 		}
 		else {
-			chooseJumpFrames = false;
+			p.chooseJumpFrames = false;
 			genPropertiesModel.setValueAt("N/A", HOLD_JUMP_FRAMES_ROW, 1);
 		}
 		if (initialMovement.canMoonwalk) {
@@ -506,7 +848,7 @@ public class VectorCalculator extends JPanel {
 		}
 		if (initialMovement.variableInitialHorizontalSpeed()) {
 			if (suggestSpeed) {
-				chooseInitialHorizontalSpeed = true;
+				p.chooseInitialHorizontalSpeed = true;
 				if (suggestedSpeed == (int) suggestedSpeed)
 					genPropertiesModel.setValueAt((int) initialMovement.getSuggestedSpeed(), INITIAL_HORIZONTAL_SPEED_ROW, 1);
 				else
@@ -520,7 +862,7 @@ public class VectorCalculator extends JPanel {
 			}
 		}
 		else {
-			chooseInitialHorizontalSpeed = false;
+			p.chooseInitialHorizontalSpeed = false;
 			genPropertiesModel.setValueAt("N/A", INITIAL_HORIZONTAL_SPEED_ROW, 1);
 			p.initialHorizontalSpeed = 0;
 		}
@@ -885,7 +1227,7 @@ public class VectorCalculator extends JPanel {
                 }
 				else if (modelColumn == 1 && row == MOVEMENT_DURATION_TYPE_ROW)
                 {
-					if (lockDurationType == LOCK_NONE) {
+					if (p.lockDurationType == LOCK_NONE) {
 						String[] options = {"Frames", "Vertical Displacement"};
 						JComboBox<String> choice = new JComboBox<String>(options);
 						return new DefaultCellEditor(choice);
@@ -934,7 +1276,7 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && p.targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !chooseJumpFrames) || (row == MOONWALK_FRAMES_ROW && !p.canMoonwalk) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !chooseInitialHorizontalSpeed))
+				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && p.targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !p.chooseJumpFrames) || (row == MOONWALK_FRAMES_ROW && !p.canMoonwalk) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !p.chooseInitialHorizontalSpeed))
 					return false;
 				return true;
 			}
@@ -1110,7 +1452,7 @@ public class VectorCalculator extends JPanel {
 						}
 					}
 					else if (row == MOVEMENT_DURATION_TYPE_ROW) {
-						if (lockDurationType == LOCK_NONE) {
+						if (p.lockDurationType == LOCK_NONE) {
 							boolean oldDurationFrames = p.durationFrames;
 							p.durationFrames = genPropertiesTable.getValueAt(MOVEMENT_DURATION_TYPE_ROW, 1).equals("Frames");
 							Debug.println(p.durationFrames);
@@ -1130,7 +1472,7 @@ public class VectorCalculator extends JPanel {
 						}
 					}
 					else if (row == HOLD_JUMP_FRAMES_ROW) {
-						if (chooseJumpFrames) {
+						if (p.chooseJumpFrames) {
 							p.framesJump = 0;
 							try {
 								p.framesJump = Integer.parseInt(genPropertiesTable.getValueAt(row, 1).toString());
@@ -1165,7 +1507,7 @@ public class VectorCalculator extends JPanel {
 						}
 					}
 					else if (row == INITIAL_HORIZONTAL_SPEED_ROW) {
-						if (chooseInitialHorizontalSpeed) {
+						if (p.chooseInitialHorizontalSpeed) {
 							p.initialHorizontalSpeed = 0;
 							try {
 								p.initialHorizontalSpeed = Double.parseDouble(genPropertiesTable.getValueAt(row, 1).toString());
