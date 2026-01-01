@@ -32,6 +32,16 @@ public class Properties {
         return p;
     }
 
+    static enum CalculateUsing {
+		INITIAL_ANGLE("Initial Angle"), TARGET_ANGLE("Target Angle"), TARGET_COORDINATES("Target Coordinates");
+
+        String name;
+
+        CalculateUsing(String string) {
+            this.name = string;
+        }
+	}
+
     static enum AngleType {
 		INITIAL, TARGET, BOTH
 	}
@@ -41,7 +51,13 @@ public class Properties {
 	}
 
     static enum Mode {
-        SOLVE, SOLVE_CB, CALCULATE
+        SOLVE("Solve"), SOLVE_CB("Solve Cap Bounce Only"), CALCULATE("Calculate");
+
+        String name;
+
+        Mode(String string) {
+            this.name = string;
+        }
     }
 
     static enum GroundType {
@@ -53,6 +69,7 @@ public class Properties {
 	boolean targetCoordinates = true;
 	double initialAngle = 0;
 	double targetAngle = 90;
+    CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;
 	AngleType angleType = AngleType.TARGET;
 	String initialMovementName = "Triple Jump";
 	boolean durationFrames = true;
@@ -95,6 +112,9 @@ public class Properties {
     //boolean isLavaOrPoison = false;
     double upwarp = 0;
     Mode mode = Mode.SOLVE;
+
+
+    int currentTab = 0;
 
     //select the initial movement once these properties are saved
 

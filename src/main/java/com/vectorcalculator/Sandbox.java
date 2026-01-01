@@ -2,12 +2,86 @@ package com.vectorcalculator;
 
 import java.util.Arrays;
 
+import javax.swing.JTabbedPane;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.KeyEvent;
+
 public class Sandbox {
     
     public static void main(String[] args) {
-        test();
+        //test();
         //System.out.println(basePossible[30][26]);
+        tabTest();
     }
+
+    public static void tabTest() {
+        
+
+        JPanel panel = new JPanel();
+
+        //Create and set up the window.
+        JFrame frame = new JFrame("TabbedPaneDemo");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        
+        
+        JComponent panel3 = makeTextPanel("Homing Cap Throw Options");
+        tabbedPane.addTab("Tab 3", null, panel3,
+                "Still does nothing");
+        tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
+        
+        JComponent panel4 = makeTextPanel(
+                "Panel #4 (has a preferred size of 410 x 50).");
+        panel4.setPreferredSize(new Dimension(410, 50));
+        tabbedPane.addTab("Tab 4", null, panel4,
+                "Does nothing at all");
+        tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
+        
+        //Add the tabbed pane to this panel.
+        panel.add(tabbedPane);
+        
+        tabbedPane.setPreferredSize(new Dimension(1000, 30));
+        panel.setPreferredSize(new Dimension(1000, 1000));
+
+        //The following line enables to use scrolling tabs.
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+
+        //Add content to the window.
+        frame.add(panel, BorderLayout.CENTER);
+
+        //VectorCalculator vc = new VectorCalculator();
+        //VectorCalculator.main(null);
+
+        //frame.add(VectorCalculator.all);
+        
+        //Display the window.
+        frame.pack();
+        frame.setPreferredSize(new Dimension(1000, 1000));
+        frame.setVisible(true);
+        
+    }
+        
+    protected static JComponent makeTextPanel(String text) {
+        JPanel panel = new JPanel(false);
+        JLabel filler = new JLabel(text);
+        filler.setHorizontalAlignment(JLabel.CENTER);
+        panel.setLayout(new GridLayout(1, 1));
+        panel.add(filler);
+        return panel;
+    }
+
 
     public static void test() {
         System.out.println("Started");

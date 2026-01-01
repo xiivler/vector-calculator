@@ -24,8 +24,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 //import javax.swing.dataTable.DefaultTableModel;
@@ -53,7 +56,61 @@ public class VectorCalculator extends JPanel {
 	static String jarParentFolder;
 	static File userDefaults;
 	static File factoryDefaults;
+
+	static final int GENERAL_TAB = 0, INITIAL_TAB = 1, CB_TAB = 2, HCT_TAB = 3, GROUND_TAB = 4;
 	
+	static enum Parameter {
+		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
+		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
+		midairs("Midairs"), gravity("Gravity"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Category"), initial_movement("Type"),
+		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Displacement"),
+		jump_button_frames("Frames of Holding A/B"), initial_speed("Initial Horizontal Speed"),
+		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
+		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
+		dive_turn("Turn During First Dive"), hct_angle("Homing Throw Angle"),
+		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
+		hct_homing_frame("Frames Before Home"), hct_min_frames("Frames Until Cappy Returns"),
+		ground_mode("Ground Under Jump"), ground_type("Ground Type"), ground_height("Ground Height"),
+		ground_type_firstGP("Ground Height Under First GP"), ground_height_firstGP("Ground Type Under First GP"),
+		ground_type_CB("Ground Type UnderCB"), ground_height_CB("Ground Height Under CB"),
+		ground_type_secondGP("Ground Type Under First GP"), ground_height_secondGP("Ground Height Under First GP");
+
+		String name;
+
+		Parameter(String name) {
+			this.name = name;
+		}
+	}
+
+	static Parameter[] rowParams = new Parameter[]{Parameter.mode};
+	static void setPropertiesRow(int row) {
+		Parameter param = rowParams[row];
+		String key = param.name;
+		Object value = null;
+		switch(param) {
+			case mode:
+				value = p.mode.name;
+			case initial_coordinates:
+				value = toCoordinateString(p.x0, p.y0, p.z0);
+			case calculate_using:
+				value = p.calculateUsing.name;
+			case initial_angle:
+				value = p.initialAngle;
+			case target_angle:
+			case target_coordinates:
+			case midairs:
+			
+			default:
+		setPropertiesRow(row, key, value);
+		}
+	}
+
+	static void setPropertiesRow(int row, String key, Object value) {
+		genPropertiesTable.setValueAt(key, row, 0);
+		genPropertiesTable.setValueAt(value, row, 0);
+	}
+
 	//category for falling for height calculator?
 	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
 	static String[][] initialMovementNames =
@@ -223,6 +280,7 @@ public class VectorCalculator extends JPanel {
 		{"Camera Angle", "Target Angle"}};
 	
 	static JFrame f = new JFrame(projectName);
+	static JPanel all;
 
 	public static double round(double d, int places) {
 		return ((int) (d * Math.pow(10, places) + .5)) / (double) Math.pow(10, places);
@@ -803,7 +861,7 @@ public class VectorCalculator extends JPanel {
 		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
 		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
 
-		JPanel all = new JPanel();
+		all = new JPanel();
 		all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
 		all.setOpaque(true);
 		
@@ -1355,7 +1413,7 @@ public class VectorCalculator extends JPanel {
 		//CREATING THE WINDOW
 		
 		JPanel nonResize = new JPanel(new BorderLayout());
-		nonResize.add(genPropertiesScrollPane, BorderLayout.NORTH);
+		//nonResize.add(genPropertiesScrollPane, BorderLayout.NORTH);
 		//nonResize.add(movementPropertiesScrollPane, BorderLayout.EAST);
 		//nonResize.add(infoScrollPane, BorderLayout.CENTER);
 		nonResize.add(movementScrollPane, BorderLayout.CENTER);
@@ -1368,6 +1426,23 @@ public class VectorCalculator extends JPanel {
 		resize.add(dataScrollPane, BorderLayout.CENTER);
 		*/
 
+		JPanel tabPanel = new JPanel();
+		JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                System.out.println("Tab: " + tabbedPane.getSelectedIndex());
+            }
+        });
+        tabbedPane.addTab("General",genPropertiesScrollPane);
+        tabbedPane.addTab("Initial Movement", null);
+        tabbedPane.addTab("Cap Bounce", null);
+        tabbedPane.addTab("Homing Cap Throw", null);
+        tabbedPane.addTab("Ground", null);
+        tabbedPane.setPreferredSize(new Dimension(600, 400));
+		tabPanel.add(tabbedPane);
+
+		//genPropertiesTable.setTableHeader(null);
+
 		MainJMenuBar menuBar = new MainJMenuBar();
 		f.setJMenuBar(menuBar);
 		f.addWindowListener(new WindowAdapter() {
@@ -1376,6 +1451,7 @@ public class VectorCalculator extends JPanel {
 				}
 			});
 
+		f.add(tabPanel, BorderLayout.NORTH);
 		f.add(nonResize, BorderLayout.CENTER);
 		
 		//f.add(resize, BorderLayout.CENTER);
