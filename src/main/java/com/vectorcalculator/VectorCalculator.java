@@ -42,6 +42,7 @@ import javax.swing.text.JTextComponent;
 
 import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.GroundMode;
+import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctDirection;
 import com.vectorcalculator.Properties.Mode;
 //import com.apple.laf.ClientPropertyApplicator.Property;
@@ -63,24 +64,24 @@ public class VectorCalculator extends JPanel {
 	static File userDefaults;
 	static File factoryDefaults;
 
-	static final int GENERAL_TAB = 0, INITIAL_TAB = 1, CB_TAB = 2, HCT_TAB = 3, GROUND_TAB = 4;
+	static final int GENERAL_TAB = 0, MIDAIR_TAB = 1;
 	
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
-		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Category"), initial_movement("Type"),
+		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement Category"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Displacement"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
 		dive_turn("Turn During First Dive"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_min_frames("Frames Until Cappy Returns"),
-		ground_mode("Ground Under Jump"), ground_type("Ground Type"), ground_height("Ground Height"),
-		ground_type_firstGP("Ground Height Under First GP"), ground_height_firstGP("Ground Type Under First GP"),
-		ground_type_CB("Ground Type UnderCB"), ground_height_CB("Ground Height Under CB"),
-		ground_type_secondGP("Ground Type Under First GP"), ground_height_secondGP("Ground Height Under First GP");
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frames Until Cappy Returns"),
+		ground_mode("Ground Under Midairs"), ground_type("Type"), ground_height("Height"),
+		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
+		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
+		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP");
 
 		String name;
 
@@ -95,6 +96,7 @@ public class VectorCalculator extends JPanel {
 		ArrayList<Parameter> params = new ArrayList<Parameter>();
 		if (p.currentTab == GENERAL_TAB) {
 			params.add(Parameter.mode);
+			params.add(null);
 			params.add(Parameter.initial_coordinates);
 			params.add(Parameter.calculate_using);
 			if (p.initialAngleGiven)
@@ -103,19 +105,10 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.target_angle);
 			if (p.targetCoordinatesGiven)
 				params.add(Parameter.target_coordinates);
-			params.add(Parameter.midairs);
-			if (p.canTripleThrow)
-				params.add(Parameter.triple_throw);
-			params.add(Parameter.gravity);
-			params.add(Parameter.zero_axis);
-			params.add(Parameter.camera);
-			if (p.cameraType == CameraType.CUSTOM)
-				params.add(Parameter.custom_camera_angle);
-		}
-		else if (p.currentTab == INITIAL_TAB) {
+			params.add(null);
 			params.add(Parameter.initial_movement_category);
 			params.add(Parameter.initial_movement);
-			if (!p.chooseDurationType)
+			if (p.chooseDurationType)
 				params.add(Parameter.duration_type);
 			if (p.durationFrames)
 				params.add(Parameter.initial_frames);
@@ -128,33 +121,55 @@ public class VectorCalculator extends JPanel {
 			if (p.chooseInitialHorizontalSpeed)
 				params.add(Parameter.initial_speed);
 			params.add(Parameter.vector_direction);
+			params.add(null);
+			params.add(Parameter.midairs);
+			if (p.canTripleThrow)
+				params.add(Parameter.triple_throw);
+			params.add(null);
+			params.add(Parameter.gravity);
+			params.add(Parameter.zero_axis);
+			params.add(Parameter.camera);
+			if (p.cameraType == CameraType.CUSTOM)
+				params.add(Parameter.custom_camera_angle);
 		}
-		else if (p.currentTab == CB_TAB) {
-			params.add(Parameter.dive_angle);
-			params.add(Parameter.dive_angle_tolerance);
-			params.add(Parameter.dive_deceleration);
-			params.add(Parameter.dive_turn);
-		}
-		else if (p.currentTab == HCT_TAB) {
-			params.add(Parameter.hct_angle);
-			params.add(Parameter.hct_neutral);
-			params.add(Parameter.hct_direction);
-			params.add(Parameter.hct_homing_frame);
-			params.add(Parameter.hct_min_frames);
-		}
-		else if (p.currentTab == GROUND_TAB) {
+		else if (p.currentTab == MIDAIR_TAB) {
+			params.add(Parameter.mode);
+			params.add(null);
+			params.add(Parameter.midairs);
+			if (p.canTripleThrow)
+				params.add(Parameter.triple_throw);
+			if (p.diveCapBounce) {
+				params.add(null);
+				params.add(Parameter.dive_angle);
+				params.add(Parameter.dive_angle_tolerance);
+				params.add(Parameter.dive_deceleration);
+				params.add(Parameter.dive_turn);
+			}
+			if (p.hct) {
+				params.add(null);
+				params.add(Parameter.hct_angle);
+				params.add(Parameter.hct_neutral);
+				params.add(Parameter.hct_direction);
+				params.add(Parameter.hct_homing_frame);
+				params.add(Parameter.hct_cap_return_frame);
+			}
+			params.add(null);
 			params.add(Parameter.ground_mode);
 			if (p.groundMode == GroundMode.UNIFORM) {
 				params.add(Parameter.ground_type);
-				params.add(Parameter.ground_height);
+				if (p.groundType != GroundType.NONE)
+					params.add(Parameter.ground_height);
 			}
 			else if (p.groundMode == GroundMode.VARIED) {
 				params.add(Parameter.ground_type_firstGP);
-				params.add(Parameter.ground_height_firstGP);
+				if (p.groundTypeFirstGP != GroundType.NONE)
+					params.add(Parameter.ground_height_firstGP);
 				params.add(Parameter.ground_type_CB);
-				params.add(Parameter.ground_height_CB);
+				if (p.groundTypeCB != GroundType.NONE)
+					params.add(Parameter.ground_height_CB);
 				params.add(Parameter.ground_type_secondGP);
-				params.add(Parameter.ground_height_secondGP);
+				if (p.groundTypeSecondGP != GroundType.NONE)
+					params.add(Parameter.ground_height_secondGP);
 			}
 		}
 		return params;
@@ -172,7 +187,12 @@ public class VectorCalculator extends JPanel {
 		genPropertiesModel.setRowCount(0);
 		settingPropertyRow = true;
 		for (Parameter param : params) {
-			genPropertiesModel.addRow(new Object[]{param.name, PropertyToDisplayValue(param)});
+			if (param == null) {
+				genPropertiesModel.addRow(new Object[]{"", ""});
+				genPropertiesTable.setRowHeight(genPropertiesTable.getRowCount() - 1, 10);
+			}
+			else
+				genPropertiesModel.addRow(new Object[]{param.name, PropertyToDisplayValue(param)});
 		}
 		settingPropertyRow = false;
 	}
@@ -185,7 +205,12 @@ public class VectorCalculator extends JPanel {
 
 	static void setPropertiesRow(int row) {
 		settingPropertyRow = true;
+		// for (Parameter p : rowParams) {
+		// 	System.out.print(p + ", ");
+		// }
+		// System.out.println();
 		Parameter param = rowParams.get(row);
+		//System.out.println(param + ", " + row);
 		genPropertiesTable.setValueAt(param.name, row, 0);
 		genPropertiesTable.setValueAt(PropertyToDisplayValue(param), row, 1);
 		settingPropertyRow = false;
@@ -221,6 +246,9 @@ public class VectorCalculator extends JPanel {
 		case gravity:
 			value = p.onMoon ? "Moon" : "Regular";
 			break;
+		case hyperoptimize:
+			value = p.hyperoptimize ? "Yes" : "No";
+			break;
 		case zero_axis:
 			value = p.xAxisZeroDegrees ? "X" : "Z";
 			break;
@@ -248,6 +276,9 @@ public class VectorCalculator extends JPanel {
 		case jump_button_frames:
 			value = p.framesJump;
 			break;
+		case moonwalk_frames:
+			value = p.framesMoonwalk;
+			break;
 		case initial_speed:
 			value = p.initialHorizontalSpeed;
 			break;
@@ -264,13 +295,13 @@ public class VectorCalculator extends JPanel {
 			value = round(p.diveFirstFrameDecel, 3);
 			break;
 		case dive_turn:
-			value = p.diveTurn;
+			value = p.diveTurn ? "Yes" : "No";
 			break;
 		case hct_angle:
 			value = p.hctThrowAngle;
 			break;
 		case hct_neutral:
-			value = p.hctNeutralHoming ? "True" : "False";
+			value = p.hctNeutralHoming ? "Yes" : "No";
 			break;
 		case hct_direction:
 			value = p.hctDirection.name;
@@ -278,35 +309,35 @@ public class VectorCalculator extends JPanel {
 		case hct_homing_frame:
 			value = p.hctHomingFrame;
 			break;
-		case hct_min_frames:
-			value = p.hctMinFrames;
+		case hct_cap_return_frame:
+			value = p.hctCapReturnFrame;
 			break;
 		case ground_mode:
-			value = p.groundMode.name();
+			value = p.groundMode.name;
 			break;
 		case ground_type:
-			value = p.groundType.name();
+			value = p.groundType.name;
 			break;
 		case ground_height:
-			value = p.groundUnderFirstGP;
+			value = p.groundHeightFirstGP;
 			break;
 		case ground_type_firstGP:
-			value = p.groundTypeFirstGP.name();
+			value = p.groundTypeFirstGP.name;
 			break;
 		case ground_height_firstGP:
-			value = p.groundUnderFirstGP;
+			value = p.groundHeightFirstGP;
 			break;
 		case ground_type_CB:
-			value = p.groundTypeCB.name();
+			value = p.groundTypeCB.name;
 			break;
 		case ground_height_CB:
-			value = p.groundUnderCB;
+			value = p.groundHeightCB;
 			break;
 		case ground_type_secondGP:
-			value = p.groundTypeSecondGP.name();
+			value = p.groundTypeSecondGP.name;
 			break;
 		case ground_height_secondGP:
-			value = p.groundUnderSecondGP;
+			value = p.groundHeightSecondGP;
 			break;
 		default:
 			return "";
@@ -417,7 +448,7 @@ public class VectorCalculator extends JPanel {
 				p.initialMovementName = initialMovementDefaults[Arrays.asList(initialMovementCategories).indexOf(p.initialMovementCategory)];
 				updateInitialMovement();
 			}
-
+			break;
 		case initial_movement:
 			p.initialMovementName = value.toString();
 			updateInitialMovement();
@@ -483,7 +514,7 @@ public class VectorCalculator extends JPanel {
 			p.onMoon = value.toString().equals("Moon");
 			break;
 		case hyperoptimize:
-			p.hyperoptimize = value.toString().equals("True");
+			p.hyperoptimize = value.toString().equals("Yes");
 			break;
 		case zero_axis:
 			p.xAxisZeroDegrees = value.toString().equals("X");
@@ -493,10 +524,72 @@ public class VectorCalculator extends JPanel {
 			break;
 		case custom_camera_angle:
 			p.customCameraAngle = parseDoubleWithDefault(value, 0);
-		default:
+			break;
+		case dive_turn:
+			p.diveTurn = value.toString().equals("Yes");
+			break;
+		case hct_angle:
+			p.hctThrowAngle = parseDoubleWithDefault(value, 60);
+			break;
+		case hct_neutral:
+			p.hctNeutralHoming = value.toString().equals("Yes");
+			break;
+		case hct_direction:
+			p.hctDirection = Properties.HctDirection.fromName(value.toString());
+			break;
+		case hct_homing_frame:
+			p.hctHomingFrame = clampInt(parseIntWithDefault(value, 19), 0, Integer.MAX_VALUE);
+			break;
+		case hct_cap_return_frame:
+			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 0, Integer.MAX_VALUE);
+			break;
+		case ground_mode:
+			GroundMode oldGroundMode = p.groundMode;
+			p.groundMode = Properties.GroundMode.fromName(value.toString());
+			if (p.groundMode == GroundMode.NONE)
+				updateAllGround(GroundType.NONE, 0);
+			else if (oldGroundMode == GroundMode.NONE)
+				updateAllGround(GroundType.GROUND, 0);
+			else if (p.groundMode == GroundMode.UNIFORM && oldGroundMode == GroundMode.VARIED)
+				updateAllGround(p.groundTypeFirstGP, p.groundHeightFirstGP);
+			break;
+		case ground_type:
+			updateAllGround(Properties.GroundType.fromName(value.toString()), p.groundHeight);
+			break;
+		case ground_height:
+			updateAllGround(p.groundType, parseDoubleWithDefault(value, 0));
+			break;
+		case ground_type_firstGP:
+			p.groundTypeFirstGP = Properties.GroundType.fromName(value.toString());
+			break;
+		case ground_height_firstGP:
+			p.groundHeightFirstGP = parseDoubleWithDefault(value, 0);
+			break;
+		case ground_type_CB:
+			p.groundTypeCB = Properties.GroundType.fromName(value.toString());
+			break;
+		case ground_height_CB:
+			p.groundHeightCB = parseDoubleWithDefault(value, 0);
+			break;
+		case ground_type_secondGP:
+			p.groundTypeSecondGP = Properties.GroundType.fromName(value.toString());
+			break;
+		case ground_height_secondGP:
+			p.groundHeightSecondGP = parseDoubleWithDefault(value, 0);
 			break;
 		}
 		setPropertiesRow(param); //refresh this row
+	}
+
+	static void updateAllGround(GroundType groundType, double groundHeight) {
+		p.groundType = groundType;
+		p.groundHeight = groundHeight;
+		p.groundTypeFirstGP = p.groundType;
+		p.groundHeightFirstGP = p.groundHeight;
+		p.groundTypeCB = p.groundType;
+		p.groundHeightCB = p.groundHeight;
+		p.groundTypeSecondGP = p.groundType;
+		p.groundHeightSecondGP = p.groundHeight;
 	}
 
 	static void updateCalculateUsing() {
@@ -569,10 +662,16 @@ public class VectorCalculator extends JPanel {
 
 	static void saveMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
+		p.hct = false;
+		p.diveCapBounce = false;
 		List<String> types = Arrays.asList(midairMovementNames);
 		for (int i = 0; i < movementModel.getRowCount(); i++) {
 			p.midairs[i][0] = types.indexOf(movementModel.getValueAt(i, 0).toString());
 			p.midairs[i][1] = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
+			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE)
+				p.diveCapBounce = true;
+			else if (p.midairs[i][0] == HMCCT)
+				p.hct = true;
 		}
 		/* for (int i = 0; i < p.midairs.length; i++)
 			System.out.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
@@ -868,6 +967,7 @@ public class VectorCalculator extends JPanel {
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
+		saveMidairs();
 		// if (p.midairPreset.equals("Custom")) {
 		// 	add.setEnabled(false);
 		// 	remove.setEnabled(false);
@@ -960,7 +1060,10 @@ public class VectorCalculator extends JPanel {
 		Properties.copyAttributes(pl, p);
 			
 		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-		addPreset(p.midairs);
+		if (p.midairPreset.equals("Custom"))
+			addPreset(p.midairs);
+		else 
+			addPreset(p.midairPreset);
 		refreshPropertiesRows(getRowParams(), true);
 
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
@@ -1042,10 +1145,10 @@ public class VectorCalculator extends JPanel {
 		}
 		p.hyperoptimize = pl.hyperoptimize;
 		if (p.hyperoptimize) {
-			genPropertiesTable.setValueAt("True", HYPEROPTIMIZE_ROW, 1);
+			genPropertiesTable.setValueAt("Yes", HYPEROPTIMIZE_ROW, 1);
 		}
 		else {
-			genPropertiesTable.setValueAt("False", HYPEROPTIMIZE_ROW, 1);
+			genPropertiesTable.setValueAt("No", HYPEROPTIMIZE_ROW, 1);
 		}
 		p.xAxisZeroDegrees = pl.xAxisZeroDegrees;
 		if (p.xAxisZeroDegrees) {
@@ -1150,11 +1253,11 @@ public class VectorCalculator extends JPanel {
 					if (solver.solve(delta)) { //2 might even be okay for jumps with HCT
 						VectorMaximizer maximizer = getMaximizer();
 						if (maximizer != null) {
-							maximizer.alwaysDiveTurn = true;
+							//p.diveTurn should be set correctly by the solver
 							maximizer.maximize();
 							//System.out.println(maximizer.variableCapThrow1FallingFrames);
 							//System.out.println(maximizer.fallingFrames);
-							boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
+							boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, true, true, solver.ttAllowed) >= 0;
 							maximizer.recalculateDisps();
 							maximizer.adjustToGivenAngle();
 							//maximizer.maximize();
@@ -1321,12 +1424,16 @@ public class VectorCalculator extends JPanel {
 					case ground_mode:
 						return dropdown(new String[]{"None", "Uniform", "Varied"});
 					case ground_type:
+						return dropdown(new String[]{"Ground", "Lava/Poison"});
 					case ground_type_firstGP:
 					case ground_type_CB:
 					case ground_type_secondGP:
 						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
 					case mode:
-						return dropdown(new String[]{"Solve", "Solve Cap Bounce Only", "Calculate"});
+						if (p.midairPreset.equals("Custom"))
+							return dropdown(new String[]{"Solve Cap Bounce Only", "Calculate"});
+						else
+							return dropdown(new String[]{"Solve", "Solve Cap Bounce Only", "Calculate"});
 					default:
 						return super.getCellEditor(row, column);
 				}
@@ -1338,13 +1445,14 @@ public class VectorCalculator extends JPanel {
 					return false;
 				Parameter param = rowParams.get(row);
 				switch(param) {
+					case null:
 					case initial_coordinates:
 					case target_coordinates:
-					case initial_movement_category:
-					case initial_movement:
 						return false;
 					case initial_speed:
 						return p.chooseInitialHorizontalSpeed;
+					case gravity:
+						return p.mode != Mode.SOLVE;
 					default:
 						return true;
 				}
@@ -1397,6 +1505,8 @@ public class VectorCalculator extends JPanel {
 					// 		}
 					// 	});
 					// 	break;
+					case null:
+						break;
 					case initial_coordinates:
 						initial_CoordinateWindow.display(p.x0, p.y0, p.z0);
 						if (add_ic_listener) {
@@ -1660,7 +1770,7 @@ public class VectorCalculator extends JPanel {
 						p.onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
 					}
 					else if (row == HYPEROPTIMIZE_ROW) {
-						p.hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("True");
+						p.hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("Yes");
 					}
 					else if (row == AXIS_ORDER_ROW) {
 						p.xAxisZeroDegrees = genPropertiesTable.getValueAt(row, 1).equals("X");
@@ -1754,7 +1864,7 @@ public class VectorCalculator extends JPanel {
 					Movement changedRowMovement = new Movement(movementTable.getValueAt(row, 0).toString());
 					if (e.getColumn() == 0) {
 						if (changedRowMovement.getSuggestedFrames() > Integer.parseInt(movementTable.getValueAt(row, 1).toString()))
-							movementTable.setValueAt(changedRowMovement.getSuggestedFrames(), row, 1);	
+							movementTable.setValueAt(changedRowMovement.getSuggestedFrames(), row, 1);
 					}
 					else {
 						try {
@@ -1768,6 +1878,7 @@ public class VectorCalculator extends JPanel {
 				}
 
 				saveMidairs();
+				refreshPropertiesRows(getRowParams(), false);
 				if (initialized && saved && Properties.isUnsaved()) {
 					saved = false;
 					f.setTitle("*" + projectName);
@@ -1838,11 +1949,8 @@ public class VectorCalculator extends JPanel {
 				refreshPropertiesRows(getRowParams(), false);
             }
         });
-        tabbedPane.addTab("General",genPropertiesScrollPane);
-        tabbedPane.addTab("Initial Movement", null);
-        tabbedPane.addTab("Cap Bounce", null);
-        tabbedPane.addTab("Homing Cap Throw", null);
-        tabbedPane.addTab("Ground", null);
+        tabbedPane.addTab("General Properties",genPropertiesScrollPane);
+        tabbedPane.addTab("Midair Properties", null);
         tabbedPane.setPreferredSize(new Dimension(600, 400));
 		tabPanel.add(tabbedPane);
 
@@ -1870,56 +1978,6 @@ public class VectorCalculator extends JPanel {
 		f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		f.setLocationRelativeTo(null);
 		f.setVisible(true);
-		
-		//DEBUG PREPOLUATE MOVEMENT
-		
-/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "32"});
-		movementModel.addRow(new String[]{"Dive", "25"});
-		movementModel.addRow(new String[]{"Cap Bounce", "42"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "32"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-
-/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "9"});
-		movementModel.addRow(new String[]{"Dive", "21"});
-		movementModel.addRow(new String[]{"Cap Bounce", "3"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "8"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-
-/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "21"});
-		movementModel.addRow(new String[]{"Cap Bounce", "36"});
-		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-
-/* 		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "21"});
-		movementModel.addRow(new String[]{"Cap Bounce", "36"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "24"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-
-/* 		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
-		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "21"});
-		movementModel.addRow(new String[]{"Cap Bounce", "42"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-		
-
-/* 		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "21"});
-		movementModel.addRow(new String[]{"Cap Bounce", "42"});
-		movementModel.addRow(new String[]{"Homing Triple Throw", "36"});
-		movementModel.addRow(new String[]{"Rainbow Spin", "32"});
-		movementModel.addRow(new String[]{"Motion Cap Throw", "29"});
-		movementModel.addRow(new String[]{"Dive", "25"}); */
-
-		//setAngleType(AngleType.BOTH);
-		//p.initialAngle = 65;
-		//p.targetAngle = 90;
-		//*/
 	}
 
 }

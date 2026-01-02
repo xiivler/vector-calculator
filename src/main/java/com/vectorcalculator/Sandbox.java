@@ -48,7 +48,7 @@ public class Sandbox {
                     VectorCalculator.addPreset(preset);
                     Properties.p.rightVector = false;
                     VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-                    maximizer.alwaysDiveTurn = true;
+                    Properties.p.diveTurn = true;
                     //maximizer.neverDiveTurn = true;
                     Properties.p.diveCapBounceTolerance = 0.02;
                     Properties.p.diveFirstFrameDecel = 0;

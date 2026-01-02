@@ -2,6 +2,8 @@ package com.vectorcalculator;
 
 import java.util.ArrayList;
 
+import com.vectorcalculator.Properties.HctDirection;
+
 public class Movement {
 	
 	Properties p = Properties.p;
@@ -570,11 +572,18 @@ public class Movement {
 				minFrames = 3;
 			else if (movementType.equals("Homing Motion Cap Throw")) {
 				displayName = "Homing MCCT";
-				minFrames = 36; //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
-				for (int i = 0; i < 19; i++) {
+				minFrames = Math.max(p.hctCapReturnFrame, 23); //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
+				for (int i = 0; i < p.hctHomingFrame; i++) {
 					inputs1.add(Inputs.NONE);
 				}
-				inputs1.add(Inputs.MD);
+				if (p.hctDirection == HctDirection.UP)
+					inputs1.add(Inputs.MU);
+				else if (p.hctDirection == HctDirection.DOWN)
+					inputs1.add(Inputs.MD);
+				else if (p.hctDirection == HctDirection.LEFT)
+					inputs1.add(Inputs.ML);
+				else if (p.hctDirection == HctDirection.RIGHT)
+					inputs1.add(Inputs.MR);
 			}
 			else if (movementType.equals("Homing Triple Throw")) {
 				displayName = "Homing TT";

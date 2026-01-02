@@ -101,6 +101,15 @@ public class Properties {
         GroundMode(String string) {
             this.name = string;
         }
+
+        static GroundMode fromName(String string) {
+            for (GroundMode gm : GroundMode.values()) {
+                if (gm.name.equals(string)) {
+                    return gm;
+                }
+            }
+            return NONE;
+        }
     }
 
     static enum GroundType {
@@ -110,6 +119,15 @@ public class Properties {
 
         GroundType(String string) {
             this.name = string;
+        }
+
+        static GroundType fromName(String string) {
+            for (GroundType gt : GroundType.values()) {
+                if (gt.name.equals(string)) {
+                    return gt;
+                }
+            }
+            return NONE;
         }
     }
 
@@ -155,6 +173,7 @@ public class Properties {
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
 
+    boolean diveCapBounce = true;
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
     double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
@@ -176,22 +195,24 @@ public class Properties {
     //static final double NO_GROUND = -1000000;
 
     //new experimental settings
-    double groundUnderFirstGP = 0;
-    double groundUnderCB = 0;
-    double groundUnderSecondGP = 0;
+    double groundHeight = 0;
+    double groundHeightFirstGP = 0;
+    double groundHeightCB = 0;
+    double groundHeightSecondGP = 0;
     GroundType groundType = GroundType.NONE;
     GroundType groundTypeFirstGP = GroundType.NONE;
     GroundType groundTypeCB = GroundType.NONE;
     GroundType groundTypeSecondGP = GroundType.NONE;
-    boolean hasGroundUnderFirstGP = false;
-    boolean hasGroundUnderCB = false;
-    boolean hasGroundUnderSecondGP = false;
+    boolean hasgroundHeightFirstGP = false;
+    boolean hasgroundHeightCB = false;
+    boolean hasgroundHeightSecondGP = false;
 
+    boolean hct = false;
     double hctThrowAngle = 60;
     boolean hctNeutralHoming = true;
     HctDirection hctDirection = HctDirection.DOWN;
     int hctHomingFrame = 19;
-    int hctMinFrames = 36;
+    int hctCapReturnFrame = 36;
 
     boolean initialAndTargetGiven = false;
     boolean initialAngleGiven = false;
@@ -202,9 +223,10 @@ public class Properties {
     double upwarp = 0;
     Mode mode = Mode.SOLVE;
 
+    @XmlTransient
     int currentTab = 0;
 
-    String initialMovementCategory = "Distance";
+    String initialMovementCategory = "Jump";
     GroundMode groundMode = GroundMode.NONE;
 	boolean chooseJumpFrames = true;
 

@@ -81,6 +81,7 @@ public class Solver {
 
     public boolean solve(int delta) {
         //System.out.println(ctDivePossible[29][23]);
+        System.out.println("Starting Solver");
         long startTime = System.currentTimeMillis();
 
         if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
@@ -139,21 +140,32 @@ public class Solver {
 
         p.durationFrames = true;
 
-        // p.hasGroundUnderFirstGP = true;
-        // p.hasGroundUnderCB = true;
-        // p.hasGroundUnderSecondGP = true;
+        // p.hasgroundHeightFirstGP = true;
+        // p.hasgroundHeightCB = true;
+        // p.hasgroundHeightSecondGP = true;
         // p.groundTypeFirstGP = GroundType.GROUND;
         // p.groundTypeCB = GroundType.GROUND;
         // p.groundTypeSecondGP = GroundType.GROUND;
-        // p.groundUnderFirstGP = 0;
-        // p.groundUnderCB = 0;
-        // p.groundUnderSecondGP = 0;
+        // p.groundHeightFirstGP = 0;
+        // p.groundHeightCB = 0;
+        // p.groundHeightSecondGP = 0;
+
+        System.out.println("Reached Preset Maximization");
 
         preset[diveCapBounceIndex - 1][1] = p.initialFrames; //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
 
+        System.out.println("Got Maximzer");
+
+        int maximizer_initialMovementIndex = -1;
+        for (int i = 0; i < presetMaximizer.movementNames.size(); i++) {
+            if (presetMaximizer.movementNames.get(i).contains("Cap Throw")) {
+                maximizer_initialMovementIndex = i - 1;
+                break;
+            }
+        }
         int maximizer_firstGPIndex;
         if (presetMaximizer.hasVariableCapThrow1Falling)
             maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 2;
@@ -175,16 +187,16 @@ public class Solver {
         //shorten first movement until first GP isn't too low
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
-            while (final_y_heights[maximizer_firstGPIndex] < p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT) {
+            while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
                 p.initialFrames--;
-                presetMaximizer.movementFrames.set(0, p.initialFrames);
+                presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
         } 
         if (p.groundTypeCB != GroundType.NONE) {
-            while (final_y_heights[maximizer_firstDiveIndex] <= p.groundUnderCB) {
+            while (final_y_heights[maximizer_firstDiveIndex] <= p.groundHeightCB) {
                 p.initialFrames--;
-                presetMaximizer.movementFrames.set(0, p.initialFrames);
+                presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
         }
@@ -195,7 +207,7 @@ public class Solver {
         System.out.println(Arrays.toString(final_y_heights));
         if (p.groundTypeSecondGP != GroundType.NONE) {
             int iterations = 0;
-            while (final_y_heights[maximizer_secondGPIndex] < p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT) {
+            while (final_y_heights[maximizer_secondGPIndex] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
                 iterations++;
                 //System.out.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
                 //System.out.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
@@ -207,7 +219,7 @@ public class Solver {
                     preset[diveCapBounceIndex - 1][1]--;
                     lastFrames[diveCapBounceIndex]--;
                 }
-                presetMaximizer.movementFrames.set(0, p.initialFrames);
+                presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
                 final_y_heights = getFinalYHeights(presetMaximizer);
                 if (iterations % REFRESH_RATE == 0) {
@@ -490,10 +502,10 @@ public class Solver {
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
-            ballparkMaximizer.alwaysDiveTurn = true;
+            p.diveTurn = true;
         }
         else {
-            ballparkMaximizer.neverDiveTurn = true;
+            p.diveTurn = false;
             ballparkMaximizer.edgeCBMin = 6;
             ballparkMaximizer.edgeCBMax = 12;
         }
@@ -510,6 +522,9 @@ public class Solver {
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
+        // if (ctType > -1) {
+        //     System.out.println("CT Type: " + ctType + " " + preset[0][1] + " " + preset[1][1]);
+        // }
         return ctType;
     }
 
@@ -528,14 +543,19 @@ public class Solver {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if (index == rainbowSpinIndex || index == homingMCCTIndex) {
+        if (index == rainbowSpinIndex || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36)) {
             return test(durations, delta, index + 1, y_pos + y_disps[index]);
         }
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
+                int testDuration = durations[index] + i;
+                if (index == homingMCCTIndex && (testDuration < p.hctCapReturnFrame || testDuration > 36)) {
+                    System.out.println("Skipping HMCCT duration " + testDuration);
+                    continue;
+                }
                 double test_y_pos = y_pos + y_disps[index];
                 int[] testDurations = durations.clone();
-                testDurations[index] = durations[index] + i;
+                testDurations[index] = testDuration;
                 DoubleIntArray result = new DoubleIntArray(0, testDurations);
                 int lastFrame = lastFrames[index];
                 if (i < 0) {
@@ -696,10 +716,10 @@ public class Solver {
         bestYDisp = dispY; //for debugging
 
         if (diveTurns[ctDuration][diveDuration]) {
-            maximizer.alwaysDiveTurn = true;
+            p.diveTurn = true;
         }
         else {
-            maximizer.neverDiveTurn = true;
+            p.diveTurn = false;
             maximizer.edgeCBMin = 6;
             maximizer.edgeCBMax = 12;
         }
@@ -757,10 +777,10 @@ public class Solver {
             //System.out.println(y_pos);
             if (p.groundTypeFirstGP == GroundType.NONE)
                 return y_pos;
-            else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundUnderFirstGP)
+            else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundHeightFirstGP)
                 return FALSE;
             else
-                yDiff = p.groundUnderFirstGP - y_pos;
+                yDiff = p.groundHeightFirstGP - y_pos;
             //System.out.println(yDiff);
         }
         else if (motionIndex == homingMCCTIndex || motionIndex == homingTTIndex) { //failures here will be caught by the rainbow spin because it is even lower
@@ -770,28 +790,28 @@ public class Solver {
             if (rainbowSpinIndex < diveCapBounceIndex) { //rainbow spin first
                 if (p.groundTypeFirstGP == GroundType.NONE)
                     return y_pos;
-                else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundUnderFirstGP)
+                else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundHeightFirstGP)
                     return FALSE;
                 else
-                    yDiff = p.groundUnderFirstGP - y_pos;
+                    yDiff = p.groundHeightFirstGP - y_pos;
             }
             else { //rainbow spin second
                 if (p.groundTypeSecondGP == GroundType.NONE)
                     return y_pos;
-                else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundUnderSecondGP)
+                else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundHeightSecondGP)
                     return FALSE;
                 else
-                    yDiff = p.groundUnderSecondGP - y_pos;
+                    yDiff = p.groundHeightSecondGP - y_pos;
             }
         }
         else if (motionIndex == firstDiveIndex - 1) { //first CT
-            if (p.groundTypeFirstGP == GroundType.NONE || y_pos - y_vel >= p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT)
+            if (p.groundTypeFirstGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
                 return y_pos;
             else
                 return FALSE;
         }
         else if (motionIndex == firstDiveIndex) {
-            if (p.groundTypeCB == GroundType.NONE || y_pos > p.groundUnderCB)
+            if (p.groundTypeCB == GroundType.NONE || y_pos > p.groundHeightCB)
                 return y_pos;
             else
                 return FALSE;
@@ -799,13 +819,13 @@ public class Solver {
         else if (motionIndex == diveCapBounceIndex) {
             if (p.groundTypeSecondGP == GroundType.NONE)
                 return y_pos;
-            else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundUnderSecondGP)
+            else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundHeightSecondGP)
                 return FALSE;
             else
-                yDiff = p.groundUnderSecondGP - y_pos;
+                yDiff = p.groundHeightSecondGP - y_pos;
         }
         else if (motionIndex == secondDiveIndex - 1) { //second CT
-            if (p.groundTypeSecondGP == GroundType.NONE || y_pos - y_vel >= p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT) {
+            if (p.groundTypeSecondGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
                 // if (durations[0] == 68) {
                 //     System.out.println("68 Passed index " + motionIndex);
                 //     System.out.println(y_pos);
@@ -871,18 +891,18 @@ public class Solver {
             penultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity;
             double yDiff = 0;
             if (i == maximizer_initialMovementIndex && p.groundTypeFirstGP == GroundType.GROUND) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
-                yDiff = p.groundUnderFirstGP - final_y_heights[i];
+                yDiff = p.groundHeightFirstGP - final_y_heights[i];
             }
             else if (i == maximizer_capBounceIndex && p.groundTypeSecondGP == GroundType.GROUND) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
-                yDiff = p.groundUnderSecondGP - final_y_heights[i];
+                yDiff = p.groundHeightSecondGP - final_y_heights[i];
             }
             else if (maximizer.hasRainbowSpin && i == maximizer_rainbowSpinIndex + 1) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
-                double groundUnderRS = -Double.MAX_VALUE;
+                double groundHeightRS = -Double.MAX_VALUE;
                 if (rainbowSpinFirst && p.groundTypeFirstGP == GroundType.GROUND)
-                    groundUnderRS = p.groundUnderFirstGP;
+                    groundHeightRS = p.groundHeightFirstGP;
                 else if (p.groundTypeSecondGP == GroundType.GROUND)
-                    groundUnderRS = p.groundUnderSecondGP;
-                yDiff = groundUnderRS - final_y_heights[i];
+                    groundHeightRS = p.groundHeightSecondGP;
+                yDiff = groundHeightRS - final_y_heights[i];
             }
             if (yDiff > 0 && yDiff < -motions[i].finalVerticalVelocity) {
                 //System.out.println("Before: " + Arrays.toString(final_y_heights));
@@ -896,27 +916,27 @@ public class Solver {
         // if (p.initialFrames == 68 || testDurations[0] == 68) {
         //     System.out.println("68 height w/ " + final_y_heights[maximizer_initialMovementIndex]);
         // }
-        if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] <= p.groundUnderFirstGP) //maybe should be <
+        if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] <= p.groundHeightFirstGP) //maybe should be <
             return FALSE;
-        if (p.groundTypeFirstGP == GroundType.DAMAGING && final_y_heights[maximizer_initialMovementIndex] <= p.groundUnderFirstGP) //maybe should be <
+        if (p.groundTypeFirstGP == GroundType.DAMAGING && final_y_heights[maximizer_initialMovementIndex] <= p.groundHeightFirstGP) //maybe should be <
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.GROUND && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundUnderFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
+        if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.GROUND && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundHeightFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.GROUND && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundUnderSecondGP)
+        if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.GROUND && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] <= p.groundHeightSecondGP)
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.DAMAGING && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundUnderFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
+        if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.DAMAGING && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundHeightFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.DAMAGING && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundUnderSecondGP)
+        if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.DAMAGING && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] <= p.groundHeightSecondGP)
             return FALSE;
-        if (p.groundTypeFirstGP != GroundType.NONE && penultimate_y_heights[maximizer_firstGPIndex - 1] < p.groundUnderFirstGP + Movement.MIN_GP_HEIGHT)
+        if (p.groundTypeFirstGP != GroundType.NONE && penultimate_y_heights[maximizer_firstGPIndex - 1] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
             return FALSE;
-        if (p.groundTypeCB != GroundType.NONE && final_y_heights[maximizer_firstDiveIndex] <= p.groundUnderCB)
+        if (p.groundTypeCB != GroundType.NONE && final_y_heights[maximizer_firstDiveIndex] <= p.groundHeightCB)
             return FALSE;
-        if (p.groundTypeSecondGP == GroundType.GROUND && penultimate_y_heights[maximizer_capBounceIndex] <= p.groundUnderSecondGP)
+        if (p.groundTypeSecondGP == GroundType.GROUND && penultimate_y_heights[maximizer_capBounceIndex] <= p.groundHeightSecondGP)
             return FALSE;
-        if (p.groundTypeSecondGP == GroundType.DAMAGING && final_y_heights[maximizer_capBounceIndex] <= p.groundUnderSecondGP)
+        if (p.groundTypeSecondGP == GroundType.DAMAGING && final_y_heights[maximizer_capBounceIndex] <= p.groundHeightSecondGP)
             return FALSE;
-        if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundUnderSecondGP + Movement.MIN_GP_HEIGHT)
+        if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT)
             return FALSE;
         if (final_y_heights[final_y_heights.length - 1] + p.upwarp < p.y1 - ERROR)
             return FALSE;

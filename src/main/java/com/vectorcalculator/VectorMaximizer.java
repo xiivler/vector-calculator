@@ -26,8 +26,8 @@ public class VectorMaximizer {
 	//currently calculates tenths of degrees, and maybe loses a hundredth of a unit over calculating to the thousandth
 	//public static int numSteps = 901;
 	
-	boolean alwaysDiveTurn = false; //set to true to only test with dive turn, which is faster for Solver
-	boolean neverDiveTurn = false;
+	//boolean alwaysDiveTurn = false; //set to true to only test with dive turn, which is faster for Solver
+	//boolean neverDiveTurn = false;
 	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
 	SimpleVector[] vectors;
@@ -75,8 +75,8 @@ public class VectorMaximizer {
 	int variableHCTFallIndex;
 	//int motionGroup3Index;
 	int rainbowSpinFrames;
-	int preCapBounceDiveIndex = -1;
-	int rainbowSpinIndex = -1;
+	int preCapBounceDiveIndex = Integer.MIN_VALUE;
+	int rainbowSpinIndex = Integer.MIN_VALUE;
 
 	int maxRCVNudges = 20;
 	int maxRCVFineNudges = 10;
@@ -142,7 +142,7 @@ public class VectorMaximizer {
 	
 	//double[] homingMotionThrowHoldingAngles;
 
-	static boolean diveTurn = true; //whether to turn on dives to optimize them further
+	//static boolean diveTurn = true; //whether to turn on dives to optimize them further
 	
 	public VectorMaximizer(MovementNameListPreparer listPreparer) {
 		
@@ -876,13 +876,17 @@ public class VectorMaximizer {
 			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
-			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || (diveTurn && movementNames.get(startIndex).equals("Ground Pound")))
+			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || (p.diveTurn && movementNames.get(startIndex).equals("Ground Pound")))
 				currentVectorRight = !currentVectorRight;
 		}
 
 		for (int i = nextIndex; i < motionGroup.length; i++) {
 			int j = i + startIndex;
-			Movement currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
+			Movement currentMovement;
+			if (movementNames.get(j - 1).equals("Moonwalk"))
+				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
+			else
+				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
 			if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
@@ -920,7 +924,7 @@ public class VectorMaximizer {
 				preCapBounceDiveIndex = j;
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
-				if (!diveTurn) {
+				if (!p.diveTurn) {
 					((DiveTurn) motionGroup[i]).setHoldingAngle(0);
 				}
 			}
@@ -1013,8 +1017,8 @@ public class VectorMaximizer {
 	//the actual maximization function
 	//calls more maximization functions for each step
 	//this function finds the correct/optimal RCV if applicable
-	//then calls maximize_dive (whether or not to turn dive before cbv)
-	//which calls maximize_hct (hct falling vectoring)
+	//then calls maximize_HCT (whether or not to turn dive before cbv)
+	//which calls maximize_HCT (hct falling vectoring)
 	//which calls maximize_variableAngle1 (first cap throw angle)
 	public double maximize() {
 		long startTime = System.currentTimeMillis();
@@ -1066,7 +1070,7 @@ public class VectorMaximizer {
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
 
-					maximize_dive();
+					maximize_HCT();
 
 					if (once_bestDisp > bestDisp) {
 						bestRCName = Movement.RC_TYPES[i];
@@ -1094,7 +1098,7 @@ public class VectorMaximizer {
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
 			for (int i = 1; i <= maxRCVNudges; i++) {
-				maximize_dive();
+				maximize_HCT();
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
 					unadjustedTargetAngle += Math.PI;
@@ -1125,7 +1129,7 @@ public class VectorMaximizer {
 					break;
 				}
 
-				maximize_dive();
+				maximize_HCT();
 
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -1143,7 +1147,7 @@ public class VectorMaximizer {
 			}
 		}
 		else {
-			maximize_dive();
+			maximize_HCT();
 		}
 
 		bestDispZ = once_bestDispZ;
@@ -1227,28 +1231,28 @@ public class VectorMaximizer {
 	}
 
 	//optimization step that maximizes the dive turn (on or off)
-	private void maximize_dive() {
-		if (alwaysDiveTurn) { //only test with dive turn if this boolean is true
-			diveTurn = true;
-			maximize_HCT();
-		}
-		else if (neverDiveTurn) {
-			diveTurn = false;
-			maximize_HCT();
-		}
-		else {
-			diveTurn = false;
-			double disp_noDiveTurn = maximize_HCT();
-			diveTurn = true;
-			double disp_diveTurn = maximize_HCT();
-			//Debug.println("With dive turn %.3f\n: " + disp_diveTurn);
-			//Debug.println("Without dive turn %.3f\n: " + disp_noDiveTurn);
-			if (disp_noDiveTurn > disp_diveTurn) {
-				diveTurn = false;
-				maximize_HCT();
-			}
-		}
-	}
+	// private void maximize_dive() {
+	// 	if (alwaysDiveTurn) { //only test with dive turn if this boolean is true
+	// 		diveTurn = true;
+	// 		maximize_HCT();
+	// 	}
+	// 	else if (neverDiveTurn) {
+	// 		diveTurn = false;
+	// 		maximize_HCT();
+	// 	}
+	// 	else {
+	// 		diveTurn = false;
+	// 		double disp_noDiveTurn = maximize_HCT();
+	// 		diveTurn = true;
+	// 		double disp_diveTurn = maximize_HCT();
+	// 		//Debug.println("With dive turn %.3f\n: " + disp_diveTurn);
+	// 		//Debug.println("Without dive turn %.3f\n: " + disp_noDiveTurn);
+	// 		if (disp_noDiveTurn > disp_diveTurn) {
+	// 			diveTurn = false;
+	// 			maximize_HCT();
+	// 		}
+	// 	}
+	// }
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
 	private double maximize_HCT() {
 		if (hasVariableHCTFallVector) {

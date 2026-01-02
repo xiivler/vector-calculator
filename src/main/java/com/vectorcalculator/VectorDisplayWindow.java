@@ -368,6 +368,7 @@ public class VectorDisplayWindow {
 			//for (double[] ds : info)
 			//	Debug.println(Arrays.toString(ds));
 			int startRow = row;
+			double upwarpOffset = 0;
 			for (int i = 0; i < info.length; i++, row++) {
 				Object[] rowContents = new Object[8];
 				rowContents[0] = row;
@@ -375,37 +376,42 @@ public class VectorDisplayWindow {
 				rowContents[2] = "";
 
 				x = info[i][0];
-				y = info[i][1];
+				y = info[i][1] + upwarpOffset;
 				z = info[i][2];
 				double dispX = p.x0 - x;
 				double dispZ = p.z0 - z;
-				if (y >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
+				if (y + p.upwarp >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
 					if (!madeJump) {
 						madeJump = true;
 						rowContents[1] = "(Made Jump)";
+						if (y < p.y1) {
+							upwarpOffset = p.y1 - y;
+							y = p.y1;
+						}
 					}
 				}
 				if (i == info.length - 1) {
-					if (p.groundTypeFirstGP == GroundType.GROUND && firstDive) {
-						if (y < p.groundUnderFirstGP) {
-							y = p.groundUnderFirstGP;
+					if (p.groundTypeFirstGP == GroundType.GROUND && firstDive && !motion.movement.movementType.equals("Moonwalk")) {
+						if (y < p.groundHeightFirstGP) {
+							y = p.groundHeightFirstGP;
 							rowContents[1] = "(Hit Ground)";
+							//System.out.println("foo1");
 						}
 					}
 					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce")) {
-						if (y < p.groundUnderSecondGP) {
-							y = p.groundUnderSecondGP;
+						if (y < p.groundHeightSecondGP) {
+							y = p.groundHeightSecondGP;
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
 					else if (maximizer.hasRainbowSpin && index == maximizer.rainbowSpinIndex + 1) {
-						double groundUnderRS = -Double.MAX_VALUE;
+						double groundHeightRS = -Double.MAX_VALUE;
 						if (index <= maximizer.variableCapThrow1Index && p.groundTypeFirstGP == GroundType.GROUND)
-							groundUnderRS = p.groundUnderFirstGP;
+							groundHeightRS = p.groundHeightFirstGP;
 						else if (p.groundTypeSecondGP == GroundType.GROUND)
-							groundUnderRS = p.groundUnderSecondGP;
-						if (y < groundUnderRS) {
-							y = groundUnderRS;
+							groundHeightRS = p.groundHeightSecondGP;
+						if (y < groundHeightRS) {
+							y = groundHeightRS;
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
