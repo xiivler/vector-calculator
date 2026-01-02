@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"file"})
+@EqualsAndHashCode(exclude = {"file", "currentTab"})
 @XmlRootElement
 public class Properties {
     static Properties p;
@@ -160,7 +160,9 @@ public class Properties {
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
     boolean diveTurn = true;
 
-	int currentPresetIndex = 1;
+	String midairPreset = "Spinless";
+    boolean canTripleThrow = true;
+    boolean tripleThrow = false;
 	boolean onMoon = false;
 	boolean hyperoptimize = true;
 	boolean xAxisZeroDegrees = true;

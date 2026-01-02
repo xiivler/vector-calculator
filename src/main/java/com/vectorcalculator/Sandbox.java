@@ -29,7 +29,7 @@ public class Sandbox {
     public static void test() {
         System.out.println("Started");
         VectorCalculator.main(null);
-        int[][] preset = VectorCalculator.midairPresets[1];
+        int[][] preset = VectorCalculator.getPreset("Spinless");
         
         int[][] possible = new int[41][41];
         double[][] firstFrameDecels = new double[41][41];

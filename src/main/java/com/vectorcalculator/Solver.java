@@ -100,18 +100,15 @@ public class Solver {
         }
 
         //custom presets not yet supported
-        if (p.currentPresetIndex == 0) {
+        if (p.midairPreset.equals("Custom"))
             return true;
-        }
-        else {
-            //first, select midair durations for a jump that's flat or downward (which are the midair presets)
-            VectorCalculator.addPreset(p.currentPresetIndex);
-        }
-        if (VectorCalculator.midairPresetNames[p.currentPresetIndex].equals("CBV First (Triple Throw)"))
-            singleThrowAllowed = false;
-        else
-            singleThrowAllowed = true;
-        int[][] unmodifiedPreset = VectorCalculator.midairPresets[p.currentPresetIndex];
+
+        VectorCalculator.addPreset(p.midairPreset);
+
+        singleThrowAllowed = !(p.midairPreset.equals("CBV First") && p.tripleThrow);
+        ttAllowed = ((p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) && p.tripleThrow);
+
+        int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
         preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
 
         //find locations of movements in the presets

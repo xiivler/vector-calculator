@@ -43,6 +43,7 @@ import javax.swing.text.JTextComponent;
 import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.GroundMode;
 import com.vectorcalculator.Properties.HctDirection;
+import com.vectorcalculator.Properties.Mode;
 //import com.apple.laf.ClientPropertyApplicator.Property;
 //import com.vectorcalculator.Properties.AngleType;
 import com.vectorcalculator.Properties.CalculateUsing;
@@ -67,7 +68,7 @@ public class VectorCalculator extends JPanel {
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
-		midairs("Midairs"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Category"), initial_movement("Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Displacement"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
@@ -103,6 +104,8 @@ public class VectorCalculator extends JPanel {
 			if (p.targetCoordinatesGiven)
 				params.add(Parameter.target_coordinates);
 			params.add(Parameter.midairs);
+			if (p.canTripleThrow)
+				params.add(Parameter.triple_throw);
 			params.add(Parameter.gravity);
 			params.add(Parameter.zero_axis);
 			params.add(Parameter.camera);
@@ -162,13 +165,16 @@ public class VectorCalculator extends JPanel {
 		if (p.currentTab != tabbedPane.getSelectedIndex())
 			tabbedPane.setSelectedIndex(p.currentTab);
 		else if (params.equals(rowParams) && !forceRefresh) {
-			System.out.println("No need to refresh");
+			//System.out.println("No need to refresh");
 			return;
 		}
+		rowParams = params;
 		genPropertiesModel.setRowCount(0);
+		settingPropertyRow = true;
 		for (Parameter param : params) {
 			genPropertiesModel.addRow(new Object[]{param.name, PropertyToDisplayValue(param)});
 		}
+		settingPropertyRow = false;
 	}
 
 	static void setPropertiesRow(Parameter param) {
@@ -178,9 +184,11 @@ public class VectorCalculator extends JPanel {
 	}
 
 	static void setPropertiesRow(int row) {
+		settingPropertyRow = true;
 		Parameter param = rowParams.get(row);
 		genPropertiesTable.setValueAt(param.name, row, 0);
-		genPropertiesTable.setValueAt(PropertyToDisplayValue(param), row, 0);
+		genPropertiesTable.setValueAt(PropertyToDisplayValue(param), row, 1);
+		settingPropertyRow = false;
 	}
 	
 	static String PropertyToDisplayValue(Parameter param) {
@@ -205,7 +213,10 @@ public class VectorCalculator extends JPanel {
 			value = toCoordinateString(p.x1, p.y1, p.z1);
 			break;
 		case midairs:
-			value = midairPresetNames[p.currentPresetIndex];
+			value = p.midairPreset;
+			break;
+		case triple_throw:
+			value = p.tripleThrow ? "Yes" : "No";
 			break;
 		case gravity:
 			value = p.onMoon ? "Moon" : "Regular";
@@ -244,7 +255,7 @@ public class VectorCalculator extends JPanel {
 			value = p.rightVector ? "Right" : "Left";
 			break;
 		case dive_angle:
-			value = p.diveCapBounceAngle;
+			value = round(p.diveCapBounceAngle, 3);
 			break;
 		case dive_angle_tolerance:
 			value = round(p.diveCapBounceTolerance, 3);
@@ -352,11 +363,14 @@ public class VectorCalculator extends JPanel {
 	}
 
 	static void setProperty(Parameter param) {
-		setProperty(rowParams.indexOf(param));
+		int index = rowParams.indexOf(param);
+		if (index != -1)
+			setProperty(index);
 	}
 
 	static void setProperty(int row) {
-		setProperty(rowParams.get(row), genPropertiesTable.getValueAt(row, 1));
+		if (row >= 0)
+			setProperty(rowParams.get(row), genPropertiesTable.getValueAt(row, 1));
 	}
 
 	//sets a property value based on the display value in the table
@@ -364,6 +378,11 @@ public class VectorCalculator extends JPanel {
 		switch(param) {
 		case mode:
 			p.mode = Properties.Mode.fromName(value.toString());
+			if (p.mode == Mode.SOLVE) {
+				setProperty(Parameter.gravity, "Regular");
+				if (p.midairPreset.equals("Custom"))
+					setProperty(Parameter.midairs, "Spinless");
+			}
 			break;
 		case initial_coordinates:
 			double[] coords = new double[3];
@@ -446,9 +465,19 @@ public class VectorCalculator extends JPanel {
 			p.diveFirstFrameDecel = decel;
 			break;
 		case midairs:
-			int presetIndex = Arrays.asList(midairPresetNames).indexOf(value.toString());
-			if (presetIndex != -1 && presetIndex != p.currentPresetIndex)
-				addPreset(presetIndex);
+			String name = value.toString();
+			boolean oldCanTripleThrow = p.canTripleThrow;
+			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom"));
+			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
+				p.tripleThrow = false;
+			if (!name.equals(p.midairPreset))
+				addPreset(name);
+			break;
+		case triple_throw:
+			boolean oldTripleThrow = p.tripleThrow;
+			p.tripleThrow = value.toString().equals("Yes");
+			if (oldTripleThrow != p.tripleThrow)
+				addPreset(p.midairPreset);
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");
@@ -505,29 +534,38 @@ public class VectorCalculator extends JPanel {
 	// 	{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 	// 	{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
-	static String[] midairPresetNames = {"Custom", "Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
+	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First"};
+	//static String[] midairPresetsWithTT = {"Spinless", "Spinless (Triple Throw)", "Simple Tech", "Simple Tech (Triple Throw)", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 
 	static final int MCCT = 0, TT = 1, HMCCT = 2, HTT = 3, RS = 4, DIVE = 5, CB = 6, P2CB = 7;
 
-	static final int[][][] midairPresets =
-		//custom (nothing to start)
-		{new int[0][0],
-		//spinless
-	 	{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}},
-		//simple tech
-		{{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}},
-		//simple tech rainbow spin first
-		{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}},
-		//mcct first
-		{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
-		//tt first
-		{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
-		//cbv first
-		{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
-		//cbv first tt
-		{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}}};
+	// static final int[][][] midairPresets =
+	// 	//custom (nothing to start)
+	// 	{new int[0][0],
+	// 	//spinless
+	//  	{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}},
+	// 	//simple tech
+	// 	{{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}},
+	// 	//simple tech rainbow spin first
+	// 	{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}},
+	// 	//mcct first
+	// 	{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
+	// 	//tt first
+	// 	{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}},
+	// 	//cbv first
+	// 	{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
+	// 	//cbv first tt
+	// 	{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}}};
+
+	// static int[][] spinless = {{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+	// static int[][] simpleTech = {{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+	// static int[][] simpleTechRainbowSpinFirst = {{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+	// static int[][] mcctFirst = {{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+	// static int[][] ttFirst = {{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+	// static int[][] cbvFirst = {{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
+	// static int[][] cbvFirstTT = {{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 
 	static void saveMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
@@ -549,7 +587,7 @@ public class VectorCalculator extends JPanel {
 	static Movement initialMovement = new Movement(p.initialMovementName);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, p.initialFrames);
 	
-	static boolean forceEdit = false;
+	static boolean settingPropertyRow = false;
 	static boolean add_ic_listener = true;
 	static boolean add_tc_listener = true;
 
@@ -570,7 +608,7 @@ public class VectorCalculator extends JPanel {
 
 	static JButton add;
 	static JButton remove;
-	static JButton solveVector;
+	//static JButton solveVector;
 	static JButton calculateVector;
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
@@ -762,13 +800,41 @@ public class VectorCalculator extends JPanel {
 			return 0;
 	}
 
-	//replaces the current midairs with the preset of the given index
-	public static void addPreset(int index) {
-		Debug.println("Switching to preset " + index);
-		
-		addPreset(midairPresets[index]);
+	public static int[][] getPreset(String name) {
+		if (!p.tripleThrow) {
+			switch(name) {
+				case "Spinless":
+					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+				case "Simple Tech":
+					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+				case "Simple Tech Rainbow Spin First":
+					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+				case "MCCT First":
+					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+				case "CBV First":
+					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
+				default:
+					return new int[0][0];
+			}
+		}
+		else {
+			switch(name) {
+				case "Spinless":
+					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+				case "Simple Tech":
+					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+				case "MCCT First":
+					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+				case "CBV First":
+					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+				default:
+					return new int[0][0];
+			}
+		}
+	}
 
-		if (index == 0) {
+	public static void addPreset(String name) {
+		if (name.equals("Custom")) {
 			add.setEnabled(true);
 			remove.setEnabled(true);
 		}
@@ -776,18 +842,36 @@ public class VectorCalculator extends JPanel {
 			add.setEnabled(false);
 			remove.setEnabled(false);
 		}
-		p.currentPresetIndex = index;
+		addPreset(getPreset(name));
+		p.midairPreset = name;
 	}
+
+	//replaces the current midairs with the preset of the given index
+	// public static void addPreset(int index) {
+	// 	//Debug.println("Switching to preset " + index);
+		
+	// 	addPreset(midairPresets[index]);
+
+	// 	if (index == 0) {
+	// 		add.setEnabled(true);
+	// 		remove.setEnabled(true);
+	// 	}
+	// 	else {
+	// 		add.setEnabled(false);
+	// 		remove.setEnabled(false);
+	// 	}
+	// 	p.currentPresetIndex = index;
+	// }
 
 	public static void addPreset(int[][] preset) {
 		movementModel.setRowCount(0);
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
-		if (p.currentPresetIndex >= 0) {
-			add.setEnabled(false);
-			remove.setEnabled(false);
-		}
+		// if (p.midairPreset.equals("Custom")) {
+		// 	add.setEnabled(false);
+		// 	remove.setEnabled(false);
+		// }
 	}
 
 	public static void updateInitialMovement() {
@@ -1033,12 +1117,12 @@ public class VectorCalculator extends JPanel {
 	
 	static class ButtonListener implements ActionListener {
 		 public void actionPerformed(ActionEvent evt) {
-			 if (evt.getActionCommand() == "add") {
+			 if (evt.getActionCommand().equals("add")) {
 				 movementModel.addRow(movementRows);
 				 //movementPropertyTables.add(new MovementProperties("Motion Cap Throw"));
 				 //movementPropertiesTable.setModel(movementPropertyTables.get(0).generateTableModel());
 			 }
-			 else if (evt.getActionCommand() == "remove") {
+			 else if (evt.getActionCommand().equals("remove")) {
 				 movementTable.removeEditor();
 				 int[] rowsRemove = movementTable.getSelectedRows();
 				 if (rowsRemove.length > 0)
@@ -1052,93 +1136,96 @@ public class VectorCalculator extends JPanel {
 								 movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
 					 }
 			 }
-			 else if (evt.getActionCommand() == "solve") {
-				Solver solver = new Solver();
-				int delta = 4;
-				if (p.initialMovementName.contains("RCV")) {
-					delta = 3;
+			//  else if (evt.getActionCommand() == "solve") {
+			//  }
+			 else if (evt.getActionCommand().equals("calculate")) {
+				if (p.mode == Mode.SOLVE) {
+					Solver solver = new Solver();
+					int delta = 4;
+					if (p.initialMovementName.contains("RCV")) {
+						delta = 3;
+					}
+					//  for (double i = -50; i <= 50; i += 1) {
+					//  	p.y1 = i;
+					if (solver.solve(delta)) { //2 might even be okay for jumps with HCT
+						VectorMaximizer maximizer = getMaximizer();
+						if (maximizer != null) {
+							maximizer.alwaysDiveTurn = true;
+							maximizer.maximize();
+							//System.out.println(maximizer.variableCapThrow1FallingFrames);
+							//System.out.println(maximizer.fallingFrames);
+							boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
+							maximizer.recalculateDisps();
+							maximizer.adjustToGivenAngle();
+							//maximizer.maximize();
+							//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
+							setPropertiesRow(Parameter.dive_angle);
+							setPropertiesRow(Parameter.dive_deceleration);
+							//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+							//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
+							System.out.println("Possible: " + possible + " " + maximizer.ctType);
+							//maximizer.maximize();
+							VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+							VectorDisplayWindow.display();
+							//System.out.println("Cappy position: " + );
+							//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
+						}
+					}
+					else {
+						errorMessage.setText("Error: Movement cannot reach target height");
+					}
+						//i = p.y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
+						 //i += 1;
+					//}
+					
+					//Debug.println();
 				}
-				//  for (double i = -50; i <= 50; i += 1) {
-				//  	p.y1 = i;
-				if (solver.solve(delta)) { //2 might even be okay for jumps with HCT
-					VectorMaximizer maximizer = getMaximizer();
-					if (maximizer != null) {
-						maximizer.alwaysDiveTurn = true;
+				else if (p.mode == Mode.CALCULATE) {
+					saveMidairs();
+					VectorMaximizer maximizer = null;
+					if (p.targetCoordinates) {
+						p.targetAngle = targetCoordinatesToTargetAngle();
+					}
+					if (p.initialMovementName.equals("Optimal Distance Motion")) {
+						p.initialMovementName = "Triple Jump";
+						p.framesJump = 10;
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						VectorMaximizer maximizerTJ = calculate();
+						p.initialMovementName = "Optimal Distance RCV";
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						VectorMaximizer maximizerRC = calculate();
+						p.initialMovementName = "Sideflip";
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						VectorMaximizer maximizerSideflip = calculate();
+						System.out.println("TJ: " + maximizerTJ.bestDisp);
+						System.out.println("RC: " + maximizerRC.bestDisp);
+						System.out.println("SF: " + maximizerSideflip.bestDisp);
+						if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
+							if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
+								maximizer = maximizerTJ;
+							}
+							else if (maximizerRC.bestDisp > maximizerTJ.bestDisp && maximizerRC.bestDisp > maximizerSideflip.bestDisp) {
+								maximizer = maximizerRC;
+							}
+							else {
+								maximizer = maximizerSideflip;
+							}
+						}
+						p.initialMovementName = "Optimal Distance Motion";
+					}
+					else {
+						maximizer = getMaximizer();
 						maximizer.maximize();
-						//System.out.println(maximizer.variableCapThrow1FallingFrames);
-						//System.out.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, false) >= 0;
-						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
-						//maximizer.maximize();
-						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
-						setPropertiesRow(Parameter.dive_angle);
-						setPropertiesRow(Parameter.dive_deceleration);
-						//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
-						//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
-						System.out.println("Possible: " + possible + " " + maximizer.ctType);
-						//maximizer.maximize();
+					}
+					if (maximizer != null) {
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
-						//System.out.println("Cappy position: " + );
-						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
+					Debug.println();
 				}
-				else {
-					errorMessage.setText("Error: Movement cannot reach target height");
-				}
-					//i = p.y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
-				 	//i += 1;
-				//}
-				
-				//Debug.println();
-			 }
-			 else if (evt.getActionCommand() == "calculate") {
-				saveMidairs();
-				VectorMaximizer maximizer = null;
-				if (p.targetCoordinates) {
-					p.targetAngle = targetCoordinatesToTargetAngle();
-				}
-				if (p.initialMovementName.equals("Optimal Distance Motion")) {
-					p.initialMovementName = "Triple Jump";
-					p.framesJump = 10;
-					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-					VectorMaximizer maximizerTJ = calculate();
-					p.initialMovementName = "Optimal Distance RCV";
-					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-					VectorMaximizer maximizerRC = calculate();
-					p.initialMovementName = "Sideflip";
-					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-					VectorMaximizer maximizerSideflip = calculate();
-					System.out.println("TJ: " + maximizerTJ.bestDisp);
-					System.out.println("RC: " + maximizerRC.bestDisp);
-					System.out.println("SF: " + maximizerSideflip.bestDisp);
-					if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
-						if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
-							maximizer = maximizerTJ;
-						}
-						else if (maximizerRC.bestDisp > maximizerTJ.bestDisp && maximizerRC.bestDisp > maximizerSideflip.bestDisp) {
-							maximizer = maximizerRC;
-						}
-						else {
-							maximizer = maximizerSideflip;
-						}
-					}
-					p.initialMovementName = "Optimal Distance Motion";
-				}
-				else {
-					maximizer = getMaximizer();
-					maximizer.maximize();
-					maximizer.adjustToGivenAngle();
-				}
-				if (maximizer != null) {
-					VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
-					VectorDisplayWindow.display();
-				}
-				 
-				Debug.println();
-			 }
-		 }
+			}
+		}
 	}
 
 	public static VectorMaximizer getMaximizer() {
@@ -1207,7 +1294,12 @@ public class VectorCalculator extends JPanel {
 					case vector_direction:
 						return dropdown(new String[]{"Left", "Right"});
 					case midairs:
-						return dropdown(midairPresetNames);
+						DefaultCellEditor dropdown = dropdown(midairPresetNames);
+						if (p.mode != Mode.SOLVE)
+							((JComboBox<String>) dropdown.getComponent()).addItem("Custom");
+						return dropdown;
+					case triple_throw:
+						return dropdown(new String[]{"Yes", "No"});
 					case gravity:
 						return dropdown(new String[]{"Regular", "Moon"});
 					case hyperoptimize:
@@ -1287,9 +1379,11 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				if (genPropertiesTable.columnAtPoint(evt.getPoint()) == 1)
+				int row = genPropertiesTable.rowAtPoint(evt.getPoint());
+				int column = genPropertiesTable.columnAtPoint(evt.getPoint());
+				if (row == -1 || column == -1 || column == 0)
 					return;
-				Parameter param = rowParams.get(genPropertiesTable.rowAtPoint(evt.getPoint()));
+				Parameter param = rowParams.get(row);
 				switch(param) {
 					// case initial_movement:
 					// 	dialogWindow.display();
@@ -1345,15 +1439,17 @@ public class VectorCalculator extends JPanel {
 					return;
 				}
 
-				setProperty(row);
-				refreshPropertiesRows(getRowParams(), false);
+				if (!settingPropertyRow) {
+					setProperty(row);
+					refreshPropertiesRows(getRowParams(), false);
 
-				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 
-				if (initialized && saved && Properties.isUnsaved()) {
-					System.out.println("Unsaved");
-					saved = false;
-					f.setTitle("*" + projectName);
+					if (initialized && saved && Properties.isUnsaved()) {
+						System.out.println("Unsaved");
+						saved = false;
+						f.setTitle("*" + projectName);
+					}
 				}
 
 				/* if (!forceEdit) { //forceEdit allows a part of the program to ignore these rules
@@ -1625,7 +1721,7 @@ public class VectorCalculator extends JPanel {
 
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 && p.currentPresetIndex > 0)
+				if (column == 0 && !p.midairPreset.equals("Custom"))
 					return false;
 				return true;
 			}
@@ -1696,29 +1792,25 @@ public class VectorCalculator extends JPanel {
 		
 		add = new JButton("+");
 		remove = new JButton("-");
-		solveVector = new JButton("Solve");
-		calculateVector = new JButton("Calculate Vectors");
+		//solveVector = new JButton("Solve");
+		calculateVector = new JButton("Optimize Vectors");
 		add.setActionCommand("add");
 		remove.setActionCommand("remove");
 		calculateVector.setActionCommand("calculate");
-		solveVector.setActionCommand("solve");
+		//solveVector.setActionCommand("solve");
 		
 		movementEdit.add(add);
 		movementEdit.add(remove);
-		calculateVectorPanel.add(solveVector);
+		//calculateVectorPanel.add(solveVector);
 		calculateVectorPanel.add(calculateVector);
 		
 		ButtonListener buttonListen = new ButtonListener();
 		add.addActionListener(buttonListen);
 		remove.addActionListener(buttonListen);
-		solveVector.addActionListener(buttonListen);
+		//solveVector.addActionListener(buttonListen);
 		calculateVector.addActionListener(buttonListen);
 		
 		//addPreset(7);
-
-		loadProperties(userDefaults, true);
-		p.file = null; //so we don't save to it
-		initialized = true;
 
 		//System.out.println("Script Type: " + p.scriptType);
 
@@ -1743,6 +1835,7 @@ public class VectorCalculator extends JPanel {
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
             	p.currentTab = tabbedPane.getSelectedIndex();
+				refreshPropertiesRows(getRowParams(), false);
             }
         });
         tabbedPane.addTab("General",genPropertiesScrollPane);
@@ -1765,6 +1858,11 @@ public class VectorCalculator extends JPanel {
 
 		f.add(tabPanel, BorderLayout.NORTH);
 		f.add(nonResize, BorderLayout.CENTER);
+
+		//load the user default properties
+		loadProperties(userDefaults, true);
+		p.file = null; //so we don't save to it
+		initialized = true;
 		
 		//f.add(resize, BorderLayout.CENTER);
 		f.setSize(600, 600);
