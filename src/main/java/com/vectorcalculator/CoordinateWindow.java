@@ -133,11 +133,12 @@ public class CoordinateWindow implements ActionListener {
 		x_field.requestFocus();
 	}
 
-	public void findCoordinates() {
+	public String getCoordinates() {
 		x = stringToDouble(x_field.getText());
 		y = stringToDouble(y_field.getText());
 		z = stringToDouble(z_field.getText());
 		coordinates = VectorCalculator.toCoordinateString(x, y, z);
+		return coordinates;
 	}
 	
 	public JButton getConfirmButton() {

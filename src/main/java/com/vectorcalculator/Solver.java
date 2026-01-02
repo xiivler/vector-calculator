@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import com.vectorcalculator.Properties.GroundType;
+import com.vectorcalculator.VectorCalculator.Parameter;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class Solver {
@@ -95,8 +96,7 @@ public class Solver {
         p.diveCapBounceAngle = 18;
 
         if (p.chooseJumpFrames) {
-            p.framesJump = 10;
-            VectorCalculator.genPropertiesModel.setValueAt(p.framesJump, VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1);
+            VectorCalculator.setProperty(Parameter.jump_button_frames, 10);
         }
 
         //custom presets not yet supported
@@ -933,7 +933,8 @@ public class Solver {
     //sets Vector Calculator to be using the current durations
     public void setDurations(int[] testDurations) {
         p.initialFrames = testDurations[0];
-        VectorCalculator.genPropertiesTable.setValueAt(testDurations[0], VectorCalculator.MOVEMENT_DURATION_ROW, 1);
+        VectorCalculator.setProperty(Parameter.initial_frames, testDurations[0]);
+        //VectorCalculator.genPropertiesTable.setValueAt(testDurations[0], VectorCalculator.MOVEMENT_DURATION_ROW, 1);
         int[][] midairs = preset.clone();
         for (int i = 0; i < preset.length; i++) {
             midairs[i][1] = testDurations[i + 1];

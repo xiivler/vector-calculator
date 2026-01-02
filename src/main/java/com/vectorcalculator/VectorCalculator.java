@@ -42,6 +42,7 @@ import javax.swing.text.JTextComponent;
 
 import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.GroundMode;
+import com.vectorcalculator.Properties.HctDirection;
 //import com.apple.laf.ClientPropertyApplicator.Property;
 //import com.vectorcalculator.Properties.AngleType;
 import com.vectorcalculator.Properties.CalculateUsing;
@@ -246,10 +247,10 @@ public class VectorCalculator extends JPanel {
 			value = p.diveCapBounceAngle;
 			break;
 		case dive_angle_tolerance:
-			value = p.diveCapBounceTolerance;
+			value = round(p.diveCapBounceTolerance, 3);
 			break;
 		case dive_deceleration:
-			value = p.diveFirstFrameDecel;
+			value = round(p.diveFirstFrameDecel, 3);
 			break;
 		case dive_turn:
 			value = p.diveTurn;
@@ -374,19 +375,7 @@ public class VectorCalculator extends JPanel {
 		case calculate_using:
 			String val = value.toString();
 			p.calculateUsing = Properties.CalculateUsing.fromName(val);
-			boolean oldInitialAngleGiven = p.initialAngleGiven;
-			boolean oldTargetAngleGiven = p.targetAngleGiven;
-			boolean oldTargetCoordinatesGiven = p.targetCoordinatesGiven;
-			p.initialAngleGiven = (p.initialAndTargetGiven || p.calculateUsing == CalculateUsing.INITIAL_ANGLE);
-			p.targetAngleGiven = (p.calculateUsing == CalculateUsing.TARGET_ANGLE);
-			p.targetCoordinatesGiven = (p.calculateUsing == CalculateUsing.TARGET_COORDINATES);
-			//handle if we don't know what the value should be
-			if (p.initialAngleGiven && !oldInitialAngleGiven)
-				setProperty(Parameter.initial_angle, p.targetAngle);
-			if (p.targetAngleGiven && !(oldTargetAngleGiven || oldTargetCoordinatesGiven))
-				setProperty(Parameter.target_angle, p.initialAngle);
-			if (p.targetCoordinatesGiven && !oldTargetCoordinatesGiven)
-				setProperty(Parameter.target_coordinates, "(0, 0, 0)");
+			updateCalculateUsing();
 			break;
 		case target_coordinates:
 			double[] tcoords = new double[3];
@@ -402,9 +391,17 @@ public class VectorCalculator extends JPanel {
 		case target_angle:
 			p.targetAngle = parseDoubleWithDefault(value, 0);
 			break;
+		case initial_movement_category:
+			String oldInitialMovementCategory = p.initialMovementCategory;
+			p.initialMovementCategory = value.toString();
+			if (!oldInitialMovementCategory.equals(p.initialMovementCategory)) {
+				p.initialMovementName = initialMovementDefaults[Arrays.asList(initialMovementCategories).indexOf(p.initialMovementCategory)];
+				updateInitialMovement();
+			}
+
 		case initial_movement:
 			p.initialMovementName = value.toString();
-			updateInitialMovement(p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed(), true);
+			updateInitialMovement();
 			break;
 		case duration_type:
 			boolean oldDurationFrames = p.durationFrames;
@@ -473,16 +470,41 @@ public class VectorCalculator extends JPanel {
 		setPropertiesRow(param); //refresh this row
 	}
 
+	static void updateCalculateUsing() {
+		boolean oldInitialAngleGiven = p.initialAngleGiven;
+		boolean oldTargetAngleGiven = p.targetAngleGiven;
+		boolean oldTargetCoordinatesGiven = p.targetCoordinatesGiven;
+		p.initialAngleGiven = (p.initialAndTargetGiven || p.calculateUsing == CalculateUsing.INITIAL_ANGLE);
+		p.targetAngleGiven = (p.calculateUsing == CalculateUsing.TARGET_ANGLE);
+		p.targetCoordinatesGiven = (p.calculateUsing == CalculateUsing.TARGET_COORDINATES);
+		//handle if we don't know what the value should be
+		if (p.initialAngleGiven && !oldInitialAngleGiven)
+			setProperty(Parameter.initial_angle, p.targetAngle);
+		if (p.targetAngleGiven && !(oldTargetAngleGiven || oldTargetCoordinatesGiven))
+			setProperty(Parameter.target_angle, p.initialAngle);
+		if (p.targetCoordinatesGiven && !oldTargetCoordinatesGiven)
+			setProperty(Parameter.target_coordinates, "(0, 0, 0)");
+	}
+
 	//category for falling for height calculator?
-	static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
+	//static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
+	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion"};
 	static String[][] initialMovementNames =
-		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Optimal Distance Motion"},
-		{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
+		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
-		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
+		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
+		{"Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Bouncy Object Bounce", "Flower Bounce"},
+		{"Uncapture", "Flip Forward", "Swinging Jump"},
+		{"Optimal Distance Motion", "Optimal Distance RCV"}};
+	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion"};
+	// static String[][] initialMovementNames =
+	// 	{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Optimal Distance Motion"},
+	// 	{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
+	// 	{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
+	// 	{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
+	// 	{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
-	//static String[] midairPresetCategories = {"Distance Jumps"};
 	static String[] midairPresetNames = {"Custom", "Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
@@ -506,72 +528,6 @@ public class VectorCalculator extends JPanel {
 		{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}},
 		//cbv first tt
 		{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}}};
-
-	static int INITIAL_COORDINATES_ROW = 0;
-	static int ANGLE_TYPE_ROW = 1;
-	static int ANGLE_ROW = 2;
-	static int INITIAL_MOVEMENT_TYPE_ROW = 3;
-	static int MOVEMENT_DURATION_TYPE_ROW = 4;
-	static int MOVEMENT_DURATION_ROW = 5;
-	static int HOLD_JUMP_FRAMES_ROW = 6;
-	static int MOONWALK_FRAMES_ROW = 7;
-	static int INITIAL_HORIZONTAL_SPEED_ROW = 8;
-	static int VECTOR_DIRECTION_ROW = 9;
-	static int DIVE_CAP_BOUNCE_ANGLE_ROW = 10;
-	static int DIVE_CAP_BOUNCE_TOLERANCE_ROW = 11;
-	static int DIVE_DECEL_ROW = 12;
-	static int MIDAIR_TYPE_ROW = 13;
-	static int GRAVITY_ROW = 14;
-	static int HYPEROPTIMIZE_ROW = 15;
-	static int AXIS_ORDER_ROW = 16;
-	static int CAMERA_TYPE_ROW = 17;
-	static int CAMERA_ROW = 18;
-
-	static int ANGLE_2_ROW = -1;
-
-	static void addAngle2Row() {
-		genPropertiesModel.insertRow(ANGLE_ROW, new Object[]{"", 0});
-		ANGLE_2_ROW = 2;
-		ANGLE_ROW++;
-		INITIAL_MOVEMENT_TYPE_ROW++;
-		MOVEMENT_DURATION_TYPE_ROW++;
-		MOVEMENT_DURATION_ROW++;
-		HOLD_JUMP_FRAMES_ROW++;
-		MOONWALK_FRAMES_ROW++;
-		INITIAL_HORIZONTAL_SPEED_ROW++;
-		VECTOR_DIRECTION_ROW++;
-		DIVE_CAP_BOUNCE_ANGLE_ROW++;
-		DIVE_CAP_BOUNCE_TOLERANCE_ROW++;
-		DIVE_DECEL_ROW++;
-		MIDAIR_TYPE_ROW++;
-		GRAVITY_ROW++;
-		HYPEROPTIMIZE_ROW++;		
-		AXIS_ORDER_ROW++;
-		CAMERA_TYPE_ROW++;
-		CAMERA_ROW++;
-	}
-
-	static void removeAngle2Row() {
-		genPropertiesModel.removeRow(ANGLE_2_ROW);
-		ANGLE_2_ROW = -1;
-		ANGLE_ROW--;
-		INITIAL_MOVEMENT_TYPE_ROW--;
-		MOVEMENT_DURATION_TYPE_ROW--;
-		MOVEMENT_DURATION_ROW--;
-		HOLD_JUMP_FRAMES_ROW--;
-		MOONWALK_FRAMES_ROW--;
-		INITIAL_HORIZONTAL_SPEED_ROW--;
-		VECTOR_DIRECTION_ROW--;
-		DIVE_CAP_BOUNCE_ANGLE_ROW--;
-		DIVE_CAP_BOUNCE_TOLERANCE_ROW--;
-		DIVE_DECEL_ROW--;
-		MIDAIR_TYPE_ROW--;
-		GRAVITY_ROW--;
-		HYPEROPTIMIZE_ROW--;
-		AXIS_ORDER_ROW--;
-		CAMERA_TYPE_ROW--;
-		CAMERA_ROW--;
-	}
 
 	static void saveMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
@@ -618,25 +574,25 @@ public class VectorCalculator extends JPanel {
 	static JButton calculateVector;
 
 	static String[] genPropertiesTitles = {"Property", "Value"};
-	static Object[][] genProperties =
-		{{"Initial Coordinates", "(0, 0, 0)"},
-		{"Calculate Using", "Target Coordinates"},
-		{"Target Coordinates", "(0, 0, 3000)"},
-		{"Initial Movement Type", p.initialMovementName},
-		{"Initial Movement Duration Type", "Frames"},
-		{"Initial Movement Frames", p.initialFrames},
-		{"Frames of Holding A/B", p.framesJump},
-		{"Moonwalk Frames", p.framesMoonwalk},
-		{"Initial Horizontal Speed", (int) p.initialHorizontalSpeed},
-		{"Initial Vector Direction", "Left"},
-		{"Edge Cap Bounce Angle", p.diveCapBounceAngle},
-		{"Edge Cap Bounce Angle Tolerance", p.diveCapBounceTolerance},
-		{"First Dive Deceleration", "0"},
-		{"Midairs", "Spinless"},
-		{"Gravity", "Regular"},
-		{"Hyperoptimize Cap Throws", "True"},
-		{"0 Degree Axis", "X"},
-		{"Camera Angle", "Target Angle"}};
+	// static Object[][] genProperties =
+	// 	{{"Initial Coordinates", "(0, 0, 0)"},
+	// 	{"Calculate Using", "Target Coordinates"},
+	// 	{"Target Coordinates", "(0, 0, 3000)"},
+	// 	{"Initial Movement Type", p.initialMovementName},
+	// 	{"Initial Movement Duration Type", "Frames"},
+	// 	{"Initial Movement Frames", p.initialFrames},
+	// 	{"Frames of Holding A/B", p.framesJump},
+	// 	{"Moonwalk Frames", p.framesMoonwalk},
+	// 	{"Initial Horizontal Speed", (int) p.initialHorizontalSpeed},
+	// 	{"Initial Vector Direction", "Left"},
+	// 	{"Edge Cap Bounce Angle", p.diveCapBounceAngle},
+	// 	{"Edge Cap Bounce Angle Tolerance", p.diveCapBounceTolerance},
+	// 	{"First Dive Deceleration", "0"},
+	// 	{"Midairs", "Spinless"},
+	// 	{"Gravity", "Regular"},
+	// 	{"Hyperoptimize Cap Throws", "True"},
+	// 	{"0 Degree Axis", "X"},
+	// 	{"Camera Angle", "Target Angle"}};
 	
 	static JFrame f = new JFrame(projectName);
 	static JPanel all;
@@ -834,12 +790,9 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void updateInitialMovement(boolean suggestSpeed, boolean capSpeed) {
+	public static void updateInitialMovement() {
+		boolean suggestSpeed = p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed();
 		initialMovement = new Movement(p.initialMovementName);
-		//genPropertiesModel.setValueAt(p.initialMovementName, INITIAL_MOVEMENT_TYPE_ROW, 1);
-		//double suggestedSpeed = initialMovement.getSuggestedSpeed();
-		//if (suggestSpeed)
-		//	p.initialHorizontalSpeed = suggestedSpeed;
 		if (initialMovement.variableJumpFrames()) {
 			if (!p.chooseJumpFrames) {
 				p.chooseJumpFrames = true;
@@ -854,9 +807,9 @@ public class VectorCalculator extends JPanel {
 			p.framesMoonwalk = 0;
 		p.chooseInitialHorizontalSpeed = initialMovement.variableInitialHorizontalSpeed();
 		if (p.chooseInitialHorizontalSpeed) {
-			if (suggestSpeed)
+			if (suggestSpeed) //if the player is sticking to the suggested speed, give it again
 				p.initialHorizontalSpeed = initialMovement.getSuggestedSpeed();
-			else if (capSpeed)
+			else
 				p.initialHorizontalSpeed = Math.min(p.initialHorizontalSpeed, initialMovement.trueSpeedCap);
 		}
 		else
@@ -882,6 +835,8 @@ public class VectorCalculator extends JPanel {
 		// 	p.initialHorizontalSpeed = 0;
 		// }
 		p.initialAndTargetGiven = (p.initialMovementName.contains("RCV"));
+		updateCalculateUsing();
+		
 		
 		if (p.initialMovementName.contains("Optimal Distance")) {
 			p.chooseDurationType = false;
@@ -1117,8 +1072,10 @@ public class VectorCalculator extends JPanel {
 						maximizer.adjustToGivenAngle();
 						//maximizer.maximize();
 						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
-						genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
-						genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
+						setPropertiesRow(Parameter.dive_angle);
+						setPropertiesRow(Parameter.dive_deceleration);
+						//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+						//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
 						System.out.println("Possible: " + possible + " " + maximizer.ctType);
 						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
@@ -1210,6 +1167,10 @@ public class VectorCalculator extends JPanel {
 		return maximizer;
 	}
 
+	public static DefaultCellEditor dropdown(String[] options) {
+		return new DefaultCellEditor(new JComboBox<String>(options));
+	}
+
 	public static void main(String[] args) {
 		try {
 			jarParentFolder = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
@@ -1227,72 +1188,74 @@ public class VectorCalculator extends JPanel {
 		all.setOpaque(true);
 		
 		//GENERAL PROPERTIES TABLE
-		genPropertiesModel = new DefaultTableModel(genProperties, genPropertiesTitles);
+		genPropertiesModel = new DefaultTableModel(null, genPropertiesTitles); //may have to actually load something
 		genPropertiesTable = new JTable(genPropertiesModel) {
 			
 			public TableCellEditor getCellEditor(int row, int column)
             {
-                int modelColumn = convertColumnIndexToModel( column );
+                int modelColumn = convertColumnIndexToModel(column);
 
-                if (modelColumn == 1 && row == ANGLE_TYPE_ROW)
-                {
-					String[] options;
-					if (p.initialAndTargetGiven)
-						options = new String[]{"Target Angle", "Target Coordinates"};
-					else
-						options = new String[]{"Initial Angle", "Target Angle", "Target Coordinates"};
-                    JComboBox<String> angle = new JComboBox<String>(options);
-                    return new DefaultCellEditor(angle);
-                }
-				else if (modelColumn == 1 && row == MOVEMENT_DURATION_TYPE_ROW)
-                {
-					String[] options = {"Frames", "Vertical Displacement"};
-					JComboBox<String> choice = new JComboBox<String>(options);
-					return new DefaultCellEditor(choice);
-                }
-                else if (modelColumn == 1 && row == VECTOR_DIRECTION_ROW)
-                {
-                	String[] options = {"Left", "Right"}; //can add LOCK_NONE option
-                    JComboBox<String> angle = new JComboBox<String>(options);
-                    return new DefaultCellEditor(angle);
-                }
-				else if (modelColumn == 1 && row == MIDAIR_TYPE_ROW)
-                {
-                    JComboBox<String> angle = new JComboBox<String>(midairPresetNames);
-                    return new DefaultCellEditor(angle);
-                }
-                else if (modelColumn == 1 && row == GRAVITY_ROW)
-                {
-                	String[] options = {"Regular", "Moon"};
-                    JComboBox<String> gravity = new JComboBox<String>(options);
-                    return new DefaultCellEditor(gravity);
-                }
-				else if (modelColumn == 1 && row == HYPEROPTIMIZE_ROW)
-                {
-                	String[] options = {"True", "False"};
-                    JComboBox<String> choice = new JComboBox<String>(options);
-                    return new DefaultCellEditor(choice);
-                }
-				else if (modelColumn == 1 && row == CAMERA_TYPE_ROW)
-                {
-                	String[] options = {"Initial Angle", "Target Angle", "Absolute", "Custom"};
-                    JComboBox<String> choice = new JComboBox<String>(options);
-                    return new DefaultCellEditor(choice);
-                }
-				else if (modelColumn == 1 && row == AXIS_ORDER_ROW) {
-					String[] options = {"X", "Z"};
-                    JComboBox<String> choice = new JComboBox<String>(options);
-                    return new DefaultCellEditor(choice);
+				if (modelColumn == 0)
+					return null; //return super.getCellEditor(row, column);
+				switch(rowParams.get(row)) {
+					case calculate_using:
+						String[] options = p.initialAndTargetGiven ? new String[]{"Target Angle", "Target Coordinates"} :
+																	 new String[]{"Initial Angle", "Target Angle", "Target Coordinates"};
+						return dropdown(options);
+					case duration_type:
+						return dropdown(new String[]{"Frames", "Vertical Displacement"});
+					case vector_direction:
+						return dropdown(new String[]{"Left", "Right"});
+					case midairs:
+						return dropdown(midairPresetNames);
+					case gravity:
+						return dropdown(new String[]{"Regular", "Moon"});
+					case hyperoptimize:
+						return dropdown(new String[]{"Yes", "No"});
+					case camera:
+						return dropdown(new String[]{"Initial Angle", "Target Angle", "Absolute", "Custom"});
+					case zero_axis:
+						return dropdown(new String[]{"X", "Z"});
+					case initial_movement_category:
+						return dropdown(initialMovementCategories);
+					case initial_movement:
+						return dropdown(initialMovementNames[Arrays.asList(initialMovementCategories).indexOf(p.initialMovementCategory)]);
+					case hct_direction:
+						return dropdown(new String[]{"Up", "Down", "Left", "Right"});
+					case hct_neutral:
+						return dropdown(new String[]{"Yes", "No"});
+					case dive_turn:
+						return dropdown(new String[]{"Yes", "No"});
+					case ground_mode:
+						return dropdown(new String[]{"None", "Uniform", "Varied"});
+					case ground_type:
+					case ground_type_firstGP:
+					case ground_type_CB:
+					case ground_type_secondGP:
+						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
+					case mode:
+						return dropdown(new String[]{"Solve", "Solve Cap Bounce Only", "Calculate"});
+					default:
+						return super.getCellEditor(row, column);
 				}
-                else
-                    return super.getCellEditor(row, column);
             }
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 0 || row == INITIAL_COORDINATES_ROW || (row == ANGLE_ROW && p.targetCoordinates) || row == INITIAL_MOVEMENT_TYPE_ROW || (row == HOLD_JUMP_FRAMES_ROW && !p.chooseJumpFrames) || (row == MOONWALK_FRAMES_ROW && !p.canMoonwalk) || (row == INITIAL_HORIZONTAL_SPEED_ROW && !p.chooseInitialHorizontalSpeed))
+				if (column == 0)
 					return false;
-				return true;
+				Parameter param = rowParams.get(row);
+				switch(param) {
+					case initial_coordinates:
+					case target_coordinates:
+					case initial_movement_category:
+					case initial_movement:
+						return false;
+					case initial_speed:
+						return p.chooseInitialHorizontalSpeed;
+					default:
+						return true;
+				}
 			}
 			
 			@Override
@@ -1316,7 +1279,7 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(265);
 		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
-		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * (genProperties.length + 2) + 25));
+		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * 10 + 25));
 		
 		ListSelectionModel genPropertiesSelectionModel = genPropertiesTable.getSelectionModel();
 		
@@ -1324,57 +1287,48 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				//this used to not be all part of the conditional
-				if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_MOVEMENT_TYPE_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
-					dialogWindow.display();
-					JButton confirm = dialogWindow.getConfirmButton();
-					confirm.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							//Debug.println(dialogWindow.getSelectedMovementName());
-							p.initialMovementName = dialogWindow.getSelectedMovementName();
-							updateInitialMovement(p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed(), true); //update to have suggested speed if the player currently has the suggested speed for the current movement
-							dialogWindow.close();	
+				if (genPropertiesTable.columnAtPoint(evt.getPoint()) == 1)
+					return;
+				Parameter param = rowParams.get(genPropertiesTable.rowAtPoint(evt.getPoint()));
+				switch(param) {
+					// case initial_movement:
+					// 	dialogWindow.display();
+					// 	JButton confirm = dialogWindow.getConfirmButton();
+					// 	confirm.addActionListener(new ActionListener() {
+					// 		public void actionPerformed(ActionEvent e) {
+					// 			//Debug.println(dialogWindow.getSelectedMovementName());
+					// 			p.initialMovementName = dialogWindow.getSelectedMovementName();
+					// 			updateInitialMovement(p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed(), true); //update to have suggested speed if the player currently has the suggested speed for the current movement
+					// 			dialogWindow.close();	
+					// 		}
+					// 	});
+					// 	break;
+					case initial_coordinates:
+						initial_CoordinateWindow.display(p.x0, p.y0, p.z0);
+						if (add_ic_listener) {
+							(initial_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+								public void actionPerformed(ActionEvent e) {
+									setProperty(Parameter.initial_coordinates, initial_CoordinateWindow.getCoordinates());
+									initial_CoordinateWindow.close();
+								}
+							});
 						}
-					});
-				}
-				else if (genPropertiesTable.rowAtPoint(evt.getPoint()) == INITIAL_COORDINATES_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
-					initial_CoordinateWindow.display(p.x0, p.y0, p.z0);
-					if (add_ic_listener) {
-						(initial_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
-							public void actionPerformed(ActionEvent e) {
-								initial_CoordinateWindow.findCoordinates();
-								p.x0 = initial_CoordinateWindow.x;
-								p.y0 = initial_CoordinateWindow.y;
-								p.z0 = initial_CoordinateWindow.z;
-								genPropertiesModel.setValueAt(initial_CoordinateWindow.coordinates, INITIAL_COORDINATES_ROW, 1);
-								initial_CoordinateWindow.close();
-							}
-						});
-					}
-					add_ic_listener = false;
-				}
-				else if (p.targetCoordinates && genPropertiesTable.rowAtPoint(evt.getPoint()) == ANGLE_ROW && genPropertiesTable.columnAtPoint(evt.getPoint()) == 1) {
-					target_CoordinateWindow.display(p.x1, p.y1, p.z1);
-					// JButton target_confirm = target_CoordinateWindow.getConfirmButton();
-					// for (ActionListener al : target_confirm.getActionListeners()) {
-					// 	target_confirm.removeActionListener(al);
-					// }
-					if (add_tc_listener) {
-						(target_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
-							public void actionPerformed(ActionEvent e) {
-								target_CoordinateWindow.findCoordinates();
-								p.x1 = target_CoordinateWindow.x;
-								p.y1 = target_CoordinateWindow.y;
-								p.z1 = target_CoordinateWindow.z;
-								p.targetAngle = targetCoordinatesToTargetAngle();
-								genPropertiesModel.setValueAt(target_CoordinateWindow.coordinates, ANGLE_ROW, 1);
-								target_CoordinateWindow.close();
-								Debug.println("Coords: " + target_CoordinateWindow.coordinates);
-								Debug.println("Angle row: " + ANGLE_ROW);
-							}
-						});
-					}
-					add_tc_listener = false;
+						add_ic_listener = false;
+						break;
+					case target_coordinates:
+						target_CoordinateWindow.display(p.x1, p.y1, p.z1);
+						if (add_tc_listener) {
+							(target_CoordinateWindow.getConfirmButton()).addActionListener(new ActionListener() {
+								public void actionPerformed(ActionEvent e) {
+									setProperty(Parameter.target_coordinates, target_CoordinateWindow.getCoordinates());
+									target_CoordinateWindow.close();
+								}
+							});
+						}
+						add_tc_listener = false;
+						break;
+					default:
+						break;
 				}
 			}
 		});

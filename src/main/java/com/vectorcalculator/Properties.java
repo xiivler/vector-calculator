@@ -121,6 +121,15 @@ public class Properties {
         HctDirection(String string) {
             this.name = string;
         }
+
+        static HctDirection fromName(String string) {
+            for (HctDirection hd : HctDirection.values()) {
+                if (hd.name.equals(string)) {
+                    return hd;
+                }
+            }
+            return DOWN;
+        }
     }
 
     // static enum LockDurationType {
