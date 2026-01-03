@@ -380,14 +380,14 @@ public class VectorDisplayWindow {
 				z = info[i][2];
 				double dispX = p.x0 - x;
 				double dispZ = p.z0 - z;
-				if (y + p.upwarp >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
+				if (y + p.getUpwarpMinusError() >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
 					if (!madeJump) {
 						madeJump = true;
 						rowContents[1] = "(Made Jump)";
-						if (y < p.y1) {
-							upwarpOffset = p.y1 - y;
-							y = p.y1;
-						}
+					}
+					if (y < p.y1 && !firstDive && index == simpleMotions.length - 1) {
+						upwarpOffset = p.y1 - info[i][1];
+						y = p.y1;
 					}
 				}
 				if (i == info.length - 1) {
@@ -457,8 +457,16 @@ public class VectorDisplayWindow {
 					int offset = -1;
 					int input1 = motion.movement.inputs1.get(i);
 					if (index == maximizer.variableCapThrow1Index) {
-						input1 = Movement.CT_INPUT[maximizer.ctType];
-						motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
+						// if (p.mode == Mode.CALCULATE) {
+						// 	if (p.tripleThrow)
+						//  	motion.movement.displayName = "Down TT";
+						// 	else
+						// 	 	motion.movement.displayName = "Down MCCT";
+						// }
+						if (p.mode != Mode.CALCULATE) {
+							input1 = Movement.CT_INPUT[maximizer.ctType];
+							motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
+						}
 					}
 					if (input1 >= Inputs.M && shiftMotion) {
 						offset = -2;

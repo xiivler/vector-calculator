@@ -75,7 +75,7 @@ public class Properties {
 	}
 
     static enum Mode {
-        SOLVE("Solve"), SOLVE_CB("Solve Cap Bounce Only"), CALCULATE("Calculate");
+        SOLVE("Solve"), SOLVE_CB("Calculate (Solve Cap Bounce)"), CALCULATE("Calculate");
 
         String name;
 
@@ -220,7 +220,7 @@ public class Properties {
     boolean targetCoordinatesGiven = true;
 
     //boolean isLavaOrPoison = false;
-    double upwarp = 0;
+    double upwarp = 40;
     Mode mode = Mode.SOLVE;
 
     @XmlTransient
@@ -268,6 +268,12 @@ public class Properties {
 
     public static boolean isUnsaved() {
         return !p.equals(p_saved);
+    }
+
+    public static final double UPWARP_ERROR = 0.001; //this error should be greater than the one in the Solver so that it will not accidentally give too big of an upwarp
+
+    public double getUpwarpMinusError() {
+        return Math.max(upwarp - UPWARP_ERROR, 0);
     }
 
     public static void copyAttributes(Object from, Object to) {

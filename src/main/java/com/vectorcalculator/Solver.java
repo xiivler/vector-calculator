@@ -57,12 +57,14 @@ public class Solver {
     int badCalls = 0;
 
     int delta = 0;
-
-    double bestYDisp = 0; //for debug
     
     double x;
     double y;
     double z;
+
+    double bestDisp = 0;
+    int[] bestDurations;
+    double bestYDisp = 0; //for debug
 
     ArrayList<DoubleIntArray> bestResults;
 
@@ -104,7 +106,7 @@ public class Solver {
         if (p.midairPreset.equals("Custom"))
             return true;
 
-        VectorCalculator.addPreset(p.midairPreset);
+        VectorCalculator.addPreset(p.midairPreset, false);
 
         singleThrowAllowed = !(p.midairPreset.equals("CBV First") && p.tripleThrow);
         ttAllowed = ((p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) && p.tripleThrow);
@@ -242,8 +244,6 @@ public class Solver {
 
         //System.out.println(Arrays.toString(final_y_heights));
 
-        double y_target = p.y1;
-
         System.out.println("Initial Durations: " + Arrays.toString(durations));
         System.out.println("Initial Last Frames: " + Arrays.toString(lastFrames));
 
@@ -251,7 +251,7 @@ public class Solver {
         //this gives a ballpark estimate of the optimal frames
         
         int iterations = 0;
-        while (y < y_target - ERROR) {
+        while (y + p.getUpwarpMinusError() < p.y1 - ERROR) {
             iterations++;
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
@@ -388,8 +388,8 @@ public class Solver {
 
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
-        int[] bestDurations = test(durations, delta, 0, p.y0).intArray;
-        double bestDisp = test(bestDurations, true);
+        bestDurations = test(durations, delta, 0, p.y0).intArray;
+        bestDisp = test(bestDurations, true);
         //System.out.println(test(best.intArray));
 
         //test the runner-ups in more detail to see if any are actually better
@@ -610,32 +610,32 @@ public class Solver {
             int test_delta = 0;
             int lastFrame = lastFrames[index];
             //System.out.println("Base Y Pos: " + base_y_pos);
-            if (base_y_pos + p.upwarp > p.y1) {
+            if (base_y_pos + p.getUpwarpMinusError() > p.y1) {
                 // System.out.println();
                 // System.out.println(test_y_pos);
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos += y_vels[lastFrame + test_delta];
                     // System.out.println(test_y_pos);
-                    if (test_y_pos + p.upwarp < p.y1 - ERROR) {
+                    if (test_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) {
                         test_y_pos -= y_vels[lastFrame + test_delta];
                         break;
                     }
                 }
                 test_delta--;
             }
-            else if (base_y_pos + p.upwarp < p.y1 - ERROR) {
+            else if (base_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) {
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos -= y_vels[lastFrame - test_delta + 1];
-                    if (test_y_pos + p.upwarp >= p.y1) {
+                    if (test_y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR) {
                         break;
                     }
                 }
                 test_delta *= -1; //so we subtract the frames instead of adding them
-                if (test_y_pos + p.upwarp < p.y1 - ERROR) { //not possible to be high enough so just return 0
+                if (test_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) { //not possible to be high enough so just return 0
                     return new DoubleIntArray(0, durations);
                 }
             }
-            if (test_y_pos + p.upwarp > p.y1 + limit) { //almost certainly won't be optimal
+            if (test_y_pos + p.getUpwarpMinusError() > p.y1 + limit) { //almost certainly won't be optimal
                 return new DoubleIntArray(0, durations);
             }
             // System.out.println();
@@ -836,7 +836,7 @@ public class Solver {
                 return FALSE;
         }
         else if (motionIndex == secondDiveIndex) {
-            if (y_pos + p.upwarp >= p.y1 - ERROR)
+            if (y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR)
                 return y_pos;
             else
                 return FALSE;
@@ -854,7 +854,7 @@ public class Solver {
     //make sure the durations are actually possible
     public double validateHeights(int[] testDurations, VectorMaximizer maximizer) {
         double[] final_y_heights = getFinalYHeights(maximizer);
-        if (final_y_heights[final_y_heights.length - 1] < p.y1 - p.upwarp) {
+        if (final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() < p.y1 - ERROR) {
             return FALSE;
         }
         SimpleMotion[] motions = maximizer.getMotions();
@@ -938,13 +938,13 @@ public class Solver {
             return FALSE;
         if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT)
             return FALSE;
-        if (final_y_heights[final_y_heights.length - 1] + p.upwarp < p.y1 - ERROR)
+        if (final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() < p.y1 - ERROR)
             return FALSE;
         //System.out.println(Arrays.toString(final_y_heights) + " " + Arrays.toString(penultimate_y_heights));
         // if (p.initialFrames == 64) {
         //     System.out.println(Arrays.toString(testDurations));
         // }
-        return (final_y_heights[final_y_heights.length - 1] + p.upwarp - p.y1);
+        return (final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() - p.y1);
     }
 
     //sets Vector Calculator to be using the current durations

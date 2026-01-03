@@ -16,6 +16,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -71,7 +72,7 @@ public class VectorCalculator extends JPanel {
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement Category"), initial_movement("Initial Movement Type"),
-		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Displacement"),
+		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
@@ -81,7 +82,8 @@ public class VectorCalculator extends JPanel {
 		ground_mode("Ground Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
-		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP");
+		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP"),
+		upwarp("Maximum Upwarp");
 
 		String name;
 
@@ -125,6 +127,7 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
+			params.add(Parameter.upwarp);
 			params.add(null);
 			params.add(Parameter.gravity);
 			params.add(Parameter.zero_axis);
@@ -138,6 +141,7 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
+			params.add(Parameter.upwarp);
 			if (p.diveCapBounce) {
 				params.add(null);
 				params.add(Parameter.dive_angle);
@@ -242,6 +246,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case triple_throw:
 			value = p.tripleThrow ? "Yes" : "No";
+			break;
+		case upwarp:
+			value = p.upwarp;
 			break;
 		case gravity:
 			value = p.onMoon ? "Moon" : "Regular";
@@ -414,6 +421,10 @@ public class VectorCalculator extends JPanel {
 				if (p.midairPreset.equals("Custom"))
 					setProperty(Parameter.midairs, "Spinless");
 			}
+			else if (p.mode == Mode.SOLVE_CB) {
+				setProperty(Parameter.gravity, "Regular");
+			}
+			calculateVector.setText(p.mode.name);
 			break;
 		case initial_coordinates:
 			double[] coords = new double[3];
@@ -502,16 +513,24 @@ public class VectorCalculator extends JPanel {
 			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
 				p.tripleThrow = false;
 			if (!name.equals(p.midairPreset))
-				addPreset(name);
+				addPreset(name, false);
+			if (name.equals("Custom") && p.mode == Mode.SOLVE) {
+				System.out.println("Should switch");
+				setProperty(Parameter.mode, Mode.SOLVE_CB.name);
+				
+			}
 			break;
 		case triple_throw:
 			boolean oldTripleThrow = p.tripleThrow;
 			p.tripleThrow = value.toString().equals("Yes");
 			if (oldTripleThrow != p.tripleThrow)
-				addPreset(p.midairPreset);
+				addPreset(p.midairPreset, false);
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");
+			break;
+		case upwarp:
+			p.upwarp = clampDouble(parseDoubleWithDefault(value, 40), 0, 40);
 			break;
 		case hyperoptimize:
 			p.hyperoptimize = value.toString().equals("Yes");
@@ -627,7 +646,7 @@ public class VectorCalculator extends JPanel {
 	// 	{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 	// 	{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
-	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First"};
+	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First", "Custom"};
 	//static String[] midairPresetsWithTT = {"Spinless", "Spinless (Triple Throw)", "Simple Tech", "Simple Tech (Triple Throw)", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
@@ -932,7 +951,8 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void addPreset(String name) {
+	//load being true means to load whatever the midairs actually are instead of their default values
+	public static void addPreset(String name, boolean load) {
 		if (name.equals("Custom")) {
 			add.setEnabled(true);
 			remove.setEnabled(true);
@@ -941,7 +961,10 @@ public class VectorCalculator extends JPanel {
 			add.setEnabled(false);
 			remove.setEnabled(false);
 		}
-		addPreset(getPreset(name));
+		if (load)
+			addPreset(p.midairs);
+		else
+			addPreset(getPreset(name));
 		p.midairPreset = name;
 	}
 
@@ -1063,8 +1086,10 @@ public class VectorCalculator extends JPanel {
 		if (p.midairPreset.equals("Custom"))
 			addPreset(p.midairs);
 		else 
-			addPreset(p.midairPreset);
+			addPreset(p.midairPreset, true);
 		refreshPropertiesRows(getRowParams(), true);
+
+		calculateVector.setText(p.mode.name);
 
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
@@ -1242,46 +1267,77 @@ public class VectorCalculator extends JPanel {
 			//  else if (evt.getActionCommand() == "solve") {
 			//  }
 			 else if (evt.getActionCommand().equals("calculate")) {
+				boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
 				if (p.mode == Mode.SOLVE) {
-					Solver solver = new Solver();
-					int delta = 4;
-					if (p.initialMovementName.contains("RCV")) {
-						delta = 3;
-					}
-					//  for (double i = -50; i <= 50; i += 1) {
-					//  	p.y1 = i;
-					if (solver.solve(delta)) { //2 might even be okay for jumps with HCT
-						VectorMaximizer maximizer = getMaximizer();
-						if (maximizer != null) {
-							//p.diveTurn should be set correctly by the solver
-							maximizer.maximize();
-							//System.out.println(maximizer.variableCapThrow1FallingFrames);
-							//System.out.println(maximizer.fallingFrames);
-							boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, true, true, solver.ttAllowed) >= 0;
-							maximizer.recalculateDisps();
-							maximizer.adjustToGivenAngle();
-							//maximizer.maximize();
-							//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
-							setPropertiesRow(Parameter.dive_angle);
-							setPropertiesRow(Parameter.dive_deceleration);
-							//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
-							//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
-							System.out.println("Possible: " + possible + " " + maximizer.ctType);
-							//maximizer.maximize();
-							VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
-							VectorDisplayWindow.display();
-							//System.out.println("Cappy position: " + );
-							//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
+					Solver solver;
+					if (optimalDistanceMotion) {
+						p.initialMovementName = "Triple Jump";
+						p.framesJump = 10;
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						Solver solverTJ = new Solver();
+						solverTJ.solve(4);
+						p.initialMovementName = "Motion Cap Throw RCV";
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						Solver solverRCV = new Solver();
+						solverRCV.solve(3);
+						p.initialMovementName = "Sideflip";
+						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						Solver solverSideflip = new Solver();
+						solverSideflip.solve(4);
+						// System.out.println("TJ: " + maximizerTJ.bestDisp);
+						// System.out.println("RC: " + maximizerRC.bestDisp);
+						// System.out.println("SF: " + maximizerSideflip.bestDisp);
+						if (solverTJ.bestDisp > solverRCV.bestDisp && solverTJ.bestDisp > solverSideflip.bestDisp) {
+							solver = solverTJ;
+							p.initialMovementName = "Triple Jump";
 						}
+						else if (solverRCV.bestDisp > solverTJ.bestDisp && solverRCV.bestDisp > solverSideflip.bestDisp) {
+							solver = solverRCV;
+							p.initialMovementName = "Motion Cap Throw RCV";
+						}
+						else {
+							solver = solverSideflip;
+							p.initialMovementName = "Sideflip";
+						}
+						// p.initialFrames = solver.preset[0][1];
+						// initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+						// VectorCalculator.addPreset(solver.preset);
+						solver.test(solver.bestDurations,true);
 					}
 					else {
-						errorMessage.setText("Error: Movement cannot reach target height");
+						solver = new Solver();
+						int delta = p.initialMovementName.contains("RCV") ? 4 : 3;
+						solver.solve(delta);
 					}
-						//i = p.y1 + solver.bestYDisp + .01; //to test what the biggest bestYDisp is
-						 //i += 1;
-					//}
-					
-					//Debug.println();
+					if (solver.bestDisp == 0) {
+						errorMessage.setText("Error: Movement cannot reach target height");
+						return;
+					}
+					VectorMaximizer maximizer = getMaximizer();
+					if (maximizer != null) {
+						//p.diveTurn should be set correctly by the solver
+						maximizer.maximize();
+						//System.out.println(maximizer.variableCapThrow1FallingFrames);
+						//System.out.println(maximizer.fallingFrames);
+						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, true, true, solver.ttAllowed) >= 0;
+						maximizer.recalculateDisps();
+						maximizer.adjustToGivenAngle();
+						//maximizer.maximize();
+						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
+						setPropertiesRow(Parameter.dive_angle);
+						setPropertiesRow(Parameter.dive_deceleration);
+						//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
+						//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
+						System.out.println("Possible: " + possible + " " + maximizer.ctType);
+						//maximizer.maximize();
+						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.display();
+						//System.out.println("Cappy position: " + );
+						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
+					}
+					if (optimalDistanceMotion) {
+						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
+					}
 				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
@@ -1319,6 +1375,7 @@ public class VectorCalculator extends JPanel {
 					else {
 						maximizer = getMaximizer();
 						maximizer.maximize();
+						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 					}
 					if (maximizer != null) {
@@ -1398,8 +1455,8 @@ public class VectorCalculator extends JPanel {
 						return dropdown(new String[]{"Left", "Right"});
 					case midairs:
 						DefaultCellEditor dropdown = dropdown(midairPresetNames);
-						if (p.mode != Mode.SOLVE)
-							((JComboBox<String>) dropdown.getComponent()).addItem("Custom");
+						// if (p.mode != Mode.SOLVE)
+						// 	((JComboBox<String>) dropdown.getComponent()).addItem("Custom");
 						return dropdown;
 					case triple_throw:
 						return dropdown(new String[]{"Yes", "No"});
@@ -1431,9 +1488,9 @@ public class VectorCalculator extends JPanel {
 						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
 					case mode:
 						if (p.midairPreset.equals("Custom"))
-							return dropdown(new String[]{"Solve Cap Bounce Only", "Calculate"});
+							return dropdown(new String[]{"Calculate (Solve Cap Bounce)", "Calculate"});
 						else
-							return dropdown(new String[]{"Solve", "Solve Cap Bounce Only", "Calculate"});
+							return dropdown(new String[]{"Solve", "Calculate (Solve Cap Bounce)", "Calculate"});
 					default:
 						return super.getCellEditor(row, column);
 				}
@@ -1452,7 +1509,7 @@ public class VectorCalculator extends JPanel {
 					case initial_speed:
 						return p.chooseInitialHorizontalSpeed;
 					case gravity:
-						return p.mode != Mode.SOLVE;
+						return p.mode == Mode.CALCULATE;
 					default:
 						return true;
 				}
@@ -1904,7 +1961,7 @@ public class VectorCalculator extends JPanel {
 		add = new JButton("+");
 		remove = new JButton("-");
 		//solveVector = new JButton("Solve");
-		calculateVector = new JButton("Optimize Vectors");
+		calculateVector = new JButton("Solve");
 		add.setActionCommand("add");
 		remove.setActionCommand("remove");
 		calculateVector.setActionCommand("calculate");
