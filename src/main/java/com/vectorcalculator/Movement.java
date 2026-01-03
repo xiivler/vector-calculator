@@ -770,7 +770,10 @@ public class Movement {
 	
 	public double getSuggestedSpeed() {
 		//return Math.min(recommendedInitialHorizontalSpeed, initialHorizontalSpeed);
-		return Math.min(recommendedInitialHorizontalSpeed, trueSpeedCap);
+		if (!variableInitialHorizontalSpeed)
+			return initialHorizontalSpeed;
+		else
+			return Math.min(recommendedInitialHorizontalSpeed, trueSpeedCap);
 	}
 	
 	public double getTrueSpeedCap() {

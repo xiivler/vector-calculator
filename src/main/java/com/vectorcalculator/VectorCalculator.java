@@ -109,12 +109,13 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.target_coordinates);
 			params.add(null);
 			params.add(Parameter.initial_movement_category);
-			params.add(Parameter.initial_movement);
+			if (!p.initialMovementCategory.equals("Optimal Distance Motion"))
+				params.add(Parameter.initial_movement);
 			if (p.chooseDurationType)
 				params.add(Parameter.duration_type);
 			if (p.durationFrames)
 				params.add(Parameter.initial_frames);
-			else
+			else if (p.mode != Mode.SOLVE)
 				params.add(Parameter.initial_displacement);
 			if (p.chooseJumpFrames)
 				params.add(Parameter.jump_button_frames);
@@ -1020,7 +1021,7 @@ public class VectorCalculator extends JPanel {
 				p.initialHorizontalSpeed = Math.min(p.initialHorizontalSpeed, initialMovement.trueSpeedCap);
 		}
 		else
-			p.initialHorizontalSpeed = 0;
+			p.initialHorizontalSpeed = initialMovement.initialHorizontalSpeed;
 		// if (initialMovement.variableInitialHorizontalSpeed()) {
 		// 	if (suggestSpeed) {
 		// 		p.chooseInitialHorizontalSpeed = true;
@@ -1048,6 +1049,10 @@ public class VectorCalculator extends JPanel {
 		if (p.initialMovementName.contains("Optimal Distance")) {
 			p.chooseDurationType = false;
 			p.durationFrames = false;
+		}
+		else if (p.mode == Mode.SOLVE) {
+			p.chooseDurationType = false;
+			p.durationFrames = true;
 		}
 		else
 			p.chooseDurationType = true;
