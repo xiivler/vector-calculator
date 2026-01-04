@@ -1378,6 +1378,9 @@ public class VectorCalculator extends JPanel {
 					if (optimalDistanceMotion) {
 						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
 					}
+					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
+						setProperty(Parameter.hct_type, p.hctType.name);
+					}
 				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();

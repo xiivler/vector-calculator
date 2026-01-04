@@ -14,6 +14,8 @@ public class Solver {
     //this limit takes a while for TT jumps
     static final double ERROR = .0001; //acceptable amount of error on double addition/subtraction
     static final int REFRESH_RATE = 5; //after how many iterations the values are recaluclated when getting a ballpark estimate
+    static final double HCT_CHANGE_ANGLE_HEIGHT = 150; //if hct is less than this height above the ground, angle will be reduced to HCT_SMALLER_ANGLE so it still comes back in time
+    static final double HCT_SMALLER_ANGLE = 40;
 
     double limit = 20; //if the final y height of the test is above this number, assume it can't be optimal
 
@@ -869,6 +871,7 @@ public class Solver {
             }
         }
 
+        int maximizer_hmcctIndex = maximizer.variableHCTFallIndex;
         int maximizer_firstGPIndex;
         if (maximizer.hasVariableCapThrow1Falling)
             maximizer_firstGPIndex = maximizer.variableCapThrow1Index + 2;
@@ -918,6 +921,20 @@ public class Solver {
         // if (p.initialFrames == 68 || testDurations[0] == 68) {
         //     System.out.println("68 height w/ " + final_y_heights[maximizer_initialMovementIndex]);
         // }
+        if (p.hct) {
+            double groundHeightRS = -Double.MAX_VALUE;
+            if (rainbowSpinFirst && p.groundTypeFirstGP == GroundType.GROUND)
+                groundHeightRS = p.groundHeightFirstGP;
+            else if (p.groundTypeSecondGP == GroundType.GROUND)
+                groundHeightRS = p.groundHeightSecondGP;
+            if (final_y_heights[maximizer_hmcctIndex] < groundHeightRS + HCT_CHANGE_ANGLE_HEIGHT) {
+                System.out.println("Reducing HMCCT Angle");
+                p.hctThrowAngle = HCT_SMALLER_ANGLE;
+            }
+            else {
+                p.hctThrowAngle = 60;
+            }
+        }
         if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] <= p.groundHeightFirstGP) //maybe should be <
             return FALSE;
         if (p.groundTypeFirstGP == GroundType.DAMAGING && final_y_heights[maximizer_initialMovementIndex] <= p.groundHeightFirstGP) //maybe should be <
