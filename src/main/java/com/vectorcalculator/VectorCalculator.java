@@ -47,6 +47,7 @@ import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctDirection;
 import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
+import com.vectorcalculator.Properties.TripleThrow;
 //import com.apple.laf.ClientPropertyApplicator.Property;
 //import com.vectorcalculator.Properties.AngleType;
 import com.vectorcalculator.Properties.CalculateUsing;
@@ -250,7 +251,7 @@ public class VectorCalculator extends JPanel {
 			value = p.midairPreset;
 			break;
 		case triple_throw:
-			value = p.tripleThrow ? "Yes" : "No";
+			value = p.tripleThrow.displayName;
 			break;
 		case upwarp:
 			value = p.upwarp;
@@ -433,6 +434,9 @@ public class VectorCalculator extends JPanel {
 				setProperty(Parameter.gravity, "Regular");
 			}
 			calculateVector.setText(p.mode.name);
+			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"));
+			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
+				setProperty(Parameter.triple_throw, "No");
 			break;
 		case initial_coordinates:
 			double[] coords = new double[3];
@@ -518,8 +522,11 @@ public class VectorCalculator extends JPanel {
 			String name = value.toString();
 			boolean oldCanTripleThrow = p.canTripleThrow;
 			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom"));
+			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (name.equals("Spinless") || name.equals("Simple Tech"));
 			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
-				p.tripleThrow = false;
+				p.tripleThrow = TripleThrow.NO;
+			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
+				p.tripleThrow = TripleThrow.NO;
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
 			if (name.equals("Custom") && p.mode == Mode.SOLVE) {
@@ -529,8 +536,8 @@ public class VectorCalculator extends JPanel {
 			}
 			break;
 		case triple_throw:
-			boolean oldTripleThrow = p.tripleThrow;
-			p.tripleThrow = value.toString().equals("Yes");
+			TripleThrow oldTripleThrow = p.tripleThrow;
+			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
 			if (oldTripleThrow != p.tripleThrow)
 				addPreset(p.midairPreset, false);
 			break;
@@ -955,7 +962,7 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static int[][] getPreset(String name) {
-		if (!p.tripleThrow) {
+		if (p.tripleThrow == TripleThrow.NO) {
 			switch(name) {
 				case "Spinless":
 					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
@@ -1359,7 +1366,7 @@ public class VectorCalculator extends JPanel {
 						maximizer.maximize();
 						//System.out.println(maximizer.variableCapThrow1FallingFrames);
 						//System.out.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, true, true, solver.ttAllowed) >= 0;
+						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, true, solver.ttAllowed != TripleThrow.NO) >= 0;
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 						//maximizer.maximize();
@@ -1502,7 +1509,10 @@ public class VectorCalculator extends JPanel {
 						// 	((JComboBox<String>) dropdown.getComponent()).addItem("Custom");
 						return dropdown;
 					case triple_throw:
-						return dropdown(new String[]{"Yes", "No"});
+						if (p.canTestTripleThrow)
+							return dropdown(new String[]{"Yes", "No", "Test Both"});
+						else
+							return dropdown(new String[]{"Yes", "No"});
 					case gravity:
 						return dropdown(new String[]{"Regular", "Moon"});
 					case hyperoptimize:

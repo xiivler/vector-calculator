@@ -51,6 +51,25 @@ public class Properties {
         }
 	}
 
+    static enum TripleThrow {
+        YES("Yes"), NO("No"), TEST("Test Both");
+
+        String displayName;
+
+        TripleThrow(String displayName) {
+            this.displayName = displayName;
+        }
+
+        static TripleThrow fromDisplayName(String name) {
+            for (TripleThrow tt : TripleThrow.values()) {
+                if (tt.displayName.equals(name)) {
+                    return tt;
+                }
+            }
+            return NO;
+        }
+    }
+
     // static enum AngleType {
 	// 	INITIAL, TARGET, BOTH
 	// }
@@ -206,7 +225,8 @@ public class Properties {
 
 	String midairPreset = "Spinless";
     boolean canTripleThrow = true;
-    boolean tripleThrow = false;
+    boolean canTestTripleThrow = true; //whether the option Test Both is shown
+    TripleThrow tripleThrow = TripleThrow.NO;
 	boolean onMoon = false;
 	boolean hyperoptimize = true;
 	boolean xAxisZeroDegrees = true;

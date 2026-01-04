@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import com.vectorcalculator.Properties.GroundType;
+import com.vectorcalculator.Properties.TripleThrow;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
@@ -24,7 +25,7 @@ public class Solver {
     double bestResultsRange = 5; //range of values worse than the current best to still test in full
 
     boolean singleThrowAllowed = true;
-    boolean ttAllowed = false;
+    TripleThrow ttAllowed;
 
     boolean hasRCV;
 
@@ -113,14 +114,17 @@ public class Solver {
         VectorCalculator.addPreset(p.midairPreset, false);
 
         singleThrowAllowed = true;
-        if (p.midairPreset.equals("CBV First") && p.tripleThrow) {
+        if (p.midairPreset.equals("CBV First") && p.tripleThrow != TripleThrow.NO) {
             singleThrowAllowed = false;
             cbDurationLimit = 36;
         }
         else if (p.midairPreset.equals("Simple Tech")) {
             cbDurationLimit = 36;
         }
-        ttAllowed = ((p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) && p.tripleThrow);
+        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"))
+            ttAllowed = p.tripleThrow;
+        else
+            ttAllowed = TripleThrow.NO;
 
         int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
         preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
@@ -531,7 +535,7 @@ public class Solver {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, true, false, ttAllowed);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, false, ttAllowed != TripleThrow.NO);
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
@@ -751,7 +755,7 @@ public class Solver {
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, true, false, ttAllowed) > -1) { //also conforms the motion correctly
+            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, ttAllowed != TripleThrow.YES, false, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps();
                 disp = maximizer.bestDisp;
             }
