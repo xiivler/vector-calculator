@@ -271,6 +271,7 @@ public class Movement {
 			variableInitialHorizontalSpeed = false;
 			initialHorizontalSpeed = 30;
 			framesAtInitialHorizontalSpeed = 43;
+			minFrames = 44;
 			forwardAccel = 0;
 			vectorAccel = 0;
 			moonGravity = 1;
@@ -287,6 +288,7 @@ public class Movement {
 			if (initialHorizontalSpeed <= 20)
 				initialHorizontalSpeed = 20;
 			framesAtInitialHorizontalSpeed = 57;
+			minFrames = 58;
 			forwardAccel = 0;
 			vectorAccel = 0;
 			moonGravity = 1;
@@ -305,6 +307,7 @@ public class Movement {
 			if (initialHorizontalSpeed <= 20)
 				initialHorizontalSpeed = 20;
 			framesAtInitialHorizontalSpeed = 56;
+			minFrames = 57;
 			forwardAccel = 0;
 			vectorAccel = 0;
 			moonGravity = 1;

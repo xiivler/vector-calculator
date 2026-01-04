@@ -208,6 +208,8 @@ public class Solver {
         if (p.groundTypeFirstGP != GroundType.NONE) {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
                 p.initialFrames--;
+                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames())
+                    return false;
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
@@ -215,6 +217,8 @@ public class Solver {
         if (p.groundTypeCB != GroundType.NONE) {
             while (final_y_heights[maximizer_firstDiveIndex] <= p.groundHeightCB) {
                 p.initialFrames--;
+                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames())
+                    return false;
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
@@ -230,13 +234,15 @@ public class Solver {
                 iterations++;
                 //System.out.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
                 //System.out.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
-                if (efficiencies[lastFrames[0]] < efficiencies[lastFrames[diveCapBounceIndex]]) {
+                if (efficiencies[lastFrames[0]] < efficiencies[lastFrames[diveCapBounceIndex]] && p.initialFrames > VectorCalculator.initialMovement.getMinFrames()) {
                     p.initialFrames--;
                     lastFrames[0]--;
                 }
                 else {
                     preset[diveCapBounceIndex - 1][1]--;
                     lastFrames[diveCapBounceIndex]--;
+                    if (preset[diveCapBounceIndex - 1][1] < 1)
+                        return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
@@ -274,6 +280,7 @@ public class Solver {
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastFrames.length; i++) {
                 if (i != rainbowSpinIndex && i != homingMCCTIndex && efficiencies[lastFrames[i]] < worstEfficiency) {
+                    if (i != 0 || (i == 0 && durations[0] > VectorCalculator.initialMovement.getMinFrames())) //only shorten initial movement if it can be shortened
                     worstEfficiency = efficiencies[lastFrames[i]];
                     worstEfficiencyIndex = i;
                 }
