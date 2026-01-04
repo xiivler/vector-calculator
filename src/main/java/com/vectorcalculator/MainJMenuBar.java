@@ -21,10 +21,19 @@ public class MainJMenuBar extends JMenuBar {
     Properties p = Properties.p;
     
     private JMenuItem open, save, saveAs, saveCopy, saveAsDefaults, resetToDefaults, resetToFactory, exit, newItem;
+    private JMenuItem calculate, addRow, removeRow, clearAll;
+    private JMenuItem generalTab, midairTab;
+
+    private static MainJMenuBar instance;
 
     public MainJMenuBar() {
+		instance = this;
 		JMenu fileMenu = createFileMenu();
 		add(fileMenu);
+		JMenu calculatorMenu = createCalculatorMenu();
+		add(calculatorMenu);
+		JMenu viewMenu = createViewMenu();
+		add(viewMenu);
     }
 
     private JMenu createFileMenu(){
@@ -49,8 +58,6 @@ public class MainJMenuBar extends JMenuBar {
 			p.file = null;
 			VectorCalculator.f.setTitle("Untitled Project");
 		});
-
-        fileJMenu.addSeparator();
 
 		open = fileJMenu.add("Open...");
 		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, shortcut));
@@ -87,6 +94,8 @@ public class MainJMenuBar extends JMenuBar {
                 p.file = file;
             }
 		});
+
+        fileJMenu.addSeparator();
 
 		save = fileJMenu.add("Save");
 		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut));
@@ -144,6 +153,98 @@ public class MainJMenuBar extends JMenuBar {
         });
 
 		return fileJMenu;
+	}
+
+	private JMenu createCalculatorMenu() {
+		JMenu calculatorJMenu = new JMenu("Calculator");
+
+		calculate = calculatorJMenu.add(VectorCalculator.calculateVector.getText());
+		calculate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, shortcut));
+		calculate.addActionListener(e -> {
+			// Trigger the same action as the calculate button
+			VectorCalculator.calculateVector.doClick();
+		});
+
+		calculatorJMenu.addSeparator();
+
+		addRow = calculatorJMenu.add("Add Midair");
+		addRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut)); // Ctrl+= for add
+		addRow.addActionListener(e -> {
+			if (p.midairPreset.equals("Custom")) {
+				VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
+			}
+		});
+
+		removeRow = calculatorJMenu.add("Remove Midair");
+		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
+		removeRow.addActionListener(e -> {
+			if (p.midairPreset.equals("Custom")) {
+				VectorCalculator.movementTable.removeEditor();
+				int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
+				if (rowsRemove.length > 0)
+					for (int i = rowsRemove.length - 1; i >= 0; i--) {
+						int removeRowIndex = rowsRemove[i];
+						VectorCalculator.movementModel.removeRow(removeRowIndex);
+						if (VectorCalculator.movementModel.getRowCount() > 0)
+							if (removeRowIndex == VectorCalculator.movementModel.getRowCount())
+								VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex - 1, removeRowIndex - 1);
+							else
+								VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
+					}
+			}
+		});
+
+		clearAll = calculatorJMenu.add("Clear All Midairs");
+		clearAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcut)); // Ctrl+0 for clear
+		clearAll.addActionListener(e -> {
+			if (p.midairPreset.equals("Custom")) {
+				while (VectorCalculator.movementModel.getRowCount() > 0) {
+					VectorCalculator.movementModel.removeRow(0);
+				}
+			}
+		});
+
+		// Initially disable if not custom
+		updateCalculatorMenu();
+
+		return calculatorJMenu;
+	}
+
+	private JMenu createViewMenu() {
+		JMenu viewJMenu = new JMenu("View");
+
+		generalTab = viewJMenu.add("General Properties Tab");
+		generalTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, shortcut));
+		generalTab.addActionListener(e -> {
+			VectorCalculator.tabbedPane.setSelectedIndex(0);
+		});
+
+		midairTab = viewJMenu.add("Midair Properties Tab");
+		midairTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, shortcut));
+		midairTab.addActionListener(e -> {
+			VectorCalculator.tabbedPane.setSelectedIndex(1);
+		});
+		return viewJMenu;
+	}
+
+	private void updateCalculatorMenu() {
+		boolean isCustom = p.midairPreset.equals("Custom");
+		addRow.setEnabled(isCustom);
+		removeRow.setEnabled(isCustom);
+		clearAll.setEnabled(isCustom);
+	}
+
+	public static void updateCalculatorMenuItems() {
+		if (instance != null) {
+			instance.updateCalculatorMenu();
+			instance.updateCalculateText();
+		}
+	}
+
+	private void updateCalculateText() {
+		if (calculate != null) {
+			calculate.setText(VectorCalculator.calculateVector.getText());
+		}
 	}
 
     private File saveAsDialog() {

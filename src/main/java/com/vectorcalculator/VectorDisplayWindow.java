@@ -210,6 +210,14 @@ public class VectorDisplayWindow {
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
 		frame.setSize(1160, 600);
+		frame.addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowOpened(java.awt.event.WindowEvent e) {
+				MainJMenuBar.updateCalculatorMenuItems();
+			}
+			public void windowClosed(java.awt.event.WindowEvent e) {
+				MainJMenuBar.updateCalculatorMenuItems();
+			}
+		});
 	}
 	
 	private static void validatePath() {
@@ -537,10 +545,40 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);
 		else
 			infoTableModel.setValueAt("No", MADE_JUMP_ROW, 1);
+
+		//if (!VectorCalculator.editedSinceCalculate) {
+			Properties.p.savedInfoTableRows = new String[infoTableModel.getRowCount()];
+			for (int i = 0; i < infoTableModel.getRowCount(); i++) {
+				Properties.p.savedInfoTableRows[i] = infoTableModel.getValueAt(i, 0) + "\t" + infoTableModel.getValueAt(i, 1);
+			}
+			Properties.p.savedDataTableRows = new String[dataTableModel.getRowCount()][];
+			for (int i = 0; i < dataTableModel.getRowCount(); i++) {
+				Properties.p.savedDataTableRows[i] = new String[7];
+				for (int j = 0; j < 7; j++) {
+					Properties.p.savedDataTableRows[i][j] = dataTableModel.getValueAt(i, j).toString();
+				}
+			}
+		//}
 	}
 	
 	public static void display() {
+		if (Properties.p.savedInfoTableRows != null && dataTableModel.getRowCount() == 0) {
+			loadSavedData();
+		}
 		frame.setVisible(true);
+	}
+
+	public static void loadSavedData() {
+		if (Properties.p.savedInfoTableRows != null) {
+			for (int i = 0; i < Properties.p.savedInfoTableRows.length; i++) {
+				String[] parts = Properties.p.savedInfoTableRows[i].split("\t");
+				infoTableModel.setValueAt(parts[0], i, 0);
+				infoTableModel.setValueAt(parts[1], i, 1);
+			}
+			for (String[] row : Properties.p.savedDataTableRows) {
+				dataTableModel.addRow(row);
+			}
+		}
 	}
 
 	public static void generateTSVTAS(boolean toClipboard) {

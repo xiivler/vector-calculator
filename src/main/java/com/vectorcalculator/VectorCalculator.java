@@ -63,6 +63,8 @@ public class VectorCalculator extends JPanel {
 	static boolean stop = false;
 	static boolean saved = true;
 	static boolean initialized = false;
+	static boolean editedSinceCalculate = true;
+	static boolean loading = false;
 
 	static String projectName = "Untitled Project";
 
@@ -427,6 +429,10 @@ public class VectorCalculator extends JPanel {
 
 	//sets a property value based on the display value in the table
 	static void setProperty(Parameter param, Object value) {
+		if (editedSinceCalculate) {
+			p.savedDataTableRows = null;
+			p.savedInfoTableRows = null;
+		}
 		switch(param) {
 		case mode:
 			p.mode = Properties.Mode.fromName(value.toString());
@@ -439,6 +445,7 @@ public class VectorCalculator extends JPanel {
 				setProperty(Parameter.gravity, "Regular");
 			}
 			calculateVector.setText(p.mode.name);
+			MainJMenuBar.updateCalculatorMenuItems();
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"));
 			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
 				setProperty(Parameter.triple_throw, "No");
@@ -1014,6 +1021,7 @@ public class VectorCalculator extends JPanel {
 		else
 			addPreset(getPreset(name));
 		p.midairPreset = name;
+		MainJMenuBar.updateCalculatorMenuItems();
 	}
 
 	//replaces the current midairs with the preset of the given index
@@ -1123,6 +1131,7 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void loadProperties(File file, boolean defaults) {
+		loading = true;
 		Properties pl = Properties.load(file);
 		if (pl == null) {
 			if (defaults) {
@@ -1144,9 +1153,13 @@ public class VectorCalculator extends JPanel {
 		refreshPropertiesRows(getRowParams(), true);
 
 		calculateVector.setText(p.mode.name);
+		MainJMenuBar.updateCalculatorMenuItems();
 
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
+
+		loading = false;
+		if (p.savedInfoTableRows != null) VectorDisplayWindow.display();
 
 		/* p.x0 = pl.x0;
 		p.y0 = pl.y0;
@@ -1260,6 +1273,7 @@ public class VectorCalculator extends JPanel {
 		
 		if (initialized && defaults && Properties.isUnsaved()) {
 			saved = false;
+			if (!loading) editedSinceCalculate = true;
 			f.setTitle("*" + projectName);
 		}
 		else {
@@ -1386,6 +1400,7 @@ public class VectorCalculator extends JPanel {
 						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
+						editedSinceCalculate = false;
 						//System.out.println("Cappy position: " + );
 						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
@@ -1438,6 +1453,7 @@ public class VectorCalculator extends JPanel {
 					if (maximizer != null) {
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
+						editedSinceCalculate = false;
 					}
 					Debug.println();
 				}
@@ -1677,6 +1693,7 @@ public class VectorCalculator extends JPanel {
 					if (initialized && saved && Properties.isUnsaved()) {
 						System.out.println("Unsaved");
 						saved = false;
+						if (!loading) editedSinceCalculate = true;
 						f.setTitle("*" + projectName);
 					}
 				}
@@ -2000,6 +2017,7 @@ public class VectorCalculator extends JPanel {
 				refreshPropertiesRows(getRowParams(), false);
 				if (initialized && saved && Properties.isUnsaved()) {
 					saved = false;
+					if (!loading) editedSinceCalculate = true;
 					f.setTitle("*" + projectName);
 				}
 			}
@@ -2090,6 +2108,7 @@ public class VectorCalculator extends JPanel {
 		loadProperties(userDefaults, true);
 		p.file = null; //so we don't save to it
 		initialized = true;
+		MainJMenuBar.updateCalculatorMenuItems();
 		
 		//f.add(resize, BorderLayout.CENTER);
 		f.setSize(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT + MIDAIR_PANEL_HEIGHT);

@@ -25,6 +25,9 @@ public class Properties {
     @XmlTransient
     File file = null;
 
+    String[] savedInfoTableRows = null;
+    String[][] savedDataTableRows = null;
+
     public static Properties getInstance() {
         if (p == null) {
             p = new Properties();
