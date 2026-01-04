@@ -19,6 +19,8 @@ public class Solver {
 
     double limit = 20; //if the final y height of the test is above this number, assume it can't be optimal
 
+    int cbDurationLimit = Integer.MAX_VALUE; //limit for how long cb duration can be
+
     double bestResultsRange = 5; //range of values worse than the current best to still test in full
 
     boolean singleThrowAllowed = true;
@@ -110,7 +112,14 @@ public class Solver {
 
         VectorCalculator.addPreset(p.midairPreset, false);
 
-        singleThrowAllowed = !(p.midairPreset.equals("CBV First") && p.tripleThrow);
+        singleThrowAllowed = true;
+        if (p.midairPreset.equals("CBV First") && p.tripleThrow) {
+            singleThrowAllowed = false;
+            cbDurationLimit = 36;
+        }
+        else if (p.midairPreset.equals("Simple Tech")) {
+            cbDurationLimit = 36;
+        }
         ttAllowed = ((p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) && p.tripleThrow);
 
         int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
@@ -158,7 +167,7 @@ public class Solver {
 
         System.out.println("Reached Preset Maximization");
 
-        preset[diveCapBounceIndex - 1][1] = p.initialFrames; //make cap bounce also big to start (will be shortened later)
+        preset[diveCapBounceIndex - 1][1] = Math.min(p.initialFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
@@ -506,10 +515,10 @@ public class Solver {
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
-            p.diveTurn = true;
+            VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
         }
         else {
-            p.diveTurn = false;
+            VectorCalculator.setProperty(Parameter.dive_turn, "No");
             ballparkMaximizer.edgeCBMin = 6;
             ballparkMaximizer.edgeCBMax = 12;
         }
@@ -555,6 +564,9 @@ public class Solver {
                 int testDuration = durations[index] + i;
                 if (index == homingMCCTIndex && (testDuration < p.hctCapReturnFrame || testDuration > 36)) {
                     System.out.println("Skipping HMCCT duration " + testDuration);
+                    continue;
+                }
+                if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
                     continue;
                 }
                 double test_y_pos = y_pos + y_disps[index];
@@ -720,10 +732,10 @@ public class Solver {
         bestYDisp = dispY; //for debugging
 
         if (diveTurns[ctDuration][diveDuration]) {
-            p.diveTurn = true;
+            VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
         }
         else {
-            p.diveTurn = false;
+            VectorCalculator.setProperty(Parameter.dive_turn, "No");
             maximizer.edgeCBMin = 6;
             maximizer.edgeCBMax = 12;
         }

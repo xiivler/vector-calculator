@@ -876,7 +876,7 @@ public class VectorMaximizer {
 			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
-			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || (p.diveTurn && movementNames.get(startIndex).equals("Ground Pound")))
+			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || movementNames.get(startIndex).equals("Ground Pound"))
 				currentVectorRight = !currentVectorRight;
 		}
 

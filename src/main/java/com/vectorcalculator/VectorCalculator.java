@@ -960,7 +960,7 @@ public class VectorCalculator extends JPanel {
 				case "Spinless":
 					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 				case "Simple Tech":
-					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 				case "Simple Tech Rainbow Spin First":
 					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
 				case "MCCT First":
@@ -976,11 +976,11 @@ public class VectorCalculator extends JPanel {
 				case "Spinless":
 					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 				case "Simple Tech":
-					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 43}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 				case "MCCT First":
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				case "CBV First":
-					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 				default:
 					return new int[0][0];
 			}
