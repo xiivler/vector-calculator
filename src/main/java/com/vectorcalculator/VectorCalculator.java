@@ -45,6 +45,7 @@ import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.GroundMode;
 import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctDirection;
+import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
 //import com.apple.laf.ClientPropertyApplicator.Property;
 //import com.vectorcalculator.Properties.AngleType;
@@ -76,7 +77,7 @@ public class VectorCalculator extends JPanel {
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
-		dive_turn("Turn During First Dive"), hct_angle("Homing Throw Angle"),
+		dive_turn("Turn During First Dive"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
 		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frames Until Cappy Returns"),
 		ground_mode("Ground Under Midairs"), ground_type("Type"), ground_height("Height"),
@@ -152,11 +153,14 @@ public class VectorCalculator extends JPanel {
 			}
 			if (p.hct) {
 				params.add(null);
-				params.add(Parameter.hct_angle);
-				params.add(Parameter.hct_neutral);
-				params.add(Parameter.hct_direction);
-				params.add(Parameter.hct_homing_frame);
-				params.add(Parameter.hct_cap_return_frame);
+				params.add(Parameter.hct_type);
+				if (p.hctType == HctType.CUSTOM) {
+					params.add(Parameter.hct_angle);
+					params.add(Parameter.hct_neutral);
+					params.add(Parameter.hct_direction);
+					params.add(Parameter.hct_homing_frame);
+					params.add(Parameter.hct_cap_return_frame);
+				}
 			}
 			params.add(null);
 			params.add(Parameter.ground_mode);
@@ -304,6 +308,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case dive_turn:
 			value = p.diveTurn ? "Yes" : "No";
+			break;
+		case hct_type:
+			value = p.hctType.name;
 			break;
 		case hct_angle:
 			value = p.hctThrowAngle;
@@ -548,6 +555,23 @@ public class VectorCalculator extends JPanel {
 		case dive_turn:
 			p.diveTurn = value.toString().equals("Yes");
 			break;
+		case hct_type:
+			p.hctType = Properties.HctType.fromName(value.toString());
+			if (p.hctType == HctType.RELAX) {
+				setProperty(Parameter.hct_angle, 60);
+				setProperty(Parameter.hct_neutral, "Yes");
+				setProperty(Parameter.hct_direction, "Down");
+				setProperty(Parameter.hct_homing_frame, 19);
+				setProperty(Parameter.hct_cap_return_frame, 36);
+			}
+			else if (p.hctType == HctType.RELAXLESS) {
+				setProperty(Parameter.hct_angle, 60);
+				setProperty(Parameter.hct_neutral, "No");
+				setProperty(Parameter.hct_direction, "Down");
+				setProperty(Parameter.hct_homing_frame, 19);
+				setProperty(Parameter.hct_cap_return_frame, 38);
+			}
+			break;
 		case hct_angle:
 			p.hctThrowAngle = parseDoubleWithDefault(value, 60);
 			break;
@@ -561,7 +585,8 @@ public class VectorCalculator extends JPanel {
 			p.hctHomingFrame = clampInt(parseIntWithDefault(value, 19), 0, Integer.MAX_VALUE);
 			break;
 		case hct_cap_return_frame:
-			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 0, Integer.MAX_VALUE);
+			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 23, Integer.MAX_VALUE);
+			updateHCTDuration();
 			break;
 		case ground_mode:
 			GroundMode oldGroundMode = p.groundMode;
@@ -695,6 +720,16 @@ public class VectorCalculator extends JPanel {
 		}
 		/* for (int i = 0; i < p.midairs.length; i++)
 			System.out.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
+	}
+
+	static void updateHCTDuration() {
+		for (int i = 0; i < movementModel.getRowCount(); i++) {
+			if (movementModel.getValueAt(i, 0).toString().equals("Homing Motion Cap Throw")) {
+				int currentDuration = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
+				if (currentDuration < p.hctCapReturnFrame)
+					movementModel.setValueAt(p.hctCapReturnFrame, i, 1);
+			}
+		}
 	}
 
 	//static final int LOCK_NONE = 0;
@@ -1477,6 +1512,8 @@ public class VectorCalculator extends JPanel {
 						return dropdown(initialMovementCategories);
 					case initial_movement:
 						return dropdown(initialMovementNames[Arrays.asList(initialMovementCategories).indexOf(p.initialMovementCategory)]);
+					case hct_type:
+						return dropdown(HctType.names);
 					case hct_direction:
 						return dropdown(new String[]{"Up", "Down", "Left", "Right"});
 					case hct_neutral:

@@ -150,6 +150,31 @@ public class Properties {
         }
     }
 
+    static enum HctType {
+        RELAX("Relax"), RELAXLESS("Relaxless"), CUSTOM("Custom");
+
+        String name;
+
+        HctType(String string) {
+            this.name = string;
+        }
+
+        static HctType fromName(String string) {
+            for (HctType ht : HctType.values()) {
+                if (ht.name.equals(string)) {
+                    return ht;
+                }
+            }
+            return RELAX;
+        }
+
+        static String[] names = new String[HctType.values().length];
+        static {
+            for (int i = 0; i < HctType.values().length; i++)
+                names[i] = HctType.values()[i].name;
+        }
+    }
+
     // static enum LockDurationType {
     //     NONE, FRAMES, VERTICAL_DISPLACEMENT
     // }
@@ -208,6 +233,7 @@ public class Properties {
     boolean hasgroundHeightSecondGP = false;
 
     boolean hct = false;
+    HctType hctType = HctType.RELAX;
     double hctThrowAngle = 60;
     boolean hctNeutralHoming = true;
     HctDirection hctDirection = HctDirection.DOWN;

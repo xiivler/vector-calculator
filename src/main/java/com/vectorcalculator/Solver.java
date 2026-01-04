@@ -120,8 +120,10 @@ public class Solver {
             preset[i][1] = unmodifiedPreset[i][1];
             if (preset[i][0] == VectorCalculator.RS)
                 rainbowSpinIndex = i + 1;
-            else if (preset[i][0] == VectorCalculator.HMCCT)
+            else if (preset[i][0] == VectorCalculator.HMCCT) {
                 homingMCCTIndex = i + 1;
+                preset[i][1] = Math.max(30, p.hctCapReturnFrame);
+            }
             else if (preset[i][0] ==  VectorCalculator.HTT)
                 homingTTIndex = i + 1;
             else if (preset[i][0] == VectorCalculator.CB && i > 0 && preset[i - 1][0] == VectorCalculator.DIVE) {
