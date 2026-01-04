@@ -22,6 +22,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -54,6 +55,10 @@ import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
 	
+	public static final int WINDOW_WIDTH = 550;
+	public static final int PROPERTIES_TABLE_HEIGHT = 420;
+	public static final int MIDAIR_PANEL_HEIGHT = 260;
+
 	static Properties p = Properties.getInstance();
 	static boolean stop = false;
 	static boolean saved = true;
@@ -1103,6 +1108,10 @@ public class VectorCalculator extends JPanel {
 
 	public static void saveProperties(File file, boolean updateCurrentFile) {
 		boolean saveSuccess = Properties.save(file);
+		if (!saveSuccess) {
+			JOptionPane.showMessageDialog(f, "Failed to save the file.", "Save Error", JOptionPane.ERROR_MESSAGE);
+			errorMessage.setText("Error: Save failed");
+		}
 		if (updateCurrentFile) {
 			saved = saveSuccess;
 			if (saved) {
@@ -1110,9 +1119,6 @@ public class VectorCalculator extends JPanel {
 				f.setTitle(projectName);
 				VectorDisplayWindow.frame.setTitle("Calculations: " + VectorCalculator.projectName);
 			}
-		}
-		else if (!saveSuccess) {
-			errorMessage.setText("Error: Save failed");
 		}
 	}
 
@@ -1126,8 +1132,9 @@ public class VectorCalculator extends JPanel {
 				errorMessage.setText("Error: File could not be loaded");
 			}
 		}
-		
+		int currentTab = p.currentTab;
 		Properties.copyAttributes(pl, p);
+		p.currentTab = currentTab;
 			
 		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 		if (p.midairPreset.equals("Custom"))
@@ -1591,7 +1598,7 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(265);
 		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
-		genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * 10 + 25));
+		//genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * 12 + 25));
 		
 		ListSelectionModel genPropertiesSelectionModel = genPropertiesTable.getSelectionModel();
 		
@@ -2063,7 +2070,7 @@ public class VectorCalculator extends JPanel {
         });
         tabbedPane.addTab("General Properties",genPropertiesScrollPane);
         tabbedPane.addTab("Midair Properties", null);
-        tabbedPane.setPreferredSize(new Dimension(600, 400));
+        tabbedPane.setPreferredSize(new Dimension(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT));
 		tabPanel.add(tabbedPane);
 
 		//genPropertiesTable.setTableHeader(null);
@@ -2085,7 +2092,7 @@ public class VectorCalculator extends JPanel {
 		initialized = true;
 		
 		//f.add(resize, BorderLayout.CENTER);
-		f.setSize(600, 600);
+		f.setSize(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT + MIDAIR_PANEL_HEIGHT);
 		//f.setResizable(false);
 		f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		f.setLocationRelativeTo(null);

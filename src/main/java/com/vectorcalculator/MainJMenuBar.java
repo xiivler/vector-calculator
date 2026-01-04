@@ -20,7 +20,7 @@ public class MainJMenuBar extends JMenuBar {
 
     Properties p = Properties.p;
     
-    private JMenuItem open, save, saveAs, saveCopy, saveAsDefaults, resetToDefaults, resetToFactory, exit;
+    private JMenuItem open, save, saveAs, saveCopy, saveAsDefaults, resetToDefaults, resetToFactory, exit, newItem;
 
     public MainJMenuBar() {
 		JMenu fileMenu = createFileMenu();
@@ -29,6 +29,28 @@ public class MainJMenuBar extends JMenuBar {
 
     private JMenu createFileMenu(){
 		JMenu fileJMenu = new JMenu("File");
+
+        newItem = fileJMenu.add("New");
+		newItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, shortcut));
+		newItem.addActionListener(e -> {
+			if (!VectorCalculator.saved && saveBeforeClosing()) {
+				if (p.file == null) {
+					File file = saveAsDialog();
+					if (file != null && (!file.exists() || overwrite(file))) {
+						p.file = file;
+						VectorCalculator.saveProperties(p.file, true);
+					}
+				}
+				else {
+					VectorCalculator.saveProperties(p.file, true);
+				}
+			}
+			VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+			p.file = null;
+			VectorCalculator.f.setTitle("Untitled Project");
+		});
+
+        fileJMenu.addSeparator();
 
 		open = fileJMenu.add("Open...");
 		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, shortcut));
@@ -45,6 +67,10 @@ public class MainJMenuBar extends JMenuBar {
             j.setFileFilter(new FileNameExtensionFilter("XML Files", "xml"));
             if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
                 File file = j.getSelectedFile();
+                if (!file.exists()) {
+                    JOptionPane.showMessageDialog(VectorCalculator.f, "The selected file does not exist.", "File Not Found", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 if (!VectorCalculator.saved && saveBeforeLoading(file)) {
                     if (p.file == null) {
                         File save_file = saveAsDialog();
@@ -131,7 +157,17 @@ public class MainJMenuBar extends JMenuBar {
         }
         j.setFileFilter(new FileNameExtensionFilter("XML Files", "xml"));
         if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
-            return j.getSelectedFile();
+            File selectedFile = j.getSelectedFile();
+            if (!selectedFile.getName().toLowerCase().endsWith(".xml")) {
+                int option = JOptionPane.showConfirmDialog(VectorCalculator.f, 
+                    "The file does not have a .xml extension. Do you want to append .xml?", 
+                    "Append .xml?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (option == JOptionPane.YES_OPTION) {
+                    String path = selectedFile.getAbsolutePath() + ".xml";
+                    selectedFile = new File(path);
+                }
+            }
+            return selectedFile;
         }
         else {
             return null;

@@ -951,7 +951,7 @@ public class Solver {
             else if (p.groundTypeSecondGP == GroundType.GROUND)
                 groundHeightRS = p.groundHeightSecondGP;
             if (final_y_heights[maximizer_hmcctIndex] < groundHeightRS + HCT_CHANGE_ANGLE_HEIGHT) {
-                System.out.println("Reducing HMCCT Angle");
+                //System.out.println("Reducing HMCCT Angle");
                 p.hctThrowAngle = HCT_SMALLER_ANGLE;
             }
             else {
