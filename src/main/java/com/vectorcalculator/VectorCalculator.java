@@ -1330,6 +1330,8 @@ public class VectorCalculator extends JPanel {
 		}
 		if (defaults)
 			UndoManager.recordState();
+		else
+			UndoManager.clear();
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -1446,7 +1448,6 @@ public class VectorCalculator extends JPanel {
 						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
-						editedSinceCalculate = false;
 						//System.out.println("Cappy position: " + );
 						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
@@ -1456,6 +1457,8 @@ public class VectorCalculator extends JPanel {
 					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
 						setProperty(Parameter.hct_type, p.hctType.name);
 					}
+					editedSinceCalculate = false;
+					UndoManager.recordState();
 				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
@@ -1502,6 +1505,7 @@ public class VectorCalculator extends JPanel {
 						editedSinceCalculate = false;
 					}
 					Debug.println();
+					UndoManager.recordState();
 				}
 			}
 		}

@@ -180,7 +180,7 @@ public class Solver {
 
         int maximizer_initialMovementIndex = -1;
         for (int i = 0; i < presetMaximizer.movementNames.size(); i++) {
-            if (presetMaximizer.movementNames.get(i).contains("Cap Throw")) {
+            if (presetMaximizer.movementNames.get(i).contains("Throw")) {
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }
@@ -207,6 +207,7 @@ public class Solver {
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
+                //System.out.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames())
                     return false;
@@ -888,7 +889,7 @@ public class Solver {
 
         int maximizer_initialMovementIndex = -1;
         for (int i = 0; i < motions.length; i++) {
-            if (motions[i].movement.movementType.contains("Cap Throw")) {
+            if (motions[i].movement.movementType.contains("Throw")) {
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }
