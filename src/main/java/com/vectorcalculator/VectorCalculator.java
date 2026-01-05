@@ -89,6 +89,7 @@ public class VectorCalculator extends JPanel {
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
+		final_y_position("Final Y Position"),
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
@@ -126,6 +127,8 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.target_angle);
 			if (p.targetCoordinatesGiven)
 				params.add(Parameter.target_coordinates);
+			if (p.targetAngleGiven && p.mode == Mode.SOLVE)
+				params.add(Parameter.final_y_position);
 			params.add(null);
 			params.add(Parameter.initial_movement_category);
 			if (!p.initialMovementCategory.equals("None")) {
@@ -265,6 +268,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case target_coordinates:
 			value = toCoordinateString(p.x1, p.y1, p.z1);
+			break;
+		case final_y_position:
+			value = p.y1;
 			break;
 		case midairs:
 			value = p.midairPreset;
@@ -468,6 +474,7 @@ public class VectorCalculator extends JPanel {
 			p.x0 = coords[0];
 			p.y0 = coords[1];
 			p.z0 = coords[2];
+			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
 			break;
 		case calculate_using:
 			String val = value.toString();
@@ -481,6 +488,9 @@ public class VectorCalculator extends JPanel {
 			p.y1 = tcoords[1];
 			p.z1 = tcoords[2];
 			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
+			break;
+		case final_y_position:
+			p.y1 = parseDoubleWithDefault(value, 0);
 			break;
 		case initial_angle:
 			p.initialAngle = parseDoubleWithDefault(value, 0);
@@ -688,7 +698,7 @@ public class VectorCalculator extends JPanel {
 		if (p.targetAngleGiven && !(oldTargetAngleGiven || oldTargetCoordinatesGiven))
 			setProperty(Parameter.target_angle, p.initialAngle);
 		if (p.targetCoordinatesGiven && !oldTargetCoordinatesGiven)
-			setProperty(Parameter.target_coordinates, "(0, 0, 0)");
+			setProperty(Parameter.target_coordinates, toCoordinateString(p.x0, p.y1, p.z0));
 	}
 
 	//category for falling for height calculator?
