@@ -21,7 +21,7 @@ public class MainJMenuBar extends JMenuBar {
     Properties p = Properties.p;
     
     private JMenuItem open, save, saveAs, saveCopy, saveAsDefaults, resetToDefaults, resetToFactory, exit, newItem;
-    private JMenuItem calculate, addRow, removeRow, clearAll;
+    private JMenuItem calculate, addRow, insertRow, removeRow, clearAll;
     private JMenuItem generalTab, midairTab;
 
     private static MainJMenuBar instance;
@@ -175,6 +175,19 @@ public class MainJMenuBar extends JMenuBar {
 			}
 		});
 
+		insertRow = calculatorJMenu.add("Insert Midair");
+		insertRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut | InputEvent.SHIFT_DOWN_MASK)); // Ctrl+Shift+= for insert
+		insertRow.addActionListener(e -> {
+			if (p.midairPreset.equals("Custom")) {
+				int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
+				if (selectedRows.length > 0) {
+					int insertIndex = selectedRows[0];
+					VectorCalculator.movementModel.insertRow(insertIndex, VectorCalculator.movementRows);
+					VectorCalculator.movementTable.setRowSelectionInterval(insertIndex, insertIndex);
+				}
+			}
+		});
+
 		removeRow = calculatorJMenu.add("Remove Midair");
 		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
 		removeRow.addActionListener(e -> {
@@ -230,6 +243,8 @@ public class MainJMenuBar extends JMenuBar {
 	private void updateCalculatorMenu() {
 		boolean isCustom = p.midairPreset.equals("Custom");
 		addRow.setEnabled(isCustom);
+		boolean hasSelectedRow = isCustom && VectorCalculator.movementTable.getSelectedRow() != -1;
+		insertRow.setEnabled(hasSelectedRow);
 		removeRow.setEnabled(isCustom);
 		clearAll.setEnabled(isCustom);
 	}

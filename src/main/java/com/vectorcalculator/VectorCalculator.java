@@ -1986,6 +1986,11 @@ public class VectorCalculator extends JPanel {
 		TableColumn movementColumn = movementTable.getColumnModel().getColumn(0);
 		movementColumn.setCellEditor(new MyComboBoxEditor(midairMovementNames));
 		
+		// Add selection listener to update menu when selection changes
+		movementTable.getSelectionModel().addListSelectionListener(e -> {
+			MainJMenuBar.updateCalculatorMenuItems();
+		});
+		
 		movementModel.addTableModelListener(new TableModelListener() {
 
 			public void tableChanged(TableModelEvent e) {
