@@ -63,11 +63,19 @@ public class SimpleVector extends SimpleMotion {
 		
 		this.holdingAngle = holdingAngle;
 		vectorFrames = frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
+		if (vectorFrames < 0) {
+			vectorFrames = 0;
+		}
 		sidewaysVelocityCap = forwardVelocityCap;
 	}
 
 	public double calcDispSideways() {
 		
+		if (frames == 0) {
+			sidewaysAccel = 0;
+			return 0;
+		}
+
 		if (holdingAngle == NORMAL_ANGLE)
 			sidewaysAccel = baseSidewaysAccel;
 		else if (holdingAngle == NO_ANGLE) {

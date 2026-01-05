@@ -217,7 +217,7 @@ public class ComplexVector extends SimpleVector {
 			double[][] info = new double[frames][9];
 			for (int i = 0; i < frames; i++) {	
 				//apply forward/backward accel
-				if (i >= nonVectorFrames) {
+				//if (i >= nonVectorFrames) {
 					if (holdingAngles[i] != NO_ANGLE) {
 						double accelValue;
 						if (holdingAngles[i] <= NORMAL_ANGLE && holdingAngles[i] >= -NORMAL_ANGLE) {
@@ -231,13 +231,13 @@ public class ComplexVector extends SimpleVector {
 						}
 						forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
 					}
-				}
-				else
-					forwardVelocity += baseForwardAccel;
+				//}
+				//else
+				//	forwardVelocity += baseForwardAccel;
 				if (forwardVelocity > forwardVelocityCap)
 					forwardVelocity = forwardVelocityCap;
 				//apply sideways accel
-				if (i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
+				if (/* i >= nonVectorFrames &&  */holdingAngles[i] != NO_ANGLE) {
 					if (holdingMinRadius[i]) {
 						sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
 					}

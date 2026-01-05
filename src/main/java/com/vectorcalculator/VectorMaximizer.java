@@ -1371,6 +1371,10 @@ public class VectorMaximizer {
 			double low = 0;
 			double high = Math.PI / 2;
 			double med = Math.PI / 4;
+			// if (p.initialFrames < 10) {
+			// 	high = Math.PI;
+			// 	med = Math.PI / 2;
+			// }
 			double medDisp = calcDisp(med); 
 			double lowMed;
 			double lowMedDisp;

@@ -126,6 +126,22 @@ public class Movement {
 		this.movementType = movementType;
 		displayName = movementType;
 		
+		if (movementType.equals("None")) {
+			//variableInitialHorizontalSpeed = false;
+			//initialHorizontalSpeed = 0;
+			minFrames = 0;
+			maxFrames = 0;
+			minRecommendedFrames = 0;
+			gravity = 0;
+			moonGravity = 0;
+			vectorAccel = 0;
+			forwardAccel = 0;
+			backwardAccel = 0;
+			recommendedInitialHorizontalSpeed = 0;
+			//defaultSpeedCap = 0;
+			//trueSpeedCap = 0;
+		}
+
 		if (movementType.equals("Optimal Distance Motion")) {
 			initialHorizontalSpeed = 29.94;
 			recommendedInitialHorizontalSpeed = 29.94;

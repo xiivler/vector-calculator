@@ -90,7 +90,7 @@ public class VectorCalculator extends JPanel {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
-		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement Category"), initial_movement("Initial Movement Type"),
+		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
@@ -128,18 +128,20 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.target_coordinates);
 			params.add(null);
 			params.add(Parameter.initial_movement_category);
-			if (!p.initialMovementCategory.equals("Optimal Distance Motion"))
-				params.add(Parameter.initial_movement);
-			if (p.chooseDurationType)
-				params.add(Parameter.duration_type);
-			if (p.durationFrames)
-				params.add(Parameter.initial_frames);
-			else if (p.mode != Mode.SOLVE)
-				params.add(Parameter.initial_displacement);
-			if (p.chooseJumpFrames)
-				params.add(Parameter.jump_button_frames);
-			if (p.canMoonwalk)
-				params.add(Parameter.moonwalk_frames);
+			if (!p.initialMovementCategory.equals("None")) {
+				if (!p.initialMovementCategory.equals("Optimal Distance Motion"))
+					params.add(Parameter.initial_movement);
+				if (p.chooseDurationType)
+					params.add(Parameter.duration_type);
+				if (p.durationFrames)
+					params.add(Parameter.initial_frames);
+				else if (p.mode != Mode.SOLVE)
+					params.add(Parameter.initial_displacement);
+				if (p.chooseJumpFrames)
+					params.add(Parameter.jump_button_frames);
+				if (p.canMoonwalk)
+					params.add(Parameter.moonwalk_frames);
+			}
 			if (p.chooseInitialHorizontalSpeed)
 				params.add(Parameter.initial_speed);
 			params.add(Parameter.vector_direction);
@@ -489,7 +491,14 @@ public class VectorCalculator extends JPanel {
 		case initial_movement_category:
 			String oldInitialMovementCategory = p.initialMovementCategory;
 			p.initialMovementCategory = value.toString();
-			if (!oldInitialMovementCategory.equals(p.initialMovementCategory)) {
+			if (p.initialMovementCategory.equals("None")) {
+				p.initialMovementName = "None";
+				p.initialFrames = 0;
+				p.initialDispY = 0;
+				p.initialHorizontalSpeed = 0;
+				updateInitialMovement();
+			}
+			else if (!oldInitialMovementCategory.equals(p.initialMovementCategory)) {
 				p.initialMovementName = initialMovementDefaults[Arrays.asList(initialMovementCategories).indexOf(p.initialMovementCategory)];
 				updateInitialMovement();
 			}
@@ -543,7 +552,7 @@ public class VectorCalculator extends JPanel {
 		case midairs:
 			String name = value.toString();
 			boolean oldCanTripleThrow = p.canTripleThrow;
-			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom"));
+			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom") || name.equals("None"));
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (name.equals("Spinless") || name.equals("Simple Tech"));
 			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
 				p.tripleThrow = TripleThrow.NO;
@@ -551,7 +560,7 @@ public class VectorCalculator extends JPanel {
 				p.tripleThrow = TripleThrow.NO;
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
-			if (name.equals("Custom") && p.mode == Mode.SOLVE) {
+			if (name.equals("Custom") || name.equals("None") && p.mode == Mode.SOLVE) {
 				System.out.println("Should switch");
 				setProperty(Parameter.mode, Mode.SOLVE_CB.name);
 				
@@ -684,7 +693,7 @@ public class VectorCalculator extends JPanel {
 
 	//category for falling for height calculator?
 	//static String[] initialMovementCategories = {"Distance Jumps", "Height Jumps", "Roll Cancel Vectors", "Rolls", "Object-Dependent Motion"};
-	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion"};
+	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
@@ -692,8 +701,9 @@ public class VectorCalculator extends JPanel {
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
 		{"Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Bouncy Object Bounce", "Flower Bounce"},
 		{"Uncapture", "Flip Forward", "Swinging Jump"},
-		{"Optimal Distance Motion", "Optimal Distance RCV"}};
-	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion"};
+		{"Optimal Distance Motion", "Optimal Distance RCV"},
+		{"None"}};
+	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion", "None"};
 	// static String[][] initialMovementNames =
 	// 	{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Optimal Distance Motion"},
 	// 	{"Triple Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Vault", "Spin Jump"},
@@ -701,7 +711,7 @@ public class VectorCalculator extends JPanel {
 	// 	{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
 	// 	{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick", "Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Uncapture", "Bouncy Object Bounce", "Flower Bounce", "Flip Forward", "Swinging Jump"}}; //flower spinpound for height calculator
 	
-	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First", "Custom"};
+	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First", "None", "Custom"};
 	//static String[] midairPresetsWithTT = {"Spinless", "Spinless (Triple Throw)", "Simple Tech", "Simple Tech (Triple Throw)", "Simple Tech Rainbow Spin First", "MCCT First", "MCCT First (Triple Throw)", "CBV First", "CBV First (Triple Throw)"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
@@ -996,6 +1006,7 @@ public class VectorCalculator extends JPanel {
 					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				case "CBV First":
 					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
+				case "None":
 				default:
 					return new int[0][0];
 			}
@@ -1010,6 +1021,7 @@ public class VectorCalculator extends JPanel {
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				case "CBV First":
 					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+				case "None":
 				default:
 					return new int[0][0];
 			}
@@ -1021,16 +1033,17 @@ public class VectorCalculator extends JPanel {
 		if (name.equals("Custom")) {
 			add.setEnabled(true);
 			remove.setEnabled(true);
+			if (load)
+				addPreset(p.midairs);
 		}
 		else {
 			add.setEnabled(false);
 			remove.setEnabled(false);
+			if (load)
+				addPreset(p.midairs);
+			else
+				addPreset(getPreset(name));
 		}
-		if (load) {
-			addPreset(p.midairs);
-		}
-		else
-			addPreset(getPreset(name));
 		p.midairPreset = name;
 		MainJMenuBar.updateCalculatorMenuItems();
 	}
@@ -1073,6 +1086,7 @@ public class VectorCalculator extends JPanel {
 			if (!p.chooseJumpFrames) {
 				p.chooseJumpFrames = true;
 				p.framesJump = 10;
+				p.initialFrames = Math.max(p.initialFrames, 10);
 			}
 		}
 		else
@@ -1111,6 +1125,7 @@ public class VectorCalculator extends JPanel {
 		// 	p.initialHorizontalSpeed = 0;
 		// }
 		p.initialAndTargetGiven = (p.initialMovementName.contains("RCV"));
+		p.initialFrames = Math.max(p.initialFrames, initialMovement.minFrames);
 		updateCalculateUsing();
 		
 		
@@ -1533,6 +1548,7 @@ public class VectorCalculator extends JPanel {
 		VectorMaximizer maximizer = getMaximizer();
 		if (maximizer != null)
 			maximizer.maximize();
+		maximizer.recalculateDisps();
 		maximizer.adjustToGivenAngle();
 		return maximizer;
 	}
