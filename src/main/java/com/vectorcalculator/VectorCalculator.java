@@ -35,10 +35,13 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 //import javax.swing.dataTable.DefaultTableModel;
 //import javax.swing.dataTable.TableCellEditor;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -1169,6 +1172,16 @@ public class VectorCalculator extends JPanel {
 		calculateVector.setText(p.mode.name);
 		MainJMenuBar.updateCalculatorMenuItems();
 
+		// Restore selected cells after UI updates
+		// SwingUtilities.invokeLater(() -> {
+			if (p.genPropertiesSelectedRow >= 0 && p.genPropertiesSelectedCol >= 0 && p.genPropertiesSelectedRow < genPropertiesTable.getRowCount() && p.genPropertiesSelectedCol < genPropertiesTable.getColumnCount()) {
+				genPropertiesTable.changeSelection(p.genPropertiesSelectedRow, p.genPropertiesSelectedCol, false, false);
+			}
+			if (p.movementSelectedRow >= 0 && p.movementSelectedCol >= 0 && p.movementSelectedRow < movementTable.getRowCount() && p.movementSelectedCol < movementTable.getColumnCount()) {
+				movementTable.changeSelection(p.movementSelectedRow, p.movementSelectedCol, false, false);
+			}
+		// });
+
 		loading = false;
 	}
 
@@ -1709,6 +1722,18 @@ public class VectorCalculator extends JPanel {
 		
 		ListSelectionModel genPropertiesSelectionModel = genPropertiesTable.getSelectionModel();
 		
+		// Add selection listeners to update selection state
+		// genPropertiesSelectionModel.addListSelectionListener(e -> {
+		// 	if (!e.getValueIsAdjusting()) {
+		// 		UndoManager.updateSelectionState();
+		// 	}
+		// });
+		// genPropertiesTable.getColumnModel().getSelectionModel().addListSelectionListener(e -> {
+		// 	if (!e.getValueIsAdjusting()) {
+		// 		UndoManager.updateSelectionState();
+		// 	}
+		// });
+		
 		//initial movement type selector
 		genPropertiesTable.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
@@ -2097,7 +2122,10 @@ public class VectorCalculator extends JPanel {
 		
 		// Add selection listener to update menu when selection changes
 		movementTable.getSelectionModel().addListSelectionListener(e -> {
-			MainJMenuBar.updateCalculatorMenuItems();
+			if (!e.getValueIsAdjusting()) {
+				MainJMenuBar.updateCalculatorMenuItems();
+				//UndoManager.updateSelectionState();
+			}
 		});
 		
 		movementModel.addTableModelListener(new TableModelListener() {
@@ -2197,6 +2225,7 @@ public class VectorCalculator extends JPanel {
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
             	p.currentTab = tabbedPane.getSelectedIndex();
+				//UndoManager.updateSelectionState();
 				refreshPropertiesRows(getRowParams(), false);
             }
         });

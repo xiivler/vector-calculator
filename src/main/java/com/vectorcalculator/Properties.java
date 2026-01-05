@@ -25,6 +25,18 @@ public class Properties {
     @XmlTransient
     File file = null;
 
+    @XmlTransient
+    int genPropertiesSelectedRow = -1;
+
+    @XmlTransient
+    int genPropertiesSelectedCol = -1;
+
+    @XmlTransient
+    int movementSelectedRow = -1;
+
+    @XmlTransient
+    int movementSelectedCol = -1;
+
     String[] savedInfoTableRows = null;
     String[][] savedDataTableRows = null;
 

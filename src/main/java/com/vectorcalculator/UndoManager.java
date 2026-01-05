@@ -8,12 +8,17 @@ public class UndoManager {
     private static Deque<Properties> undoStack = new ArrayDeque<>();
     private static Deque<Properties> redoStack = new ArrayDeque<>();
 
+    private static boolean redoing = false;
+
     public static synchronized void recordState() {
         if (VectorCalculator.loading) return;
         // Ensure midairs are saved into Properties before snapshot
         try {
             VectorCalculator.saveMidairs();
         } catch (Exception ex) {}
+        // Capture current selected cells
+        Properties p = Properties.getInstance();
+        updateSelectionState();
         Properties snapshot = new Properties();
         if (!undoStack.isEmpty() && Properties.getInstance().equals(undoStack.peek())) return; //don't save state if nothing has changed
         Properties.copyAttributes(Properties.getInstance(), snapshot);
@@ -26,16 +31,52 @@ public class UndoManager {
         System.out.println("Recorded State");
     }
 
+    //updates current state with what tab is selected and which cell is selected
+    public static synchronized void updateSelectionState(Properties properties) {
+        if (redoing)
+            return;
+        System.out.println("Selection state updated");
+        properties.currentTab = Properties.getInstance().currentTab;
+        properties.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
+        properties.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
+        properties.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
+        properties.movementSelectedCol = VectorCalculator.movementTable.getSelectedColumn();
+    }
+
+    public static synchronized void updateSelectionState() {
+        //if (!undoStack.isEmpty())
+        //    updateSelectionState(undoStack.peek());
+        Properties p = Properties.getInstance();
+        p.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
+        p.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
+        p.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
+        p.movementSelectedCol = VectorCalculator.movementTable.getSelectedColumn();
+    }
+
     public static synchronized void undo() {
         if (!canUndo()) return;
         // Save current state to redo
         Properties current = new Properties();
         Properties.copyAttributes(Properties.getInstance(), current);
-        redoStack.push(current);
+        System.out.println(current.genPropertiesSelectedRow);
+        
 
         undoStack.pop();
-        //Properties prev = undoStack.peek();
-        VectorCalculator.loadProperties(undoStack.peek(), true);
+        Properties prev = undoStack.peek();
+        int currentTab = current.currentTab;
+        int genPropertiesSelectedRow = current.genPropertiesSelectedRow;
+        int genPropertiesSelectedCol = current.genPropertiesSelectedCol;
+        int movementSelectedRow = current.movementSelectedRow;
+        int movementSelectedCol = current.movementSelectedCol;
+        VectorCalculator.loadProperties(prev, true);
+        if (genPropertiesSelectedRow >= 0 && genPropertiesSelectedCol >= 0 && genPropertiesSelectedRow < VectorCalculator.genPropertiesTable.getRowCount() && genPropertiesSelectedCol < VectorCalculator.genPropertiesTable.getColumnCount()) {
+            VectorCalculator.genPropertiesTable.changeSelection(genPropertiesSelectedRow, genPropertiesSelectedCol, false, false);
+        }
+        if (movementSelectedRow >= 0 && movementSelectedCol >= 0 && movementSelectedRow < VectorCalculator.movementTable.getRowCount() && movementSelectedCol < VectorCalculator.movementTable.getColumnCount()) {
+            VectorCalculator.movementTable.changeSelection(movementSelectedRow, movementSelectedCol, false, false);
+        }
+        VectorCalculator.tabbedPane.setSelectedIndex(currentTab);
+        System.out.println("Now it is " + Properties.getInstance().genPropertiesSelectedRow);
         // restore into live properties
         //Properties.copyAttributes(prev, Properties.getInstance());
         // prevent listeners from recording this programmatic restore
@@ -47,7 +88,16 @@ public class UndoManager {
         // } finally {
         //     VectorCalculator.loading = oldLoading;
         // }
+        // current.currentTab = prev.currentTab;
+        // current.genPropertiesSelectedRow = prev.genPropertiesSelectedRow;
+        // current.genPropertiesSelectedCol = prev.genPropertiesSelectedCol;
+        // current.movementSelectedRow = prev.movementSelectedRow;
+        // current.movementSelectedCol = prev.movementSelectedCol;
+        // System.out.println(prev.genPropertiesSelectedRow);
+        redoStack.push(current);
         if (MainJMenuBar.instance != null) MainJMenuBar.instance.updateUndoRedoItems();
+        System.out.println("Undo size: " + undoStack.size());
+        System.out.println("Redo size: " + redoStack.size());
     }
 
     public static synchronized void redo() {
@@ -67,19 +117,8 @@ public class UndoManager {
         //     VectorCalculator.loading = oldLoading;
         // }
         if (MainJMenuBar.instance != null) MainJMenuBar.instance.updateUndoRedoItems();
-    }
-
-    private static void applyRestoredState() {
-        // reconstruct UI to reflect Properties
-        VectorCalculator.initialMovement = new Movement(Properties.getInstance().initialMovementName, Properties.getInstance().initialHorizontalSpeed, Properties.getInstance().framesJump);
-        if (Properties.getInstance().midairPreset.equals("Custom"))
-            VectorCalculator.addPreset(Properties.getInstance().midairs);
-        else
-            VectorCalculator.addPreset(Properties.getInstance().midairPreset, true);
-        System.out.println(Properties.getInstance().mode);
-        VectorCalculator.refreshPropertiesRows(VectorCalculator.getRowParams(), true);
-        VectorCalculator.calculateVector.setText(Properties.getInstance().mode.name);
-        MainJMenuBar.updateCalculatorMenuItems();
+        System.out.println("Undo size: " + undoStack.size());
+        System.out.println("Redo size: " + redoStack.size());
     }
 
     public static synchronized boolean canUndo() {
