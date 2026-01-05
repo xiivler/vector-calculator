@@ -89,7 +89,7 @@ public class VectorCalculator extends JPanel {
 	
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
-		initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
+		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		final_y_position("Final Y Position"),
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
@@ -122,8 +122,17 @@ public class VectorCalculator extends JPanel {
 			params.add(null);
 			params.add(Parameter.initial_coordinates);
 			params.add(Parameter.calculate_using);
-			if (p.initialAngleGiven)
+			// Show solve_for_initial_angle only if mode is Solve and initialAndTargetGiven is true
+			if (p.mode == Mode.SOLVE && p.initialAndTargetGiven) {
+				params.add(Parameter.solve_for_initial_angle);
+				if (!p.solveForInitialAngle) {
+					// If solve_for_initial_angle is false, show Initial Angle row
+					params.add(Parameter.initial_angle);
+				}
+				// If true, Initial Angle row is hidden
+			} else if (p.initialAngleGiven) {
 				params.add(Parameter.initial_angle);
+			}
 			if (p.targetAngleGiven)
 				params.add(Parameter.target_angle);
 			if (p.targetCoordinatesGiven)
@@ -252,6 +261,9 @@ public class VectorCalculator extends JPanel {
 	static String PropertyToDisplayValue(Parameter param) {
 		Object value;
 		switch(param) {
+		case solve_for_initial_angle:
+			value = p.solveForInitialAngle ? "Yes" : "No";
+			break;
 		case mode:
 			value = p.mode.name;
 			break;
@@ -456,17 +468,22 @@ public class VectorCalculator extends JPanel {
 		}
 		switch(param) {
 		case mode:
+			Mode oldMode = p.mode;
 			p.mode = Properties.Mode.fromName(value.toString());
 			if (p.mode == Mode.SOLVE) {
 				setProperty(Parameter.gravity, "Regular");
 				if (p.midairPreset.equals("Custom"))
 					setProperty(Parameter.midairs, "Spinless");
+				if (p.initialAndTargetGiven && oldMode != Mode.SOLVE)
+					setProperty(Parameter.solve_for_initial_angle, "Yes");
 			}
 			else if (p.mode == Mode.SOLVE_CB) {
 				setProperty(Parameter.gravity, "Regular");
+				p.solveForInitialAngle = false;
 			}
 			else {
 				setProperty(Parameter.dive_turn, "Yes");
+				p.solveForInitialAngle = false;
 			}
 			calculateVector.setText(p.mode.name);
 			MainJMenuBar.updateCalculatorMenuItems();
@@ -480,7 +497,8 @@ public class VectorCalculator extends JPanel {
 			p.x0 = coords[0];
 			p.y0 = coords[1];
 			p.z0 = coords[2];
-			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
+			if (p.targetCoordinatesGiven)
+				setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
 			break;
 		case calculate_using:
 			String val = value.toString();
@@ -493,11 +511,14 @@ public class VectorCalculator extends JPanel {
 			p.x1 = tcoords[0];
 			p.y1 = tcoords[1];
 			p.z1 = tcoords[2];
+			//if (p.targetCoordinatesGiven)
 			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
 			break;
 		case final_y_position:
 			p.y1 = parseDoubleWithDefault(value, 0);
 			break;
+		case solve_for_initial_angle:
+			p.solveForInitialAngle = value.toString().equals("Yes");
 		case initial_angle:
 			p.initialAngle = parseDoubleWithDefault(value, 0);
 			break;
@@ -705,6 +726,8 @@ public class VectorCalculator extends JPanel {
 			setProperty(Parameter.target_angle, p.initialAngle);
 		if (p.targetCoordinatesGiven && !oldTargetCoordinatesGiven)
 			setProperty(Parameter.target_coordinates, toCoordinateString(p.x0, p.y1, p.z0));
+		if (p.targetAngleGiven && oldTargetCoordinatesGiven)
+			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
 	}
 
 	//category for falling for height calculator?
@@ -988,7 +1011,7 @@ public class VectorCalculator extends JPanel {
 			targetAngle = 90 - targetAngle;
 		if (targetAngle < 0)
 			targetAngle += 360;
-		Debug.println("Target Angle from Coordinates: " + targetAngle);
+		System.out.println("Target Angle from Coordinates: " + targetAngle);
 		return targetAngle;
 	}
 	
@@ -1141,6 +1164,8 @@ public class VectorCalculator extends JPanel {
 		// 	p.initialHorizontalSpeed = 0;
 		// }
 		p.initialAndTargetGiven = (p.initialMovementName.contains("RCV"));
+		if (p.mode == Mode.SOLVE)
+			setProperty(Parameter.solve_for_initial_angle, "Yes");
 		p.initialFrames = Math.max(p.initialFrames, initialMovement.minFrames);
 		updateCalculateUsing();
 		
@@ -1415,6 +1440,9 @@ public class VectorCalculator extends JPanel {
 			//  else if (evt.getActionCommand() == "solve") {
 			//  }
 			 else if (evt.getActionCommand().equals("calculate")) {
+				if (p.targetCoordinatesGiven) {
+					p.targetAngle = targetCoordinatesToTargetAngle();
+				}
 				boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
 				if (p.mode == Mode.SOLVE) {
 					Solver solver;
@@ -1496,9 +1524,6 @@ public class VectorCalculator extends JPanel {
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
 					VectorMaximizer maximizer = null;
-					if (p.targetCoordinates) {
-						p.targetAngle = targetCoordinatesToTargetAngle();
-					}
 					if (p.initialMovementName.equals("Optimal Distance Motion")) {
 						p.initialMovementName = "Triple Jump";
 						p.framesJump = 10;
@@ -1662,6 +1687,8 @@ public class VectorCalculator extends JPanel {
 				if (modelColumn == 0)
 					return null; //return super.getCellEditor(row, column);
 				switch(rowParams.get(row)) {
+					case solve_for_initial_angle:
+						return dropdown(new String[]{"Yes", "No"});
 					case calculate_using:
 						String[] options = p.initialAndTargetGiven ? new String[]{"Target Angle", "Target Coordinates"} :
 																	 new String[]{"Initial Angle", "Target Angle", "Target Coordinates"};
@@ -1843,7 +1870,7 @@ public class VectorCalculator extends JPanel {
 									target_CoordinateWindow.close();
 									//p.genPropertiesSelectedCol = 1;
 									//p.genPropertiesSelectedRow = rowParams.indexOf(Parameter.target_coordinates);
-									p.selectedParam = Parameter.initial_coordinates;
+									p.selectedParam = Parameter.target_coordinates;
 									UndoManager.recordState();
 									checkIfSaved(true);
 								}

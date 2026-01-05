@@ -314,6 +314,12 @@ public class VectorDisplayWindow {
 		VectorDisplayWindow.simpleMotions = maximizer.getMotions();
 		VectorDisplayWindow.initialAngle = initialAngle;
 		VectorDisplayWindow.targetAngle = targetAngle;
+		double targetAngleAdjusted = targetAngle;
+		double initialAngleAdjusted = initialAngle;
+		if (p.xAxisZeroDegrees) {
+			targetAngleAdjusted = 90 - targetAngle;
+			initialAngleAdjusted = 90 - initialAngle;
+		}
 		if (p.cameraType == CameraType.ABSOLUTE) {
 			cameraAngle = Math.PI / 2;
 		}
@@ -336,7 +342,7 @@ public class VectorDisplayWindow {
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(p.x0, p.y0, p.z0), toVelocityVector(v0 * Math.cos(initialAngle), 0, v0 * Math.sin(initialAngle)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(p.x0, p.y0, p.z0), toVelocityVector(v0 * Math.sin(initialAngleAdjusted), 0, v0 * Math.cos(initialAngleAdjusted)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
 		
 		double x = p.x0;
 		double y = p.y0;
@@ -446,7 +452,7 @@ public class VectorDisplayWindow {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngle);
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngleAdjusted);
 					double value = -1 / ((info[i][4] / speedInTargetDirection) - 1);
 					rowContents[7] = String.format("%.3f", value);
 				}

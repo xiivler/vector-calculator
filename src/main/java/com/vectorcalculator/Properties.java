@@ -230,6 +230,7 @@ public class Properties {
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;
 	boolean targetCoordinates = true;
+    boolean solveForInitialAngle = false;
 	double initialAngle = 0;
 	double targetAngle = 90;
     CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;

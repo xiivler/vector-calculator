@@ -45,6 +45,8 @@ public class Solver {
     double[] final_y_heights; //the end y height of each motion
     double[] y_disps;
 
+    double[][] info;
+
     int[][] ctTypes;
     double[][] diveDecels;
     double[][] edgeCBAngles;
@@ -104,6 +106,10 @@ public class Solver {
 
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
+
+        if (p.solveForInitialAngle) {
+            p.initialAngle = p.targetAngle;
+        }
 
         if (p.chooseJumpFrames) {
             VectorCalculator.setProperty(Parameter.jump_button_frames, 10);
@@ -313,6 +319,24 @@ public class Solver {
         VectorCalculator.addPreset(preset);
         initialMaximizer = VectorCalculator.getMaximizer();         
         calcFrameByFrame(initialMaximizer);
+
+        //if the movement is an rcv and we are solving for initial angle, figure out what initial angle should be used
+        if (hasRCV && p.solveForInitialAngle) {
+            double rcvFirstFrameVelocityAngle;
+            System.out.println(info[0][5]);
+            System.out.println(info[1][5]);
+            if (p.xAxisZeroDegrees) {
+                rcvFirstFrameVelocityAngle = Math.toDegrees(Math.atan2(info[0][5], info[0][3]));
+            }
+            else {
+                rcvFirstFrameVelocityAngle = Math.toDegrees(Math.atan2(info[0][3], info[0][5]));
+            }
+            p.initialAngle += p.initialAngle - rcvFirstFrameVelocityAngle;
+            System.out.println(rcvFirstFrameVelocityAngle);
+        }
+        initialMaximizer = VectorCalculator.getMaximizer();         
+        calcFrameByFrame(initialMaximizer);
+
         //calculate the y displacement of each piece of movement
         y_disps = new double[preset.length + 1];
         for (int i = 0; i < preset.length + 1; i++) {
@@ -483,7 +507,7 @@ public class Solver {
         // System.out.println("Rainbow Spin Index: " + rainbowSpinIndex);
         // System.out.println("Homing MCCT Index: " + homingMCCTIndex);
 
-        double[][] info = null;
+        info = null;
 
         //calculate efficiencies from every frame of the jump
         y_vels = new double[currentMotionLastFrame + 1];
@@ -495,6 +519,10 @@ public class Solver {
         z = p.z0;
 
         SimpleMotion[] simpleMotions = maximizer.getMotions();
+
+        double targetAngleAdjusted = maximizer.getTargetAngle();
+        if (p.xAxisZeroDegrees)
+            targetAngleAdjusted = 90 - targetAngleAdjusted;
 
         int row = 0;
 		for (int index = 0; index < simpleMotions.length; index++) {
@@ -509,7 +537,7 @@ public class Solver {
                 y_vels[row] = info[i][4];
                 //y_heights[row] = info[i][1];
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - maximizer.getTargetAngle());
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngleAdjusted);
 					efficiencies[row] = -1 / ((info[i][4] / speedInTargetDirection) - 1); //ranges from 0 to 1
                     //maybe a more efficient calculation?
 				}
