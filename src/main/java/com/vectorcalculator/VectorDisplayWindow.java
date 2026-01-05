@@ -163,10 +163,7 @@ public class VectorDisplayWindow {
 				else {
 					setShiftMotion(false);
 				}
-				if (Properties.isUnsaved()) {
-					VectorCalculator.saved = false;
-					VectorCalculator.f.setTitle("*" + VectorCalculator.projectName);
-				}
+				VectorCalculator.checkIfSaved(true);
 			}
 		});
 		JLabel exportLabel = new JLabel("Script Path: ", JLabel.RIGHT);
@@ -234,10 +231,7 @@ public class VectorDisplayWindow {
 				create.setText("Create");
 			}
 			p.scriptPath = scriptPath;
-			if (Properties.isUnsaved()) {
-				VectorCalculator.saved = false;
-				VectorCalculator.f.setTitle("*" + VectorCalculator.projectName);
-			}
+			VectorCalculator.checkIfSaved(false);
 		}
 		else {
 			create.setEnabled(false);

@@ -6,8 +6,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -29,6 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -65,6 +68,8 @@ public class VectorCalculator extends JPanel {
 	static boolean initialized = false;
 	static boolean editedSinceCalculate = true;
 	static boolean loading = false;
+	static boolean cellsEditable = true;
+	static boolean addingPreset = false;
 
 	static String projectName = "Untitled Project";
 
@@ -1016,8 +1021,9 @@ public class VectorCalculator extends JPanel {
 			add.setEnabled(false);
 			remove.setEnabled(false);
 		}
-		if (load)
+		if (load) {
 			addPreset(p.midairs);
+		}
 		else
 			addPreset(getPreset(name));
 		p.midairPreset = name;
@@ -1042,10 +1048,12 @@ public class VectorCalculator extends JPanel {
 	// }
 
 	public static void addPreset(int[][] preset) {
+		addingPreset = true;
 		movementModel.setRowCount(0);
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
+		addingPreset = false;
 		saveMidairs();
 		// if (p.midairPreset.equals("Custom")) {
 		// 	add.setEnabled(false);
@@ -1130,8 +1138,41 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static void loadProperties(File file, boolean defaults) {
+	//if dispose is true, editedSinceCalculate is set to true and the snapshot of the display window tables is trashed
+	public static void checkIfSaved(boolean dispose) {
+		if (Properties.isSaved()) {
+			saved = true;
+			f.setTitle(projectName);
+		}
+		else if (initialized && saved) {
+			saved = false;
+			if (!loading && dispose) editedSinceCalculate = true;
+			f.setTitle("*" + projectName);
+		}
+	}
+
+	public static void loadProperties(Properties pl, boolean changeTab) {
 		loading = true;
+
+		int currentTab = p.currentTab;
+		Properties.copyAttributes(pl, p);
+		if (!changeTab)
+			p.currentTab = currentTab;
+			
+		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+		if (p.midairPreset.equals("Custom"))
+			addPreset(p.midairs);
+		else
+			addPreset(p.midairPreset, true);
+		refreshPropertiesRows(getRowParams(), true);
+
+		calculateVector.setText(p.mode.name);
+		MainJMenuBar.updateCalculatorMenuItems();
+
+		loading = false;
+	}
+
+	public static void loadProperties(File file, boolean defaults) {
 		Properties pl = Properties.load(file);
 		if (pl == null) {
 			if (defaults) {
@@ -1141,24 +1182,12 @@ public class VectorCalculator extends JPanel {
 				errorMessage.setText("Error: File could not be loaded");
 			}
 		}
-		int currentTab = p.currentTab;
-		Properties.copyAttributes(pl, p);
-		p.currentTab = currentTab;
-			
-		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-		if (p.midairPreset.equals("Custom"))
-			addPreset(p.midairs);
-		else 
-			addPreset(p.midairPreset, true);
-		refreshPropertiesRows(getRowParams(), true);
-
-		calculateVector.setText(p.mode.name);
-		MainJMenuBar.updateCalculatorMenuItems();
+		
+		loadProperties(pl, false);
 
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
 
-		loading = false;
 		if (p.savedInfoTableRows != null) VectorDisplayWindow.display();
 
 		/* p.x0 = pl.x0;
@@ -1271,7 +1300,7 @@ public class VectorCalculator extends JPanel {
 
 		VectorDisplayWindow.initialize(); */
 		
-		if (initialized && defaults && Properties.isUnsaved()) {
+		if (initialized && defaults && !Properties.isSaved()) {
 			saved = false;
 			if (!loading) editedSinceCalculate = true;
 			f.setTitle("*" + projectName);
@@ -1491,6 +1520,52 @@ public class VectorCalculator extends JPanel {
 		return new DefaultCellEditor(new JComboBox<String>(options));
 	}
 
+	// Check if a keystroke matches a known menu accelerator
+	public static boolean isMenuAccelerator(KeyStroke ks) {
+		if (ks == null) return false;
+		int keyCode = ks.getKeyCode();
+		int modifiers = ks.getModifiers();
+		int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+		
+		// Check common menu shortcuts
+		// File menu: N, O, S, R (Shift), A (Alt)
+		if ((modifiers & shortcut) != 0) {
+			if (keyCode == KeyEvent.VK_N || keyCode == KeyEvent.VK_O || keyCode == KeyEvent.VK_S) {
+				return true;
+			}
+		}
+		// Redo: Ctrl+Y
+		if ((modifiers & shortcut) != 0 && keyCode == KeyEvent.VK_Y) {
+			return true;
+		}
+		// Undo: Ctrl+Z
+		if ((modifiers & shortcut) != 0 && keyCode == KeyEvent.VK_Z) {
+			return true;
+		}
+		// Calculator menu (Ctrl+R, Ctrl+=, Ctrl+Shift+=, Ctrl+-, Ctrl+0)
+		if ((modifiers & shortcut) != 0) {
+			if (keyCode == KeyEvent.VK_R) {
+				return true;
+			}
+			if (keyCode == KeyEvent.VK_EQUALS) {
+				return true;
+			}
+			if (keyCode == KeyEvent.VK_MINUS) {
+				return true;
+			}
+			if (keyCode == KeyEvent.VK_0) {
+				return true;
+			}
+		}
+		// View menu: Ctrl+1, Ctrl+2
+		if ((modifiers & shortcut) != 0) {
+			if (keyCode == KeyEvent.VK_1 || keyCode == KeyEvent.VK_2) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void main(String[] args) {
 		try {
 			jarParentFolder = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
@@ -1576,6 +1651,8 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
+				if (!cellsEditable)
+					return false;
 				if (column == 0)
 					return false;
 				Parameter param = rowParams.get(row);
@@ -1613,6 +1690,20 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.getColumnModel().getColumn(0).setMinWidth(265);
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(265);
 		
+		// Prevent menu accelerators from activating cell editors
+		genPropertiesTable.addKeyListener(new java.awt.event.KeyAdapter() {
+			@Override
+			public void keyPressed(java.awt.event.KeyEvent e) {
+				KeyStroke ks = KeyStroke.getKeyStroke(e.getKeyCode(), e.getModifiers());
+				if (isMenuAccelerator(ks) && MainJMenuBar.instance != null && MainJMenuBar.instance.hasEnabledAccelerator(ks)) {
+					cellsEditable = false;
+					if (genPropertiesTable.getCellEditor() != null) {
+						genPropertiesTable.getCellEditor().cancelCellEditing();
+					}
+				}
+			}
+		});
+		
 		JScrollPane genPropertiesScrollPane = new JScrollPane(genPropertiesTable);
 		//genPropertiesScrollPane.setPreferredSize(new Dimension(500, genPropertiesTable.getRowHeight() * 12 + 25));
 		
@@ -1649,6 +1740,7 @@ public class VectorCalculator extends JPanel {
 								public void actionPerformed(ActionEvent e) {
 									setProperty(Parameter.initial_coordinates, initial_CoordinateWindow.getCoordinates());
 									initial_CoordinateWindow.close();
+									UndoManager.recordState();
 								}
 							});
 						}
@@ -1661,6 +1753,7 @@ public class VectorCalculator extends JPanel {
 								public void actionPerformed(ActionEvent e) {
 									setProperty(Parameter.target_coordinates, target_CoordinateWindow.getCoordinates());
 									target_CoordinateWindow.close();
+									UndoManager.recordState();
 								}
 							});
 						}
@@ -1690,11 +1783,11 @@ public class VectorCalculator extends JPanel {
 
 					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 
-					if (initialized && saved && Properties.isUnsaved()) {
-						System.out.println("Unsaved");
-						saved = false;
-						if (!loading) editedSinceCalculate = true;
-						f.setTitle("*" + projectName);
+					checkIfSaved(true);
+
+					// record undo state for user edits
+					if (initialized && !loading) {
+						UndoManager.recordState();
 					}
 				}
 
@@ -1967,6 +2060,8 @@ public class VectorCalculator extends JPanel {
 
 			@Override
 			public boolean isCellEditable(int row, int column) {
+				if (!cellsEditable)
+					return false;
 				if (column == 0 && !p.midairPreset.equals("Custom"))
 					return false;
 				return true;
@@ -1980,6 +2075,20 @@ public class VectorCalculator extends JPanel {
 		movementTable.setPreferredScrollableViewportSize(new Dimension(300, 185));
 		//movementTable.setColumnSelectionAllowed(true);
 		movementTable.getTableHeader().setReorderingAllowed(false);
+		
+		// Prevent menu accelerators from activating cell editors
+		movementTable.addKeyListener(new java.awt.event.KeyAdapter() {
+			@Override
+			public void keyPressed(java.awt.event.KeyEvent e) {
+				KeyStroke ks = KeyStroke.getKeyStroke(e.getKeyCode(), e.getModifiers());
+				if (isMenuAccelerator(ks) && MainJMenuBar.instance != null && MainJMenuBar.instance.hasEnabledAccelerator(ks)) {
+					cellsEditable = false;
+					if (movementTable.getCellEditor() != null) {
+						movementTable.getCellEditor().cancelCellEditing();
+					}
+				}
+			}
+		});
 		
 		JScrollPane movementScrollPane = new JScrollPane(movementTable);
 		
@@ -2020,11 +2129,11 @@ public class VectorCalculator extends JPanel {
 
 				saveMidairs();
 				refreshPropertiesRows(getRowParams(), false);
-				if (initialized && saved && Properties.isUnsaved()) {
-					saved = false;
-					if (!loading) editedSinceCalculate = true;
-					f.setTitle("*" + projectName);
+				// record undo state for midairs edits
+				if (initialized && !loading && !addingPreset) {
+					UndoManager.recordState();
 				}
+				checkIfSaved(true);
 			}
 		});
 		
@@ -2112,6 +2221,9 @@ public class VectorCalculator extends JPanel {
 		//load the user default properties
 		loadProperties(userDefaults, true);
 		p.file = null; //so we don't save to it
+		// initialize undo history to current state
+		UndoManager.clear();
+		UndoManager.recordState();
 		initialized = true;
 		MainJMenuBar.updateCalculatorMenuItems();
 		

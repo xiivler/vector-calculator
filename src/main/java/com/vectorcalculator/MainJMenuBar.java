@@ -24,17 +24,70 @@ public class MainJMenuBar extends JMenuBar {
     private JMenuItem calculate, addRow, insertRow, removeRow, clearAll;
     private JMenuItem generalTab, midairTab;
 
-    private static MainJMenuBar instance;
+	public static MainJMenuBar instance;
+	private JMenuItem undoItem, redoItem;
 
     public MainJMenuBar() {
 		instance = this;
 		JMenu fileMenu = createFileMenu();
 		add(fileMenu);
+			JMenu editMenu = createEditMenu();
+			add(editMenu);
 		JMenu calculatorMenu = createCalculatorMenu();
 		add(calculatorMenu);
 		JMenu viewMenu = createViewMenu();
 		add(viewMenu);
     }
+
+	// Check whether any enabled menu item uses the given accelerator keystroke
+	public boolean hasEnabledAccelerator(KeyStroke ks) {
+		if (ks == null) return false;
+		Component[] comps = this.getComponents();
+		for (Component c : comps) {
+			if (c instanceof JMenu) {
+				JMenu menu = (JMenu) c;
+				for (Component mc : menu.getMenuComponents()) {
+					if (mc instanceof JMenuItem) {
+						JMenuItem mi = (JMenuItem) mc;
+						KeyStroke acc = mi.getAccelerator();
+						if (acc != null && acc.getKeyCode() == ks.getKeyCode() && mi.isEnabled()) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private JMenu createEditMenu() {
+		JMenu editJMenu = new JMenu("Edit");
+		undoItem = editJMenu.add("Undo");
+		undoItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, shortcut));
+		undoItem.addActionListener(e -> {
+			try {
+				UndoManager.undo();
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+		redoItem = editJMenu.add("Redo");
+		redoItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, shortcut));
+		redoItem.addActionListener(e -> {
+			try {
+				UndoManager.redo();
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+		updateUndoRedoItems();
+		return editJMenu;
+	}
+
+	void updateUndoRedoItems() {
+		if (undoItem != null) undoItem.setEnabled(UndoManager.canUndo());
+		if (redoItem != null) redoItem.setEnabled(UndoManager.canRedo());
+	}
 
     private JMenu createFileMenu(){
 		JMenu fileJMenu = new JMenu("File");
@@ -42,57 +95,65 @@ public class MainJMenuBar extends JMenuBar {
         newItem = fileJMenu.add("New");
 		newItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, shortcut));
 		newItem.addActionListener(e -> {
-			if (!VectorCalculator.saved && saveBeforeClosing()) {
-				if (p.file == null) {
-					File file = saveAsDialog();
-					if (file != null && (!file.exists() || overwrite(file))) {
-						p.file = file;
+			try {
+				if (!VectorCalculator.saved && saveBeforeClosing()) {
+					if (p.file == null) {
+						File file = saveAsDialog();
+						if (file != null && (!file.exists() || overwrite(file))) {
+							p.file = file;
+							VectorCalculator.saveProperties(p.file, true);
+						}
+					}
+					else {
 						VectorCalculator.saveProperties(p.file, true);
 					}
 				}
-				else {
-					VectorCalculator.saveProperties(p.file, true);
-				}
+				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+				p.file = null;
+				VectorCalculator.f.setTitle("Untitled Project");
+			} finally {
+				VectorCalculator.cellsEditable = true;
 			}
-			VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
-			p.file = null;
-			VectorCalculator.f.setTitle("Untitled Project");
 		});
 
 		open = fileJMenu.add("Open...");
 		open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, shortcut));
 		open.addActionListener(e -> {
-			JFileChooser j;
-            if (p.file != null) {
-                j = new JFileChooser(p.file.getParent());
-            }
-            else {
-                j = new JFileChooser(VectorCalculator.jarParentFolder);
-            }
-            j.setDialogTitle("Choose XML File");
-            j.setDialogType(JFileChooser.OPEN_DIALOG);
-            j.setFileFilter(new FileNameExtensionFilter("XML Files", "xml"));
-            if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
-                File file = j.getSelectedFile();
-                if (!file.exists()) {
-                    JOptionPane.showMessageDialog(VectorCalculator.f, "The selected file does not exist.", "File Not Found", JOptionPane.ERROR_MESSAGE);
-                    return;
+			try {
+				JFileChooser j;
+                if (p.file != null) {
+                    j = new JFileChooser(p.file.getParent());
                 }
-                if (!VectorCalculator.saved && saveBeforeLoading(file)) {
-                    if (p.file == null) {
-                        File save_file = saveAsDialog();
-                        if (save_file != null && (!save_file.exists() || overwrite(save_file))) {
-                            p.file = save_file;
-                            VectorCalculator.saveProperties(save_file, true);
+                else {
+                    j = new JFileChooser(VectorCalculator.jarParentFolder);
+                }
+                j.setDialogTitle("Choose XML File");
+                j.setDialogType(JFileChooser.OPEN_DIALOG);
+                j.setFileFilter(new FileNameExtensionFilter("XML Files", "xml"));
+                if (j.showDialog(null, "OK") == JFileChooser.APPROVE_OPTION) {
+                    File file = j.getSelectedFile();
+                    if (!file.exists()) {
+                        JOptionPane.showMessageDialog(VectorCalculator.f, "The selected file does not exist.", "File Not Found", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if (!VectorCalculator.saved && saveBeforeLoading(file)) {
+                        if (p.file == null) {
+                            File save_file = saveAsDialog();
+                            if (save_file != null && (!save_file.exists() || overwrite(save_file))) {
+                                p.file = save_file;
+                                VectorCalculator.saveProperties(save_file, true);
+                            }
+                        }
+                        else {
+                            VectorCalculator.saveProperties(p.file, true);
                         }
                     }
-                    else {
-                        VectorCalculator.saveProperties(p.file, true);
-                    }
+                    VectorCalculator.loadProperties(file, false);
+                    p.file = file;
                 }
-                VectorCalculator.loadProperties(file, false);
-                p.file = file;
-            }
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
         fileJMenu.addSeparator();
@@ -100,56 +161,84 @@ public class MainJMenuBar extends JMenuBar {
 		save = fileJMenu.add("Save");
 		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut));
 		save.addActionListener(e -> {
-			if (p.file == null) {
-                File file = saveAsDialog();
-                if (file != null && (!file.exists() || overwrite(file))) {
-                    p.file = file;
+			try {
+				if (p.file == null) {
+                    File file = saveAsDialog();
+                    if (file != null && (!file.exists() || overwrite(file))) {
+                        p.file = file;
+                        VectorCalculator.saveProperties(p.file, true);
+                    }
+                }
+                else {
                     VectorCalculator.saveProperties(p.file, true);
                 }
-            }
-            else {
-                VectorCalculator.saveProperties(p.file, true);
-            }
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
 		saveAs = fileJMenu.add("Save As...");
 		saveAs.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut | InputEvent.SHIFT_DOWN_MASK));
 		saveAs.addActionListener(e -> {
-			File file = saveAsDialog();
-            if (file != null && (!file.exists() || overwrite(file))) {
-                p.file = file;
-                VectorCalculator.saveProperties(file, true);
-            }
+			try {
+				File file = saveAsDialog();
+                if (file != null && (!file.exists() || overwrite(file))) {
+                    p.file = file;
+                    VectorCalculator.saveProperties(file, true);
+                }
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
 		saveCopy = fileJMenu.add("Save Copy to...");
 		saveCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut | InputEvent.ALT_DOWN_MASK));
 		saveCopy.addActionListener(e -> {
-            VectorCalculator.saveProperties(saveAsDialog(), false);
+			try {
+                VectorCalculator.saveProperties(saveAsDialog(), false);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
         fileJMenu.addSeparator();
 
         saveAsDefaults = fileJMenu.add("Save As User Defaults");
 		saveAsDefaults.addActionListener(e -> {
-			VectorCalculator.saveProperties(VectorCalculator.userDefaults, false);
+			try {
+				VectorCalculator.saveProperties(VectorCalculator.userDefaults, false);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
         resetToDefaults = fileJMenu.add("Reset to User Defaults");
 		resetToDefaults.addActionListener(e -> {
-			VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+			try {
+				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
         resetToFactory = fileJMenu.add("Reset to Factory Defaults");
 		resetToFactory.addActionListener(e -> {
-			VectorCalculator.loadProperties(VectorCalculator.factoryDefaults, true);
+			try {
+				VectorCalculator.loadProperties(VectorCalculator.factoryDefaults, true);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
 		fileJMenu.addSeparator();
 
 		exit = fileJMenu.add("Exit");
 		exit.addActionListener(e -> {
-            VectorCalculator.f.dispatchEvent(new WindowEvent(VectorCalculator.f, WindowEvent.WINDOW_CLOSING));
+			try {
+                VectorCalculator.f.dispatchEvent(new WindowEvent(VectorCalculator.f, WindowEvent.WINDOW_CLOSING));
+            } finally {
+				VectorCalculator.cellsEditable = true;
+			}
         });
 
 		return fileJMenu;
@@ -161,8 +250,12 @@ public class MainJMenuBar extends JMenuBar {
 		calculate = calculatorJMenu.add(VectorCalculator.calculateVector.getText());
 		calculate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, shortcut));
 		calculate.addActionListener(e -> {
-			// Trigger the same action as the calculate button
-			VectorCalculator.calculateVector.doClick();
+			try {
+				// Trigger the same action as the calculate button
+				VectorCalculator.calculateVector.doClick();
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
 		calculatorJMenu.addSeparator();
@@ -170,50 +263,64 @@ public class MainJMenuBar extends JMenuBar {
 		addRow = calculatorJMenu.add("Add Midair");
 		addRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut)); // Ctrl+= for add
 		addRow.addActionListener(e -> {
-			if (p.midairPreset.equals("Custom")) {
-				VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
 			}
 		});
 
 		insertRow = calculatorJMenu.add("Insert Midair");
 		insertRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut | InputEvent.SHIFT_DOWN_MASK)); // Ctrl+Shift+= for insert
 		insertRow.addActionListener(e -> {
-			if (p.midairPreset.equals("Custom")) {
-				int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
-				if (selectedRows.length > 0) {
-					int insertIndex = selectedRows[0];
-					VectorCalculator.movementModel.insertRow(insertIndex, VectorCalculator.movementRows);
-					VectorCalculator.movementTable.setRowSelectionInterval(insertIndex, insertIndex);
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
+					if (selectedRows.length > 0) {
+						int insertIndex = selectedRows[0];
+						VectorCalculator.movementModel.insertRow(insertIndex, VectorCalculator.movementRows);
+						VectorCalculator.movementTable.setRowSelectionInterval(insertIndex, insertIndex);
+					}
 				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
 			}
 		});
 
 		removeRow = calculatorJMenu.add("Remove Midair");
 		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
 		removeRow.addActionListener(e -> {
-			if (p.midairPreset.equals("Custom")) {
-				VectorCalculator.movementTable.removeEditor();
-				int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
-				if (rowsRemove.length > 0)
-					for (int i = rowsRemove.length - 1; i >= 0; i--) {
-						int removeRowIndex = rowsRemove[i];
-						VectorCalculator.movementModel.removeRow(removeRowIndex);
-						if (VectorCalculator.movementModel.getRowCount() > 0)
-							if (removeRowIndex == VectorCalculator.movementModel.getRowCount())
-								VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex - 1, removeRowIndex - 1);
-							else
-								VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
-					}
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementTable.removeEditor();
+					int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
+					if (rowsRemove.length > 0)
+						for (int i = rowsRemove.length - 1; i >= 0; i--) {
+							int removeRowIndex = rowsRemove[i];
+							VectorCalculator.movementModel.removeRow(removeRowIndex);
+							if (VectorCalculator.movementModel.getRowCount() > 0)
+								if (removeRowIndex == VectorCalculator.movementModel.getRowCount())
+									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex - 1, removeRowIndex - 1);
+								else
+									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
+						}
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
 			}
 		});
 
 		clearAll = calculatorJMenu.add("Clear All Midairs");
 		clearAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcut)); // Ctrl+0 for clear
 		clearAll.addActionListener(e -> {
-			if (p.midairPreset.equals("Custom")) {
-				while (VectorCalculator.movementModel.getRowCount() > 0) {
-					VectorCalculator.movementModel.removeRow(0);
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementModel.setRowCount(0);
 				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
 			}
 		});
 
@@ -229,13 +336,21 @@ public class MainJMenuBar extends JMenuBar {
 		generalTab = viewJMenu.add("General Properties Tab");
 		generalTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1, shortcut));
 		generalTab.addActionListener(e -> {
-			VectorCalculator.tabbedPane.setSelectedIndex(0);
+			try {
+				VectorCalculator.tabbedPane.setSelectedIndex(0);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 
 		midairTab = viewJMenu.add("Midair Properties Tab");
 		midairTab.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_2, shortcut));
 		midairTab.addActionListener(e -> {
-			VectorCalculator.tabbedPane.setSelectedIndex(1);
+			try {
+				VectorCalculator.tabbedPane.setSelectedIndex(1);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
 		});
 		return viewJMenu;
 	}
@@ -253,6 +368,7 @@ public class MainJMenuBar extends JMenuBar {
 		if (instance != null) {
 			instance.updateCalculatorMenu();
 			instance.updateCalculateText();
+			instance.updateUndoRedoItems();
 		}
 	}
 

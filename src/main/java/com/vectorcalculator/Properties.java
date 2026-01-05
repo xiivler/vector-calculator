@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"file", "currentTab"})
+@EqualsAndHashCode(exclude = {"file", "currentTab", "savedInfoTableRows", "savedDataTableRows"})
 @XmlRootElement
 public class Properties {
     static Properties p;
@@ -315,8 +315,8 @@ public class Properties {
         }
     }
 
-    public static boolean isUnsaved() {
-        return !p.equals(p_saved);
+    public static boolean isSaved() {
+        return p.equals(p_saved);
     }
 
     public static final double UPWARP_ERROR = 0.001; //this error should be greater than the one in the Solver so that it will not accidentally give too big of an upwarp
