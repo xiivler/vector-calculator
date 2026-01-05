@@ -13,6 +13,8 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.vectorcalculator.Properties.TurnDuringDive;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -48,7 +50,7 @@ public class Sandbox {
                     VectorCalculator.addPreset(preset);
                     Properties.p.rightVector = false;
                     VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-                    Properties.p.diveTurn = true;
+                    Properties.p.diveTurn = TurnDuringDive.YES;
                     //maximizer.neverDiveTurn = true;
                     Properties.p.diveCapBounceTolerance = 0.02;
                     Properties.p.diveFirstFrameDecel = 0;

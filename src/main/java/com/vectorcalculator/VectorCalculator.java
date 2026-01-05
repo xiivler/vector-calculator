@@ -55,6 +55,7 @@ import com.vectorcalculator.Properties.HctDirection;
 import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
 import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.TurnDuringDive;
 //import com.apple.laf.ClientPropertyApplicator.Property;
 //import com.vectorcalculator.Properties.AngleType;
 import com.vectorcalculator.Properties.CalculateUsing;
@@ -333,7 +334,7 @@ public class VectorCalculator extends JPanel {
 			value = round(p.diveFirstFrameDecel, 3);
 			break;
 		case dive_turn:
-			value = p.diveTurn ? "Yes" : "No";
+			value = p.diveTurn.displayName;
 			break;
 		case hct_type:
 			value = p.hctType.name;
@@ -461,6 +462,9 @@ public class VectorCalculator extends JPanel {
 			}
 			else if (p.mode == Mode.SOLVE_CB) {
 				setProperty(Parameter.gravity, "Regular");
+			}
+			else {
+				setProperty(Parameter.dive_turn, "Yes");
 			}
 			calculateVector.setText(p.mode.name);
 			MainJMenuBar.updateCalculatorMenuItems();
@@ -601,7 +605,7 @@ public class VectorCalculator extends JPanel {
 			p.customCameraAngle = parseDoubleWithDefault(value, 0);
 			break;
 		case dive_turn:
-			p.diveTurn = value.toString().equals("Yes");
+			p.diveTurn = Properties.TurnDuringDive.fromDisplayName(value.toString());
 			break;
 		case hct_type:
 			p.hctType = Properties.HctType.fromName(value.toString());
@@ -1482,6 +1486,7 @@ public class VectorCalculator extends JPanel {
 					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
 						setProperty(Parameter.hct_type, p.hctType.name);
 					}
+					setProperty(Parameter.dive_turn, solver.dtAllowed.displayName); //set back to "Test Both" if that is the setting
 					editedSinceCalculate = false;
 					UndoManager.recordState();
 				}
@@ -1677,7 +1682,10 @@ public class VectorCalculator extends JPanel {
 					case hct_neutral:
 						return dropdown(new String[]{"Yes", "No"});
 					case dive_turn:
-						return dropdown(new String[]{"Yes", "No"});
+						if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_CB)
+							return dropdown(new String[]{"Yes", "No", "Test Both"});
+						else
+							return dropdown(new String[]{"Yes", "No"});
 					case ground_mode:
 						return dropdown(new String[]{"None", "Uniform", "Varied"});
 					case ground_type:

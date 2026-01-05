@@ -5,7 +5,7 @@ import java.util.Vector;
 
 import javax.swing.table.TableModel;
 
-//import com.vectorcalculator.Properties.AngleType;
+import com.vectorcalculator.Properties.TurnDuringDive;
 
 public class VectorMaximizer {
 
@@ -924,7 +924,7 @@ public class VectorMaximizer {
 				preCapBounceDiveIndex = j;
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
-				if (!p.diveTurn) {
+				if (p.diveTurn == TurnDuringDive.NO) {
 					((DiveTurn) motionGroup[i]).setHoldingAngle(0);
 				}
 			}

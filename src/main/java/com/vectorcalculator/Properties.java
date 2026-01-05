@@ -82,6 +82,25 @@ public class Properties {
         }
     }
 
+    static enum TurnDuringDive {
+        YES("Yes"), NO("No"), TEST("Test Both");
+
+        String displayName;
+
+        TurnDuringDive(String displayName) {
+            this.displayName = displayName;
+        }
+
+        static TurnDuringDive fromDisplayName(String name) {
+            for (TurnDuringDive dt : TurnDuringDive.values()) {
+                if (dt.displayName.equals(name)) {
+                    return dt;
+                }
+            }
+            return YES;
+        }
+    }
+
     // static enum AngleType {
 	// 	INITIAL, TARGET, BOTH
 	// }
@@ -233,7 +252,7 @@ public class Properties {
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
     double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
-    boolean diveTurn = true;
+    TurnDuringDive diveTurn = TurnDuringDive.YES;
 
 	String midairPreset = "Spinless";
     boolean canTripleThrow = true;

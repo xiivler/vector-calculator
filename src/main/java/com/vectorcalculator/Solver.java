@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 
+import com.vectorcalculator.Properties.TurnDuringDive;
 import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.TripleThrow;
 import com.vectorcalculator.VectorCalculator.Parameter;
@@ -26,6 +27,7 @@ public class Solver {
 
     boolean singleThrowAllowed = true;
     TripleThrow ttAllowed;
+    TurnDuringDive dtAllowed;
 
     boolean hasRCV;
 
@@ -125,6 +127,8 @@ public class Solver {
             ttAllowed = p.tripleThrow;
         else
             ttAllowed = TripleThrow.NO;
+
+        dtAllowed = p.diveTurn;
 
         int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
         preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
@@ -383,14 +387,15 @@ public class Solver {
                 testDurations[diveCapBounceIndex - 2] = ctDuration;
                 testDurations[diveCapBounceIndex - 1] = diveDuration;
                 setDurations(testDurations);
-                if (testCT(-1, .02, .1, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
+                if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, .1, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                     //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
                     diveTurns[ctDuration][diveDuration] = true;
                 }
-                else if (!hasRCV && testCT(-1, .1, 1, true, false) >= 0) { //now test without turning the dive (don't with RCVs because these can never be optimal for them)
+                else if (testNoDiveTurn && testCT(-1, .1, 1, true, false) >= 0) { //now test without turning the dive (don't with RCVs because these can never be optimal for them)
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -772,25 +777,7 @@ public class Solver {
                 return 0.0;
             }
         }
-        // double y = p.y0;
-        // SimpleMotion[] motions = maximizer.getMotions();
-        // if (VectorCalculator.stop) {
-        //     System.out.println(Arrays.toString(testDurations));
-        //     System.exit(-1);
-        // }
-        // for (SimpleMotion m : motions) {
-        //     y += m.calcDispY();
-        // }
-        // // System.out.println(y);
-        // if (y < p.y1 - ERROR || possible == false) { //too low so won't work
-        //     badCalls++;
-        //     System.out.println(Arrays.toString(testDurations) + ", " + y);
-        //     return 0.0;
-        // }
-        // else {
-        //bestYDisp = y - p.y1;
         return disp;
-        // }
     }
 
     //if height is not possible because of the ground, returns FALSE constant

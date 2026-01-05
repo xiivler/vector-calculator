@@ -195,7 +195,10 @@ public class MainJMenuBar extends JMenuBar {
 		saveCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut | InputEvent.ALT_DOWN_MASK));
 		saveCopy.addActionListener(e -> {
 			try {
-                VectorCalculator.saveProperties(saveAsDialog(), false, false);
+				File file = saveAsDialog();
+                if (file != null && (!file.exists() || overwrite(file))) {
+                    VectorCalculator.saveProperties(file, false, false);
+                }
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}
