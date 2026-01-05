@@ -16,14 +16,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"file", "currentTab", "savedInfoTableRows", "savedDataTableRows", "genPropertiesSelectedRow", "genPropertiesSelectedCol", "movementSelectedRow", "movementSelectedCol"})
+@EqualsAndHashCode(exclude = {"currentTab", "savedInfoTableRows", "savedDataTableRows", "genPropertiesSelectedRow", "genPropertiesSelectedCol", "movementSelectedRow", "movementSelectedCol"})
 @XmlRootElement
 public class Properties {
     static Properties p;
     static Properties p_saved;
-
-    @XmlTransient
-    File file = null;
 
     @XmlTransient
     int genPropertiesSelectedRow = -1;
@@ -295,16 +292,17 @@ public class Properties {
 
     //select the initial movement once these properties are saved
 
-    public static boolean save(File file) {
+    public static boolean save(File file, boolean defaults) {
         try {
             JAXBContext jxbc = JAXBContext.newInstance(Properties.class);
             Marshaller m = jxbc.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             //File f = new File("properties.xml");
-            //p.file = file;
             m.marshal(p, file);
-            p_saved = new Properties();
-            Properties.copyAttributes(p, p_saved);
+            if (!defaults) {
+                p_saved = new Properties();
+                Properties.copyAttributes(p, p_saved);
+            }
             return true;
         }
         catch (Exception ex) {
@@ -313,15 +311,16 @@ public class Properties {
         }
     }
 
-    public static Properties load(File file) {
+    public static Properties load(File file, boolean defaults) {
         try {
             JAXBContext jxbc = JAXBContext.newInstance(Properties.class);
             Unmarshaller um = jxbc.createUnmarshaller();
             //um.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             //File f = new File("properties.xml");
-            //p.file = file;
-            p_saved = (Properties) um.unmarshal(file);
-            return p_saved;
+            Properties p_loaded = (Properties) um.unmarshal(file);
+            if (!defaults)
+                p_saved = p_loaded;
+            return p_loaded;
             //System.out.println(p.x0);
         }
         catch (Exception ex) {

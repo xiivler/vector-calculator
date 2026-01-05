@@ -74,6 +74,8 @@ public class VectorCalculator extends JPanel {
 	static boolean cellsEditable = true;
 	static boolean addingPreset = false;
 
+	static File file = null;
+
 	static String projectName = "Untitled Project";
 
 	static Font tableFont = new Font("Verdana", Font.PLAIN, 14);
@@ -1125,8 +1127,8 @@ public class VectorCalculator extends JPanel {
 		refreshPropertiesRows(getRowParams(), true);
 	}
 
-	public static void saveProperties(File file, boolean updateCurrentFile) {
-		boolean saveSuccess = Properties.save(file);
+	public static void saveProperties(File file, boolean updateCurrentFile, boolean defaults) {
+		boolean saveSuccess = Properties.save(file, defaults);
 		if (!saveSuccess) {
 			JOptionPane.showMessageDialog(f, "Failed to save the file.", "Save Error", JOptionPane.ERROR_MESSAGE);
 			errorMessage.setText("Error: Save failed");
@@ -1186,7 +1188,7 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void loadProperties(File file, boolean defaults) {
-		Properties pl = Properties.load(file);
+		Properties pl = Properties.load(file, defaults);
 		if (pl == null) {
 			if (defaults) {
 				errorMessage.setText("Error: Defaults could not be loaded");
@@ -1326,6 +1328,8 @@ public class VectorCalculator extends JPanel {
 				VectorDisplayWindow.frame.setTitle("Calculations: " + VectorCalculator.projectName);
 			}
 		}
+		if (defaults)
+			UndoManager.recordState();
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -1766,6 +1770,7 @@ public class VectorCalculator extends JPanel {
 									setProperty(Parameter.initial_coordinates, initial_CoordinateWindow.getCoordinates());
 									initial_CoordinateWindow.close();
 									UndoManager.recordState();
+									checkIfSaved(true);
 								}
 							});
 						}
@@ -1779,6 +1784,7 @@ public class VectorCalculator extends JPanel {
 									setProperty(Parameter.target_coordinates, target_CoordinateWindow.getCoordinates());
 									target_CoordinateWindow.close();
 									UndoManager.recordState();
+									checkIfSaved(true);
 								}
 							});
 						}
@@ -2249,7 +2255,7 @@ public class VectorCalculator extends JPanel {
 
 		//load the user default properties
 		loadProperties(userDefaults, true);
-		p.file = null; //so we don't save to it
+		VectorCalculator.file = null; //so we don't save to it
 		// initialize undo history to current state
 		UndoManager.clear();
 		UndoManager.recordState();

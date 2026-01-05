@@ -55,7 +55,7 @@ public class UndoManager {
     }
 
     public static synchronized void undo() {
-        System.out.println(Properties.p_saved.file);
+        //System.out.println(Properties.p_saved.file);
         if (!canUndo()) return;
         // Save current state to redo
         Properties current = new Properties();

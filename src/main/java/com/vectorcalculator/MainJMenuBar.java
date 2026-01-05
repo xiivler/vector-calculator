@@ -97,19 +97,19 @@ public class MainJMenuBar extends JMenuBar {
 		newItem.addActionListener(e -> {
 			try {
 				if (!VectorCalculator.saved && saveBeforeClosing()) {
-					if (p.file == null) {
+					if (VectorCalculator.file == null) {
 						File file = saveAsDialog();
 						if (file != null && (!file.exists() || overwrite(file))) {
-							p.file = file;
-							VectorCalculator.saveProperties(p.file, true);
+							VectorCalculator.file = file;
+							VectorCalculator.saveProperties(VectorCalculator.file, true, false);
 						}
 					}
 					else {
-						VectorCalculator.saveProperties(p.file, true);
+						VectorCalculator.saveProperties(VectorCalculator.file, true, false);
 					}
 				}
 				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
-				p.file = null;
+				VectorCalculator.file = null;
 				VectorCalculator.f.setTitle("Untitled Project");
 			} finally {
 				VectorCalculator.cellsEditable = true;
@@ -121,8 +121,8 @@ public class MainJMenuBar extends JMenuBar {
 		open.addActionListener(e -> {
 			try {
 				JFileChooser j;
-                if (p.file != null) {
-                    j = new JFileChooser(p.file.getParent());
+                if (VectorCalculator.file != null) {
+                    j = new JFileChooser(VectorCalculator.file.getParent());
                 }
                 else {
                     j = new JFileChooser(VectorCalculator.jarParentFolder);
@@ -137,19 +137,19 @@ public class MainJMenuBar extends JMenuBar {
                         return;
                     }
                     if (!VectorCalculator.saved && saveBeforeLoading(file)) {
-                        if (p.file == null) {
+                        if (VectorCalculator.file == null) {
                             File save_file = saveAsDialog();
                             if (save_file != null && (!save_file.exists() || overwrite(save_file))) {
-                                p.file = save_file;
-                                VectorCalculator.saveProperties(save_file, true);
+                                VectorCalculator.file = save_file;
+                                VectorCalculator.saveProperties(save_file, true, false);
                             }
                         }
                         else {
-                            VectorCalculator.saveProperties(p.file, true);
+                            VectorCalculator.saveProperties(VectorCalculator.file, true, false);
                         }
                     }
                     VectorCalculator.loadProperties(file, false);
-                    p.file = file;
+                    VectorCalculator.file = file;
                 }
 			} finally {
 				VectorCalculator.cellsEditable = true;
@@ -162,15 +162,15 @@ public class MainJMenuBar extends JMenuBar {
 		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut));
 		save.addActionListener(e -> {
 			try {
-				if (Properties.p_saved.file == null) {
+				if (VectorCalculator.file == null) {
                     File file = saveAsDialog();
                     if (file != null && (!file.exists() || overwrite(file))) {
-                        p.file = file;
-                        VectorCalculator.saveProperties(p.file, true);
+                        VectorCalculator.file = file;
+                        VectorCalculator.saveProperties(VectorCalculator.file, true, false);
                     }
                 }
                 else {
-                    VectorCalculator.saveProperties(Properties.p_saved.file, true);
+                    VectorCalculator.saveProperties(VectorCalculator.file, true, false);
                 }
 			} finally {
 				VectorCalculator.cellsEditable = true;
@@ -183,8 +183,8 @@ public class MainJMenuBar extends JMenuBar {
 			try {
 				File file = saveAsDialog();
                 if (file != null && (!file.exists() || overwrite(file))) {
-                    p.file = file;
-                    VectorCalculator.saveProperties(file, true);
+                    VectorCalculator.file = file;
+                    VectorCalculator.saveProperties(file, true, false);
                 }
 			} finally {
 				VectorCalculator.cellsEditable = true;
@@ -195,7 +195,7 @@ public class MainJMenuBar extends JMenuBar {
 		saveCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut | InputEvent.ALT_DOWN_MASK));
 		saveCopy.addActionListener(e -> {
 			try {
-                VectorCalculator.saveProperties(saveAsDialog(), false);
+                VectorCalculator.saveProperties(saveAsDialog(), false, false);
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}
@@ -206,7 +206,7 @@ public class MainJMenuBar extends JMenuBar {
         saveAsDefaults = fileJMenu.add("Save As User Defaults");
 		saveAsDefaults.addActionListener(e -> {
 			try {
-				VectorCalculator.saveProperties(VectorCalculator.userDefaults, false);
+				VectorCalculator.saveProperties(VectorCalculator.userDefaults, false, true);
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}
@@ -382,8 +382,8 @@ public class MainJMenuBar extends JMenuBar {
         JFileChooser j = new JFileChooser(VectorCalculator.jarParentFolder);
         j.setDialogTitle("Choose Save Location");
         j.setDialogType(JFileChooser.SAVE_DIALOG);
-        if (p.file != null)
-            j.setSelectedFile(p.file);
+        if (VectorCalculator.file != null)
+            j.setSelectedFile(VectorCalculator.file);
         else {
             j.setSelectedFile(new File("untitled-project.xml"));
         }
@@ -413,31 +413,31 @@ public class MainJMenuBar extends JMenuBar {
 
     private boolean saveBeforeLoading(File f) {
         String messageStr = "Save the current project before opening \"" + f.getName() + "\"?";
-        if (p.file != null)
-            messageStr = "\"" + p.file.getName() + "\" is unsaved. Save before opening \"" + f.getName() + "\"?";
+        if (VectorCalculator.file != null)
+            messageStr = "\"" + VectorCalculator.file.getName() + "\" is unsaved. Save before opening \"" + f.getName() + "\"?";
         return (JOptionPane.showOptionDialog(VectorCalculator.f, messageStr,
             "Save?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[]{"No", "Yes"}, 1) == 1);
     }
 
     private boolean saveBeforeClosing() {
         String messageStr = "Save the current project before closing?";
-        if (p.file != null)
-            messageStr = "Save \"" + p.file.getName() + "\" before closing?";
+        if (VectorCalculator.file != null)
+            messageStr = "Save \"" + VectorCalculator.file.getName() + "\" before closing?";
         return (JOptionPane.showOptionDialog(VectorCalculator.f, messageStr,
             "Save?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[]{"No", "Yes"}, 1) == 1);
     }
 
     public void promptSaveAndClose() {
         if (!VectorCalculator.saved && saveBeforeClosing()) {
-            if (p.file == null) {
+            if (VectorCalculator.file == null) {
                 File file = saveAsDialog();
                 if (file != null && (!file.exists() || overwrite(file))) {
-                    p.file = file;
-                    VectorCalculator.saveProperties(p.file, true);
+                    VectorCalculator.file = file;
+                    VectorCalculator.saveProperties(VectorCalculator.file, true, false);
                 }
             }
             else {
-                VectorCalculator.saveProperties(p.file, true);
+                VectorCalculator.saveProperties(VectorCalculator.file, true, false);
             }
         }
         VectorCalculator.f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
