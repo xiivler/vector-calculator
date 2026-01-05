@@ -33,8 +33,6 @@ public class MainJMenuBar extends JMenuBar {
 		add(fileMenu);
 			JMenu editMenu = createEditMenu();
 			add(editMenu);
-		JMenu calculatorMenu = createCalculatorMenu();
-		add(calculatorMenu);
 		JMenu viewMenu = createViewMenu();
 		add(viewMenu);
     }
@@ -81,6 +79,76 @@ public class MainJMenuBar extends JMenuBar {
 			}
 		});
 		updateUndoRedoItems();
+		
+		editJMenu.addSeparator();
+		
+		addRow = editJMenu.add("Add Midair");
+		addRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut)); // Ctrl+= for add
+		addRow.addActionListener(e -> {
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+
+		insertRow = editJMenu.add("Insert Midair");
+		insertRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut | InputEvent.SHIFT_DOWN_MASK)); // Ctrl+Shift+= for insert
+		insertRow.addActionListener(e -> {
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
+					if (selectedRows.length > 0) {
+						int insertIndex = selectedRows[0];
+						VectorCalculator.movementModel.insertRow(insertIndex, VectorCalculator.movementRows);
+						VectorCalculator.movementTable.setRowSelectionInterval(insertIndex, insertIndex);
+					}
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+
+		removeRow = editJMenu.add("Remove Midair");
+		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
+		removeRow.addActionListener(e -> {
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementTable.removeEditor();
+					int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
+					if (rowsRemove.length > 0)
+						for (int i = rowsRemove.length - 1; i >= 0; i--) {
+							int removeRowIndex = rowsRemove[i];
+							VectorCalculator.movementModel.removeRow(removeRowIndex);
+							if (VectorCalculator.movementModel.getRowCount() > 0)
+								if (removeRowIndex == VectorCalculator.movementModel.getRowCount())
+									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex - 1, removeRowIndex - 1);
+								else
+									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
+						}
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+
+		clearAll = editJMenu.add("Clear All Midairs");
+		clearAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcut)); // Ctrl+0 for clear
+		clearAll.addActionListener(e -> {
+			try {
+				if (p.midairPreset.equals("Custom")) {
+					VectorCalculator.movementModel.setRowCount(0);
+				}
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+		
+		// Initially disable if not custom
+		updateCalculatorMenu();
+		
 		return editJMenu;
 	}
 
@@ -91,6 +159,19 @@ public class MainJMenuBar extends JMenuBar {
 
     private JMenu createFileMenu(){
 		JMenu fileJMenu = new JMenu("File");
+
+		// calculate = fileJMenu.add(VectorCalculator.calculateVector.getText());
+		// calculate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, shortcut));
+		// calculate.addActionListener(e -> {
+		//     try {
+		//         // Trigger the same action as the calculate button
+		//         VectorCalculator.calculateVector.doClick();
+		//     } finally {
+		//         VectorCalculator.cellsEditable = true;
+		//     }
+		// });
+		// 
+		//fileJMenu.addSeparator();
 
         newItem = fileJMenu.add("New");
 		newItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, shortcut));
@@ -247,91 +328,7 @@ public class MainJMenuBar extends JMenuBar {
 		return fileJMenu;
 	}
 
-	private JMenu createCalculatorMenu() {
-		JMenu calculatorJMenu = new JMenu("Calculator");
 
-		calculate = calculatorJMenu.add(VectorCalculator.calculateVector.getText());
-		calculate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, shortcut));
-		calculate.addActionListener(e -> {
-			try {
-				// Trigger the same action as the calculate button
-				VectorCalculator.calculateVector.doClick();
-			} finally {
-				VectorCalculator.cellsEditable = true;
-			}
-		});
-
-		calculatorJMenu.addSeparator();
-
-		addRow = calculatorJMenu.add("Add Midair");
-		addRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut)); // Ctrl+= for add
-		addRow.addActionListener(e -> {
-			try {
-				if (p.midairPreset.equals("Custom")) {
-					VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
-				}
-			} finally {
-				VectorCalculator.cellsEditable = true;
-			}
-		});
-
-		insertRow = calculatorJMenu.add("Insert Midair");
-		insertRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut | InputEvent.SHIFT_DOWN_MASK)); // Ctrl+Shift+= for insert
-		insertRow.addActionListener(e -> {
-			try {
-				if (p.midairPreset.equals("Custom")) {
-					int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
-					if (selectedRows.length > 0) {
-						int insertIndex = selectedRows[0];
-						VectorCalculator.movementModel.insertRow(insertIndex, VectorCalculator.movementRows);
-						VectorCalculator.movementTable.setRowSelectionInterval(insertIndex, insertIndex);
-					}
-				}
-			} finally {
-				VectorCalculator.cellsEditable = true;
-			}
-		});
-
-		removeRow = calculatorJMenu.add("Remove Midair");
-		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
-		removeRow.addActionListener(e -> {
-			try {
-				if (p.midairPreset.equals("Custom")) {
-					VectorCalculator.movementTable.removeEditor();
-					int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
-					if (rowsRemove.length > 0)
-						for (int i = rowsRemove.length - 1; i >= 0; i--) {
-							int removeRowIndex = rowsRemove[i];
-							VectorCalculator.movementModel.removeRow(removeRowIndex);
-							if (VectorCalculator.movementModel.getRowCount() > 0)
-								if (removeRowIndex == VectorCalculator.movementModel.getRowCount())
-									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex - 1, removeRowIndex - 1);
-								else
-									VectorCalculator.movementTable.setRowSelectionInterval(removeRowIndex, removeRowIndex);
-						}
-				}
-			} finally {
-				VectorCalculator.cellsEditable = true;
-			}
-		});
-
-		clearAll = calculatorJMenu.add("Clear All Midairs");
-		clearAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcut)); // Ctrl+0 for clear
-		clearAll.addActionListener(e -> {
-			try {
-				if (p.midairPreset.equals("Custom")) {
-					VectorCalculator.movementModel.setRowCount(0);
-				}
-			} finally {
-				VectorCalculator.cellsEditable = true;
-			}
-		});
-
-		// Initially disable if not custom
-		updateCalculatorMenu();
-
-		return calculatorJMenu;
-	}
 
 	private JMenu createViewMenu() {
 		JMenu viewJMenu = new JMenu("View");
