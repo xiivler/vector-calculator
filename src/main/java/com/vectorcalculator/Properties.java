@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"file", "currentTab", "savedInfoTableRows", "savedDataTableRows"})
+@EqualsAndHashCode(exclude = {"file", "currentTab", "savedInfoTableRows", "savedDataTableRows", "genPropertiesSelectedRow", "genPropertiesSelectedCol", "movementSelectedRow", "movementSelectedCol"})
 @XmlRootElement
 public class Properties {
     static Properties p;
@@ -286,6 +286,8 @@ public class Properties {
 
     @XmlTransient
     int currentTab = 0;
+    @XmlTransient
+    int lastEditTab = 0;
 
     String initialMovementCategory = "Jump";
     GroundMode groundMode = GroundMode.NONE;
@@ -301,6 +303,8 @@ public class Properties {
             //File f = new File("properties.xml");
             //p.file = file;
             m.marshal(p, file);
+            p_saved = new Properties();
+            Properties.copyAttributes(p, p_saved);
             return true;
         }
         catch (Exception ex) {

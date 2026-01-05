@@ -1163,10 +1163,10 @@ public class VectorCalculator extends JPanel {
 			p.currentTab = currentTab;
 			
 		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-		if (p.midairPreset.equals("Custom"))
-			addPreset(p.midairs);
-		else
-			addPreset(p.midairPreset, true);
+		// if (p.midairPreset.equals("Custom"))
+		// 	addPreset(p.midairs);
+		// else
+		addPreset(p.midairPreset, true);
 		refreshPropertiesRows(getRowParams(), true);
 
 		calculateVector.setText(p.mode.name);

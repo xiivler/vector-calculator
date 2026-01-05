@@ -17,7 +17,7 @@ public class UndoManager {
             VectorCalculator.saveMidairs();
         } catch (Exception ex) {}
         // Capture current selected cells
-        Properties p = Properties.getInstance();
+        //Properties p = Properties.getInstance();
         updateSelectionState();
         Properties snapshot = new Properties();
         if (!undoStack.isEmpty() && Properties.getInstance().equals(undoStack.peek())) return; //don't save state if nothing has changed
@@ -47,6 +47,7 @@ public class UndoManager {
         //if (!undoStack.isEmpty())
         //    updateSelectionState(undoStack.peek());
         Properties p = Properties.getInstance();
+        p.lastEditTab = VectorCalculator.tabbedPane.getSelectedIndex();
         p.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
         p.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
         p.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
@@ -54,6 +55,7 @@ public class UndoManager {
     }
 
     public static synchronized void undo() {
+        System.out.println(Properties.p_saved.file);
         if (!canUndo()) return;
         // Save current state to redo
         Properties current = new Properties();
@@ -61,7 +63,7 @@ public class UndoManager {
         System.out.println(current.genPropertiesSelectedRow);
         
 
-        undoStack.pop();
+        Properties recent = undoStack.pop();
         Properties prev = undoStack.peek();
         int currentTab = current.currentTab;
         int genPropertiesSelectedRow = current.genPropertiesSelectedRow;
@@ -69,13 +71,14 @@ public class UndoManager {
         int movementSelectedRow = current.movementSelectedRow;
         int movementSelectedCol = current.movementSelectedCol;
         VectorCalculator.loadProperties(prev, true);
+        System.out.println("Switching to tab " + recent.currentTab);
+        VectorCalculator.tabbedPane.setSelectedIndex(recent.currentTab);
         if (genPropertiesSelectedRow >= 0 && genPropertiesSelectedCol >= 0 && genPropertiesSelectedRow < VectorCalculator.genPropertiesTable.getRowCount() && genPropertiesSelectedCol < VectorCalculator.genPropertiesTable.getColumnCount()) {
             VectorCalculator.genPropertiesTable.changeSelection(genPropertiesSelectedRow, genPropertiesSelectedCol, false, false);
         }
         if (movementSelectedRow >= 0 && movementSelectedCol >= 0 && movementSelectedRow < VectorCalculator.movementTable.getRowCount() && movementSelectedCol < VectorCalculator.movementTable.getColumnCount()) {
             VectorCalculator.movementTable.changeSelection(movementSelectedRow, movementSelectedCol, false, false);
         }
-        VectorCalculator.tabbedPane.setSelectedIndex(currentTab);
         System.out.println("Now it is " + Properties.getInstance().genPropertiesSelectedRow);
         // restore into live properties
         //Properties.copyAttributes(prev, Properties.getInstance());
@@ -94,7 +97,7 @@ public class UndoManager {
         // current.movementSelectedRow = prev.movementSelectedRow;
         // current.movementSelectedCol = prev.movementSelectedCol;
         // System.out.println(prev.genPropertiesSelectedRow);
-        redoStack.push(current);
+        redoStack.push(recent);
         if (MainJMenuBar.instance != null) MainJMenuBar.instance.updateUndoRedoItems();
         System.out.println("Undo size: " + undoStack.size());
         System.out.println("Redo size: " + redoStack.size());
@@ -104,10 +107,13 @@ public class UndoManager {
         if (!canRedo()) return;
         Properties current = new Properties();
         Properties.copyAttributes(Properties.getInstance(), current);
-        undoStack.push(current);
+        //undoStack.push(current);
 
         //Properties next = redoStack.pop();
         VectorCalculator.loadProperties(redoStack.pop(), true);
+        Properties snapshot = new Properties();
+        Properties.copyAttributes(Properties.getInstance(), snapshot);
+        undoStack.push(snapshot);
         //Properties.copyAttributes(next, Properties.getInstance());
         // boolean oldLoading = VectorCalculator.loading;
         // VectorCalculator.loading = true;

@@ -162,7 +162,7 @@ public class MainJMenuBar extends JMenuBar {
 		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcut));
 		save.addActionListener(e -> {
 			try {
-				if (p.file == null) {
+				if (Properties.p_saved.file == null) {
                     File file = saveAsDialog();
                     if (file != null && (!file.exists() || overwrite(file))) {
                         p.file = file;
@@ -170,7 +170,7 @@ public class MainJMenuBar extends JMenuBar {
                     }
                 }
                 else {
-                    VectorCalculator.saveProperties(p.file, true);
+                    VectorCalculator.saveProperties(Properties.p_saved.file, true);
                 }
 			} finally {
 				VectorCalculator.cellsEditable = true;
