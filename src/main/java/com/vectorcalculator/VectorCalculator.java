@@ -1478,7 +1478,7 @@ public class VectorCalculator extends JPanel {
 						// p.initialFrames = solver.preset[0][1];
 						// initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						// VectorCalculator.addPreset(solver.preset);
-						solver.test(solver.bestDurations,true);
+						solver.test(solver.bestDurations, true, solver.hasRCV);
 					}
 					else {
 						solver = new Solver();

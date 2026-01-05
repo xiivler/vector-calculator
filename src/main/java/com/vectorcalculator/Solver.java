@@ -46,6 +46,7 @@ public class Solver {
     double[] y_disps;
 
     double[][] info;
+    double firstFrameVelocityAngle;
 
     int[][] ctTypes;
     double[][] diveDecels;
@@ -322,17 +323,8 @@ public class Solver {
 
         //if the movement is an rcv and we are solving for initial angle, figure out what initial angle should be used
         if (hasRCV && p.solveForInitialAngle) {
-            double rcvFirstFrameVelocityAngle;
-            System.out.println(info[0][5]);
-            System.out.println(info[1][5]);
-            if (p.xAxisZeroDegrees) {
-                rcvFirstFrameVelocityAngle = Math.toDegrees(Math.atan2(info[0][5], info[0][3]));
-            }
-            else {
-                rcvFirstFrameVelocityAngle = Math.toDegrees(Math.atan2(info[0][3], info[0][5]));
-            }
-            p.initialAngle += p.initialAngle - rcvFirstFrameVelocityAngle;
-            System.out.println(rcvFirstFrameVelocityAngle);
+            p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
+            System.out.println(firstFrameVelocityAngle);
         }
         initialMaximizer = VectorCalculator.getMaximizer();         
         calcFrameByFrame(initialMaximizer);
@@ -443,13 +435,13 @@ public class Solver {
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
         bestDurations = test(durations, delta, 0, p.y0).intArray;
-        bestDisp = test(bestDurations, true);
+        bestDisp = test(bestDurations, true, false);
         //System.out.println(test(best.intArray));
 
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
             testDurations = bestResults.get(i).intArray;
-            double testDisp = test(testDurations, true);
+            double testDisp = test(testDurations, true, false);
             if (testDisp > bestDisp) {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
@@ -457,7 +449,7 @@ public class Solver {
             //System.out.println("Best Results " + i + ": " + testDisp);
             //System.out.println(Arrays.toString(testDurations));
         }
-        test(bestDurations, true);
+        test(bestDurations, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
@@ -507,8 +499,6 @@ public class Solver {
         // System.out.println("Rainbow Spin Index: " + rainbowSpinIndex);
         // System.out.println("Homing MCCT Index: " + homingMCCTIndex);
 
-        info = null;
-
         //calculate efficiencies from every frame of the jump
         y_vels = new double[currentMotionLastFrame + 1];
         efficiencies = new double[currentMotionLastFrame + 1];
@@ -533,7 +523,10 @@ public class Solver {
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame(); //seems inefficient because not all these values are needed
-			for (int i = 0; i < info.length; i++, row++) {
+			if (index == 0 && info.length > 0) {
+                firstFrameVelocityAngle = Math.toDegrees(p.xAxisZeroDegrees ? Math.atan2(info[0][5], info[0][3]) : Math.atan2(info[0][3], info[0][5]));
+            }
+            for (int i = 0; i < info.length; i++, row++) {
                 y_vels[row] = info[i][4];
                 //y_heights[row] = info[i][1];
 				if (info[i][4] < 0) { //how efficient the jump is
@@ -703,7 +696,7 @@ public class Solver {
             
             int[] testDurations = durations.clone();
             testDurations[index] = durations[index] + test_delta;
-            DoubleIntArray result = new DoubleIntArray(test(testDurations, false), testDurations);
+            DoubleIntArray result = new DoubleIntArray(test(testDurations, false, false), testDurations);
             //System.out.println(Arrays.toString(testDurations) + ", " + test_y_pos + ", " + result.d);
             double currentBest = bestResults.get(0).d;
             if (result.d > 0) {
@@ -751,7 +744,7 @@ public class Solver {
         } */
     }
 
-    public double test(int[] testDurations, boolean fullAccuracy) {
+    public double test(int[] testDurations, boolean fullAccuracy, boolean adjustInitialAngle) {
         iterations++;
         boolean possible = true;
 
@@ -804,6 +797,14 @@ public class Solver {
                 System.out.println("Not actually possible: " + Arrays.toString(testDurations));
                 return 0.0;
             }
+        }
+        if (adjustInitialAngle) {
+            calcFrameByFrame(maximizer);
+            if (hasRCV && p.solveForInitialAngle) {
+                p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
+                System.out.println(firstFrameVelocityAngle);
+            }
+            return test(testDurations, fullAccuracy, false);
         }
         return disp;
     }
