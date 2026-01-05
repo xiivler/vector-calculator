@@ -12,21 +12,17 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.vectorcalculator.VectorCalculator.Parameter;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"currentTab", "savedInfoTableRows", "savedDataTableRows", "genPropertiesSelectedRow", "genPropertiesSelectedCol", "movementSelectedRow", "movementSelectedCol"})
+@EqualsAndHashCode(exclude = {"currentTab", "savedInfoTableRows", "savedDataTableRows", "selectedParam", "movementSelectedRow", "movementSelectedCol"})
 @XmlRootElement
 public class Properties {
     static Properties p;
     static Properties p_saved;
-
-    @XmlTransient
-    int genPropertiesSelectedRow = -1;
-
-    @XmlTransient
-    int genPropertiesSelectedCol = -1;
 
     @XmlTransient
     int movementSelectedRow = -1;
@@ -228,6 +224,8 @@ public class Properties {
     // static enum LockDurationType {
     //     NONE, FRAMES, VERTICAL_DISPLACEMENT
     // }
+
+    Parameter selectedParam = null;
 
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;

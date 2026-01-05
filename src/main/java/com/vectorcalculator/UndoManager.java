@@ -37,8 +37,8 @@ public class UndoManager {
             return;
         System.out.println("Selection state updated");
         properties.currentTab = Properties.getInstance().currentTab;
-        properties.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
-        properties.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
+        //properties.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
+        //properties.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
         properties.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
         properties.movementSelectedCol = VectorCalculator.movementTable.getSelectedColumn();
     }
@@ -48,8 +48,8 @@ public class UndoManager {
         //    updateSelectionState(undoStack.peek());
         Properties p = Properties.getInstance();
         p.lastEditTab = VectorCalculator.tabbedPane.getSelectedIndex();
-        p.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
-        p.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
+        //p.genPropertiesSelectedRow = VectorCalculator.genPropertiesTable.getSelectedRow();
+        //p.genPropertiesSelectedCol = VectorCalculator.genPropertiesTable.getSelectedColumn();
         p.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
         p.movementSelectedCol = VectorCalculator.movementTable.getSelectedColumn();
     }
@@ -60,26 +60,24 @@ public class UndoManager {
         // Save current state to redo
         Properties current = new Properties();
         Properties.copyAttributes(Properties.getInstance(), current);
-        System.out.println(current.genPropertiesSelectedRow);
+        //System.out.println(current.genPropertiesSelectedRow);
         
 
         Properties recent = undoStack.pop();
         Properties prev = undoStack.peek();
-        int currentTab = current.currentTab;
-        int genPropertiesSelectedRow = current.genPropertiesSelectedRow;
-        int genPropertiesSelectedCol = current.genPropertiesSelectedCol;
         int movementSelectedRow = current.movementSelectedRow;
         int movementSelectedCol = current.movementSelectedCol;
         VectorCalculator.loadProperties(prev, true);
         System.out.println("Switching to tab " + recent.currentTab);
         VectorCalculator.tabbedPane.setSelectedIndex(recent.currentTab);
-        if (genPropertiesSelectedRow >= 0 && genPropertiesSelectedCol >= 0 && genPropertiesSelectedRow < VectorCalculator.genPropertiesTable.getRowCount() && genPropertiesSelectedCol < VectorCalculator.genPropertiesTable.getColumnCount()) {
-            VectorCalculator.genPropertiesTable.changeSelection(genPropertiesSelectedRow, genPropertiesSelectedCol, false, false);
-        }
+        // if (genPropertiesSelectedRow >= 0 && genPropertiesSelectedCol >= 0 && genPropertiesSelectedRow < VectorCalculator.genPropertiesTable.getRowCount() && genPropertiesSelectedCol < VectorCalculator.genPropertiesTable.getColumnCount()) {
+        //     VectorCalculator.genPropertiesTable.changeSelection(genPropertiesSelectedRow, genPropertiesSelectedCol, false, false);
+        // }
         if (movementSelectedRow >= 0 && movementSelectedCol >= 0 && movementSelectedRow < VectorCalculator.movementTable.getRowCount() && movementSelectedCol < VectorCalculator.movementTable.getColumnCount()) {
             VectorCalculator.movementTable.changeSelection(movementSelectedRow, movementSelectedCol, false, false);
         }
-        System.out.println("Now it is " + Properties.getInstance().genPropertiesSelectedRow);
+        VectorCalculator.selectParamRow(current.selectedParam);
+        //System.out.println("Now it is " + Properties.getInstance().genPropertiesSelectedRow);
         // restore into live properties
         //Properties.copyAttributes(prev, Properties.getInstance());
         // prevent listeners from recording this programmatic restore

@@ -448,6 +448,8 @@ public class VectorCalculator extends JPanel {
 
 	//sets a property value based on the display value in the table
 	static void setProperty(Parameter param, Object value) {
+		if (param == null)
+			return;
 		if (editedSinceCalculate) {
 			p.savedDataTableRows = null;
 			p.savedInfoTableRows = null;
@@ -1205,12 +1207,13 @@ public class VectorCalculator extends JPanel {
 
 		// Restore selected cells after UI updates
 		// SwingUtilities.invokeLater(() -> {
-			if (p.genPropertiesSelectedRow >= 0 && p.genPropertiesSelectedCol >= 0 && p.genPropertiesSelectedRow < genPropertiesTable.getRowCount() && p.genPropertiesSelectedCol < genPropertiesTable.getColumnCount()) {
-				genPropertiesTable.changeSelection(p.genPropertiesSelectedRow, p.genPropertiesSelectedCol, false, false);
-			}
-			if (p.movementSelectedRow >= 0 && p.movementSelectedCol >= 0 && p.movementSelectedRow < movementTable.getRowCount() && p.movementSelectedCol < movementTable.getColumnCount()) {
-				movementTable.changeSelection(p.movementSelectedRow, p.movementSelectedCol, false, false);
-			}
+		//if (p.genPropertiesSelectedRow >= 0 && p.genPropertiesSelectedCol >= 0 && p.genPropertiesSelectedRow < genPropertiesTable.getRowCount() && p.genPropertiesSelectedCol < genPropertiesTable.getColumnCount()) {
+		//	genPropertiesTable.changeSelection(p.genPropertiesSelectedRow, p.genPropertiesSelectedCol, false, false);
+		//}
+		selectParamRow(p.selectedParam);
+		if (p.movementSelectedRow >= 0 && p.movementSelectedCol >= 0 && p.movementSelectedRow < movementTable.getRowCount() && p.movementSelectedCol < movementTable.getColumnCount()) {
+			movementTable.changeSelection(p.movementSelectedRow, p.movementSelectedCol, false, false);
+		}
 		// });
 
 		loading = false;
@@ -1618,6 +1621,20 @@ public class VectorCalculator extends JPanel {
 		return false;
 	}
 
+	public static void selectParamRow(Parameter param) {
+		System.out.println(param);
+		if (param == null) {
+			genPropertiesTable.clearSelection();
+			return;
+		}
+		int index = rowParams.indexOf(param);
+		// p.genPropertiesSelectedCol = 1;
+		// p.genPropertiesSelectedRow = index;
+		if (index >= 0)
+			SwingUtilities.invokeLater(() -> {
+				genPropertiesTable.changeSelection(index, 1, false, false);});
+	}
+
 	public static void main(String[] args) {
 		try {
 			jarParentFolder = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
@@ -1807,6 +1824,9 @@ public class VectorCalculator extends JPanel {
 								public void actionPerformed(ActionEvent e) {
 									setProperty(Parameter.initial_coordinates, initial_CoordinateWindow.getCoordinates());
 									initial_CoordinateWindow.close();
+									//p.genPropertiesSelectedCol = 1;
+									//p.genPropertiesSelectedRow = rowParams.indexOf(Parameter.initial_coordinates);
+									p.selectedParam = Parameter.initial_coordinates;
 									UndoManager.recordState();
 									checkIfSaved(true);
 								}
@@ -1821,6 +1841,9 @@ public class VectorCalculator extends JPanel {
 								public void actionPerformed(ActionEvent e) {
 									setProperty(Parameter.target_coordinates, target_CoordinateWindow.getCoordinates());
 									target_CoordinateWindow.close();
+									//p.genPropertiesSelectedCol = 1;
+									//p.genPropertiesSelectedRow = rowParams.indexOf(Parameter.target_coordinates);
+									p.selectedParam = Parameter.initial_coordinates;
 									UndoManager.recordState();
 									checkIfSaved(true);
 								}
@@ -1841,18 +1864,23 @@ public class VectorCalculator extends JPanel {
 				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 
 				int row = e.getFirstRow();
+				int col = e.getColumn();
 
-				if (row >= genPropertiesModel.getRowCount()) {
+				if (row >= genPropertiesModel.getRowCount() || row < 0 || col != 1) {
 					return;
 				}
 
 				if (!settingPropertyRow) {
+					Parameter param = rowParams.get(row);
 					setProperty(row);
 					refreshPropertiesRows(getRowParams(), false);
 
 					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 
 					checkIfSaved(true);
+
+					selectParamRow(param);
+					p.selectedParam = param;
 
 					// record undo state for user edits
 					if (initialized && !loading) {
