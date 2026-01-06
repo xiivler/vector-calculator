@@ -48,7 +48,7 @@ public class DiveSolver {
             boolean add = true;
             int delta = 0;
 
-            System.out.println("Solving for first dive");
+            Debug.println("Solving for first dive");
 
             //test the given dive duration, then 1 more, than 1 less, than 2 more, then 2 less, etc. until a possible dive is found
             boolean found = false;
@@ -68,7 +68,7 @@ public class DiveSolver {
                     return false;
                 }
                 int testFirstDiveDuration = firstDiveDuration + delta;
-                System.out.println("Testing " + testFirstDiveDuration);
+                Debug.println("Testing " + testFirstDiveDuration);
                 if (testFirstDiveDuration <= 10 || testFirstDiveDuration >= 40)
                     continue;
                 midairs[firstDiveIndex][1] = testFirstDiveDuration;
@@ -79,8 +79,8 @@ public class DiveSolver {
 
         if (solveSecondDive) {
             VectorMaximizer maximizer = VectorCalculator.getMaximizer();
-            System.out.println(p.getUpwarpMinusError());
-            System.out.println(getFinalYPos(maximizer));
+            Debug.println(p.getUpwarpMinusError());
+            Debug.println(getFinalYPos(maximizer));
             while (getFinalYPos(maximizer) + p.getUpwarpMinusError() > p.y1 - Solver.ERROR) {
                 midairs[secondDiveIndex][1]++;
                 maximizer.movementFrames.set(maximizer.movementFrames.size() - 1, midairs[secondDiveIndex][1]);

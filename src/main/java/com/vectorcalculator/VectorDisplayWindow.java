@@ -371,7 +371,7 @@ public class VectorDisplayWindow {
 			}
 			else if (motion.movement.movementType.equals("Homing Triple Throw") && motion.frames >= 24 && simpleMotions[index + 1].frames >= 6) { //home later
 				ArrayList<Integer> inputs = motion.movement.inputs1;
-				System.out.println("Wah");
+				Debug.println("Wah");
 				inputs.clear();
 				inputs.add(Inputs.MU);
 				for (int i = 0; i < 8; i++) {
@@ -412,7 +412,7 @@ public class VectorDisplayWindow {
 						if (y < p.groundHeightFirstGP) {
 							y = p.groundHeightFirstGP;
 							rowContents[1] = "(Hit Ground)";
-							//System.out.println("foo1");
+							//Debug.println("foo1");
 						}
 					}
 					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce")) {

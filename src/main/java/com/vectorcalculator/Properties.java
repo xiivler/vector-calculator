@@ -342,10 +342,10 @@ public class Properties {
             if (!defaults)
                 p_saved = p_loaded;
             return p_loaded;
-            //System.out.println(p.x0);
+            //Debug.println(p.x0);
         }
         catch (Exception ex) {
-            System.out.println(ex);
+            Debug.println(ex);
             Debug.println("XML Load Failed");
             return null;
         }

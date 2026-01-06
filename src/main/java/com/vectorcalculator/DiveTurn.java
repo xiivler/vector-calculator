@@ -308,11 +308,11 @@ public class DiveTurn extends SimpleMotion {
 			double diffYFootCappyCatch = footY - cappyCatchY;
 			double footCappyCatchAngle = Math.atan2(diffYFootCappyCatch, hDistToCappy);
 			if (distBodyCappy < 150 || distHeadCappy < 140 || (diffYFootCappyCatch < 70 && footCappyCatchAngle >= Math.toRadians(20))) {
-				//System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+				//Debug.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
 				return i + 1;
 			}
 			// if (i == frames - 1 && Math.toDegrees(footCappyCatchAngle) > -5) {
-			// 	System.out.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
+			// 	Debug.printf("%d %.3f %.3f %.3f %.3f\n", i + 1, distBodyCappy, distHeadCappy, diffYFootCappyCatch, Math.toDegrees(footCappyCatchAngle));
 			// }
 		}
 		return -1; //won't bounce

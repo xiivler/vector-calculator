@@ -24,12 +24,12 @@ public class Sandbox {
     
     public static void main(String[] args) {
         //test();
-        //System.out.println(basePossible[30][26]);
-        System.out.println(Double.parseDouble(".5"));
+        //Debug.println(basePossible[30][26]);
+        Debug.println(Double.parseDouble(".5"));
     }
 
     public static void test() {
-        System.out.println("Started");
+        Debug.println("Started");
         VectorCalculator.main(null);
         int[][] preset = VectorCalculator.getPreset("Spinless");
         
@@ -43,7 +43,7 @@ public class Sandbox {
                     possible[i][j] = -1;
                     continue;
                 }
-                    //System.out.println(i + ", " + j);
+                    //Debug.println(i + ", " + j);
                     Properties.p.initialFrames = 73;
                     preset[0][1] = i;
                     preset[1][1] = j;
@@ -60,40 +60,40 @@ public class Sandbox {
                     if (maximizer != null) {
                         possible[i][j] = maximizer.isDiveCapBouncePossible(-1, true, true, true, true, true);
                         if (i < 40 && possible[i][j] != basePossible[i][j]) {
-                            System.out.println("Difference at (" + i + ", " + j + "): " + possible[i][j] + " vs " + basePossible[i][j]);
+                            Debug.println("Difference at (" + i + ", " + j + "): " + possible[i][j] + " vs " + basePossible[i][j]);
                         }
                         firstFrameDecels[i][j] = maximizer.firstFrameDecel;
-                        //System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, true) + " " + maximizer.ctType + " " + maximizer.firstFrameDecel);
-                        //System.out.println("Angle: " + Properties.p.diveCapBounceAngle);
-                        //System.out.println("Type: " + maximizer.ctType);
+                        //Debug.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, true) + " " + maximizer.ctType + " " + maximizer.firstFrameDecel);
+                        //Debug.println("Angle: " + Properties.p.diveCapBounceAngle);
+                        //Debug.println("Type: " + maximizer.ctType);
                         //VectorDisplayWindow.generateData(maximizer.getMotions(), maximizer.getInitialAngle(), maximizer.getTargetAngle());
                         //VectorDisplayWindow.display();
                         //((DiveTurn) maximizer.getMotions()[maximizer.preCapBounceDiveIndex]).getCapBounceFrame(((ComplexVector) maximizer.getMotions()[maximizer.variableCapThrow1Index]).getCappyPosition(0));
                     }
                 //}
                 // catch (Exception ex) {
-                //     System.out.println("Exception on (" + i + ", " + j + ")");
-                //     System.out.println(ex);
+                //     Debug.println("Exception on (" + i + ", " + j + ")");
+                //     Debug.println(ex);
                 // }
             }
         }
-        System.out.println("Done");
+        Debug.println("Done");
        /*  System.out.print("{");
         for (int i = 0; i < 40; i++) {
             String end = ", ";
             if (i == 39) {
                 end = "}";
             }
-            System.out.println(Arrays.toString(possible[i]).replace('[','{').replace(']','}') + end);
+            Debug.println(Arrays.toString(possible[i]).replace('[','{').replace(']','}') + end);
         }
-        System.out.println();
+        Debug.println();
         System.out.print("{");
         for (int i = 0; i < 40; i++) {
             String end = ", ";
             if (i == 39) {
                 end = "}";
             }
-            System.out.println(Arrays.toString(firstFrameDecels[i]).replace('[','{').replace(']','}') + end);
+            Debug.println(Arrays.toString(firstFrameDecels[i]).replace('[','{').replace(']','}') + end);
         } */
        
          
@@ -103,7 +103,7 @@ public class Sandbox {
         //  VectorMaximizer maximizer = VectorCalculator.getMaximizer();
         //  //maximizer.neverDiveTurn = true;
         //  maximizer.maximize();
-        //  System.out.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
+        //  Debug.println(preset[0][1] + " " + preset[1][1] + " " + maximizer.isDiveCapBouncePossible(true, true, true, false) + " " + maximizer.ctType);
         //  VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
         //  VectorDisplayWindow.display();
     }
@@ -130,7 +130,7 @@ public class Sandbox {
             if (i == arr.length - 1) {
                 end = "}";
             }
-            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+            Debug.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
         }
     }
 
@@ -141,7 +141,7 @@ public class Sandbox {
             if (i == arr.length - 1) {
                 end = "}";
             }
-            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+            Debug.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
         }
     }
 
@@ -152,7 +152,7 @@ public class Sandbox {
             if (i == arr.length - 1) {
                 end = "}";
             }
-            System.out.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
+            Debug.println(Arrays.toString(arr[i]).replace('[','{').replace(']','}') + end);
         }
     }
 

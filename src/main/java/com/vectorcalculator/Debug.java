@@ -16,6 +16,12 @@ public class Debug {
         }
     }
 
+    public static void printf(String format, Object... args) {
+        if (debug) {
+            System.out.printf(format, args);
+        }
+    }
+
     public static void print(Object o) {
         if (debug) {
             System.out.print(o);

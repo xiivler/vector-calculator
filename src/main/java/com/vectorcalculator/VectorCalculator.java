@@ -15,6 +15,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -228,7 +230,7 @@ public class VectorCalculator extends JPanel {
 		if (p.currentTab != tabbedPane.getSelectedIndex())
 			tabbedPane.setSelectedIndex(p.currentTab);
 		else if (params.equals(rowParams) && !forceRefresh) {
-			//System.out.println("No need to refresh");
+			//Debug.println("No need to refresh");
 			return;
 		}
 		rowParams = params;
@@ -256,9 +258,9 @@ public class VectorCalculator extends JPanel {
 		// for (Parameter p : rowParams) {
 		// 	System.out.print(p + ", ");
 		// }
-		// System.out.println();
+		// Debug.println();
 		Parameter param = rowParams.get(row);
-		//System.out.println(param + ", " + row);
+		//Debug.println(param + ", " + row);
 		genPropertiesTable.setValueAt(param.name, row, 0);
 		genPropertiesTable.setValueAt(PropertyToDisplayValue(param), row, 1);
 		settingPropertyRow = false;
@@ -604,7 +606,7 @@ public class VectorCalculator extends JPanel {
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
 			if (name.equals("Custom") || name.equals("None") && p.mode == Mode.SOLVE) {
-				System.out.println("Should switch");
+				Debug.println("Should switch");
 				setProperty(Parameter.mode, Mode.SOLVE_DIVES.name);
 				
 			}
@@ -825,7 +827,7 @@ public class VectorCalculator extends JPanel {
 			}
 		}
 		/* for (int i = 0; i < p.midairs.length; i++)
-			System.out.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
+			Debug.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
 	}
 
 	static void updateHCTDuration() {
@@ -1039,7 +1041,7 @@ public class VectorCalculator extends JPanel {
 			targetAngle = 90 - targetAngle;
 		if (targetAngle < 0)
 			targetAngle += 360;
-		System.out.println("Target Angle from Coordinates: " + targetAngle);
+		Debug.println("Target Angle from Coordinates: " + targetAngle);
 		return targetAngle;
 	}
 	
@@ -1514,9 +1516,9 @@ public class VectorCalculator extends JPanel {
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						Solver solverSideflip = new Solver();
 						solverSideflip.solve(4);
-						// System.out.println("TJ: " + maximizerTJ.bestDisp);
-						// System.out.println("RC: " + maximizerRC.bestDisp);
-						// System.out.println("SF: " + maximizerSideflip.bestDisp);
+						// Debug.println("TJ: " + maximizerTJ.bestDisp);
+						// Debug.println("RC: " + maximizerRC.bestDisp);
+						// Debug.println("SF: " + maximizerSideflip.bestDisp);
 						if (solverTJ.bestDisp > solverRCV.bestDisp && solverTJ.bestDisp > solverSideflip.bestDisp) {
 							solver = solverTJ;
 							p.initialMovementName = "Triple Jump";
@@ -1547,8 +1549,8 @@ public class VectorCalculator extends JPanel {
 					if (maximizer != null) {
 						//p.diveTurn should be set correctly by the solver
 						maximizer.maximize();
-						//System.out.println(maximizer.variableCapThrow1FallingFrames);
-						//System.out.println(maximizer.fallingFrames);
+						//Debug.println(maximizer.variableCapThrow1FallingFrames);
+						//Debug.println(maximizer.fallingFrames);
 						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, true, solver.ttAllowed != TripleThrow.NO) >= 0;
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
@@ -1558,12 +1560,12 @@ public class VectorCalculator extends JPanel {
 						setPropertiesRow(Parameter.dive_deceleration);
 						//genPropertiesTable.setValueAt(round(p.diveCapBounceAngle, 3), DIVE_CAP_BOUNCE_ANGLE_ROW, 1);
 						//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
-						System.out.println("Possible: " + possible + " " + maximizer.ctType);
+						Debug.println("Possible: " + possible + " " + maximizer.ctType);
 						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
-						//System.out.println("Cappy position: " + );
-						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
+						//Debug.println("Cappy position: " + );
+						//Debug.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
 					if (optimalDistanceMotion) {
 						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
@@ -1588,7 +1590,7 @@ public class VectorCalculator extends JPanel {
 							maximizer.adjustToGivenAngle();
 							setPropertiesRow(Parameter.dive_angle);
 							setPropertiesRow(Parameter.dive_deceleration);
-							System.out.println("Possible: " + possible + " " + maximizer.ctType);
+							Debug.println("Possible: " + possible + " " + maximizer.ctType);
 							VectorDisplayWindow.generateData(maximizer);
 							VectorDisplayWindow.display();
 						}
@@ -1612,9 +1614,9 @@ public class VectorCalculator extends JPanel {
 						p.initialMovementName = "Sideflip";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						VectorMaximizer maximizerSideflip = calculate();
-						System.out.println("TJ: " + maximizerTJ.bestDisp);
-						System.out.println("RC: " + maximizerRC.bestDisp);
-						System.out.println("SF: " + maximizerSideflip.bestDisp);
+						Debug.println("TJ: " + maximizerTJ.bestDisp);
+						Debug.println("RC: " + maximizerRC.bestDisp);
+						Debug.println("SF: " + maximizerSideflip.bestDisp);
 						if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
 							if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
 								maximizer = maximizerTJ;
@@ -1727,7 +1729,7 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void selectParamRow(Parameter param) {
-		System.out.println(param);
+		Debug.println(param);
 		if (param == null) {
 			genPropertiesTable.clearSelection();
 			return;
@@ -1741,14 +1743,17 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void main(String[] args) {
+		File program;
 		try {
-			jarParentFolder = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+			program = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			if (program.isDirectory()) //running from IDE
+				jarParentFolder = ".";
+			else
+				jarParentFolder = program.getParent();
 		}
-		catch (Exception ex) {
+		catch (URISyntaxException e) {
 			jarParentFolder = "~";
 		}
-		//for debugging
-		jarParentFolder = ".";
 		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
 		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
 
@@ -2381,7 +2386,7 @@ public class VectorCalculator extends JPanel {
 		
 		//addPreset(7);
 
-		//System.out.println("Script Type: " + p.scriptType);
+		//Debug.println("Script Type: " + p.scriptType);
 
 		//CREATING THE WINDOW
 		

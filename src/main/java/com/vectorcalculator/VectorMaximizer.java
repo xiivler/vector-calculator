@@ -434,13 +434,13 @@ public class VectorMaximizer {
 					double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame (or two) is a fast turnaround
 					Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
 					double unneededRotation = 0;
-					//System.out.println(fallingFrames);
+					//Debug.println(fallingFrames);
 					if (fallingFrames >= 4) {
 						unneededRotation = Math.toRadians(2.9); //this rotation can all happen during the falling
-						//System.out.println("Whoa");
+						//Debug.println("Whoa");
 					}
 					else {
-						//System.out.println("Whoa No");
+						//Debug.println("Whoa No");
 					}
 					double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) - unneededRotation + minRotation);	
 					if (additionalRotation < 0) {
@@ -759,7 +759,7 @@ public class VectorMaximizer {
 
 		 for (int z = 0; z < frames; z++) {
 			if (Debug.debug) {
-				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
 			}
 		}
 		Debug.println(); 
@@ -823,7 +823,7 @@ public class VectorMaximizer {
 		}
 		 for (int z = 0; z < frames; z++) {
 			if (Debug.debug) {
-				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
 			}
 		}
 		Debug.println(); 
@@ -1182,8 +1182,8 @@ public class VectorMaximizer {
 		//rotating motions to the right angle
 		//adjustToGivenAngle();
 		
-		//System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
-		//System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
+		//Debug.println("Angle 1: " + Math.toDegrees(bestAngle1));
+		//Debug.println("Angle 2: " + Math.toDegrees(bestAngle2));
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
 		return bestDisp;
@@ -1357,7 +1357,7 @@ public class VectorMaximizer {
 			//optimize the first variable cap throw
 			Movement variableCapThrow1 = new Movement(movementNames.get(variableCapThrow1Index), motions[variableCapThrow1Index - 1].finalSpeed);
 			variableCapThrow1Frames = movementFrames.get(variableCapThrow1Index);
-			//System.out.println("frames: " + variableCapThrow1Frames);
+			//Debug.println("frames: " + variableCapThrow1Frames);
 			variableCapThrow1Vector = (ComplexVector) variableCapThrow1.getMotion(variableCapThrow1Frames, variableCapThrow1VectorRight, true);
 			motions[variableCapThrow1Index] = variableCapThrow1Vector;
 			variableCapThrow1Vector.setInitialAngle(motionGroup1FinalAngle);
@@ -1663,8 +1663,8 @@ public class VectorMaximizer {
 				SimpleVector falling = (SimpleVector) motions[variableCapThrow1Index + 1];
 				falling.setInitialAngle(ct.finalAngle);
 				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
-				//System.out.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
-				//System.out.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
+				//Debug.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
+				//Debug.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
 				falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
 				falling.calcDispDispCoordsAngleSpeed();
@@ -1712,7 +1712,7 @@ public class VectorMaximizer {
 		double lowAngle = -Double.MAX_VALUE;
 		double highAngle = -Double.MAX_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
-		//System.out.println("Target CB Frame: " + targetCBFrame);
+		//Debug.println("Target CB Frame: " + targetCBFrame);
 		DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
 		//ComplexVector capThrow = (ComplexVector) motions[variableCapThrow1Index];
 		for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += firstFrameDecelIncrement) {
@@ -1725,7 +1725,7 @@ public class VectorMaximizer {
 			dive.firstFrameDecel = firstFrameDecel;
 			//((DiveTurn) motions[preCapBounceDiveIndex]).endDecel = endDecel;
 			for (int ct = 0; ct < Movement.CT_COUNT; ct++) {
-				// System.out.println("Testing throw type " + ct);
+				// Debug.println("Testing throw type " + ct);
 				if (throwType != -1 && ct != throwType) {
 					continue;
 				}
@@ -1757,7 +1757,7 @@ public class VectorMaximizer {
 					setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
 
 					int cbFrame = getCapBounceFrame(ct);
-					//System.out.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
+					//Debug.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
 					if (cbFrame == targetCBFrame) {
 						if (!found) {
 							found = true;
@@ -1791,7 +1791,7 @@ public class VectorMaximizer {
 				}
 			}
 		}
-		// System.out.println("NO!");
+		// Debug.println("NO!");
 		return -1;
 	}
 
