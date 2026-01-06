@@ -56,13 +56,14 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
-	static final int INFO_ANGLE_TYPE_ROW = 0;
-	static final int FINAL_POSITION_ROW = 1;
-	static final int HORIZONTAL_DISPLACEMENT_ROW = 2;
-	static final int VERTICAL_DISPLACEMENT_ROW = 3;
-	static final int TOTAL_FRAMES_ROW = 4;
-	static final int MADE_JUMP_ROW = 5;
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
+	static final int INITIAL_ANGLE_ROW = 0;
+	static final int TARGET_ANGLE_ROW = 1;
+	static final int FINAL_POSITION_ROW = 2;
+	static final int HORIZONTAL_DISPLACEMENT_ROW = 3;
+	static final int VERTICAL_DISPLACEMENT_ROW = 4;
+	static final int TOTAL_FRAMES_ROW = 5;
+	static final int MADE_JUMP_ROW = 6;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -117,7 +118,7 @@ public class VectorDisplayWindow {
 		infoTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane infoScrollPane = new JScrollPane(infoTable);
-		infoScrollPane.setPreferredSize(new Dimension(500, 135));
+		infoScrollPane.setPreferredSize(new Dimension(500, 158));
 		
 		
 		//DATA TABLE
@@ -317,11 +318,11 @@ public class VectorDisplayWindow {
 		double targetAngleAdjusted = targetAngle;
 		double initialAngleAdjusted = initialAngle;
 		if (p.xAxisZeroDegrees) {
-			targetAngleAdjusted = 90 - targetAngle;
-			initialAngleAdjusted = 90 - initialAngle;
+			targetAngleAdjusted = Math.PI / 2 - targetAngle;
+			initialAngleAdjusted = Math.PI / 2 - initialAngle;
 		}
 		if (p.cameraType == CameraType.ABSOLUTE) {
-			cameraAngle = Math.PI / 2;
+			cameraAngle = p.xAxisZeroDegrees ? Math.PI : Math.PI / 2;
 		}
 		else {
 			if (p.cameraType == CameraType.INITIAL) {
@@ -527,14 +528,8 @@ public class VectorDisplayWindow {
 			dataTableModel.setValueAt(displayString, i, 2);
 		}
 	
-		if (p.targetAngleGiven || p.targetCoordinatesGiven) {
-			infoTableModel.setValueAt("Initial Angle", INFO_ANGLE_TYPE_ROW, 0);
-			infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
-		}
-		else {
-			infoTableModel.setValueAt("Target Angle", INFO_ANGLE_TYPE_ROW, 0);
-			infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), INFO_ANGLE_TYPE_ROW, 1);
-		}
+		infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INITIAL_ANGLE_ROW, 1);
+		infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), TARGET_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
