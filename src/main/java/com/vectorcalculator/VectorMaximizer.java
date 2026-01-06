@@ -1819,6 +1819,7 @@ public class VectorMaximizer {
 		sumYDisps(motions);
 		bestDispX = dispX;
 		bestDispZ = dispZ;
+		bestDisp = Math.sqrt(bestDispX * bestDispX + bestDispZ * bestDispZ);
 		//maximize_variableAngle1();					
 		//calcDisp(bestAngle1);
 		//adjustToGivenAngle();

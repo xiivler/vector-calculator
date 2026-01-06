@@ -453,6 +453,9 @@ public class Solver {
         bestDisp = test(bestDurations, true, false);
         //System.out.println(test(best.intArray));
 
+        System.out.println("Best Results " + 0 + ": " + bestDisp);
+            System.out.println(Arrays.toString(bestDurations));
+
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
             testDurations = bestResults.get(i).intArray;
@@ -461,8 +464,8 @@ public class Solver {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
             }
-            //System.out.println("Best Results " + i + ": " + testDisp);
-            //System.out.println(Arrays.toString(testDurations));
+            System.out.println("Best Results " + i + ": " + testDisp);
+            System.out.println(Arrays.toString(testDurations));
         }
         test(bestDurations, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
 
