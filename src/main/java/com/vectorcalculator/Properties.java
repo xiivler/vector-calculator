@@ -242,6 +242,7 @@ public class Properties {
 	boolean durationFrames = true;
 	int initialFrames = 70;
 	double initialDispY = 0;
+	int durationSearchRange = 4;
 	int framesJump = 10;
 	boolean canMoonwalk = true;
 	int framesMoonwalk = 0;
@@ -261,7 +262,7 @@ public class Properties {
     TripleThrow tripleThrow = TripleThrow.NO;
     int firstCTIndex = 0;
 	boolean onMoon = false;
-	boolean hyperoptimize = true;
+	boolean turnarounds = true;
 	boolean xAxisZeroDegrees = true;
 	CameraType cameraType = CameraType.TARGET;
 	double customCameraAngle = 0;

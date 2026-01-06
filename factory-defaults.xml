@@ -9,7 +9,7 @@
     <durationFrames>true</durationFrames>
     <framesJump>10</framesJump>
     <framesMoonwalk>5</framesMoonwalk>
-    <hyperoptimize>true</hyperoptimize>
+    <turnarounds>true</turnarounds>
     <initialAngle>0.0</initialAngle>
     <initialDispY>0.0</initialDispY>
     <initialFrames>70</initialFrames>

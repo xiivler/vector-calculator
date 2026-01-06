@@ -93,9 +93,10 @@ public class VectorCalculator extends JPanel {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		target_y_position("Target Y Position"),
-		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), hyperoptimize("Hyperoptimize Cap Throws"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
+		duration_search_range("Duration Search Range"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
@@ -182,6 +183,12 @@ public class VectorCalculator extends JPanel {
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
 			params.add(Parameter.upwarp);
+			params.add(null);
+
+			params.add(Parameter.duration_search_range);
+			params.add(null);
+
+			params.add(Parameter.turnarounds);
 
 			if (p.diveCapBounce) {
 				params.add(null);
@@ -269,6 +276,9 @@ public class VectorCalculator extends JPanel {
 	static String PropertyToDisplayValue(Parameter param) {
 		Object value;
 		switch(param) {
+		case duration_search_range:
+			value = p.durationSearchRange;
+			break;
 		case solve_for_initial_angle:
 			value = p.solveForInitialAngle ? "Yes" : "No";
 			break;
@@ -305,8 +315,8 @@ public class VectorCalculator extends JPanel {
 		case gravity:
 			value = p.onMoon ? "Moon" : "Regular";
 			break;
-		case hyperoptimize:
-			value = p.hyperoptimize ? "Yes" : "No";
+		case turnarounds:
+			value = p.turnarounds ? "Yes" : "No";
 			break;
 		case zero_axis:
 			value = p.xAxisZeroDegrees ? "X" : "Z";
@@ -569,6 +579,9 @@ public class VectorCalculator extends JPanel {
 		case initial_displacement:
 			p.initialDispY = parseDoubleWithDefault(value, 0);
 			break;
+		case duration_search_range:
+			p.durationSearchRange = clampInt(parseIntWithDefault(value, 4), 2, 5);
+			break;
 		case jump_button_frames:
 			p.framesJump = clampInt(parseIntWithDefault(value, 1), 1, 10);
 			break;
@@ -628,8 +641,8 @@ public class VectorCalculator extends JPanel {
 		case upwarp:
 			p.upwarp = clampDouble(parseDoubleWithDefault(value, 40), 0, 40);
 			break;
-		case hyperoptimize:
-			p.hyperoptimize = value.toString().equals("Yes");
+		case turnarounds:
+			p.turnarounds = value.toString().equals("Yes");
 			break;
 		case zero_axis:
 			p.xAxisZeroDegrees = value.toString().equals("X");
@@ -890,7 +903,7 @@ public class VectorCalculator extends JPanel {
 	// 	{"First Dive Deceleration", "0"},
 	// 	{"Midairs", "Spinless"},
 	// 	{"Gravity", "Regular"},
-	// 	{"Hyperoptimize Cap Throws", "True"},
+	// 	{"turnarounds Cap Throws", "True"},
 	// 	{"0 Degree Axis", "X"},
 	// 	{"Camera Angle", "Target Angle"}};
 	
@@ -1392,8 +1405,8 @@ public class VectorCalculator extends JPanel {
 		else {
 			genPropertiesTable.setValueAt("Regular", GRAVITY_ROW, 1);
 		}
-		p.hyperoptimize = pl.hyperoptimize;
-		if (p.hyperoptimize) {
+		p.turnarounds = pl.turnarounds;
+		if (p.turnarounds) {
 			genPropertiesTable.setValueAt("Yes", HYPEROPTIMIZE_ROW, 1);
 		}
 		else {
@@ -1507,15 +1520,15 @@ public class VectorCalculator extends JPanel {
 						p.framesJump = 10;
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						Solver solverTJ = new Solver();
-						solverTJ.solve(4);
+						solverTJ.solve(p.durationSearchRange);
 						p.initialMovementName = "Motion Cap Throw RCV";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						Solver solverRCV = new Solver();
-						solverRCV.solve(3);
+						solverRCV.solve(Math.min(p.durationSearchRange, 3));
 						p.initialMovementName = "Sideflip";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						Solver solverSideflip = new Solver();
-						solverSideflip.solve(4);
+						solverSideflip.solve(p.durationSearchRange);
 						// Debug.println("TJ: " + maximizerTJ.bestDisp);
 						// Debug.println("RC: " + maximizerRC.bestDisp);
 						// Debug.println("SF: " + maximizerSideflip.bestDisp);
@@ -1538,7 +1551,7 @@ public class VectorCalculator extends JPanel {
 					}
 					else {
 						solver = new Solver();
-						int delta = p.initialMovementName.contains("RCV") ? 4 : 3;
+						int delta = p.initialMovementName.contains("RCV") ? Math.min(p.durationSearchRange, 3) : p.durationSearchRange;
 						solver.solve(delta);
 					}
 					if (solver.bestDisp == 0) {
@@ -1633,6 +1646,10 @@ public class VectorCalculator extends JPanel {
 					else {
 						maximizer = getMaximizer();
 						maximizer.maximize();
+						if (maximizer.hasError()) {
+							errorMessage.setText(maximizer.error);
+							return;
+						}
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 					}
@@ -1675,6 +1692,8 @@ public class VectorCalculator extends JPanel {
 			maximizer.maximize();
 		maximizer.recalculateDisps();
 		maximizer.adjustToGivenAngle();
+		if (maximizer.hasError())
+			maximizer.bestDisp = 0;
 		return maximizer;
 	}
 
@@ -1794,7 +1813,7 @@ public class VectorCalculator extends JPanel {
 							return dropdown(new String[]{"Yes", "No"});
 					case gravity:
 						return dropdown(new String[]{"Regular", "Moon"});
-					case hyperoptimize:
+					case turnarounds:
 						return dropdown(new String[]{"Yes", "No"});
 					case camera:
 						return dropdown(new String[]{"Initial Angle", "Target Angle", "Absolute", "Custom"});
@@ -2208,7 +2227,7 @@ public class VectorCalculator extends JPanel {
 						p.onMoon = genPropertiesTable.getValueAt(row, 1).equals("Moon");
 					}
 					else if (row == HYPEROPTIMIZE_ROW) {
-						p.hyperoptimize = genPropertiesTable.getValueAt(row, 1).equals("Yes");
+						p.turnarounds = genPropertiesTable.getValueAt(row, 1).equals("Yes");
 					}
 					else if (row == AXIS_ORDER_ROW) {
 						p.xAxisZeroDegrees = genPropertiesTable.getValueAt(row, 1).equals("X");

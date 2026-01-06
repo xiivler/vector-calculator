@@ -459,8 +459,8 @@ public class Solver {
         bestDisp = test(bestDurations, true, false);
         //Debug.println(test(best.intArray));
 
-        // Debug.println("Best Results " + 0 + ": " + bestDisp);
-        //     Debug.println(Arrays.toString(bestDurations));
+        System.out.println("Best Results " + 0 + ": " + bestDisp);
+        System.out.println(Arrays.toString(bestDurations));
 
         System.out.println("Solver: Testing Optimal Duration Candidates");
 
@@ -472,8 +472,8 @@ public class Solver {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
             }
-            // Debug.println("Best Results " + i + ": " + testDisp);
-            // Debug.println(Arrays.toString(testDurations));
+            System.out.println("Best Results " + i + ": " + testDisp);
+            System.out.println(Arrays.toString(testDurations));
         }
         test(bestDurations, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
 
@@ -491,10 +491,10 @@ public class Solver {
         }
         // Debug.println("Delta: " + delta);
         //Debug.println("Max Delta: " + maxDelta);
-        Debug.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
+        System.out.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
         //Debug.println("Durations: " + Arrays.toString(best.intArray) + ", " + bestYDisp);
-        // Debug.println("Iterations: " + iterations);
-        // Debug.println("Inner Calls: " + innerCalls);
+        System.out.println("Iterations: " + iterations);
+        System.out.println("Inner Calls: " + innerCalls);
         // Debug.println("Bad Calls: " + badCalls);
         System.out.println("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
     

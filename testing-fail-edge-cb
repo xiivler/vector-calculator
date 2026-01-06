@@ -38,7 +38,7 @@
     <hctNeutralHoming>true</hctNeutralHoming>
     <hctThrowAngle>60.0</hctThrowAngle>
     <hctType>RELAX</hctType>
-    <hyperoptimize>true</hyperoptimize>
+    <turnarounds>true</turnarounds>
     <initialAndTargetGiven>false</initialAndTargetGiven>
     <initialAngle>90.0</initialAngle>
     <initialAngleGiven>true</initialAngleGiven>
