@@ -60,6 +60,7 @@ public class Solver {
     int homingTTIndex = -1;
     int firstDiveIndex = -1;
     int secondDiveIndex = -1;
+    int finalCapThrowIndex = -1;
     int diveCapBounceIndex = -1;
 
     int iterations = 0;
@@ -156,8 +157,10 @@ public class Solver {
                 diveCapBounceIndex = i + 1;
                 firstDiveIndex = i;
             }
-            else if (i == preset.length - 1 && preset[i][0] == VectorCalculator.DIVE)
+            else if (i == preset.length - 1 && preset[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i + 1;
+                finalCapThrowIndex = i;
+            }
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
 
         //first, fix the preset so that it makes sense with the height of the ground
@@ -184,6 +187,7 @@ public class Solver {
 
         preset[diveCapBounceIndex - 1][1] = Math.min(p.initialFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
+        preset[finalCapThrowIndex - 1][1] = p.initialFrames;
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
 
@@ -246,14 +250,25 @@ public class Solver {
                 iterations++;
                 //System.out.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
                 //System.out.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
-                if (efficiencies[lastFrames[0]] < efficiencies[lastFrames[diveCapBounceIndex]] && p.initialFrames > VectorCalculator.initialMovement.getMinFrames()) {
+                double initialEfficiency = efficiencies[lastFrames[0]];
+                if (p.initialFrames <= VectorCalculator.initialMovement.getMinFrames())
+                    initialEfficiency = Double.MAX_VALUE;
+                double diveCapBounceEfficiency = efficiencies[lastFrames[diveCapBounceIndex]];
+                double finalCapThrowEfficiency = efficiencies[lastFrames[finalCapThrowIndex]];
+                if (initialEfficiency < diveCapBounceEfficiency && initialEfficiency < finalCapThrowEfficiency) {
                     p.initialFrames--;
                     lastFrames[0]--;
                 }
-                else {
+                else if (diveCapBounceEfficiency < initialEfficiency && diveCapBounceEfficiency < finalCapThrowEfficiency) {
                     preset[diveCapBounceIndex - 1][1]--;
                     lastFrames[diveCapBounceIndex]--;
                     if (preset[diveCapBounceIndex - 1][1] < 1)
+                        return false;
+                }
+                else {
+                    preset[finalCapThrowIndex - 1][1]--;
+                    lastFrames[finalCapThrowIndex]--;
+                    if (preset[finalCapThrowIndex - 1][1] < 8)
                         return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
