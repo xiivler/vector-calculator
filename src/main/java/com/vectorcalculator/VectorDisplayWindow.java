@@ -322,7 +322,7 @@ public class VectorDisplayWindow {
 			initialAngleAdjusted = Math.PI / 2 - initialAngle;
 		}
 		if (p.cameraType == CameraType.ABSOLUTE) {
-			cameraAngle = p.xAxisZeroDegrees ? Math.PI : Math.PI / 2;
+			cameraAngle = Math.PI;
 		}
 		else {
 			if (p.cameraType == CameraType.INITIAL) {

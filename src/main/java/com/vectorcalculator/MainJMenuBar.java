@@ -299,7 +299,7 @@ public class MainJMenuBar extends JMenuBar {
         resetToDefaults = fileJMenu.add("Reset to User Defaults");
 		resetToDefaults.addActionListener(e -> {
 			try {
-				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+				VectorCalculator.loadUserDefaults();
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}
@@ -308,7 +308,7 @@ public class MainJMenuBar extends JMenuBar {
         resetToFactory = fileJMenu.add("Reset to Factory Defaults");
 		resetToFactory.addActionListener(e -> {
 			try {
-				VectorCalculator.loadProperties(VectorCalculator.factoryDefaults, true);
+				VectorCalculator.loadProperties(new Properties(), false);
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}

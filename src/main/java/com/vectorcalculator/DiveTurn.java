@@ -49,8 +49,11 @@ public class DiveTurn extends SimpleMotion {
 		dispForward = 0;
 		dispSideways = 0;
 		double forwardVelocity = 20;
+		double forwardVelocityCap = 20;
 		double sidewaysVelocity = 0;
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
+		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);
+		double normalizer = forwardVelocityCap / uncappedVelocity;
 
 		//cap at 20 u/fr speed
 		//double multiplier
@@ -58,6 +61,7 @@ public class DiveTurn extends SimpleMotion {
 		int endDecelFrames = (int) (endDecel + .999);
 
 		double velocityAngle = 0;
+
 		for (int i = 0; i < frames; i++) {
 			if (i == 0 && firstFrameDecel > 0) {
 				forwardVelocity -= firstFrameDecel;
@@ -65,6 +69,10 @@ public class DiveTurn extends SimpleMotion {
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+				if (firstFrameDecel == 0) {
+					forwardVelocity *= normalizer;
+					sidewaysVelocity *= normalizer;
+				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {
@@ -129,8 +137,12 @@ public class DiveTurn extends SimpleMotion {
 		double sinInitialAngle = Math.sin(initialAngle);
 		double cosNormalAngle = Math.cos(normalAngle);
 		double sinNormalAngle = Math.sin(normalAngle);
-		double forwardVelocity = initialForwardVelocity;
+		double forwardVelocity = 20;
+		double forwardVelocityCap = 20;
 		double sidewaysVelocity = 0;
+		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
+		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);
+		double normalizer = forwardVelocityCap / uncappedVelocity;
 		double zVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
@@ -141,7 +153,6 @@ public class DiveTurn extends SimpleMotion {
 		else
 			holdingAngleAdjusted = initialAngle + holdingAngle;
 		
-		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double velocityAngle = 0;
 
 		double deltaVelocityAngle = Math.atan(sidewaysAccel / (initialForwardVelocity - firstFrameDecel));
@@ -155,6 +166,10 @@ public class DiveTurn extends SimpleMotion {
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+				if (firstFrameDecel == 0) {
+					forwardVelocity *= normalizer;
+					sidewaysVelocity *= normalizer;
+				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {
@@ -233,13 +248,16 @@ public class DiveTurn extends SimpleMotion {
 		double sinInitialAngle = Math.sin(initialAngle);
 		double cosNormalAngle = Math.cos(normalAngle);
 		double sinNormalAngle = Math.sin(normalAngle);
-		double forwardVelocity = initialForwardVelocity;
+		double forwardVelocity = 20;
+		double forwardVelocityCap = 20;
 		double sidewaysVelocity = 0;
+		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
+		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);
+		double normalizer = forwardVelocityCap / uncappedVelocity;
 		double zVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
 
-		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double velocityAngle = 0;
 
 		for (int i = 0; i < frames; i++) {
@@ -250,6 +268,10 @@ public class DiveTurn extends SimpleMotion {
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
+				if (firstFrameDecel == 0) {
+					forwardVelocity *= normalizer;
+					sidewaysVelocity *= normalizer;
+				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {

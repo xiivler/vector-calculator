@@ -63,14 +63,14 @@ import com.vectorcalculator.Properties.CalculateUsing;
 public class VectorCalculator extends JPanel {
 	
 	public static final int WINDOW_WIDTH = 550;
-	public static final int PROPERTIES_TABLE_HEIGHT = 420;
+	public static final int PROPERTIES_TABLE_HEIGHT = 435;
 	public static final int MIDAIR_PANEL_HEIGHT = 260;
 
 	static Properties p = Properties.getInstance();
 	static boolean stop = false;
 	static boolean saved = true;
 	static boolean initialized = false;
-	static boolean editedSinceCalculate = true;
+	//static boolean editedSinceCalculate = true;
 	static boolean loading = false;
 	static boolean cellsEditable = true;
 	static boolean addingPreset = false;
@@ -200,7 +200,7 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.hct_cap_return_frame);
 				}
 			}
-			
+
 			params.add(null);
 			params.add(Parameter.ground_mode);
 			if (p.groundMode == GroundMode.UNIFORM) {
@@ -468,10 +468,10 @@ public class VectorCalculator extends JPanel {
 	static void setProperty(Parameter param, Object value) {
 		if (param == null)
 			return;
-		if (editedSinceCalculate) {
-			p.savedDataTableRows = null;
-			p.savedInfoTableRows = null;
-		}
+		// if (editedSinceCalculate) {
+		// 	p.savedDataTableRows = null;
+		// 	p.savedInfoTableRows = null;
+		// }
 		switch(param) {
 		case mode:
 			Mode oldMode = p.mode;
@@ -1215,9 +1215,19 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void saveProperties(File file, boolean updateCurrentFile, boolean defaults) {
+		Properties.p_toSave = new Properties();
+		Properties.copyAttributes(p, Properties.p_toSave);
+		if (Properties.p_calculated == null || !Properties.p_calculated.equals(p) || defaults) {
+			Properties.p_toSave.savedDataTableRows = null;
+			Properties.p_toSave.savedInfoTableRows = null;
+		}
+		
 		boolean saveSuccess = Properties.save(file, defaults);
 		if (!saveSuccess) {
-			JOptionPane.showMessageDialog(f, "Failed to save the file.", "Save Error", JOptionPane.ERROR_MESSAGE);
+			if (defaults)
+				JOptionPane.showMessageDialog(f, "Failed to save user defaults.", "Save Error", JOptionPane.ERROR_MESSAGE);
+			else
+				JOptionPane.showMessageDialog(f, "Failed to save the file.", "Save Error", JOptionPane.ERROR_MESSAGE);
 			errorMessage.setText("Error: Save failed");
 		}
 		if (updateCurrentFile) {
@@ -1238,7 +1248,7 @@ public class VectorCalculator extends JPanel {
 		}
 		else if (initialized && saved) {
 			saved = false;
-			if (!loading && dispose) editedSinceCalculate = true;
+			//if (!loading && dispose) editedSinceCalculate = true;
 			f.setTitle("*" + projectName);
 		}
 	}
@@ -1275,11 +1285,20 @@ public class VectorCalculator extends JPanel {
 		loading = false;
 	}
 
+	public static void loadUserDefaults() {
+		try {
+			loadProperties(userDefaults, true);
+		}
+		catch (Exception ex) {
+			loadProperties(new Properties(), false);
+		}
+	}
+
 	public static void loadProperties(File file, boolean defaults) {
 		Properties pl = Properties.load(file, defaults);
 		if (pl == null) {
 			if (defaults) {
-				errorMessage.setText("Error: Defaults could not be loaded");
+				//errorMessage.setText("Error: Defaults could not be loaded");
 			}
 			else {
 				errorMessage.setText("Error: File could not be loaded");
@@ -1291,7 +1310,11 @@ public class VectorCalculator extends JPanel {
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
 
-		if (p.savedInfoTableRows != null) VectorDisplayWindow.display();
+		if (p.savedInfoTableRows != null) {
+			Properties.p_calculated = new Properties();
+			Properties.copyAttributes(p, Properties.p_calculated);
+			VectorDisplayWindow.display();
+		}
 
 		/* p.x0 = pl.x0;
 		p.y0 = pl.y0;
@@ -1405,7 +1428,7 @@ public class VectorCalculator extends JPanel {
 		
 		if (initialized && defaults && !Properties.isSaved()) {
 			saved = false;
-			if (!loading) editedSinceCalculate = true;
+			//if (!loading) editedSinceCalculate = true;
 			f.setTitle("*" + projectName);
 		}
 		else {
@@ -1549,8 +1572,6 @@ public class VectorCalculator extends JPanel {
 						setProperty(Parameter.hct_type, p.hctType.name);
 					}
 					setProperty(Parameter.dive_turn, solver.dtAllowed.displayName); //set back to "Test Both" if that is the setting
-					editedSinceCalculate = false;
-					UndoManager.recordState();
 				}
 				else if (p.mode == Mode.SOLVE_DIVES) {
 					if (p.initialMovementName.equals("Optimal Distance Motion")) {
@@ -1570,14 +1591,12 @@ public class VectorCalculator extends JPanel {
 							System.out.println("Possible: " + possible + " " + maximizer.ctType);
 							VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 							VectorDisplayWindow.display();
-							editedSinceCalculate = false;
 						}
 					}
 					else {
 						errorMessage.setText(diveSolver.error);
 					}
 					Debug.println();
-					UndoManager.recordState();
 				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
@@ -1618,11 +1637,14 @@ public class VectorCalculator extends JPanel {
 					if (maximizer != null) {
 						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
 						VectorDisplayWindow.display();
-						editedSinceCalculate = false;
 					}
 					Debug.println();
-					UndoManager.recordState();
+					
 				}
+				//for all calculate modes
+				Properties.p_calculated = new Properties();
+                Properties.copyAttributes(p, Properties.p_calculated);
+				UndoManager.recordState();
 			}
 		}
 	}
@@ -2405,7 +2427,7 @@ public class VectorCalculator extends JPanel {
 		f.add(nonResize, BorderLayout.CENTER);
 
 		//load the user default properties
-		loadProperties(userDefaults, true);
+		loadUserDefaults();
 		VectorCalculator.file = null; //so we don't save to it
 		// initialize undo history to current state
 		UndoManager.clear();

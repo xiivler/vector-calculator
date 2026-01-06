@@ -21,8 +21,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(exclude = {"currentTab", "savedInfoTableRows", "savedDataTableRows", "selectedParam", "movementSelectedRow", "movementSelectedCol"})
 @XmlRootElement
 public class Properties {
-    static Properties p;
-    static Properties p_saved;
+    static Properties p; //the current properties
+    static Properties p_saved; //properties that are currently saved
+    static Properties p_toSave; //properties that should be saved
+    static Properties p_calculated; //properties present the last time a calculation was run (solve/calculate/etc.)
 
     @XmlTransient
     int movementSelectedRow = -1;
@@ -317,7 +319,7 @@ public class Properties {
             Marshaller m = jxbc.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             //File f = new File("properties.xml");
-            m.marshal(p, file);
+            m.marshal(p_toSave, file);
             if (!defaults) {
                 p_saved = new Properties();
                 Properties.copyAttributes(p, p_saved);
