@@ -1560,7 +1560,7 @@ public class VectorCalculator extends JPanel {
 						//genPropertiesTable.setValueAt(round(p.diveFirstFrameDecel, 3), DIVE_DECEL_ROW, 1);
 						System.out.println("Possible: " + possible + " " + maximizer.ctType);
 						//maximizer.maximize();
-						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
 						//System.out.println("Cappy position: " + );
 						//System.out.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
@@ -1589,7 +1589,7 @@ public class VectorCalculator extends JPanel {
 							setPropertiesRow(Parameter.dive_angle);
 							setPropertiesRow(Parameter.dive_deceleration);
 							System.out.println("Possible: " + possible + " " + maximizer.ctType);
-							VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+							VectorDisplayWindow.generateData(maximizer);
 							VectorDisplayWindow.display();
 						}
 					}
@@ -1635,7 +1635,7 @@ public class VectorCalculator extends JPanel {
 						maximizer.adjustToGivenAngle();
 					}
 					if (maximizer != null) {
-						VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
 					}
 					Debug.println();

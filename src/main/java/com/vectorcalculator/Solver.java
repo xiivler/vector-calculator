@@ -239,7 +239,7 @@ public class Solver {
         presetMaximizer = VectorCalculator.getMaximizer();
         calcFrameByFrame(presetMaximizer);
         final_y_heights = getFinalYHeights(presetMaximizer);
-        System.out.println(Arrays.toString(final_y_heights));
+        //System.out.println(Arrays.toString(final_y_heights));
         if (p.groundTypeSecondGP != GroundType.NONE) {
             int iterations = 0;
             while (final_y_heights[maximizer_secondGPIndex] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
@@ -277,7 +277,7 @@ public class Solver {
 
         System.out.println("Initial End Y Position: " + y);
 
-        //System.out.println(Arrays.toString(final_y_heights));
+        System.out.println(Arrays.toString(final_y_heights));
 
         System.out.println("Initial Durations: " + Arrays.toString(durations));
         System.out.println("Initial Last Frames: " + Arrays.toString(lastFrames));
@@ -363,7 +363,7 @@ public class Solver {
 
         System.out.println("Test Start Durations: " + Arrays.toString(durations));
         System.out.println("Test Start Last Frames: " + Arrays.toString(lastFrames));
-        System.out.println(Arrays.toString(y_vels));
+        //System.out.println(Arrays.toString(y_vels));
 
         //durations = ballparkDurations; //use the old durations still as the basis for testing though
 
@@ -510,10 +510,6 @@ public class Solver {
 
         SimpleMotion[] simpleMotions = maximizer.getMotions();
 
-        double targetAngleAdjusted = maximizer.getTargetAngle();
-        if (p.xAxisZeroDegrees)
-            targetAngleAdjusted = 90 - targetAngleAdjusted;
-
         int row = 0;
 		for (int index = 0; index < simpleMotions.length; index++) {
 			SimpleMotion motion = simpleMotions[index];
@@ -530,7 +526,7 @@ public class Solver {
                 y_vels[row] = info[i][4];
                 //y_heights[row] = info[i][1];
 				if (info[i][4] < 0) { //how efficient the jump is
-					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngleAdjusted);
+					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - maximizer.targetAngle);
 					efficiencies[row] = -1 / ((info[i][4] / speedInTargetDirection) - 1); //ranges from 0 to 1
                     //maybe a more efficient calculation?
 				}
