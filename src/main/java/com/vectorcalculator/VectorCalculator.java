@@ -477,7 +477,7 @@ public class VectorCalculator extends JPanel {
 				if (p.initialAndTargetGiven && oldMode != Mode.SOLVE)
 					setProperty(Parameter.solve_for_initial_angle, "Yes");
 			}
-			else if (p.mode == Mode.SOLVE_CB) {
+			else if (p.mode == Mode.SOLVE_DIVES) {
 				setProperty(Parameter.gravity, "Regular");
 				p.solveForInitialAngle = false;
 			}
@@ -599,15 +599,20 @@ public class VectorCalculator extends JPanel {
 				addPreset(name, false);
 			if (name.equals("Custom") || name.equals("None") && p.mode == Mode.SOLVE) {
 				System.out.println("Should switch");
-				setProperty(Parameter.mode, Mode.SOLVE_CB.name);
+				setProperty(Parameter.mode, Mode.SOLVE_DIVES.name);
 				
 			}
 			break;
 		case triple_throw:
 			TripleThrow oldTripleThrow = p.tripleThrow;
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
+			if (p.tripleThrow != TripleThrow.NO)
+				p.midairs[p.firstCTIndex][0] = TT;
+			else
+				p.midairs[p.firstCTIndex][0] = MCCT;
+			addPreset(p.midairs);
 			if (oldTripleThrow != p.tripleThrow)
-				addPreset(p.midairPreset, false);
+				//addPreset(p.midairPreset, false, true);
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");
@@ -784,17 +789,27 @@ public class VectorCalculator extends JPanel {
 	// static int[][] cbvFirstTT = {{MCCT, 28}, {DIVE, 26}, {CB, 42}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 
 	static void saveMidairs() {
+		if (p.midairPreset.equals("Custom"))
+			p.tripleThrow = TripleThrow.NO;
 		p.midairs = new int[movementModel.getRowCount()][2];
 		p.hct = false;
 		p.diveCapBounce = false;
+		p.firstCTIndex = -1;
 		List<String> types = Arrays.asList(midairMovementNames);
 		for (int i = 0; i < movementModel.getRowCount(); i++) {
 			p.midairs[i][0] = types.indexOf(movementModel.getValueAt(i, 0).toString());
 			p.midairs[i][1] = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
-			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE)
+			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
 				p.diveCapBounce = true;
+				if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == TT) {
+					p.firstCTIndex = i - 2;
+				}
+			}
 			else if (p.midairs[i][0] == HMCCT)
 				p.hct = true;
+			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == TT) {
+				p.tripleThrow = TripleThrow.YES;
+			}
 		}
 		/* for (int i = 0; i < p.midairs.length; i++)
 			System.out.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
@@ -1521,6 +1536,33 @@ public class VectorCalculator extends JPanel {
 					editedSinceCalculate = false;
 					UndoManager.recordState();
 				}
+				else if (p.mode == Mode.SOLVE_DIVES) {
+					if (p.initialMovementName.equals("Optimal Distance Motion")) {
+						errorMessage.setText("Error: Optimal Distance Motion not supported by the Calculate (Solve Dives) mode");
+					}
+					DiveSolver diveSolver = new DiveSolver();
+					if (diveSolver.solve()) {
+						saveMidairs();
+						VectorMaximizer maximizer = getMaximizer();
+						if (maximizer != null) {
+							maximizer.maximize();
+							boolean possible = maximizer.isDiveCapBouncePossible(-1, diveSolver.singleThrowAllowed, false, p.tripleThrow != TripleThrow.YES, true, p.tripleThrow != TripleThrow.NO) >= 0;
+							maximizer.recalculateDisps();
+							maximizer.adjustToGivenAngle();
+							setPropertiesRow(Parameter.dive_angle);
+							setPropertiesRow(Parameter.dive_deceleration);
+							System.out.println("Possible: " + possible + " " + maximizer.ctType);
+							VectorDisplayWindow.generateData(maximizer, maximizer.getInitialAngle(), maximizer.getTargetAngle());
+							VectorDisplayWindow.display();
+							editedSinceCalculate = false;
+						}
+					}
+					else {
+						errorMessage.setText(diveSolver.error);
+					}
+					Debug.println();
+					UndoManager.recordState();
+				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
 					VectorMaximizer maximizer = null;
@@ -1726,7 +1768,7 @@ public class VectorCalculator extends JPanel {
 					case hct_neutral:
 						return dropdown(new String[]{"Yes", "No"});
 					case dive_turn:
-						if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_CB)
+						if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES)
 							return dropdown(new String[]{"Yes", "No", "Test Both"});
 						else
 							return dropdown(new String[]{"Yes", "No"});
@@ -1740,9 +1782,9 @@ public class VectorCalculator extends JPanel {
 						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
 					case mode:
 						if (p.midairPreset.equals("Custom"))
-							return dropdown(new String[]{"Calculate (Solve Cap Bounce)", "Calculate"});
+							return dropdown(new String[]{"Calculate (Solve Dives)", "Calculate"});
 						else
-							return dropdown(new String[]{"Solve", "Calculate (Solve Cap Bounce)", "Calculate"});
+							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate"});
 					default:
 						return super.getCellEditor(row, column);
 				}

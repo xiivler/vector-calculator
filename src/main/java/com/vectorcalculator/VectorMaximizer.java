@@ -1712,6 +1712,7 @@ public class VectorMaximizer {
 		double lowAngle = -Double.MAX_VALUE;
 		double highAngle = -Double.MAX_VALUE;
 		int targetCBFrame = motions[preCapBounceDiveIndex].frames;
+		//System.out.println("Target CB Frame: " + targetCBFrame);
 		DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
 		//ComplexVector capThrow = (ComplexVector) motions[variableCapThrow1Index];
 		for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += firstFrameDecelIncrement) {

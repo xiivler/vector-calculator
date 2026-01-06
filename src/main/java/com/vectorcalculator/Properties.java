@@ -121,7 +121,7 @@ public class Properties {
 	}
 
     static enum Mode {
-        SOLVE("Solve"), SOLVE_CB("Calculate (Solve Cap Bounce)"), CALCULATE("Calculate");
+        SOLVE("Solve"), SOLVE_DIVES("Calculate (Solve Dives)"), CALCULATE("Calculate");
 
         String name;
 
@@ -257,6 +257,7 @@ public class Properties {
     boolean canTripleThrow = true;
     boolean canTestTripleThrow = true; //whether the option Test Both is shown
     TripleThrow tripleThrow = TripleThrow.NO;
+    int firstCTIndex = 0;
 	boolean onMoon = false;
 	boolean hyperoptimize = true;
 	boolean xAxisZeroDegrees = true;
