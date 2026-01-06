@@ -120,26 +120,26 @@ public class VectorCalculator extends JPanel {
 		if (p.currentTab == GENERAL_TAB) {
 			params.add(Parameter.mode);
 			params.add(null);
+
 			params.add(Parameter.initial_coordinates);
 			params.add(Parameter.calculate_using);
 			// Show solve_for_initial_angle only if mode is Solve and initialAndTargetGiven is true
 			if (p.mode == Mode.SOLVE && p.initialAndTargetGiven) {
 				params.add(Parameter.solve_for_initial_angle);
-				if (!p.solveForInitialAngle) {
-					// If solve_for_initial_angle is false, show Initial Angle row
+				if (!p.solveForInitialAngle)
 					params.add(Parameter.initial_angle);
-				}
-				// If true, Initial Angle row is hidden
-			} else if (p.initialAngleGiven) {
-				params.add(Parameter.initial_angle);
 			}
+			else if (p.initialAngleGiven)
+				params.add(Parameter.initial_angle);
+
 			if (p.targetAngleGiven)
 				params.add(Parameter.target_angle);
 			if (p.targetCoordinatesGiven)
 				params.add(Parameter.target_coordinates);
-			if (!p.targetCoordinatesGiven && (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES))
+			else
 				params.add(Parameter.target_y_position);
 			params.add(null);
+
 			params.add(Parameter.initial_movement_category);
 			if (!p.initialMovementCategory.equals("None")) {
 				if (!p.initialMovementCategory.equals("Optimal Distance Motion"))
@@ -159,11 +159,13 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.initial_speed);
 			params.add(Parameter.vector_direction);
 			params.add(null);
+
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
 			params.add(Parameter.upwarp);
 			params.add(null);
+
 			params.add(Parameter.gravity);
 			params.add(Parameter.zero_axis);
 			params.add(Parameter.camera);
@@ -173,10 +175,12 @@ public class VectorCalculator extends JPanel {
 		else if (p.currentTab == MIDAIR_TAB) {
 			params.add(Parameter.mode);
 			params.add(null);
+
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
 			params.add(Parameter.upwarp);
+
 			if (p.diveCapBounce) {
 				params.add(null);
 				params.add(Parameter.dive_angle);
@@ -184,6 +188,7 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.dive_deceleration);
 				params.add(Parameter.dive_turn);
 			}
+
 			if (p.hct) {
 				params.add(null);
 				params.add(Parameter.hct_type);
@@ -195,6 +200,7 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.hct_cap_return_frame);
 				}
 			}
+			
 			params.add(null);
 			params.add(Parameter.ground_mode);
 			if (p.groundMode == GroundMode.UNIFORM) {

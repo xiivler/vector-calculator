@@ -371,6 +371,16 @@ public class VectorDisplayWindow {
 					motion.movement.inputs1.add(Inputs.Y);
 				}
 			}
+			else if (motion.movement.movementType.equals("Homing Triple Throw") && motion.frames >= 24 && simpleMotions[index + 1].frames >= 6) { //home later
+				ArrayList<Integer> inputs = motion.movement.inputs1;
+				System.out.println("Wah");
+				inputs.clear();
+				inputs.add(Inputs.MU);
+				for (int i = 0; i < 8; i++) {
+					inputs.add(Inputs.NONE);
+				}
+				inputs.add(Inputs.MD);
+			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
