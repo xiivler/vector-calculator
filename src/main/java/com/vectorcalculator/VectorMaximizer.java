@@ -1171,12 +1171,12 @@ public class VectorMaximizer {
 		bestAngle1Adjusted = once_bestAngle1Adjusted;
 		bestAngle2Adjusted = once_bestAngle2Adjusted;
 
-		Debug.println("Displacement x, y: " + bestDispZ + ", " + bestDispX);
-		Debug.println("Maximum displacement: " + bestDisp);
-		Debug.println("Angle 1: " + Math.toDegrees(bestAngle1));
-		Debug.println("Angle 2: " + Math.toDegrees(bestAngle2));
-		Debug.println("Angle 1 Adjusted: " + Math.toDegrees(bestAngle1Adjusted));
-		Debug.println("Angle 2 Adjusted: " + Math.toDegrees(bestAngle2Adjusted));
+		System.out.println("Displacement x, y: " + bestDispZ + ", " + bestDispX);
+		System.out.println("Maximum displacement: " + bestDisp);
+		System.out.println("Angle 1: " + Math.toDegrees(bestAngle1));
+		System.out.println("Angle 2: " + Math.toDegrees(bestAngle2));
+		System.out.println("Angle 1 Adjusted: " + Math.toDegrees(bestAngle1Adjusted));
+		System.out.println("Angle 2 Adjusted: " + Math.toDegrees(bestAngle2Adjusted));
 		
 		//adjusting motions to the optimized values
 		if (hasVariableCapThrow1) {
@@ -1226,14 +1226,15 @@ public class VectorMaximizer {
 			else {
 				ctFinalRotation = -variableCapThrowVector.initialAngle + SimpleMotion.NORMAL_ANGLE;
 			}
-			setFinalFallingHoldingAngles(variableCapThrowFallingVectorC, variableAngleAdjusted - ctFinalRotation, Math.abs(variableCapThrowVector.finalAngle - variableAngleAdjusted), movementFrames.get(variableCapThrowIndex + 1));
+			setFinalFallingHoldingAngles(variableCapThrowFallingVectorC, variableAngleAdjusted - ctFinalRotation, booleanToPlusMinus(!vectorRight) * (variableCapThrowVector.finalAngle - variableAngleAdjusted), movementFrames.get(variableCapThrowIndex + 1));
 			//variableCapThrowFallingVectorC.setHoldingAngle(0);
 		}
 		else {
 			SimpleVector variableCapThrowFallingVectorS = (SimpleVector) variableCapThrowFallingVector;
 			variableCapThrowFallingVectorS.setOptimalForwardAccel(false); //not trying to be optimal, simply trying to end up in the right direction
 			variableCapThrowFallingVectorS.setInitialAngle(variableCapThrowVector.finalAngle);
-			variableCapThrowFallingVectorS.setHoldingAngle(Math.abs(variableCapThrowVector.finalAngle - variableAngleAdjusted));
+			//System.out.println(Math.toDegrees(variableCapThrowVector.finalAngle));
+			variableCapThrowFallingVectorS.setHoldingAngle(booleanToPlusMinus(vectorRight) * (variableCapThrowVector.finalAngle - variableAngleAdjusted));
 		}
 		
 		variableCapThrowFallingVector.calcDisp();
@@ -1466,9 +1467,12 @@ public class VectorMaximizer {
 		
 		//adjust the angles so we can see how much displacement has occurred
 		double motionGroup2AdjustedAngle;
+		System.out.println("Motion Group 1 Final Angle: " + Math.toDegrees(motionGroup1FinalAngle));
 		variableAngle1Adjusted = motionGroup1FinalAngle + booleanToPlusMinus(motionGroup2VectorRight) * variableAngle1;
 		motionGroup2AdjustedAngle = variableAngle1Adjusted - booleanToPlusMinus(motionGroup2VectorRight) * motionGroup2Angle;
 		
+		System.out.println("Variable Angle 1 Adjusted: " + Math.toDegrees(variableAngle1Adjusted));
+
 		//if the cap throw is long enough, there's falling afterward
 		if (hasVariableCapThrow1Falling) {
 			double[] fallingDisplacements = calcFallingDisplacements(variableCapThrow1Vector, variableCapThrow1Index, variableAngle1Adjusted, !variableCapThrow1VectorRight, false);
@@ -1533,7 +1537,7 @@ public class VectorMaximizer {
 		variableMovement2Vector.setInitialAngle(initialAngle); 
 		
 		//binary search to find variableAngle2
-		double low = -Math.PI / 16;
+		double low = 0;
 		double high = Math.PI / 4;
 		variableAngle2 = Math.PI / 8;
 		
@@ -1602,7 +1606,8 @@ public class VectorMaximizer {
 				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
 				//Debug.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
 				//Debug.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
-				falling.setHoldingAngle(booleanToPlusMinus(!ct.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
+				//falling.setHoldingAngle(booleanToPlusMinus(!ct.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
+				falling.setHoldingAngle(booleanToPlusMinus(falling.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
 				//falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
 				falling.calcDispDispCoordsAngleSpeed();

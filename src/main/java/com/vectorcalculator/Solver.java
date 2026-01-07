@@ -406,6 +406,7 @@ public class Solver {
                 boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
                 if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, .1, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                     //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
+                    //System.out.println("Possible: " + ctDuration + " " + diveDuration);
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
