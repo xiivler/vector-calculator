@@ -183,8 +183,8 @@ public class Solver {
         Debug.println("Got Maximzer");
 
         int maximizer_initialMovementIndex = -1;
-        for (int i = 0; i < presetMaximizer.movementNames.size(); i++) {
-            if (presetMaximizer.movementNames.get(i).contains("Throw")) {
+        for (int i = 1; i < presetMaximizer.movementNames.size(); i++) {
+            if (Movement.isMidairCapThrow(presetMaximizer.movementNames.get(i))) {
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }
@@ -440,8 +440,8 @@ public class Solver {
         bestDisp = test(bestDurations, true, false);
         //Debug.println(test(best.intArray));
 
-        System.out.println("Best Results " + 0 + ": " + bestDisp);
-        System.out.println(Arrays.toString(bestDurations));
+        Debug.println("Best Results " + 0 + ": " + bestDisp);
+        Debug.println(Arrays.toString(bestDurations));
 
         System.out.println("Solver: Testing Optimal Duration Candidates");
 
@@ -862,8 +862,8 @@ public class Solver {
         SimpleMotion[] motions = maximizer.getMotions();
 
         int maximizer_initialMovementIndex = -1;
-        for (int i = 0; i < motions.length; i++) {
-            if (motions[i].movement.movementType.contains("Throw")) {
+        for (int i = 1; i < motions.length; i++) {
+            if (Movement.isMidairCapThrow(motions[i].movement.movementType)) {
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }

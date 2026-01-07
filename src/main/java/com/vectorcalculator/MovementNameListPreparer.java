@@ -163,8 +163,8 @@ public class MovementNameListPreparer {
 			name = movementModel.getValueAt(i, 0).toString();
 			frames = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
 			
-			if (name.contains("Throw")) {
-				if (oldName.contains("Throw"))
+			if (Movement.isMidairCapThrow(name)) {
+				if (Movement.isMidairCapThrow(oldName))
 					return "Cannot have two throws in immediate succession";
 				else if (oldName.equals("Dive"))
 					return "Cannot throw from a dive";

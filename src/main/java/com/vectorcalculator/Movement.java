@@ -99,6 +99,10 @@ public class Movement {
 	
 	boolean variableJumpFrames = false;
 	boolean variableInitialHorizontalSpeed = true;
+
+	public static boolean isMidairCapThrow(String str) {
+		return str.contains("Throw") && !str.contains("RCV");
+	}
 	
 	//deprecated constructor
 	public Movement(double initialHorizontalSpeed, double vectorAccel) {
