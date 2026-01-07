@@ -1180,15 +1180,12 @@ public class VectorCalculator extends JPanel {
 						maximizer.maximize();
 						//Debug.println(maximizer.variableCapThrow1FallingFrames);
 						//Debug.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, true, solver.ttAllowed != TripleThrow.NO) >= 0;
+						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
-						//maximizer.maximize();
-						//possible = maximizer.isDiveCapBouncePossible(true, true, true, false);
 						setPropertiesRow(Parameter.dive_angle);
 						setPropertiesRow(Parameter.dive_deceleration);
 						Debug.println("Possible: " + possible + " " + maximizer.ctType);
-						//maximizer.maximize();
 						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
 						//Debug.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
@@ -1211,7 +1208,7 @@ public class VectorCalculator extends JPanel {
 						VectorMaximizer maximizer = getMaximizer();
 						if (maximizer != null) {
 							maximizer.maximize();
-							boolean possible = maximizer.isDiveCapBouncePossible(-1, diveSolver.singleThrowAllowed, false, p.tripleThrow != TripleThrow.YES, true, p.tripleThrow != TripleThrow.NO) >= 0;
+							boolean possible = maximizer.isDiveCapBouncePossible(-1, diveSolver.singleThrowAllowed, false, p.tripleThrow != TripleThrow.YES, !diveSolver.singleThrowAllowed, p.tripleThrow != TripleThrow.NO) >= 0;
 							maximizer.recalculateDisps();
 							maximizer.adjustToGivenAngle();
 							setPropertiesRow(Parameter.dive_angle);

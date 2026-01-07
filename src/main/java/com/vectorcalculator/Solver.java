@@ -570,7 +570,7 @@ public class Solver {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, false, ttAllowed != TripleThrow.NO);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO);
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
@@ -751,7 +751,7 @@ public class Solver {
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, ttAllowed != TripleThrow.YES, false, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps();
                 disp = maximizer.bestDisp;
             }

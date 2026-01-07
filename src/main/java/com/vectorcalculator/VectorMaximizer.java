@@ -682,6 +682,7 @@ public class VectorMaximizer {
 			motion.setHolding(holdingAngles, holdingMinRadius);
 		}
 		else {
+			holdingAngles[0] = angle;
 			int lastNormalAngleFrame = (frames - 1) / 2;
 			for (int i = 1; i <= lastNormalAngleFrame; i++)
 				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
