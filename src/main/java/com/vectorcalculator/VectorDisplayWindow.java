@@ -12,12 +12,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;

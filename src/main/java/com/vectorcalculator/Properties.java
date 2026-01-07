@@ -271,9 +271,6 @@ public class Properties {
     int scriptType = VectorDisplayWindow.NX_TAS;
     String scriptPath = "";
 
-    //static final double NO_GROUND = -1000000;
-
-    //new experimental settings
     double groundHeight = 0;
     double groundHeightFirstGP = 0;
     double groundHeightCB = 0;
@@ -299,7 +296,6 @@ public class Properties {
     boolean targetAngleGiven = false;
     boolean targetCoordinatesGiven = true;
 
-    //boolean isLavaOrPoison = false;
     double upwarp = 40;
     Mode mode = Mode.SOLVE;
 
@@ -337,13 +333,10 @@ public class Properties {
         try {
             JAXBContext jxbc = JAXBContext.newInstance(Properties.class);
             Unmarshaller um = jxbc.createUnmarshaller();
-            //um.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            //File f = new File("properties.xml");
             Properties p_loaded = (Properties) um.unmarshal(file);
             if (!defaults)
                 p_saved = p_loaded;
             return p_loaded;
-            //Debug.println(p.x0);
         }
         catch (Exception ex) {
             Debug.println(ex);
