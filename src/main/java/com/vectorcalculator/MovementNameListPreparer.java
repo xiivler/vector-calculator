@@ -1,12 +1,7 @@
 package com.vectorcalculator;
 
 import java.util.ArrayList;
-import java.util.Vector;
-
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-
-//import com.vectorcalculator.Properties.AngleType;
 
 public class MovementNameListPreparer {
 

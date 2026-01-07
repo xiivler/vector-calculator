@@ -143,7 +143,7 @@ public class DiveSolver {
     public double getFinalYPos(VectorMaximizer maximizer) {
         maximizer.calcYDisps();
         SimpleMotion[] motions = maximizer.getMotions();
-        double y = p.y0 /* + VectorCalculator.getMoonwalkDisp() */;
+        double y = p.y0;
         for (int i = 0; i < motions.length; i++) {
             y += motions[i].dispY;
         }

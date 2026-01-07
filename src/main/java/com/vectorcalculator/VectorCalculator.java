@@ -1730,7 +1730,6 @@ public class VectorCalculator extends JPanel {
         tabbedPane.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
             	p.currentTab = tabbedPane.getSelectedIndex();
-				//UndoManager.updateSelectionState();
 				refreshPropertiesRows(getRowParams(), false);
             }
         });

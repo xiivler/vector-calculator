@@ -274,15 +274,6 @@ public class VectorDisplayWindow {
 	private static String shorten(double d, int decimalPlaces) {
 		String format = "%." + decimalPlaces + "f";
 		return String.format(format, d);
-		
-		/*
-		int trimIndex = s.length() - 1;
-		while (s.charAt(trimIndex) == '0')
-			trimIndex--;
-		if (s.charAt(trimIndex) != '.')
-			trimIndex++;
-		return s.substring(0, trimIndex);
-		*/
 	}
 	
 	private static double reduceAngle(double angle) {
@@ -313,8 +304,6 @@ public class VectorDisplayWindow {
 
 		VectorDisplayWindow.maximizer = maximizer;
 		VectorDisplayWindow.simpleMotions = maximizer.getMotions();
-		// VectorDisplayWindow.initialAngle = initialAngle;
-		// VectorDisplayWindow.targetAngle = targetAngle;
 		double initialAngle = maximizer.getInitialAngle();
 		double targetAngle = maximizer.getTargetAngle();
 		double initialAngleAbsolute = maximizer.initialAngle;
@@ -412,7 +401,6 @@ public class VectorDisplayWindow {
 						if (y < p.groundHeightFirstGP) {
 							y = p.groundHeightFirstGP;
 							rowContents[1] = "(Hit Ground)";
-							//Debug.println("foo1");
 						}
 					}
 					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce")) {
@@ -474,12 +462,6 @@ public class VectorDisplayWindow {
 					int offset = -1;
 					int input1 = motion.movement.inputs1.get(i);
 					if (index == maximizer.variableCapThrow1Index) {
-						// if (p.mode == Mode.CALCULATE) {
-						// 	if (p.tripleThrow)
-						//  	motion.movement.displayName = "Down TT";
-						// 	else
-						// 	 	motion.movement.displayName = "Down MCCT";
-						// }
 						if (p.mode != Mode.CALCULATE) {
 							input1 = Movement.CT_INPUT[maximizer.ctType];
 							motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
@@ -513,10 +495,7 @@ public class VectorDisplayWindow {
 					}
 				}
 			}
-			
-			//x = info[info.length - 1][0];
-			//y = info[info.length - 1][1];
-			//z = info[info.length - 1][2];
+
 			Debug.println(motion.movement.displayName);
 			if (!motion.movement.displayName.equals(""))
 				dataTableModel.setValueAt(motion.movement.displayName, startRow, 1);
@@ -549,19 +528,17 @@ public class VectorDisplayWindow {
 		else
 			infoTableModel.setValueAt("No", MADE_JUMP_ROW, 1);
 
-		//if (!VectorCalculator.editedSinceCalculate) {
-			Properties.p.savedInfoTableRows = new String[infoTableModel.getRowCount()];
-			for (int i = 0; i < infoTableModel.getRowCount(); i++) {
-				Properties.p.savedInfoTableRows[i] = infoTableModel.getValueAt(i, 0) + "\t" + infoTableModel.getValueAt(i, 1);
+		Properties.p.savedInfoTableRows = new String[infoTableModel.getRowCount()];
+		for (int i = 0; i < infoTableModel.getRowCount(); i++) {
+			Properties.p.savedInfoTableRows[i] = infoTableModel.getValueAt(i, 0) + "\t" + infoTableModel.getValueAt(i, 1);
+		}
+		Properties.p.savedDataTableRows = new String[dataTableModel.getRowCount()][];
+		for (int i = 0; i < dataTableModel.getRowCount(); i++) {
+			Properties.p.savedDataTableRows[i] = new String[7];
+			for (int j = 0; j < 7; j++) {
+				Properties.p.savedDataTableRows[i][j] = dataTableModel.getValueAt(i, j).toString();
 			}
-			Properties.p.savedDataTableRows = new String[dataTableModel.getRowCount()][];
-			for (int i = 0; i < dataTableModel.getRowCount(); i++) {
-				Properties.p.savedDataTableRows[i] = new String[7];
-				for (int j = 0; j < 7; j++) {
-					Properties.p.savedDataTableRows[i][j] = dataTableModel.getValueAt(i, j).toString();
-				}
-			}
-		//}
+		}
 	}
 	
 	public static void display() {

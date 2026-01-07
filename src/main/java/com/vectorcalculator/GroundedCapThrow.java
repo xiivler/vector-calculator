@@ -278,39 +278,6 @@ public class GroundedCapThrow extends SimpleMotion {
 		else {
 			finalAngle = initialAngle + velocityAngles[frames - 1];
 		}
-
-		/*
-		for (int i = firstTurnFrame + 1; i < frames; i++) {
-			currentVelocity -= WALKING_DECEL;
-			if (currentVelocity < WALKING_SPEED) {
-				currentVelocity = WALKING_SPEED;
-			}
-			if (rotationalSpeed < maxRotationalSpeed) {
-				rotationalSpeed += rotationalAccel;
-				if (rotationalSpeed > maxRotationalSpeed) {
-					rotationalSpeed = maxRotationalSpeed;
-				}
-			}
-			else if (i == frames - 1 && !spreadOutOvershoot) {
-				velocityAngles[i] = finalAngleDiff;
-			}
-			//TODO: also track the velocities so you know what stick angles to hold
-			else {
-				if (remainingOvershoot > 0 && spreadOutOvershoot) { //there could be non-max acceleration for 2 frames if the first isn't enough
-					overshootSpreadFrames = Math.min(frames - i, (int) Math.ceil((maxRotationalSpeed - rotationalSpeed) / rotationalAccel));
-					double rotationalSpeedReduction = Math.min(remainingOvershoot / overshootSpreadFrames, rotationalAccel); //get rid of some of the overshoot (if there are 4 frames and 5 degrees of overshoot, you can lose 5/4 of your angular velocity to have none left)
-					remainingOvershoot -= rotationalSpeedReduction * overshootSpreadFrames;
-					rotationalSpeed -= rotationalSpeedReduction;
-				}
-				velocityAngles[i] = velocityAngles[i - 1] + rotationalSpeed;
-			}
-			//Debug.println("Step " + i + ": " + Math.toDegrees(rotationalSpeed) + ", " + Math.toDegrees(velocityAngles[i]));
-			dispForward += currentVelocity * Math.cos(velocityAngles[i]);
-			dispSideways += currentVelocity * Math.sin(velocityAngles[i]);
-			//Debug.println("Current sideways disp: " + dispSideways);
-			//Debug.println("Current angle: " + Math.toDegrees(velocityAngles[i]));
-		}
-			*/
 	}
 
 	public void calcVelocityAngle(int i, double holdingAngle) {

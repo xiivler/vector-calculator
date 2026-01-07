@@ -776,19 +776,9 @@ public class Movement {
 		}
 		
 		this.initialHorizontalSpeed = Math.min(initialHorizontalSpeed, trueSpeedCap);
-		
-		/*
-		if (initialHorizontalSpeed >= trueSpeedCap)
-			this.initialHorizontalSpeed = trueSpeedCap;
-		else if (initialHorizontalSpeed <= minSpeedCap)
-			this.initialHorizontalSpeed = minSpeedCap;
-		else
-			this.initialHorizontalSpeed = initialHorizontalSpeed;
-			*/
 	}
 	
 	public double getSuggestedSpeed() {
-		//return Math.min(recommendedInitialHorizontalSpeed, initialHorizontalSpeed);
 		if (!variableInitialHorizontalSpeed)
 			return initialHorizontalSpeed;
 		else
@@ -818,39 +808,6 @@ public class Movement {
 	public void setFramesJump(int framesJump) {
 		framesJump = Math.min(framesJump, 10);
 	}
-	
-	/*
-	public double height(int frames) {
-		
-		frames -= frameOffset;
-		if (frames <= 0)
-			return 0;
-		
-		double height;
-		
-		double currentGravity;
-		if (p.onMoon)
-			currentGravity = moonGravity;
-		else
-			currentGravity = gravity;
-		if (frames <= framesAtMaxVerticalSpeed) {
-			height = frames * initialVerticalSpeed;
-			return height;
-		}
-		else
-			height = framesAtMaxVerticalSpeed * initialVerticalSpeed;
-		frames -= framesAtMaxVerticalSpeed;
-		if (frames <= 0)
-			return height;
-		int framesToMaxSpeed = (int) ((initialVerticalSpeed - fallSpeedCap) / currentGravity);
-		if (frames <= framesToMaxSpeed)
-			height += (2 * initialVerticalSpeed - currentGravity * (frames + 1)) / 2 * frames;
-		else
-			height += ((2 * initialVerticalSpeed - currentGravity * (framesToMaxSpeed + 1)) / 2) * framesToMaxSpeed + fallSpeedCap * (frames - framesToMaxSpeed);
-		
-		return height;
-	}
-	*/
 	
 	public SimpleMotion getMotion(int frames, boolean rightVector, boolean complex) {
 		if (movementType.contains("RCV")) {
