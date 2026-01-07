@@ -407,8 +407,9 @@ public class VectorMaximizer {
 					Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
 					double unneededRotation = 0;
 					//Debug.println(fallingFrames);
-					if (fallingFrames >= 4)
+					if (fallingFrames >= 4) {
 						unneededRotation = Math.toRadians(2.9); //this rotation can all happen during the falling
+					}
 					double additionalRotation = FAST_TURNAROUND_VELOCITY - (Math.toRadians(diveCapBounceAngle) - unneededRotation + minRotation);	
 					if (additionalRotation < 0) {
 						turnaroundFrames = 2;
@@ -620,7 +621,10 @@ public class VectorMaximizer {
 				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 			}
 			for (int i = vectorFrames + 1; i <= 2 * vectorFrames; i++) {
-				holdingAngles[i] = throwAngle;
+				if (vectorFrames >= 7)
+					holdingAngles[i] = throwAngle;
+				else
+					holdingAngles[i] = diveAngle;
 			}
 			for (int i = 2 * vectorFrames + 1; i < frames; i++) {
 				holdingAngles[i] = diveAngle;
@@ -1021,6 +1025,15 @@ public class VectorMaximizer {
 	//which calls maximize_HCT (hct falling vectoring)
 	//which calls maximize_variableAngle1 (first cap throw angle)
 	public double maximize() {
+		try {
+			return maximize_try();
+		}
+		catch (Exception ex) {
+			return 0;
+		}
+	}
+
+	public double maximize_try() {
 		long startTime = System.currentTimeMillis();
 		
 		//SimpleMotion[] motionGroup1 = new SimpleMotion[variableCapThrow1Index];
@@ -1293,14 +1306,20 @@ public class VectorMaximizer {
 			Debug.println("Motion group 2 calculation:");
 			calcAll(motionGroup2);
 			dispMotionGroup2 = disp;
-			motionGroup2Angle = Math.PI / 2 - Math.abs(angle);
+			//motionGroup2Angle = Math.PI / 2 - Math.abs(angle);
+			
 			//Debug.println("Motion group 2 final movement: " + motionGroup2[motionGroup2.length - 1].movement.movementType);
-			if (motionGroup2VectorRight)
+			if (motionGroup2VectorRight) {
+				motionGroup2Angle = Math.PI / 2 - angle;
 				motionGroup2FinalAngle = -(motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2);
-			else
+			}
+			else {
+				motionGroup2Angle = Math.PI / 2 + angle;
 				motionGroup2FinalAngle = motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2;
+			}
 				
 			motionGroup2FinalRotation = calcFinalRotation(motionGroup2);
+			//System.out.println("Final Angle: " + Math.toDegrees(motionGroup2FinalAngle));
 			// Debug.println("MG2 final angle: " + Math.toDegrees(motionGroup2FinalAngle));
 			// Debug.println("MG2 final rotation: " + Math.toDegrees(motionGroup2FinalRotation));
 			
@@ -1583,7 +1602,8 @@ public class VectorMaximizer {
 				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
 				//Debug.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
 				//Debug.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
-				falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
+				falling.setHoldingAngle(booleanToPlusMinus(!ct.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
+				//falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
 				falling.calcDispDispCoordsAngleSpeed();
 				falling.calcDispY();
@@ -1624,7 +1644,14 @@ public class VectorMaximizer {
 			else if (i > 0) {
 				motions[i].setInitialAngle(motions[i - 1].finalAngle);
 			}
-			motions[i].calcDispDispCoordsAngleSpeed();
+			try {
+				motions[i].calcDispDispCoordsAngleSpeed();
+			}
+			catch (Exception ex) {
+				diveCapBounceAngle = 0;
+				setCapThrowHoldingAngles(variableCapThrow1Vector, bestAngle1, variableCapThrow1Frames, variableCapThrow1FallingFrames);
+				motions[i].calcDispDispCoordsAngleSpeed();
+			}
 		}
 
 		double lowAngle = -Double.MAX_VALUE;
@@ -1690,10 +1717,13 @@ public class VectorMaximizer {
 						overshot = true;
 				}
 				if (found && highAngle >= lowAngle + p.diveCapBounceTolerance) { //too high of a risk it won't actually work in game if they are the same
-					 Debug.println("Decel: " + firstFrameDecel);
-					 Debug.println("Found low: " + lowAngle);
-					 Debug.println("Found high: " + highAngle);
-					if (highAngle - lowAngle < 2) { //if high and low angles are close pick the middle for most reliable result
+					Debug.println("Decel: " + firstFrameDecel);
+					Debug.println("Found low: " + lowAngle);
+					Debug.println("Found high: " + highAngle);
+					if (lowAngle == 0 && highAngle <= 5.5) { //safer to pick 0
+						diveCapBounceAngle = 0;
+					}
+					else if (highAngle - lowAngle < 2) { //if high and low angles are close pick the middle for most reliable result
 						diveCapBounceAngle = (highAngle + lowAngle) / 2;
 					}
 					else { //otherwise pick an angle close to the high for a better vector
@@ -1753,7 +1783,6 @@ public class VectorMaximizer {
 			initialAngle = Math.PI / 2 + angleAdjustment;
 		}
 		else {
-			Debug.println("hi");
 			angleAdjustment = initialAngle - Math.PI / 2;
 			if (rightVector) {
 				angleAdjustment -= rcTrueInitialAngleDiff;

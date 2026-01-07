@@ -43,7 +43,7 @@ public class DiveSolver {
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
         
         if (solveFirstDive) {
-            int firstDiveDuration = midairs[1][firstDiveIndex];
+            int firstDiveDuration = midairs[firstDiveIndex][1];
 
             boolean add = true;
             int delta = 0;
@@ -123,12 +123,13 @@ public class DiveSolver {
         VectorMaximizer maximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
-            p.diveCapBounceAngle = 18;
+            maximizer.edgeCBMin = 0;
+            p.diveCapBounceAngle = 0;
         }
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            maximizer.edgeCBMin = 6;
-            p.diveCapBounceAngle = 9;
+            maximizer.edgeCBMin = 0;
+            p.diveCapBounceAngle = 0;
             maximizer.edgeCBMax = 12;
         }
         maximizer.maximize_HCT_limit = Math.toRadians(8);

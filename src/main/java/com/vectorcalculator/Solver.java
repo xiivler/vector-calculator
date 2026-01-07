@@ -34,6 +34,8 @@ public class Solver {
 
     Properties p = Properties.p;
 
+    VectorMaximizer maximizer;
+
     int ctType;
     double diveDecel;
     double edgeCBAngle;
@@ -437,8 +439,8 @@ public class Solver {
         bestDisp = test(bestDurations, true, false);
         //Debug.println(test(best.intArray));
 
-        Debug.println("Best Results " + 0 + ": " + bestDisp);
-        Debug.println(Arrays.toString(bestDurations));
+        System.out.println("Best Results " + 0 + ": " + bestDisp);
+        System.out.println(Arrays.toString(bestDurations));
 
         System.out.println("Solver: Testing Optimal Duration Candidates");
 
@@ -474,7 +476,7 @@ public class Solver {
         Debug.println("Iterations: " + iterations);
         Debug.println("Inner Calls: " + innerCalls);
         // Debug.println("Bad Calls: " + badCalls);
-        Debug.println("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+        System.out.println("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
     
         return true;
     }
@@ -722,7 +724,7 @@ public class Solver {
         int diveDuration = testDurations[diveCapBounceIndex - 1];
 
         setDurations(testDurations);
-        VectorMaximizer maximizer = VectorCalculator.getMaximizer();
+        maximizer = VectorCalculator.getMaximizer();
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
         double dispY = validateHeights(testDurations, maximizer);
         if (dispY == FALSE) {
@@ -751,7 +753,7 @@ public class Solver {
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(ctTypes[ctDuration][diveDuration], singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps();
                 disp = maximizer.bestDisp;
             }

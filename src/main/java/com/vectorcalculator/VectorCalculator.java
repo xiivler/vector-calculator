@@ -586,9 +586,9 @@ public class VectorCalculator extends JPanel {
 			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom") || name.equals("None"));
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (name.equals("Spinless") || name.equals("Simple Tech"));
 			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
-				p.tripleThrow = TripleThrow.NO;
+				setProperty(Parameter.triple_throw, "No");
 			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
-				p.tripleThrow = TripleThrow.NO;
+				setProperty(Parameter.triple_throw, "No");
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
 			if (name.equals("Custom") || name.equals("None") && p.mode == Mode.SOLVE) {
@@ -1174,18 +1174,21 @@ public class VectorCalculator extends JPanel {
 						errorMessage.setText("Error: Movement cannot reach target height");
 						return;
 					}
+					saveMidairs();
 					VectorMaximizer maximizer = getMaximizer();
+					//VectorMaximizer maximizer = solver.maximizer;
 					if (maximizer != null) {
+						
 						//p.diveTurn should be set correctly by the solver
 						maximizer.maximize();
 						//Debug.println(maximizer.variableCapThrow1FallingFrames);
 						//Debug.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
+						//boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 						setPropertiesRow(Parameter.dive_angle);
 						setPropertiesRow(Parameter.dive_deceleration);
-						Debug.println("Possible: " + possible + " " + maximizer.ctType);
+						//System.out.println("Possible: " + possible + " " + maximizer.ctType);
 						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
 						//Debug.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
