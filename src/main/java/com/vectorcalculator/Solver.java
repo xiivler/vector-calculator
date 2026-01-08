@@ -9,7 +9,9 @@ import com.vectorcalculator.Properties.TripleThrow;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
-public class Solver {
+public class Solver implements SolverInterface {
+
+    String error = "";
 
     int seconds = 0;
     long lastAlertTime = 0;
@@ -27,6 +29,7 @@ public class Solver {
     double bestResultsRange = 5; //range of values worse than the current best to still test in full
 
     boolean singleThrowAllowed = true;
+    boolean mcctAllowed = true;
     TripleThrow ttAllowed;
     TurnDuringDive dtAllowed;
 
@@ -82,7 +85,37 @@ public class Solver {
     int[] bestDurations;
     double bestYDisp = 0; //for debug
 
+    boolean success = false;
+
     ArrayList<DoubleIntArray> bestResults;
+
+    public String getError() {
+        return error;
+    }
+
+    public boolean solveSuccess() {
+        return success;
+    }
+
+    public double getBestDisp() {
+        return bestDisp;
+    }
+
+    public boolean singleThrowAllowed() {
+        return singleThrowAllowed;
+    }
+
+    public TripleThrow ttAllowed() {
+        return ttAllowed;
+    }
+
+    public boolean mcctAllowed() {
+        return mcctAllowed;
+    }
+
+    public VectorMaximizer getMaximizer() {
+        return maximizer;
+    }
 
     public double[] getFinalYHeights(VectorMaximizer maximizer) {
         maximizer.calcYDisps();
@@ -121,12 +154,16 @@ public class Solver {
         }
 
         //custom presets not yet supported
-        if (p.midairPreset.equals("Custom"))
+        if (p.midairPreset.equals("Custom")) {
+            success = true;
             return true;
+        }
 
         VectorCalculator.addPreset(p.midairPreset, false);
 
         singleThrowAllowed = true;
+        mcctAllowed = true;
+
         if (p.midairPreset.equals("CBV First") && p.tripleThrow != TripleThrow.NO) {
             singleThrowAllowed = false;
             cbDurationLimit = p.cbCapReturnFrame + 12;
@@ -134,8 +171,13 @@ public class Solver {
         else if (p.midairPreset.equals("Simple Tech")) {
             cbDurationLimit = p.cbCapReturnFrame + 12;
         }
-        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"))
+        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) {
             ttAllowed = p.tripleThrow;
+            if (ttAllowed == TripleThrow.YES) {
+                singleThrowAllowed = false;
+                mcctAllowed = false;
+            }
+        }
         else
             ttAllowed = TripleThrow.NO;
 
@@ -214,8 +256,11 @@ public class Solver {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
                 //Debug.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
-                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames())
+                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
+                    success = false;
+                    error = "Error: Could not avoid ground/liquid";
                     return false;
+                }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
@@ -223,8 +268,10 @@ public class Solver {
         if (p.groundTypeCB != GroundType.NONE) {
             while (final_y_heights[maximizer_firstDiveIndex] <= p.groundHeightCB) {
                 p.initialFrames--;
-                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames())
+                if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
+                    error = "Error: Could not avoid ground/liquid";
                     return false;
+                }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 final_y_heights = getFinalYHeights(presetMaximizer);
             }
@@ -254,14 +301,20 @@ public class Solver {
                 else if (diveCapBounceEfficiency < initialEfficiency && diveCapBounceEfficiency < finalCapThrowEfficiency) {
                     preset[diveCapBounceIndex - 1][1]--;
                     lastFrames[diveCapBounceIndex]--;
-                    if (preset[diveCapBounceIndex - 1][1] < 1)
+                    if (preset[diveCapBounceIndex - 1][1] < 1) {
+                        success = false;
+                        error = "Error: Could not avoid ground/liquid";
                         return false;
+                    }
                 }
                 else {
                     preset[finalCapThrowIndex - 1][1]--;
                     lastFrames[finalCapThrowIndex]--;
-                    if (preset[finalCapThrowIndex - 1][1] < 8)
+                    if (preset[finalCapThrowIndex - 1][1] < 8) {
+                        success = false;
+                        error = "Error: Could not avoid ground/liquid";
                         return false;
+                    }
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
                 presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
@@ -307,9 +360,11 @@ public class Solver {
                     worstEfficiencyIndex = i;
                 }
             }
-            System.out.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
+            //System.out.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
             if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
                 p.durationFrames = true;
+                success = false;
+                error = "Error: Could not reach target height";
                 return false;
             }
             y -= y_vels[lastFrames[worstEfficiencyIndex]];
@@ -352,7 +407,7 @@ public class Solver {
         }
         Debug.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
 
-        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
+        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
         Debug.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         Debug.println("Ballpark Y Height: " + y);
 
@@ -475,6 +530,8 @@ public class Solver {
 
         Debug.println("Best Disp: " + bestDisp);
         if (bestDisp == 0) {
+            success = false;
+            error = "Error: Could not reach target height or could not bounce on cappy";
             return false;
         }
         // Debug.println("Delta: " + delta);
@@ -485,7 +542,7 @@ public class Solver {
         Debug.println("Inner Calls: " + innerCalls);
         // Debug.println("Bad Calls: " + badCalls);
         VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
-    
+        success = true;
         return true;
     }
 
@@ -592,7 +649,7 @@ public class Solver {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed, ttAllowed != TripleThrow.NO);
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
@@ -749,6 +806,9 @@ public class Solver {
 
         setDurations(testDurations);
         maximizer = VectorCalculator.getMaximizer();
+        if (maximizer == null) {
+            return 0.0;
+        }
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
         double dispY = validateHeights(testDurations, maximizer);
         if (dispY == FALSE) {
@@ -779,6 +839,7 @@ public class Solver {
         if (fullAccuracy) {
             if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps();
+                maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
             }
             else {

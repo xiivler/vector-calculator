@@ -1641,13 +1641,14 @@ public class VectorMaximizer {
 	//sees if the dive will actually bounce on cappy in the requested number of frames
 	//throwType is the type of throw to check (set to -1 to check all throw types that satisfy the booleans afterward)
 	//allowButtonST = can check for regular single throws
-	//allowST = can check for motion or regular single throws
+	//allowSideThrow = can check for MCCT/TT right and left (have not been found to be helpful as of yet)
+	//allowMCCT = can check for motion single throws
 	//allowDT = can check for double throws
 	//allowTT = can check for triple throws
 	//diveCapBounceAngle is now one that works (also the value in Properties is this)
 	//ctType is the ct that worked;
 	//currently does not recalculate rest of jump to be optimal, but maybe it should
-	public int isDiveCapBouncePossible(int throwType, boolean allowButtonST, boolean allowSideThrow, boolean allowST, boolean allowDT, boolean allowTT) {
+	public int isDiveCapBouncePossible(int throwType, boolean allowButtonST, boolean allowSideThrow, boolean allowMCCT, boolean allowDT, boolean allowTT) {
 		//motions[0].setInitialAngle(Math.PI / 2); //undo any previous angle adjustment
 		for (int i = variableCapThrow1Index; i < motions.length; i++) {
 			if ((i == variableCapThrow1Index + 1 || i == variableCapThrow1Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
@@ -1689,13 +1690,13 @@ public class VectorMaximizer {
 				if (throwType != -1 && ct != throwType) {
 					continue;
 				}
-				if ((!allowButtonST || variableCapThrow1Frames < 9) && ct == Movement.CT) {
+				else if ((!allowButtonST || variableCapThrow1Frames < 9) && ct == Movement.CT) {
 					continue;
 				}
 				else if (!allowSideThrow && (ct == Movement.MCCTL || ct == Movement.MCCTR || ct == Movement.TTL || ct == Movement.TTR)) {
 					continue;
 				}
-				else if ((!allowST || variableCapThrow1Frames < 8) && (ct == Movement.CT || ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR)) {
+				else if ((!allowMCCT || variableCapThrow1Frames < 8) && (ct == Movement.MCCTU || ct == Movement.MCCTD || ct == Movement.MCCTL || ct == Movement.MCCTR)) {
 					continue;
 				}
 				else if ((!allowDT || variableCapThrow1Frames < 8) && ct == Movement.DT) {

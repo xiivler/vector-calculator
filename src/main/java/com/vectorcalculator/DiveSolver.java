@@ -5,22 +5,69 @@ import com.vectorcalculator.Properties.TurnDuringDive;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 //class that only solves for the dive lengths
-public class DiveSolver {
+public class DiveSolver implements SolverInterface {
 
     Properties p = Properties.p;
 
     boolean singleThrowAllowed = true;
+    boolean mcctAllowed = true;
+    TripleThrow ttAllowed;
 
     String error;
+
+    boolean success;
+
+    VectorMaximizer maximizer;
 
     int diveCapBounceIndex = -1;
     int firstDiveIndex = -1;
     int secondDiveIndex = -1;
 
-    public boolean solve() {
+    double bestDisp = 0;
+
+    public String getError() {
+        return error;
+    }
+
+    public boolean solveSuccess() {
+        return success;
+    }
+
+    public double getBestDisp() {
+        return bestDisp;
+    }
+
+    public TripleThrow ttAllowed() {
+        return ttAllowed;
+    }
+
+    public boolean singleThrowAllowed() {
+        return singleThrowAllowed;
+    }
+
+    public boolean mcctAllowed() {
+        return mcctAllowed;
+    }
+
+    public VectorMaximizer getMaximizer() {
+        return maximizer;
+    }
+
+    public boolean solve(int maxDelta) {
         long startTime = System.currentTimeMillis();
 
         singleThrowAllowed = true;
+        mcctAllowed = true;
+
+        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) {
+            ttAllowed = p.tripleThrow;
+            if (ttAllowed == TripleThrow.YES) {
+                singleThrowAllowed = false;
+                mcctAllowed = false;
+            }
+        }
+        else
+            ttAllowed = TripleThrow.NO;
 
         boolean solveFirstDive = false;
         boolean solveSecondDive = false;
@@ -34,6 +81,19 @@ public class DiveSolver {
                 diveCapBounceIndex = i;
                 firstDiveIndex = i - 1;
                 solveFirstDive = true;
+                if (p.midairPreset.equals("Custom")) {
+                    if (midairs[i - 2][0] == VectorCalculator.MCCT)
+                        ttAllowed = TripleThrow.NO;
+                    else if (midairs[i - 2][0] == VectorCalculator.CT) {
+                        ttAllowed = TripleThrow.NO;
+                        mcctAllowed = false;
+                    }
+                    else {
+                        ttAllowed = TripleThrow.YES;
+                        singleThrowAllowed = false;
+                        mcctAllowed = false;
+                    }
+                }
             }
             else if (i == midairs.length - 1 && midairs[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i;
@@ -64,8 +124,9 @@ public class DiveSolver {
                 else
                     delta *= -1;
                 add = !add;
-                if (delta > 20) { //different number for moon gravity?
+                if (delta > maxDelta) { //different number for moon gravity?
                     error = "Error: Could not bounce on cappy"; 
+                    success = false;
                     return false;
                 }
                 int testFirstDiveDuration = firstDiveDuration + delta;
@@ -79,7 +140,7 @@ public class DiveSolver {
         }
 
         if (solveSecondDive) {
-            VectorMaximizer maximizer = VectorCalculator.getMaximizer();
+            maximizer = VectorCalculator.getMaximizer();
             Debug.println(p.getUpwarpMinusError());
             Debug.println(getFinalYPos(maximizer));
             while (getFinalYPos(maximizer) + p.getUpwarpMinusError() > p.y1 - Solver.ERROR) {
@@ -92,6 +153,7 @@ public class DiveSolver {
                 }
                 else if (midairs[secondDiveIndex][1] == 14) {
                     error = "Error: Could not reach target height"; 
+                    success = false;
                     return false;
                 }
                 else {
@@ -103,8 +165,23 @@ public class DiveSolver {
 
         VectorCalculator.addPreset(midairs);
 
+        if (solveSecondDive) {
+            maximizer = VectorCalculator.getMaximizer();
+            maximizer.maximize();
+            maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO); 
+        }
+
+        if (!solveFirstDive && !solveSecondDive) {
+            maximizer = VectorCalculator.getMaximizer();
+            maximizer.maximize();
+        }
+
+        maximizer.recalculateDisps();
+        maximizer.adjustToGivenAngle();
+
         VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
+        success = true;
         return true;
     }
 
@@ -124,7 +201,7 @@ public class DiveSolver {
     }
 
     public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
-        VectorMaximizer maximizer = VectorCalculator.getMaximizer();
+        maximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
             maximizer.edgeCBMin = 0;
@@ -140,8 +217,8 @@ public class DiveSolver {
         maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
         maximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
-        maximizer.maximize();
-        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, p.tripleThrow != TripleThrow.YES, false, p.tripleThrow != TripleThrow.NO);
+        bestDisp = maximizer.maximize();
+        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO);
         return ctType;
     }
 

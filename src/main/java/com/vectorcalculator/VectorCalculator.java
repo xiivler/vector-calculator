@@ -74,7 +74,6 @@ public class VectorCalculator extends JPanel {
 
 	static String jarParentFolder;
 	static File userDefaults;
-	static File factoryDefaults;
 
 	static final int GENERAL_TAB = 0, MIDAIR_TAB = 1;
 	
@@ -89,9 +88,9 @@ public class VectorCalculator extends JPanel {
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
-		dive_turn("Turn During First Dive"), cb_cap_return_frame("Frame Cappy Returns"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
+		dive_turn("Turn During First Dive"), cb_cap_return_frame("Frame Cappy Returns After CB"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frame Cappy Returns"),
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frame Cappy Returns After HCT"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
@@ -764,7 +763,7 @@ public class VectorCalculator extends JPanel {
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
-		{"Ground Pound Roll", "Crouch Roll", "Roll Boost"},
+		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
 		{"Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Bouncy Object Bounce", "Flower Bounce"},
 		{"Uncapture", "Flip Forward", "Swinging Jump"},
@@ -933,13 +932,13 @@ public class VectorCalculator extends JPanel {
 		if (name.equals("Custom")) {
 			add.setEnabled(true);
 			remove.setEnabled(true);
-			if (load)
+			if (load && p.midairs != null)
 				addPreset(p.midairs);
 		}
 		else {
 			add.setEnabled(false);
 			remove.setEnabled(false);
-			if (load)
+			if (load && p.midairs != null)
 				addPreset(p.midairs);
 			else
 				addPreset(getPreset(name));
@@ -1160,30 +1159,32 @@ public class VectorCalculator extends JPanel {
 					p.targetAngle = targetCoordinatesToTargetAngle();
 				}
 				boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
-				if (p.mode == Mode.SOLVE) {
-					Solver solver;
+				if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
+					boolean diveSolver = p.mode == Mode.SOLVE_DIVES;
+					TurnDuringDive oldTurnDuringDive = p.diveTurn;
+					SolverInterface solver;
 					if (optimalDistanceMotion) {
 						p.initialMovementName = "Triple Jump";
 						p.framesJump = 10;
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						Solver solverTJ = new Solver();
-						solverTJ.solve(p.durationSearchRange);
+						SolverInterface solverTJ = runSolver(diveSolver, false);
+						//solverTJ.solve(p.durationSearchRange);
 						p.initialMovementName = "Motion Cap Throw RCV";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						Solver solverRCV = new Solver();
-						solverRCV.solve(Math.min(p.durationSearchRange, 3));
+						SolverInterface solverRCV = runSolver(diveSolver, false);
+						//solverRCV.solve(Math.min(p.durationSearchRange, 3));
 						p.initialMovementName = "Sideflip";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						Solver solverSideflip = new Solver();
-						solverSideflip.solve(p.durationSearchRange);
+						SolverInterface solverSideflip = runSolver(diveSolver, false);
+						//solverSideflip.solve(p.durationSearchRange);
 						// Debug.println("TJ: " + maximizerTJ.bestDisp);
 						// Debug.println("RC: " + maximizerRC.bestDisp);
 						// Debug.println("SF: " + maximizerSideflip.bestDisp);
-						if (solverTJ.bestDisp > solverRCV.bestDisp && solverTJ.bestDisp > solverSideflip.bestDisp) {
+						if (solverTJ.getBestDisp() > solverRCV.getBestDisp() && solverTJ.getBestDisp() > solverSideflip.getBestDisp()) {
 							solver = solverTJ;
 							p.initialMovementName = "Triple Jump";
 						}
-						else if (solverRCV.bestDisp > solverTJ.bestDisp && solverRCV.bestDisp > solverSideflip.bestDisp) {
+						else if (solverRCV.getBestDisp() > solverTJ.getBestDisp() && solverRCV.getBestDisp() > solverSideflip.getBestDisp()) {
 							solver = solverRCV;
 							p.initialMovementName = "Motion Cap Throw RCV";
 						}
@@ -1191,41 +1192,62 @@ public class VectorCalculator extends JPanel {
 							solver = solverSideflip;
 							p.initialMovementName = "Sideflip";
 						}
-						solver.test(solver.bestDurations, true, solver.hasRCV);
+						retest(solver, diveSolver);
+					}
+					else if (p.initialMovementName.contains("Crouch Roll")) {
+						p.initialMovementName = "Crouch Roll";
+						initialMovement = new Movement(p.initialMovementName);
+						SolverInterface solverCR = runSolver(diveSolver, false);
+						p.initialMovementName = "Crouch Roll (No Vector)";
+						initialMovement = new Movement(p.initialMovementName);
+						SolverInterface solverCRNV = runSolver(diveSolver, false);
+						if (solverCR.getBestDisp() > solverCRNV.getBestDisp()) {
+							solver = solverCR;
+							p.initialMovementName = "Crouch Roll";
+						} else {
+							solver = solverCRNV;
+							p.initialMovementName = "Crouch Roll (No Vector)";
+						}
+						initialMovement = new Movement(p.initialMovementName);
+						retest(solver, diveSolver);
+					}
+					else if (p.initialMovementName.contains("Roll Boost")) {
+						p.initialMovementName = "Roll Boost";
+						initialMovement = new Movement(p.initialMovementName);
+						SolverInterface solverRB = runSolver(diveSolver, false);
+						p.initialMovementName = "Roll Boost (No Vector)";
+						initialMovement = new Movement(p.initialMovementName);
+						SolverInterface solverRBNV = runSolver(diveSolver, false);
+						if (solverRB.getBestDisp() > solverRBNV.getBestDisp()) {
+							solver = solverRB;
+							p.initialMovementName = "Roll Boost";
+						} else {
+							solver = solverRBNV;
+							p.initialMovementName = "Roll Boost (No Vector)";
+						}
+						initialMovement = new Movement(p.initialMovementName);
+						retest(solver, diveSolver);
 					}
 					else {
-						solver = new Solver();
-						int delta = p.initialMovementName.contains("RCV") ? Math.min(p.durationSearchRange, 3) : p.durationSearchRange;
-						solver.solve(delta);
-					}
-					if (solver.bestDisp == 0) {
-						setErrorText("Error: Movement cannot reach target height");
-						return;
+						solver = runSolver(diveSolver, true);
 					}
 					saveMidairs();
-					VectorMaximizer maximizer = getMaximizer();
-					//VectorMaximizer maximizer = solver.maximizer; //this would be more efficient but not necessary
+					VectorMaximizer maximizer = solver.getMaximizer();
 					if (maximizer != null) {
-						//p.diveTurn should be set correctly by the solver
-						maximizer.maximize();
-						//Debug.println(maximizer.variableCapThrow1FallingFrames);
-						//Debug.println(maximizer.fallingFrames);
-						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
-						if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
-							p.midairs[p.firstCTIndex][0] = TT;
-						else if (maximizer.ctType == Movement.CT) {
-							p.midairs[p.firstCTIndex][0] = CT;
+						if (p.firstCTIndex >= 0) {
+							if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
+								p.midairs[p.firstCTIndex][0] = TT;
+							else if (maximizer.ctType == Movement.CT)
+								p.midairs[p.firstCTIndex][0] = CT;
+							else
+								p.midairs[p.firstCTIndex][0] = MCCT;
 						}
-						else
-							p.midairs[p.firstCTIndex][0] = MCCT;
-						maximizer.recalculateDisps();
-						maximizer.adjustToGivenAngle();
+						addPreset(p.midairs);
 						setPropertiesRow(Parameter.dive_angle);
 						setPropertiesRow(Parameter.dive_deceleration);
 						//System.out.println("Possible: " + possible + " " + maximizer.ctType);
 						VectorDisplayWindow.generateData(maximizer);
 						VectorDisplayWindow.display();
-						//Debug.println(((DiveTurn)maximizer.motions[maximizer.variableCapThrow1Index + 3]).getCapBounceFrame(((ComplexVector)maximizer.motions[maximizer.variableCapThrow1Index]).getCappyPosition(maximizer.ctType)));
 					}
 					if (optimalDistanceMotion) {
 						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
@@ -1233,34 +1255,7 @@ public class VectorCalculator extends JPanel {
 					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
 						setProperty(Parameter.hct_type, p.hctType.name);
 					}
-					setProperty(Parameter.dive_turn, solver.dtAllowed.displayName); //set back to "Test Both" if that is the setting
-				}
-				else if (p.mode == Mode.SOLVE_DIVES) {
-					if (p.initialMovementName.equals("Optimal Distance Motion")) {
-						setErrorText("Error: Optimal Distance Motion not supported by the Calculate (Solve Dives) mode");
-					}
-					TurnDuringDive oldTurnDuringDive = p.diveTurn;
-					DiveSolver diveSolver = new DiveSolver();
-					if (diveSolver.solve()) {
-						saveMidairs();
-						VectorMaximizer maximizer = getMaximizer();
-						if (maximizer != null) {
-							maximizer.maximize();
-							boolean possible = maximizer.isDiveCapBouncePossible(-1, diveSolver.singleThrowAllowed, false, p.tripleThrow != TripleThrow.YES, !diveSolver.singleThrowAllowed, p.tripleThrow != TripleThrow.NO) >= 0;
-							maximizer.recalculateDisps();
-							maximizer.adjustToGivenAngle();
-							setPropertiesRow(Parameter.dive_angle);
-							setPropertiesRow(Parameter.dive_deceleration);
-							Debug.println("Possible: " + possible + " " + maximizer.ctType);
-							VectorDisplayWindow.generateData(maximizer);
-							VectorDisplayWindow.display();
-						}
-					}
-					else {
-						setErrorText(diveSolver.error);
-					}
 					setProperty(Parameter.dive_turn, oldTurnDuringDive.displayName); //set back to "Test Both" if that is the setting
-					Debug.println();
 				}
 				else if (p.mode == Mode.CALCULATE) {
 					saveMidairs();
@@ -1333,6 +1328,35 @@ public class VectorCalculator extends JPanel {
 		else {
 			setErrorText("Error: " + errorText);
 			return null;
+		}
+	}
+
+	public static SolverInterface runSolver(boolean diveSolver, boolean displayError) {
+		SolverInterface solver;
+		if (diveSolver) {
+			solver = new DiveSolver();
+			solver.solve(20);
+		}
+		else {
+			solver = new Solver();
+			int delta = p.initialMovementName.contains("RCV") ? Math.min(p.durationSearchRange, 3) : p.durationSearchRange;
+			solver.solve(delta);
+		}
+		if (!solver.solveSuccess() && displayError) {
+			setErrorText(solver.getError());
+		}
+		return solver;
+	}
+
+	public static void retest(SolverInterface solverInterface, boolean diveSolver) {
+		if (!diveSolver) {
+			Solver solver = (Solver) solverInterface;
+			solver.test(solver.bestDurations, true, solver.hasRCV);
+		}
+		else
+			solverInterface.solve(20);
+		if (!solverInterface.solveSuccess()) {
+			setErrorText(solverInterface.getError());
 		}
 	}
 
@@ -1439,8 +1463,7 @@ public class VectorCalculator extends JPanel {
 		catch (URISyntaxException e) {
 			jarParentFolder = "~";
 		}
-		userDefaults = new File(VectorCalculator.jarParentFolder + "/user-defaults.xml");
-		factoryDefaults = new File(VectorCalculator.jarParentFolder + "/factory-defaults.xml");
+		userDefaults = new File(VectorCalculator.jarParentFolder, "user-defaults.xml");
 
 		all = new JPanel();
 		all.setLayout(new BoxLayout(all, BoxLayout.Y_AXIS));
@@ -1505,7 +1528,7 @@ public class VectorCalculator extends JPanel {
 					case ground_type_secondGP:
 						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
 					case mode:
-						if (p.midairPreset.equals("Custom"))
+						if (p.midairPreset.equals("Custom") || p.midairPreset.equals("None"))
 							return dropdown(new String[]{"Calculate (Solve Dives)", "Calculate"});
 						else
 							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate"});

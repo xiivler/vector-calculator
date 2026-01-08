@@ -285,7 +285,7 @@ public class Movement {
 		}
 		
 		//need to change rolls to falling to vector them, but falling may have different gravity
-		else if (movementType.equals("Ground Pound Roll")) {
+		else if (movementType.contains("Ground Pound Roll")) {
 			displayName = "GP Roll";
 			initialVerticalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
@@ -302,7 +302,7 @@ public class Movement {
 		}
 		
 		//5% speed decay from the frame of crouching, which can be separated
-		else if (movementType.equals("Crouch Roll")) {
+		else if (movementType.contains("Crouch Roll")) {
 			displayName = "Roll";
 			initialVerticalSpeed = 12;
 			if (initialHorizontalSpeed <= 20)
@@ -322,7 +322,7 @@ public class Movement {
 		}
 		
 		//technically there are 4 varieties, at speeds 20, 23, and 26
-		else if (movementType.equals("Roll Boost")) {
+		else if (movementType.contains("Roll Boost")) {
 			initialVerticalSpeed = 12;
 			if (initialHorizontalSpeed <= 20)
 				initialHorizontalSpeed = 20;
@@ -332,7 +332,7 @@ public class Movement {
 			vectorAccel = 0;
 			moonGravity = 1;
 			defaultSpeedCap = 35;
-			trueSpeedCap = 35;
+			trueSpeedCap = 100; //sometimes you can get faster than 35 on slopes, so set this high to avoid that being an issue
 			recommendedInitialHorizontalSpeed = 29;
 			moonGravity = 1;
 			frameOffset = 1;
