@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,15 +24,6 @@ public class Properties {
     static Properties p_saved; //properties that are currently saved
     static Properties p_toSave; //properties that should be saved
     static Properties p_calculated; //properties present the last time a calculation was run (solve/calculate/etc.)
-
-    @XmlTransient
-    int movementSelectedRow = -1;
-
-    @XmlTransient
-    int movementSelectedCol = -1;
-
-    String[] savedInfoTableRows = null;
-    String[][] savedDataTableRows = null;
 
     public static Properties getInstance() {
         if (p == null) {
@@ -98,10 +88,6 @@ public class Properties {
             return YES;
         }
     }
-
-    // static enum AngleType {
-	// 	INITIAL, TARGET, BOTH
-	// }
 
 	static enum CameraType {
 		INITIAL("Initial Angle"), TARGET("Target Angle"), ABSOLUTE("Absolute"), CUSTOM("Custom");
@@ -223,50 +209,55 @@ public class Properties {
         }
     }
 
-    // static enum LockDurationType {
-    //     NONE, FRAMES, VERTICAL_DISPLACEMENT
-    // }
-
-    Parameter selectedParam = null;
+    Mode mode = Mode.SOLVE;
 
     double x0 = 0, y0 = 0, z0 = 0;
-	double x1 = 0, y1 = 0, z1 = 3000;
+	double x1 = 0, y1 = 0, z1 = 4000;
+
     boolean solveForInitialAngle = false;
-	double initialAngle = 0;
+	double initialAngle = 90;
 	double targetAngle = 90;
     CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;
-	//AngleType angleType = AngleType.TARGET;
+
+    String initialMovementCategory = "Jump";
 	String initialMovementName = "Triple Jump";
-	boolean chooseDurationType = true;
+	boolean chooseDurationType = false;
 	boolean durationFrames = true;
 	int initialFrames = 70;
 	double initialDispY = 0;
-	int durationSearchRange = 4;
+    boolean chooseJumpFrames = true;
 	int framesJump = 10;
 	boolean canMoonwalk = true;
-	int framesMoonwalk = 0;
+	int framesMoonwalk = 5;
     boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
 
     boolean diveCapBounce = true;
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
-    double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
+    double diveCapBounceTolerance = 0.01; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
     TurnDuringDive diveTurn = TurnDuringDive.YES;
     int cbCapReturnFrame = 24;
 
-	String midairPreset = "Spinless";
+	String midairPreset = "MCCT First";
     boolean canTripleThrow = true;
-    boolean canTestTripleThrow = true; //whether the option Test Both is shown
-    TripleThrow tripleThrow = TripleThrow.NO;
+    boolean canTestTripleThrow = false; //whether the option Test Both is shown
+    TripleThrow tripleThrow = TripleThrow.YES;
     int firstCTIndex = 0;
+    boolean turnarounds = true;
+    double upwarp = 40;
+
+    int durationSearchRange = 4;
+
 	boolean onMoon = false;
-	boolean turnarounds = true;
+
 	boolean xAxisZeroDegrees = true;
-	CameraType cameraType = CameraType.TARGET;
+
+	CameraType cameraType = CameraType.ABSOLUTE;
 	double customCameraAngle = 0;
     int[][] midairs;
+
     int scriptType = VectorDisplayWindow.NX_TAS;
     String scriptPath = "";
 
@@ -274,6 +265,7 @@ public class Properties {
     double groundHeightFirstGP = 0;
     double groundHeightCB = 0;
     double groundHeightSecondGP = 0;
+    GroundMode groundMode = GroundMode.NONE;
     GroundType groundType = GroundType.NONE;
     GroundType groundTypeFirstGP = GroundType.NONE;
     GroundType groundTypeCB = GroundType.NONE;
@@ -295,19 +287,27 @@ public class Properties {
     boolean targetAngleGiven = false;
     boolean targetCoordinatesGiven = true;
 
-    double upwarp = 40;
-    Mode mode = Mode.SOLVE;
+    //saving the VectorDisplayWindow tables
+    String[] savedInfoTableRows = null;
+    String[][] savedDataTableRows = null;
 
+    //UI state
     @XmlTransient
     int currentTab = 0;
+
     @XmlTransient
     int lastEditTab = 0;
 
-    String initialMovementCategory = "Jump";
-    GroundMode groundMode = GroundMode.NONE;
-	boolean chooseJumpFrames = true;
+    @XmlTransient
+    Parameter selectedParam = null;
 
-    //select the initial movement once these properties are saved
+    @XmlTransient
+    int movementSelectedRow = -1;
+
+    @XmlTransient
+    int movementSelectedCol = -1;
+
+
 
     public static boolean save(File file, boolean defaults) {
         try {
