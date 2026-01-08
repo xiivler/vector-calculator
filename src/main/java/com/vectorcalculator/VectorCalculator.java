@@ -48,6 +48,7 @@ import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
 import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.TurnDuringDive;
 import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
@@ -88,10 +89,10 @@ public class VectorCalculator extends JPanel {
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
-		dive_turn("Turn During First Dive"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
+		dive_turn("Turn During First Dive"), cb_cap_return_frame("Frame Cappy Returns"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frames Until Cappy Returns"),
-		ground_mode("Ground Under Midairs"), ground_type("Type"), ground_height("Height"),
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frame Cappy Returns"),
+		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
 		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP"),
@@ -184,6 +185,7 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.dive_angle_tolerance);
 				params.add(Parameter.dive_deceleration);
 				params.add(Parameter.dive_turn);
+				params.add(Parameter.cb_cap_return_frame);
 			}
 
 			if (p.hct) {
@@ -349,6 +351,9 @@ public class VectorCalculator extends JPanel {
 		case dive_turn:
 			value = p.diveTurn.displayName;
 			break;
+		case cb_cap_return_frame:
+			value = p.cbCapReturnFrame;
+			break;
 		case hct_type:
 			value = p.hctType.name;
 			break;
@@ -474,10 +479,12 @@ public class VectorCalculator extends JPanel {
 				p.solveForInitialAngle = false;
 			}
 			else {
-				setProperty(Parameter.dive_turn, "Yes");
+				if (p.diveTurn == TurnDuringDive.TEST)
+					setProperty(Parameter.dive_turn, "Yes");
 				p.solveForInitialAngle = false;
 			}
 			calculateVector.setText(p.mode.name);
+			updateDurationType();
 			MainJMenuBar.updateCalculatorMenuItems();
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"));
 			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
@@ -591,7 +598,7 @@ public class VectorCalculator extends JPanel {
 				setProperty(Parameter.triple_throw, "No");
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
-			if (name.equals("Custom") || name.equals("None") && p.mode == Mode.SOLVE) {
+			if ((name.equals("Custom") || name.equals("None")) && p.mode == Mode.SOLVE) {
 				Debug.println("Should switch");
 				setProperty(Parameter.mode, Mode.SOLVE_DIVES.name);
 				
@@ -599,10 +606,14 @@ public class VectorCalculator extends JPanel {
 			break;
 		case triple_throw:
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
-			if (p.tripleThrow != TripleThrow.NO)
-				p.midairs[p.firstCTIndex][0] = TT;
-			else
-				p.midairs[p.firstCTIndex][0] = MCCT;
+			int[][] oldMidairs = p.midairs;
+			addPreset(p.midairPreset, false);
+			for (int i = 0; i < p.midairs.length; i++) { //copy all the durations the user has customized
+				p.midairs[i][1] = oldMidairs[i][1];
+			}
+			if (p.tripleThrow != TripleThrow.NO && p.midairPreset.equals("CBV First")) { //conform cb duration
+				p.midairs[2][1] = Math.min(p.midairs[2][1], 36);
+			}
 			addPreset(p.midairs);
 			break;
 		case gravity:
@@ -625,6 +636,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case dive_turn:
 			p.diveTurn = Properties.TurnDuringDive.fromDisplayName(value.toString());
+			break;
+		case cb_cap_return_frame:
+			p.cbCapReturnFrame = clampInt(parseIntWithDefault(value, 24), 0, Integer.MAX_VALUE);
 			break;
 		case hct_type:
 			p.hctType = Properties.HctType.fromName(value.toString());
@@ -733,6 +747,19 @@ public class VectorCalculator extends JPanel {
 			setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
 	}
 
+	static void updateDurationType() {
+		if (p.initialMovementName.contains("Optimal Distance")) {
+			p.chooseDurationType = false;
+			p.durationFrames = false;
+		}
+		else if (p.mode == Mode.SOLVE) {
+			p.chooseDurationType = false;
+			p.durationFrames = true;
+		}
+		else
+			p.chooseDurationType = true;
+	}
+
 	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
@@ -747,9 +774,9 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First", "None", "Custom"};
 	
-	static String[] midairMovementNames = {"Motion Cap Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
+	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 
-	static final int MCCT = 0, TT = 1, HMCCT = 2, HTT = 3, RS = 4, DIVE = 5, CB = 6, P2CB = 7;
+	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8;
 
 	static void saveMidairs() {
 		if (p.midairPreset.equals("Custom"))
@@ -764,7 +791,7 @@ public class VectorCalculator extends JPanel {
 			p.midairs[i][1] = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
 			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
 				p.diveCapBounce = true;
-				if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == TT) {
+				if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT) {
 					p.firstCTIndex = i - 2;
 				}
 			}
@@ -798,6 +825,7 @@ public class VectorCalculator extends JPanel {
 	static boolean add_tc_listener = true;
 
 	static JLabel errorMessage;
+	static JLabel progressMessage;
 	
 	static String[] attributeTitles = {"Parameter", "Value"};
 	static String[] movementTitles = {"Midair Movement Type", "Number of Frames"};
@@ -965,16 +993,7 @@ public class VectorCalculator extends JPanel {
 			updateCalculateUsing();
 		}
 		
-		if (p.initialMovementName.contains("Optimal Distance")) {
-			p.chooseDurationType = false;
-			p.durationFrames = false;
-		}
-		else if (p.mode == Mode.SOLVE) {
-			p.chooseDurationType = false;
-			p.durationFrames = true;
-		}
-		else
-			p.chooseDurationType = true;
+		updateDurationType();
 		refreshPropertiesRows(getRowParams(), true);
 	}
 
@@ -992,7 +1011,7 @@ public class VectorCalculator extends JPanel {
 				JOptionPane.showMessageDialog(f, "Failed to save user defaults.", "Save Error", JOptionPane.ERROR_MESSAGE);
 			else
 				JOptionPane.showMessageDialog(f, "Failed to save the file.", "Save Error", JOptionPane.ERROR_MESSAGE);
-			errorMessage.setText("Error: Save failed");
+			setErrorText("Error: Save failed");
 		}
 		if (updateCurrentFile) {
 			saved = saveSuccess;
@@ -1018,6 +1037,8 @@ public class VectorCalculator extends JPanel {
 
 	public static void loadProperties(Properties pl, boolean changeTab) {
 		loading = true;
+
+		VectorCalculator.clearMessage();
 
 		int currentTab = p.currentTab;
 		Properties.copyAttributes(pl, p);
@@ -1049,12 +1070,16 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void loadProperties(File file, boolean defaults) {
+		loading = true;
+
 		Properties pl = Properties.load(file, defaults);
 		if (pl == null && !defaults) {
-			errorMessage.setText("Error: File could not be loaded");
+			setErrorText("Error: File could not be loaded");
 		}
 		
 		loadProperties(pl, false);
+
+		loading = true; //the other loadProperties sets it to false
 
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
@@ -1078,9 +1103,11 @@ public class VectorCalculator extends JPanel {
 			}
 		}
 		if (defaults)
-			UndoManager.recordState();
+			UndoManager.recordState(true);
 		else
 			UndoManager.clear();
+
+		loading = false;
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -1128,6 +1155,7 @@ public class VectorCalculator extends JPanel {
 					 }
 			 }
 			 else if (evt.getActionCommand().equals("calculate")) {
+				clearMessage();
 				if (p.targetCoordinatesGiven) {
 					p.targetAngle = targetCoordinatesToTargetAngle();
 				}
@@ -1171,19 +1199,25 @@ public class VectorCalculator extends JPanel {
 						solver.solve(delta);
 					}
 					if (solver.bestDisp == 0) {
-						errorMessage.setText("Error: Movement cannot reach target height");
+						setErrorText("Error: Movement cannot reach target height");
 						return;
 					}
 					saveMidairs();
 					VectorMaximizer maximizer = getMaximizer();
-					//VectorMaximizer maximizer = solver.maximizer;
+					//VectorMaximizer maximizer = solver.maximizer; //this would be more efficient but not necessary
 					if (maximizer != null) {
-						
 						//p.diveTurn should be set correctly by the solver
 						maximizer.maximize();
 						//Debug.println(maximizer.variableCapThrow1FallingFrames);
 						//Debug.println(maximizer.fallingFrames);
-						//boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
+						boolean possible = maximizer.isDiveCapBouncePossible(-1, solver.singleThrowAllowed, false, solver.ttAllowed != TripleThrow.YES, !solver.singleThrowAllowed, solver.ttAllowed != TripleThrow.NO) >= 0;
+						if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
+							p.midairs[p.firstCTIndex][0] = TT;
+						else if (maximizer.ctType == Movement.CT) {
+							p.midairs[p.firstCTIndex][0] = CT;
+						}
+						else
+							p.midairs[p.firstCTIndex][0] = MCCT;
 						maximizer.recalculateDisps();
 						maximizer.adjustToGivenAngle();
 						setPropertiesRow(Parameter.dive_angle);
@@ -1203,8 +1237,9 @@ public class VectorCalculator extends JPanel {
 				}
 				else if (p.mode == Mode.SOLVE_DIVES) {
 					if (p.initialMovementName.equals("Optimal Distance Motion")) {
-						errorMessage.setText("Error: Optimal Distance Motion not supported by the Calculate (Solve Dives) mode");
+						setErrorText("Error: Optimal Distance Motion not supported by the Calculate (Solve Dives) mode");
 					}
+					TurnDuringDive oldTurnDuringDive = p.diveTurn;
 					DiveSolver diveSolver = new DiveSolver();
 					if (diveSolver.solve()) {
 						saveMidairs();
@@ -1222,8 +1257,9 @@ public class VectorCalculator extends JPanel {
 						}
 					}
 					else {
-						errorMessage.setText(diveSolver.error);
+						setErrorText(diveSolver.error);
 					}
+					setProperty(Parameter.dive_turn, oldTurnDuringDive.displayName); //set back to "Test Both" if that is the setting
 					Debug.println();
 				}
 				else if (p.mode == Mode.CALCULATE) {
@@ -1258,13 +1294,15 @@ public class VectorCalculator extends JPanel {
 					}
 					else {
 						maximizer = getMaximizer();
-						maximizer.maximize();
-						if (maximizer.hasError()) {
-							errorMessage.setText(maximizer.error);
-							return;
+						if (maximizer != null) {
+							maximizer.maximize();
+							if (maximizer.hasError()) {
+								setErrorText(maximizer.error);
+								return;
+							}
+							maximizer.recalculateDisps();
+							maximizer.adjustToGivenAngle();
 						}
-						maximizer.recalculateDisps();
-						maximizer.adjustToGivenAngle();
 					}
 					if (maximizer != null) {
 						VectorDisplayWindow.generateData(maximizer);
@@ -1276,7 +1314,7 @@ public class VectorCalculator extends JPanel {
 				//for all calculate modes
 				Properties.p_calculated = new Properties();
                 Properties.copyAttributes(p, Properties.p_calculated);
-				UndoManager.recordState();
+				UndoManager.recordState(false);
 			}
 		}
 	}
@@ -1288,12 +1326,12 @@ public class VectorCalculator extends JPanel {
 		movementPreparer.print();
 
 		if (errorText.equals("")) {
-			errorMessage.setText("");
+			clearMessage();
 			VectorMaximizer maximizer = new VectorMaximizer(movementPreparer);
 			return maximizer;
 		}
 		else {
-			errorMessage.setText("Error: " + errorText);
+			setErrorText("Error: " + errorText);
 			return null;
 		}
 	}
@@ -1370,6 +1408,23 @@ public class VectorCalculator extends JPanel {
 		if (index >= 0)
 			SwingUtilities.invokeLater(() -> {
 				genPropertiesTable.changeSelection(index, 1, false, false);});
+	}
+
+	public static void setProgressText(String progress) {
+		progressMessage.setText(progress);
+		if (progress != "")
+			System.out.println(progress);
+	}
+
+	public static void setErrorText(String error) {
+		errorMessage.setText(error);
+		if (error != "")
+			System.out.println(error);
+	}
+
+	public static void clearMessage() { //clears progress and error text
+		progressMessage.setText("");
+		errorMessage.setText("");
 	}
 
 	public static void main(String[] args) {
@@ -1538,7 +1593,7 @@ public class VectorCalculator extends JPanel {
 									setProperty(Parameter.initial_coordinates, initial_CoordinateWindow.getCoordinates());
 									initial_CoordinateWindow.close();
 									p.selectedParam = Parameter.initial_coordinates;
-									UndoManager.recordState();
+									UndoManager.recordState(true);
 									checkIfSaved(true);
 								}
 							});
@@ -1553,7 +1608,7 @@ public class VectorCalculator extends JPanel {
 									setProperty(Parameter.target_coordinates, target_CoordinateWindow.getCoordinates());
 									target_CoordinateWindow.close();
 									p.selectedParam = Parameter.target_coordinates;
-									UndoManager.recordState();
+									UndoManager.recordState(true);
 									checkIfSaved(true);
 								}
 							});
@@ -1593,7 +1648,7 @@ public class VectorCalculator extends JPanel {
 
 					// record undo state for user edits
 					if (initialized && !loading) {
-						UndoManager.recordState();
+						UndoManager.recordState(true);
 					}
 				}
 			}
@@ -1683,7 +1738,7 @@ public class VectorCalculator extends JPanel {
 				refreshPropertiesRows(getRowParams(), false);
 				// record undo state for midairs edits
 				if (initialized && !loading && !addingPreset) {
-					UndoManager.recordState();
+					UndoManager.recordState(true);
 				}
 				checkIfSaved(true);
 			}
@@ -1701,6 +1756,9 @@ public class VectorCalculator extends JPanel {
 		errorMessage = new JLabel("");
 		errorMessage.setForeground(Color.RED);
 		error.add(errorMessage);
+		progressMessage = new JLabel("");
+		progressMessage.setForeground(new Color(102, 153, 0));
+		error.add(progressMessage);
 		buttons.add(error, BorderLayout.SOUTH);
 		
 		add = new JButton("+");
@@ -1756,7 +1814,7 @@ public class VectorCalculator extends JPanel {
 		VectorCalculator.file = null; //so we don't save to it
 		// initialize undo history to current state
 		UndoManager.clear();
-		UndoManager.recordState();
+		UndoManager.recordState(true);
 		initialized = true;
 		MainJMenuBar.updateCalculatorMenuItems();
 		

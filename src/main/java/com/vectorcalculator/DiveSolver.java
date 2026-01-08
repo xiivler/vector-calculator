@@ -18,6 +18,7 @@ public class DiveSolver {
     int secondDiveIndex = -1;
 
     public boolean solve() {
+        long startTime = System.currentTimeMillis();
 
         singleThrowAllowed = true;
 
@@ -29,7 +30,7 @@ public class DiveSolver {
         //find locations of movements in the presets
         for (int i = 0; i < midairs.length; i++) {
             if (i >= 2 && midairs[i][0] == VectorCalculator.CB && midairs[i - 1][0] == VectorCalculator.DIVE &&
-                (midairs[i - 2][0] == VectorCalculator.MCCT || midairs[i - 2][0] == VectorCalculator.TT)) {
+                (midairs[i - 2][0] == VectorCalculator.MCCT || midairs[i - 2][0] == VectorCalculator.CT || midairs[i - 2][0] == VectorCalculator.TT)) {
                 diveCapBounceIndex = i;
                 firstDiveIndex = i - 1;
                 solveFirstDive = true;
@@ -101,6 +102,9 @@ public class DiveSolver {
         }
 
         VectorCalculator.addPreset(midairs);
+
+        VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+
         return true;
     }
 

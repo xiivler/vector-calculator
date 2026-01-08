@@ -2,7 +2,6 @@ package com.vectorcalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
 
 import com.vectorcalculator.Properties.TurnDuringDive;
 import com.vectorcalculator.Properties.GroundType;
@@ -12,6 +11,7 @@ import com.vectorcalculator.VectorCalculator.Parameter;
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class Solver {
 
+    int seconds = 0;
     long lastAlertTime = 0;
     //static final double limit = 20; 
     //this limit takes a while for TT jumps
@@ -31,6 +31,8 @@ public class Solver {
     TurnDuringDive dtAllowed;
 
     boolean hasRCV;
+
+    boolean throwOrRSAfterCB = true;
 
     Properties p = Properties.p;
 
@@ -127,10 +129,10 @@ public class Solver {
         singleThrowAllowed = true;
         if (p.midairPreset.equals("CBV First") && p.tripleThrow != TripleThrow.NO) {
             singleThrowAllowed = false;
-            cbDurationLimit = 36;
+            cbDurationLimit = p.cbCapReturnFrame + 12;
         }
         else if (p.midairPreset.equals("Simple Tech")) {
-            cbDurationLimit = 36;
+            cbDurationLimit = p.cbCapReturnFrame + 12;
         }
         if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"))
             ttAllowed = p.tripleThrow;
@@ -242,6 +244,8 @@ public class Solver {
                 if (p.initialFrames <= VectorCalculator.initialMovement.getMinFrames())
                     initialEfficiency = Double.MAX_VALUE;
                 double diveCapBounceEfficiency = efficiencies[lastFrames[diveCapBounceIndex]];
+                if (preset[diveCapBounceIndex - 1][1] <= p.cbCapReturnFrame && throwOrRSAfterCB) //this will break if final cap throw-less jumps are added
+                    diveCapBounceEfficiency = Double.MAX_VALUE;
                 double finalCapThrowEfficiency = efficiencies[lastFrames[finalCapThrowIndex]];
                 if (initialEfficiency < diveCapBounceEfficiency && initialEfficiency < finalCapThrowEfficiency) {
                     p.initialFrames--;
@@ -294,13 +298,16 @@ public class Solver {
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastFrames.length; i++) {
-                if (i != rainbowSpinIndex && i != homingMCCTIndex && efficiencies[lastFrames[i]] < worstEfficiency) {
-                    if (i != 0 || (i == 0 && durations[0] > VectorCalculator.initialMovement.getMinFrames())) //only shorten initial movement if it can be shortened
+                if (canSubtractFrame(i, durations[i]) && efficiencies[lastFrames[i]] < worstEfficiency) {
+                    if (i == firstDiveIndex - 1 && durations[i] <= 28) //28 and 21 are the best for high movement
+                        continue;
+                    if (i == firstDiveIndex && durations[i] <= 21)
+                        continue;
                     worstEfficiency = efficiencies[lastFrames[i]];
                     worstEfficiencyIndex = i;
                 }
             }
-            //Debug.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
+            System.out.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
             if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
                 p.durationFrames = true;
                 return false;
@@ -387,7 +394,7 @@ public class Solver {
 
         //test cap throw and dive combinations that will be used using the ballpark durations
 
-        System.out.println("Solver: Testing Dive Durations");
+        VectorCalculator.setProgressText("Solver: Testing Dive Durations");
         
         int[] testDurations = durations.clone();
         int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
@@ -406,7 +413,7 @@ public class Solver {
                 boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
                 if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, .1, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                     //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
-                    //System.out.println("Possible: " + ctDuration + " " + diveDuration);
+                    //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
                     ctTypes[ctDuration][diveDuration] = ctType;
                     diveDecels[ctDuration][diveDuration] = diveDecel;
                     edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
@@ -428,7 +435,7 @@ public class Solver {
         //Debug.printArray(diveTurns);
         //Debug.printArray(diveDecels);
 
-        System.out.println("Solver: Finding Optimal Duration Candidates");
+        VectorCalculator.setProgressText("Solver: Finding Optimal Duration Candidates");
         lastAlertTime = System.currentTimeMillis();
 
         bestResults = new ArrayList<DoubleIntArray>();
@@ -443,7 +450,7 @@ public class Solver {
         Debug.println("Best Results " + 0 + ": " + bestDisp);
         Debug.println(Arrays.toString(bestDurations));
 
-        System.out.println("Solver: Testing Optimal Duration Candidates");
+        VectorCalculator.setProgressText("Solver: Testing Optimal Duration Candidates");
 
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
@@ -477,8 +484,20 @@ public class Solver {
         Debug.println("Iterations: " + iterations);
         Debug.println("Inner Calls: " + innerCalls);
         // Debug.println("Bad Calls: " + badCalls);
-        System.out.println("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+        VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
     
+        return true;
+    }
+
+    public boolean canSubtractFrame(int i, int frames) {
+        if (i == 0 && frames <= VectorCalculator.initialMovement.getMinFrames())
+            return false;
+        if (i == rainbowSpinIndex && frames <= 32)
+            return false;
+        if (i == homingMCCTIndex && frames <= p.hctCapReturnFrame)
+            return false;
+        if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
+            return false;
         return true;
     }
 
@@ -594,8 +613,9 @@ public class Solver {
     }
 
     public DoubleIntArray test(int[] durations, int delta, int index, double y_pos) {
-        if (System.currentTimeMillis() - lastAlertTime >= 2000) {
-            System.out.println("Solver: Working...");
+        if (System.currentTimeMillis() - lastAlertTime >= 1000) {
+            seconds++;
+            VectorCalculator.setProgressText("Solver: Working... (" + seconds + "s)");
             lastAlertTime = System.currentTimeMillis();
         }
         if (index == durations.length - 1) {
@@ -608,11 +628,14 @@ public class Solver {
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
                 int testDuration = durations[index] + i;
-                if (index == homingMCCTIndex && (testDuration < p.hctCapReturnFrame || testDuration > 36)) {
+                if (index == homingMCCTIndex && testDuration > 36) {
                     Debug.println("Skipping HMCCT duration " + testDuration);
                     continue;
                 }
                 if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
+                    continue;
+                }
+                if (!canSubtractFrame(index, testDuration)) {
                     continue;
                 }
                 double test_y_pos = y_pos + y_disps[index];

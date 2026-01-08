@@ -35,7 +35,7 @@ public class Movement {
 	public static final double TTR_DISP_S = 10.641;
 	public static final int[] CT_FRAMES = {8, 8, 8, 8, 9, 8, 3, 3, 3, 3, 3};
 	public static final int[] CT_INPUT = {Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR, Inputs.Y, Inputs.Y, Inputs.Y, Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR};
-	public static final String[] CT_NAMES = {"Down MCCT", "Up MCCT", "Left MCCT", "Right MCCT", "Button Single Throw", "Button Double Throw", "Button TT", "Down TT", "Up TT", "Left TT", "Right TT"};
+	public static final String[] CT_NAMES = {"Down MCCT", "Up MCCT", "Left MCCT", "Right MCCT", "Single Throw", "Button DT", "Button TT", "Down TT", "Up TT", "Left TT", "Right TT"};
 	public static final double[][] CT_DISPS = 	{{CT_DISP_F, MCCTU_DISP_V, MCCTU_DISP_S},
 												{CT_DISP_F, MCCTD_DISP_V, MCCTD_DISP_S},
 												{CT_DISP_F, MCCTL_DISP_V, MCCTL_DISP_S},
@@ -588,9 +588,17 @@ public class Movement {
 		//only lasts 24 frames, should be split into falling after this
 		//add min frames to this and rainbow spin?
 		else if (movementType.contains("Throw")) {
-			inputs1.add(Inputs.MU);
-			if (movementType.equals("Motion Cap Throw"))
+			if (movementType.equals("Single Throw")) {
+				minFrames = 9;
+				inputs1.add(Inputs.Y);
+			}
+			else {
+				inputs1.add(Inputs.MU);
+			}
+			if (movementType.equals("Motion Cap Throw")) {
 				minFrames = 8;
+				displayName = "MCCT";
+			}
 			else if (movementType.equals("Triple Throw"))
 				minFrames = 3;
 			else if (movementType.equals("Homing Motion Cap Throw")) {

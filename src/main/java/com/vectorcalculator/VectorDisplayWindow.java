@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -53,14 +54,15 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Initial Joystick Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
 	static final int INITIAL_ANGLE_ROW = 0;
 	static final int TARGET_ANGLE_ROW = 1;
-	static final int FINAL_POSITION_ROW = 2;
-	static final int HORIZONTAL_DISPLACEMENT_ROW = 3;
-	static final int VERTICAL_DISPLACEMENT_ROW = 4;
-	static final int TOTAL_FRAMES_ROW = 5;
-	static final int MADE_JUMP_ROW = 6;
+	static final int INITIAL_JOYSTICK_ANGLE_ROW = 2;
+	static final int FINAL_POSITION_ROW = 3;
+	static final int HORIZONTAL_DISPLACEMENT_ROW = 4;
+	static final int VERTICAL_DISPLACEMENT_ROW = 5;
+	static final int TOTAL_FRAMES_ROW = 6;
+	static final int MADE_JUMP_ROW = 7;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -115,7 +117,7 @@ public class VectorDisplayWindow {
 		infoTable.getColumnModel().getColumn(0).setMaxWidth(260);
 		
 		JScrollPane infoScrollPane = new JScrollPane(infoTable);
-		infoScrollPane.setPreferredSize(new Dimension(500, 158));
+		infoScrollPane.setPreferredSize(new Dimension(500, infoTable.getRowHeight() * (infoTable.getRowCount() + 1) + 8));
 		
 		
 		//DATA TABLE
@@ -204,7 +206,7 @@ public class VectorDisplayWindow {
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
-		frame.setSize(1160, 600);
+		frame.setSize(1160, 700);
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowOpened(java.awt.event.WindowEvent e) {
 				MainJMenuBar.updateCalculatorMenuItems();
@@ -256,15 +258,15 @@ public class VectorDisplayWindow {
 		return String.format("(%.3f; %.3f)", r, theta);
 	}
 
-	private static String toPolarCoordinatesJoystick(double r, double theta) {
+	private static String toPolarCoordinatesJoystick(double r, double theta, int precision) {
 		if (theta == SimpleMotion.NO_ANGLE) {
 			return "";
 		}
 		if (r == 1) {
-			return String.format("(1; %.4f)", theta);
+			return String.format("(1; %." + precision + "f)", theta);
 		}
 		else {
-			return String.format("(%.2f; %.4f)", r, theta);
+			return String.format("(%.2f; %." + precision + "f)", r, theta);
 		}
 	}
 	
@@ -383,14 +385,17 @@ public class VectorDisplayWindow {
 				z = info[i][2];
 				double dispX = p.x0 - x;
 				double dispZ = p.z0 - z;
-				if (y + p.getUpwarpMinusError() >= p.y1 && Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp) {
-					if (!madeJump) {
+				if (y + p.getUpwarpMinusError() >= p.y1 && (!p.targetCoordinatesGiven || Math.sqrt(dispX * dispX + dispZ * dispZ) > targetDisp)) {
+					if (!madeJump && p.targetCoordinatesGiven) {
 						madeJump = true;
 						rowContents[1] = "(Made Jump)";
 					}
 					if (y < p.y1 && !firstDive && index == simpleMotions.length - 1) {
 						upwarpOffset = p.y1 - info[i][1];
 						y = p.y1;
+						if (!p.targetCoordinatesGiven) {
+							rowContents[1] = "(Upwarp)";
+						}
 					}
 				}
 				if (i == info.length - 1) {
@@ -400,7 +405,7 @@ public class VectorDisplayWindow {
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
-					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce")) {
+					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce") || motion.movement.movementType.equals("2P Midair Vault")) {
 						if (y < p.groundHeightSecondGP) {
 							y = p.groundHeightSecondGP;
 							rowContents[1] = "(Hit Ground)";
@@ -424,7 +429,7 @@ public class VectorDisplayWindow {
 					theta = reduceAngle(info[i][7] - cameraAngle + Math.PI / 2);
 				}
 
-				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], theta);
+				rowContents[3] = toPolarCoordinatesJoystick(info[i][8], theta, 3);
 				rowContents[4] = toCoordinates(x, y, z);
 				rowContents[5] = toVelocityVector(info[i][3], info[i][4], info[i][5]);
 				double velocityAngle;
@@ -513,12 +518,13 @@ public class VectorDisplayWindow {
 		}
 	
 		infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INITIAL_ANGLE_ROW, 1);
+		infoTableModel.setValueAt(shorten(reduceAngle(initialAngleAbsolute - cameraAngle + Math.PI / 2), 4), INITIAL_JOYSTICK_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), TARGET_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
 		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
-		if (!p.targetCoordinates)
+		if (!p.targetCoordinatesGiven)
 			infoTableModel.setValueAt("N/A", MADE_JUMP_ROW, 1);
 		else if (madeJump)
 			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);
@@ -539,19 +545,21 @@ public class VectorDisplayWindow {
 	}
 	
 	public static void display() {
-		if (Properties.p.savedInfoTableRows != null && dataTableModel.getRowCount() == 0) {
+		if (Properties.p.savedInfoTableRows != null && VectorCalculator.loading) {
 			loadSavedData();
 		}
 		frame.setVisible(true);
 	}
 
 	public static void loadSavedData() {
+		//System.out.println("Loading Rows");
 		if (Properties.p.savedInfoTableRows != null) {
 			for (int i = 0; i < Properties.p.savedInfoTableRows.length; i++) {
 				String[] parts = Properties.p.savedInfoTableRows[i].split("\t");
 				infoTableModel.setValueAt(parts[0], i, 0);
 				infoTableModel.setValueAt(parts[1], i, 1);
 			}
+			dataTableModel.setRowCount(0);
 			for (String[] row : Properties.p.savedDataTableRows) {
 				dataTableModel.addRow(row);
 			}

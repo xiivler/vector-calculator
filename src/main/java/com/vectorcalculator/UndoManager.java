@@ -8,9 +8,7 @@ public class UndoManager {
     private static Deque<Properties> undoStack = new ArrayDeque<>();
     private static Deque<Properties> redoStack = new ArrayDeque<>();
 
-    private static boolean redoing = false;
-
-    public static synchronized void recordState() {
+    public static synchronized void recordState(boolean clearMessage) {
         if (VectorCalculator.loading) return;
         // Ensure midairs are saved into Properties before snapshot
         try {
@@ -20,6 +18,8 @@ public class UndoManager {
         updateSelectionState();
         Properties snapshot = new Properties();
         if (!undoStack.isEmpty() && Properties.getInstance().equals(undoStack.peek())) return; //don't save state if nothing has changed
+        if (clearMessage)
+            VectorCalculator.clearMessage();
         Properties.copyAttributes(Properties.getInstance(), snapshot);
         undoStack.push(snapshot);
         // limit size
@@ -45,6 +45,7 @@ public class UndoManager {
         Properties.copyAttributes(Properties.getInstance(), current);
         //Debug.println(current.genPropertiesSelectedRow);
         
+        VectorCalculator.clearMessage();
 
         Properties recent = undoStack.pop();
         Properties prev = undoStack.peek();
@@ -67,6 +68,8 @@ public class UndoManager {
         if (!canRedo()) return;
         Properties current = new Properties();
         Properties.copyAttributes(Properties.getInstance(), current);
+
+        VectorCalculator.clearMessage();
 
         VectorCalculator.loadProperties(redoStack.pop(), true);
         Properties snapshot = new Properties();

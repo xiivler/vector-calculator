@@ -231,7 +231,6 @@ public class Properties {
 
     double x0 = 0, y0 = 0, z0 = 0;
 	double x1 = 0, y1 = 0, z1 = 3000;
-	boolean targetCoordinates = true;
     boolean solveForInitialAngle = false;
 	double initialAngle = 0;
 	double targetAngle = 90;
@@ -255,6 +254,7 @@ public class Properties {
     double diveCapBounceTolerance = 0.02; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
     TurnDuringDive diveTurn = TurnDuringDive.YES;
+    int cbCapReturnFrame = 24;
 
 	String midairPreset = "Spinless";
     boolean canTripleThrow = true;
