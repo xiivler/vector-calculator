@@ -305,11 +305,12 @@ public class GroundedCapThrow extends SimpleMotion {
 
 	public double calcDispY() {
 		if (frames > PRE_HOOK_FRAMES) {
-			return movement.initialVerticalSpeed * PRE_HOOK_FRAMES + POST_HOOK_Y_VEL * (frames - PRE_HOOK_FRAMES);
+			dispY = movement.initialVerticalSpeed * PRE_HOOK_FRAMES + POST_HOOK_Y_VEL * (frames - PRE_HOOK_FRAMES);
 		}
 		else {
-			return movement.initialVerticalSpeed * frames;
+			dispY = movement.initialVerticalSpeed * frames;
 		}
+		return dispY;
 	}
 
 	public double calcDispY(int frames) {

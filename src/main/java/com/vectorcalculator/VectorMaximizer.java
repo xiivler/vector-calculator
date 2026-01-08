@@ -1720,8 +1720,9 @@ public class VectorMaximizer {
 					int cbFrame = getCapBounceFrame(ct);
 					//Debug.printf("%.3f° %df\n", diveCapBounceAngle, cbFrame);
 					if (cbFrame == targetCBFrame) {
-						if (!found) {
+						if (!found || overshot) {
 							found = true;
+							overshot = false;
 							lowAngle = diveCapBounceAngle;
 						}
 						if (!overshot) {

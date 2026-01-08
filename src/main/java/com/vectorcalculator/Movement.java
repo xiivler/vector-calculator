@@ -287,7 +287,7 @@ public class Movement {
 		//need to change rolls to falling to vector them, but falling may have different gravity
 		else if (movementType.contains("Ground Pound Roll")) {
 			displayName = "GP Roll";
-			initialVerticalSpeed = 0;
+			initialVerticalSpeed = -7 + 1.5;
 			variableInitialHorizontalSpeed = false;
 			initialHorizontalSpeed = 30;
 			framesAtInitialHorizontalSpeed = 43;
@@ -297,7 +297,7 @@ public class Movement {
 			moonGravity = 1;
 			defaultSpeedCap = 30;
 			trueSpeedCap = 30;
-			frameOffset = 1;
+			//frameOffset = 1;
 			inputs1.add(Inputs.Y);
 		}
 		

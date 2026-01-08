@@ -391,10 +391,12 @@ public class VectorDisplayWindow {
 						rowContents[1] = "(Made Jump)";
 					}
 					if (y < p.y1 && !firstDive && index == simpleMotions.length - 1) {
-						upwarpOffset = p.y1 - info[i][1];
-						y = p.y1;
-						if (!p.targetCoordinatesGiven) {
-							rowContents[1] = "(Upwarp)";
+						if (p.targetCoordinatesGiven || i == info.length - 1) {
+							upwarpOffset = p.y1 - info[i][1];
+							y = p.y1;
+							if (!p.targetCoordinatesGiven) {
+								rowContents[1] = "(Upwarp)";
+							}
 						}
 					}
 				}

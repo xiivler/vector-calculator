@@ -55,7 +55,7 @@ public class VectorCalculator extends JPanel {
 	
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 435;
-	public static final int MIDAIR_PANEL_HEIGHT = 260;
+	public static final int MIDAIR_PANEL_HEIGHT = 275;
 
 	static Properties p = Properties.getInstance();
 	static boolean stop = false;
@@ -554,9 +554,11 @@ public class VectorCalculator extends JPanel {
 		case initial_frames:
 			int minFrames = initialMovement.minFrames;
 			p.initialFrames = clampInt(parseIntWithDefault(value, minFrames), minFrames, Integer.MAX_VALUE);
+			p.initialDispY = initialMotion.calcDispY(p.initialFrames) + getMoonwalkDisp();
 			break;
 		case initial_displacement:
 			p.initialDispY = parseDoubleWithDefault(value, 0);
+			p.initialFrames = initialMotion.calcFrames(p.initialDispY - getMoonwalkDisp());
 			break;
 		case duration_search_range:
 			p.durationSearchRange = clampInt(parseIntWithDefault(value, 4), 2, 5);
@@ -1028,7 +1030,7 @@ public class VectorCalculator extends JPanel {
 			saved = true;
 			f.setTitle(projectName);
 		}
-		else if (initialized && saved) {
+		else if (initialized) {
 			saved = false;
 			f.setTitle("*" + projectName);
 		}
@@ -1168,14 +1170,17 @@ public class VectorCalculator extends JPanel {
 						p.framesJump = 10;
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						SolverInterface solverTJ = runSolver(diveSolver, false);
+						int[][] tjMidairs = p.midairs;
 						//solverTJ.solve(p.durationSearchRange);
 						p.initialMovementName = "Motion Cap Throw RCV";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						SolverInterface solverRCV = runSolver(diveSolver, false);
+						int[][] rcvMidairs = p.midairs;
 						//solverRCV.solve(Math.min(p.durationSearchRange, 3));
 						p.initialMovementName = "Sideflip";
 						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 						SolverInterface solverSideflip = runSolver(diveSolver, false);
+						int[][] sideflipMidairs = p.midairs;
 						//solverSideflip.solve(p.durationSearchRange);
 						// Debug.println("TJ: " + maximizerTJ.bestDisp);
 						// Debug.println("RC: " + maximizerRC.bestDisp);
@@ -1183,14 +1188,17 @@ public class VectorCalculator extends JPanel {
 						if (solverTJ.getBestDisp() > solverRCV.getBestDisp() && solverTJ.getBestDisp() > solverSideflip.getBestDisp()) {
 							solver = solverTJ;
 							p.initialMovementName = "Triple Jump";
+							addPreset(tjMidairs);
 						}
 						else if (solverRCV.getBestDisp() > solverTJ.getBestDisp() && solverRCV.getBestDisp() > solverSideflip.getBestDisp()) {
 							solver = solverRCV;
 							p.initialMovementName = "Motion Cap Throw RCV";
+							addPreset(rcvMidairs);
 						}
 						else {
 							solver = solverSideflip;
 							p.initialMovementName = "Sideflip";
+							addPreset(sideflipMidairs);
 						}
 						retest(solver, diveSolver);
 					}
@@ -1208,6 +1216,7 @@ public class VectorCalculator extends JPanel {
 							solver = solverCRNV;
 							p.initialMovementName = "Crouch Roll (No Vector)";
 						}
+						setPropertiesRow(Parameter.initial_movement);
 						initialMovement = new Movement(p.initialMovementName);
 						retest(solver, diveSolver);
 					}
@@ -1225,6 +1234,7 @@ public class VectorCalculator extends JPanel {
 							solver = solverRBNV;
 							p.initialMovementName = "Roll Boost (No Vector)";
 						}
+						setPropertiesRow(Parameter.initial_movement);
 						initialMovement = new Movement(p.initialMovementName);
 						retest(solver, diveSolver);
 					}
@@ -1233,7 +1243,7 @@ public class VectorCalculator extends JPanel {
 					}
 					saveMidairs();
 					VectorMaximizer maximizer = solver.getMaximizer();
-					if (maximizer != null) {
+					if (solver.solveSuccess() && maximizer != null) {
 						if (p.firstCTIndex >= 0) {
 							if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
 								p.midairs[p.firstCTIndex][0] = TT;
@@ -1251,6 +1261,7 @@ public class VectorCalculator extends JPanel {
 					}
 					if (optimalDistanceMotion) {
 						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
+						p.durationFrames = false;
 					}
 					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
 						setProperty(Parameter.hct_type, p.hctType.name);
@@ -1335,7 +1346,7 @@ public class VectorCalculator extends JPanel {
 		SolverInterface solver;
 		if (diveSolver) {
 			solver = new DiveSolver();
-			solver.solve(20);
+			solver.solve(40);
 		}
 		else {
 			solver = new Solver();
@@ -1354,7 +1365,7 @@ public class VectorCalculator extends JPanel {
 			solver.test(solver.bestDurations, true, solver.hasRCV);
 		}
 		else
-			solverInterface.solve(20);
+			solverInterface.solve(40);
 		if (!solverInterface.solveSuccess()) {
 			setErrorText(solverInterface.getError());
 		}

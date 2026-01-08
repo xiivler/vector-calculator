@@ -7,6 +7,9 @@ import com.vectorcalculator.VectorCalculator.Parameter;
 //class that only solves for the dive lengths
 public class DiveSolver implements SolverInterface {
 
+    public static final int MIN_DIVE_DURATION = 10;
+    public static final int MAX_DIVE_DURATION = 40;
+
     Properties p = Properties.p;
 
     boolean singleThrowAllowed = true;
@@ -55,6 +58,13 @@ public class DiveSolver implements SolverInterface {
 
     public boolean solve(int maxDelta) {
         long startTime = System.currentTimeMillis();
+
+        boolean oldDurationFrames = p.durationFrames;
+
+        if (!p.durationFrames) {
+            p.initialFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+        }
+        p.durationFrames = true;
 
         singleThrowAllowed = true;
         mcctAllowed = true;
@@ -106,6 +116,10 @@ public class DiveSolver implements SolverInterface {
         if (solveFirstDive) {
             int firstDiveDuration = midairs[firstDiveIndex][1];
 
+            if (firstDiveDuration > MAX_DIVE_DURATION) {
+                firstDiveDuration = MAX_DIVE_DURATION;
+            }
+
             boolean add = true;
             int delta = 0;
 
@@ -126,18 +140,21 @@ public class DiveSolver implements SolverInterface {
                 add = !add;
                 if (delta > maxDelta) { //different number for moon gravity?
                     error = "Error: Could not bounce on cappy"; 
+                    p.durationFrames = oldDurationFrames;
                     success = false;
                     return false;
                 }
                 int testFirstDiveDuration = firstDiveDuration + delta;
                 Debug.println("Testing " + testFirstDiveDuration);
-                if (testFirstDiveDuration <= 10 || testFirstDiveDuration >= 40)
+                if (testFirstDiveDuration <= MIN_DIVE_DURATION || testFirstDiveDuration >= MAX_DIVE_DURATION)
                     continue;
                 midairs[firstDiveIndex][1] = testFirstDiveDuration;
                 VectorCalculator.addPreset(midairs);
                 found = (testCT() != -1);
             }
         }
+
+        System.out.println(p.initialFrames);
 
         if (solveSecondDive) {
             maximizer = VectorCalculator.getMaximizer();
@@ -153,6 +170,7 @@ public class DiveSolver implements SolverInterface {
                 }
                 else if (midairs[secondDiveIndex][1] == 14) {
                     error = "Error: Could not reach target height"; 
+                    p.durationFrames = oldDurationFrames;
                     success = false;
                     return false;
                 }
@@ -168,7 +186,8 @@ public class DiveSolver implements SolverInterface {
         if (solveSecondDive) {
             maximizer = VectorCalculator.getMaximizer();
             maximizer.maximize();
-            maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO); 
+            if (solveFirstDive)
+                maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO); 
         }
 
         if (!solveFirstDive && !solveSecondDive) {
@@ -181,6 +200,7 @@ public class DiveSolver implements SolverInterface {
 
         VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
+        p.durationFrames = oldDurationFrames;
         success = true;
         return true;
     }
@@ -223,11 +243,14 @@ public class DiveSolver implements SolverInterface {
     }
 
     public double getFinalYPos(VectorMaximizer maximizer) {
+        //maximizer.maximize();
         maximizer.calcYDisps();
         SimpleMotion[] motions = maximizer.getMotions();
         double y = p.y0;
         for (int i = 0; i < motions.length; i++) {
             y += motions[i].dispY;
+            
+            System.out.println(motions[i].movement.movementType + " " + motions[i].dispY);
         }
         return y;
     }

@@ -2,18 +2,12 @@ package com.vectorcalculator;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 
 import java.awt.*;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Vector;
 
 public class MainJMenuBar extends JMenuBar {
     private static final int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
@@ -191,7 +185,11 @@ public class MainJMenuBar extends JMenuBar {
 				}
 				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
 				VectorCalculator.file = null;
+				VectorCalculator.projectName = "Untitled Project";
 				VectorCalculator.f.setTitle("Untitled Project");
+				Properties.p_saved = new Properties();
+				Properties.copyAttributes(p, Properties.p_saved);
+				VectorCalculator.saved = true;
 			} finally {
 				VectorCalculator.cellsEditable = true;
 			}

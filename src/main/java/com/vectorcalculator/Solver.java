@@ -212,7 +212,7 @@ public class Solver implements SolverInterface {
         p.onMoon = p.onMoon;
         
         p.initialDispY = p.y1 - p.y0 - 1000;
-        p.initialFrames = VectorCalculator.initialMotion.calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+        p.initialFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
 
         p.durationFrames = true;
 
@@ -407,7 +407,7 @@ public class Solver implements SolverInterface {
         }
         Debug.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
 
-        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
         Debug.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         Debug.println("Ballpark Y Height: " + y);
 
