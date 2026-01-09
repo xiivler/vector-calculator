@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class UndoManager {
-    private static final int MAX_HISTORY = 50;
+    private static final int MAX_HISTORY = 100;
     private static Deque<Properties> undoStack = new ArrayDeque<>();
     private static Deque<Properties> redoStack = new ArrayDeque<>();
 

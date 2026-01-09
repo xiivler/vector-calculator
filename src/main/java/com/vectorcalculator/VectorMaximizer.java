@@ -370,7 +370,7 @@ public class VectorMaximizer {
 		double rotationalVelocity = 0;
 		boolean standardTurnaround = false;
 		for (int i = 0; i < frames - 2; i++) {
-			rotationalVelocity += .3; //fix if really long?
+			rotationalVelocity += .3;
 			if (rotationalVelocity >= 6) {
 				rotationalVelocity = 6;
 			}
@@ -380,7 +380,7 @@ public class VectorMaximizer {
 				standardTurnaround = true;
 			}
 		}
-		rotationalVelocity += .3; //fix if really long?
+		rotationalVelocity += .3;
 		if (rotationalVelocity >= 6) {
 			rotationalVelocity = 6;
 		}
@@ -437,10 +437,17 @@ public class VectorMaximizer {
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 					}
-					holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
+					if (p.spreadOutOvershoot)
+						holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
+					else
+						holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1];
 					Debug.println(holdingAngles[firstAdditionalRotationFrame]);
 					for (int i = firstAdditionalRotationFrame + 1; i < frames - turnaroundFrames; i++) {
 						holdingAngles[i] = holdingAngles[i - 1];
+					}
+					if (!p.spreadOutOvershoot) { //counterrotate enough to mitigate all the overshoot in one frame
+						System.out.println("Overshoot: " + Math.toDegrees(overshoot));
+						holdingAngles[frames - turnaroundFrames - 1] = holdingAngles[frames - turnaroundFrames - 2] - overshoot;
 					}
 					if (turnaroundFrames == 1) {
 						holdingAngles[frames - 1] = throwAngle + totalRotation - 136 / 180.0 * Math.PI; //hold as little back as you can
@@ -1046,6 +1053,12 @@ public class VectorMaximizer {
 		firstFrameDecel = p.diveFirstFrameDecel;
 
 		if (p.initialAndTargetGiven) {
+			while (initialAngle - targetAngle > Math.PI) {
+				initialAngle -= Math.PI * 2;
+			}
+			while (initialAngle - targetAngle < -Math.PI) {
+				initialAngle += Math.PI * 2;
+			}
 			if (rightVector) {
 				rcTrueInitialAngleDiff = initialAngle - targetAngle;
 				//initialAngle -= rcTrueInitialAngleDiff;

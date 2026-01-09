@@ -187,7 +187,7 @@ public class DiveSolver implements SolverInterface {
             maximizer = VectorCalculator.getMaximizer();
             maximizer.maximize();
             if (solveFirstDive)
-                maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO); 
+                maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, p.tripleThrow != TripleThrow.NO); 
         }
 
         if (!solveFirstDive && !solveSecondDive) {
@@ -238,7 +238,7 @@ public class DiveSolver implements SolverInterface {
         p.diveFirstFrameDecel = 0;
         maximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         bestDisp = maximizer.maximize();
-        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, false, p.tripleThrow != TripleThrow.NO);
+        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, p.tripleThrow != TripleThrow.NO);
         return ctType;
     }
 

@@ -225,6 +225,7 @@ public class Properties {
 	boolean durationFrames = true;
 	int initialFrames = 70;
 	double initialDispY = 0;
+    int vaultCapReturnFrame = 28;
     boolean chooseJumpFrames = true;
 	int framesJump = 10;
 	boolean canMoonwalk = true;
@@ -238,7 +239,7 @@ public class Properties {
     double diveCapBounceTolerance = 0.01; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
     TurnDuringDive diveTurn = TurnDuringDive.YES;
-    int cbCapReturnFrame = 24;
+    int cbCapReturnFrame = 25;
 
 	String midairPreset = "MCCT First";
     boolean canTripleThrow = true;
@@ -258,7 +259,7 @@ public class Properties {
 	double customCameraAngle = 0;
     int[][] midairs;
 
-    int scriptType = VectorDisplayWindow.NX_TAS;
+    int scriptType = VectorDisplayWindow.TSV_TAS;
     String scriptPath = "";
 
     double groundHeight = 0;
@@ -286,6 +287,9 @@ public class Properties {
     boolean initialAngleGiven = false;
     boolean targetAngleGiven = false;
     boolean targetCoordinatesGiven = true;
+
+    //currently internal setting only
+    boolean spreadOutOvershoot = false;
 
     //saving the VectorDisplayWindow tables
     String[] savedInfoTableRows = null;

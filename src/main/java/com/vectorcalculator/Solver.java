@@ -24,6 +24,7 @@ public class Solver implements SolverInterface {
 
     double limit = 20; //if the final y height of the test is above this number, assume it can't be optimal
 
+    int initialDurationLimit = Integer.MAX_VALUE; //limit for how initial movement duration can be
     int cbDurationLimit = Integer.MAX_VALUE; //limit for how long cb duration can be
 
     double bestResultsRange = 5; //range of values worse than the current best to still test in full
@@ -164,12 +165,19 @@ public class Solver implements SolverInterface {
         singleThrowAllowed = true;
         mcctAllowed = true;
 
-        if (p.midairPreset.equals("CBV First") && p.tripleThrow != TripleThrow.NO) {
+        boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
+        boolean ttFirst = p.midairPreset.equals("MCCT First") && p.tripleThrow == TripleThrow.YES;
+        if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
+            initialDurationLimit = p.vaultCapReturnFrame + 11;
+        }
+        if (p.midairPreset.equals("CBV First") && p.tripleThrow == TripleThrow.YES) {
+            if (p.initialMovementName.equals("Vault"))
+                initialDurationLimit = p.vaultCapReturnFrame + 11;
             singleThrowAllowed = false;
-            cbDurationLimit = p.cbCapReturnFrame + 12;
+            cbDurationLimit = p.cbCapReturnFrame + 11;
         }
         else if (p.midairPreset.equals("Simple Tech")) {
-            cbDurationLimit = p.cbCapReturnFrame + 12;
+            cbDurationLimit = p.cbCapReturnFrame + 11;
         }
         if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) {
             ttAllowed = p.tripleThrow;
@@ -212,15 +220,16 @@ public class Solver implements SolverInterface {
         p.onMoon = p.onMoon;
         
         p.initialDispY = p.y1 - p.y0 - 1000;
-        p.initialFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+        int tooManyFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+        p.initialFrames = Math.min(initialDurationLimit, tooManyFrames);
 
         p.durationFrames = true;
 
         Debug.println("Reached Preset Maximization");
 
-        preset[diveCapBounceIndex - 1][1] = Math.min(p.initialFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
-        preset[secondDiveIndex - 1][1] = p.initialFrames; //make final dive also big to start
-        preset[finalCapThrowIndex - 1][1] = p.initialFrames;
+        preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
+        preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
+        preset[finalCapThrowIndex - 1][1] = tooManyFrames;
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
 
@@ -649,7 +658,7 @@ public class Solver implements SolverInterface {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed, ttAllowed != TripleThrow.NO);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
         diveDecel = ballparkMaximizer.firstFrameDecel;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
@@ -687,6 +696,9 @@ public class Solver implements SolverInterface {
                 int testDuration = durations[index] + i;
                 if (index == homingMCCTIndex && testDuration > 36) {
                     Debug.println("Skipping HMCCT duration " + testDuration);
+                    continue;
+                }
+                if (index == 0 && testDuration > initialDurationLimit) {
                     continue;
                 }
                 if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
@@ -837,7 +849,7 @@ public class Solver implements SolverInterface {
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps();
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;

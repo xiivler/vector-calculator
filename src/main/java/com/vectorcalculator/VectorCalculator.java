@@ -84,13 +84,13 @@ public class VectorCalculator extends JPanel {
 		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
-		duration_search_range("Duration Search Range"),
+		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
 		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
-		dive_turn("Turn During First Dive"), cb_cap_return_frame("Frame Cappy Returns After CB"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
+		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("Frame Cappy Returns After HCT"),
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
@@ -141,6 +141,8 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.initial_frames);
 				else if (p.mode != Mode.SOLVE)
 					params.add(Parameter.initial_displacement);
+				if (p.initialMovementName.equals("Vault"))
+					params.add(Parameter.vault_cap_return_frame);
 				if (p.chooseJumpFrames)
 					params.add(Parameter.jump_button_frames);
 				if (p.canMoonwalk)
@@ -353,6 +355,9 @@ public class VectorCalculator extends JPanel {
 		case cb_cap_return_frame:
 			value = p.cbCapReturnFrame;
 			break;
+		case vault_cap_return_frame:
+			value = p.vaultCapReturnFrame;
+			break;
 		case hct_type:
 			value = p.hctType.name;
 			break;
@@ -563,6 +568,9 @@ public class VectorCalculator extends JPanel {
 		case duration_search_range:
 			p.durationSearchRange = clampInt(parseIntWithDefault(value, 4), 2, 5);
 			break;
+		case vault_cap_return_frame:
+			p.vaultCapReturnFrame = clampInt(parseIntWithDefault(value, 28), 0, Integer.MAX_VALUE);
+			break;
 		case jump_button_frames:
 			p.framesJump = clampInt(parseIntWithDefault(value, 1), 1, 10);
 			break;
@@ -639,7 +647,7 @@ public class VectorCalculator extends JPanel {
 			p.diveTurn = Properties.TurnDuringDive.fromDisplayName(value.toString());
 			break;
 		case cb_cap_return_frame:
-			p.cbCapReturnFrame = clampInt(parseIntWithDefault(value, 24), 0, Integer.MAX_VALUE);
+			p.cbCapReturnFrame = clampInt(parseIntWithDefault(value, 25), 0, Integer.MAX_VALUE);
 			break;
 		case hct_type:
 			p.hctType = Properties.HctType.fromName(value.toString());
@@ -985,11 +993,12 @@ public class VectorCalculator extends JPanel {
 		else
 			p.initialHorizontalSpeed = initialMovement.initialHorizontalSpeed;
 		p.initialAndTargetGiven = (p.initialMovementName.contains("RCV"));
-		if (p.mode == Mode.SOLVE)
+		if (p.mode == Mode.SOLVE && p.initialAndTargetGiven)
 			setProperty(Parameter.solve_for_initial_angle, "Yes");
 		p.initialFrames = Math.max(p.initialFrames, initialMovement.minFrames);
-		if (p.initialAndTargetGiven && p.calculateUsing == CalculateUsing.INITIAL_ANGLE)
+		if (p.initialAndTargetGiven && p.calculateUsing == CalculateUsing.INITIAL_ANGLE) {
 			setProperty(Parameter.calculate_using, "Target Angle");
+		}
 		else {
 			updateCalculateUsing();
 		}
@@ -1162,6 +1171,11 @@ public class VectorCalculator extends JPanel {
 				}
 				boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
 				if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
+					if (p.initialMovementName.equals("Optimal Distance RCV")) {
+						setErrorText("Error: Optimal Distance RCV not supported in this mode");
+						return;
+					}
+
 					boolean diveSolver = p.mode == Mode.SOLVE_DIVES;
 					TurnDuringDive oldTurnDuringDive = p.diveTurn;
 					SolverInterface solver;
