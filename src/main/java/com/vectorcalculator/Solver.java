@@ -132,6 +132,9 @@ public class Solver implements SolverInterface {
 
     public boolean solve(int delta) {
         Debug.println("Starting Solver");
+
+        VectorCalculator.setProgressText("Solver: Finding Ballpark Durations");
+
         long startTime = System.currentTimeMillis();
 
         if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
@@ -499,6 +502,10 @@ public class Solver implements SolverInterface {
         //Debug.printArray(diveTurns);
         //Debug.printArray(diveDecels);
 
+        if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+            return false;
+        }
+
         VectorCalculator.setProgressText("Solver: Finding Optimal Duration Candidates");
         lastAlertTime = System.currentTimeMillis();
 
@@ -513,6 +520,10 @@ public class Solver implements SolverInterface {
 
         Debug.println("Best Results " + 0 + ": " + bestDisp);
         Debug.println(Arrays.toString(bestDurations));
+
+        if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+            return false;
+        }
 
         VectorCalculator.setProgressText("Solver: Testing Optimal Duration Candidates");
 
@@ -543,6 +554,11 @@ public class Solver implements SolverInterface {
             error = "Error: Could not reach target height or could not bounce on cappy";
             return false;
         }
+
+        if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+            return false;
+        }
+
         // Debug.println("Delta: " + delta);
         //Debug.println("Max Delta: " + maxDelta);
         Debug.println("Deltas: " + Arrays.toString(deltas) + ", " + bestYDisp);
@@ -679,9 +695,13 @@ public class Solver implements SolverInterface {
     }
 
     public DoubleIntArray test(int[] durations, int delta, int index, double y_pos) {
+        if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+            return new DoubleIntArray(0, durations);
+        }
+
         if (System.currentTimeMillis() - lastAlertTime >= 1000) {
             seconds++;
-            VectorCalculator.setProgressText("Solver: Working... (" + seconds + "s)");
+            VectorCalculator.setProgressText("Solver: Finding Optimal Duration Candidates (" + seconds + "s)");
             lastAlertTime = System.currentTimeMillis();
         }
         if (index == durations.length - 1) {
@@ -810,6 +830,10 @@ public class Solver implements SolverInterface {
     }
 
     public double test(int[] testDurations, boolean fullAccuracy, boolean adjustInitialAngle) {
+        if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+            return 0;
+        }
+
         iterations++;
         boolean possible = true;
 
@@ -850,7 +874,7 @@ public class Solver implements SolverInterface {
         double disp = maximizer.maximize();
         if (fullAccuracy) {
             if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
-                maximizer.recalculateDisps();
+                maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
             }

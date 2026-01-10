@@ -12,6 +12,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -57,6 +59,8 @@ public class VectorCalculator extends JPanel {
 	public static final int PROPERTIES_TABLE_HEIGHT = 435;
 	public static final int MIDAIR_PANEL_HEIGHT = 275;
 
+	public static CalculateThread calculateThread = null;
+
 	static Properties p = Properties.getInstance();
 	static boolean stop = false;
 	static boolean saved = true;
@@ -65,6 +69,11 @@ public class VectorCalculator extends JPanel {
 	static boolean loading = false;
 	static boolean cellsEditable = true;
 	static boolean addingPreset = false;
+	static boolean calculating = false;
+	static boolean cancelCalculating = false;
+
+	static String errorText = "";
+	static String progressText = "";
 
 	static File file = null;
 
@@ -252,6 +261,7 @@ public class VectorCalculator extends JPanel {
 	}
 
 	static void setPropertiesRow(int row) {
+		if (calculating) return;
 		settingPropertyRow = true;
 		Parameter param = rowParams.get(row);
 		genPropertiesTable.setValueAt(param.name, row, 0);
@@ -260,6 +270,10 @@ public class VectorCalculator extends JPanel {
 	}
 	
 	static String PropertyToDisplayValue(Parameter param) {
+		Properties p = Properties.p;
+		if (calculating) { //don't show what the program is calculating
+			p = UndoManager.currentState();
+		}
 		Object value;
 		switch(param) {
 		case duration_search_range:
@@ -787,17 +801,42 @@ public class VectorCalculator extends JPanel {
 
 	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8;
 
-	static void saveMidairs() {
-		if (p.midairPreset.equals("Custom"))
-			p.tripleThrow = TripleThrow.NO;
+	static void updateMidairs() {
+		// if (p.midairPreset.equals("Custom"))
+		// 	p.tripleThrow = TripleThrow.NO;
+		
+		// p.hct = false;
+		// p.diveCapBounce = false;
+		// p.firstCTIndex = -1;
 		p.midairs = new int[movementModel.getRowCount()][2];
-		p.hct = false;
-		p.diveCapBounce = false;
-		p.firstCTIndex = -1;
 		List<String> types = Arrays.asList(midairMovementNames);
 		for (int i = 0; i < movementModel.getRowCount(); i++) {
 			p.midairs[i][0] = types.indexOf(movementModel.getValueAt(i, 0).toString());
 			p.midairs[i][1] = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
+			// if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
+			// 	p.diveCapBounce = true;
+			// 	if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT) {
+			// 		p.firstCTIndex = i - 2;
+			// 	}
+			// }
+			// else if (p.midairs[i][0] == HMCCT)
+			// 	p.hct = true;
+			// else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == TT) {
+			// 	p.tripleThrow = TripleThrow.YES;
+			// }
+		}
+		updateMidairProperties();
+		/* for (int i = 0; i < p.midairs.length; i++)
+			Debug.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
+	}
+
+	static void updateMidairProperties() {
+		if (p.midairPreset.equals("Custom"))
+			p.tripleThrow = TripleThrow.NO;
+		p.hct = false;
+		p.diveCapBounce = false;
+		p.firstCTIndex = -1;
+		for (int i = 0; i < p.midairs.length; i++) {
 			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
 				p.diveCapBounce = true;
 				if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT) {
@@ -810,8 +849,6 @@ public class VectorCalculator extends JPanel {
 				p.tripleThrow = TripleThrow.YES;
 			}
 		}
-		/* for (int i = 0; i < p.midairs.length; i++)
-			Debug.println(p.midairs[i][0] + ", " + p.midairs[i][1]); */
 	}
 
 	static void updateHCTDuration() {
@@ -958,13 +995,17 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void addPreset(int[][] preset) {
+		p.midairs = preset;
+		updateMidairProperties();
+		if (calculating) return;
 		addingPreset = true;
+		if (!calculating)
 		movementModel.setRowCount(0);
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
 		addingPreset = false;
-		saveMidairs();
+		//saveMidairs();
 	}
 
 	public static void updateInitialMovement() {
@@ -1009,7 +1050,10 @@ public class VectorCalculator extends JPanel {
 
 	public static void saveProperties(File file, boolean updateCurrentFile, boolean defaults) {
 		Properties.p_toSave = new Properties();
-		Properties.copyAttributes(p, Properties.p_toSave);
+		if (calculating)
+			Properties.copyAttributes(UndoManager.currentState(), Properties.p_toSave);
+		else
+			Properties.copyAttributes(p, Properties.p_toSave);
 		if (Properties.p_calculated == null || !Properties.p_calculated.equals(p) || defaults) {
 			Properties.p_toSave.savedDataTableRows = null;
 			Properties.p_toSave.savedInfoTableRows = null;
@@ -1046,9 +1090,14 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void loadProperties(Properties pl, boolean changeTab) {
-		loading = true;
+		if (calculating) {
+			cancelCalculating = true;
+			VectorCalculator.setErrorText("Calculations cancelled");
+		}
+		else
+			VectorCalculator.clearMessage();
 
-		VectorCalculator.clearMessage();
+		loading = true;
 
 		int currentTab = p.currentTab;
 		Properties.copyAttributes(pl, p);
@@ -1165,176 +1214,15 @@ public class VectorCalculator extends JPanel {
 					 }
 			 }
 			 else if (evt.getActionCommand().equals("calculate")) {
-				clearMessage();
-				if (p.targetCoordinatesGiven) {
-					p.targetAngle = targetCoordinatesToTargetAngle();
+				if (!calculating) {
+					cancelCalculating = false;
+					calculateThread = new CalculateThread();
+					calculateThread.execute();
+					calculateVector.setText("Cancel");
 				}
-				boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
-				if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
-					if (p.initialMovementName.equals("Optimal Distance RCV")) {
-						setErrorText("Error: Optimal Distance RCV not supported in this mode");
-						return;
-					}
-
-					boolean diveSolver = p.mode == Mode.SOLVE_DIVES;
-					TurnDuringDive oldTurnDuringDive = p.diveTurn;
-					SolverInterface solver;
-					if (optimalDistanceMotion) {
-						p.initialMovementName = "Triple Jump";
-						p.framesJump = 10;
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						SolverInterface solverTJ = runSolver(diveSolver, false);
-						int[][] tjMidairs = p.midairs;
-						//solverTJ.solve(p.durationSearchRange);
-						p.initialMovementName = "Motion Cap Throw RCV";
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						SolverInterface solverRCV = runSolver(diveSolver, false);
-						int[][] rcvMidairs = p.midairs;
-						//solverRCV.solve(Math.min(p.durationSearchRange, 3));
-						p.initialMovementName = "Sideflip";
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						SolverInterface solverSideflip = runSolver(diveSolver, false);
-						int[][] sideflipMidairs = p.midairs;
-						//solverSideflip.solve(p.durationSearchRange);
-						// Debug.println("TJ: " + maximizerTJ.bestDisp);
-						// Debug.println("RC: " + maximizerRC.bestDisp);
-						// Debug.println("SF: " + maximizerSideflip.bestDisp);
-						if (solverTJ.getBestDisp() > solverRCV.getBestDisp() && solverTJ.getBestDisp() > solverSideflip.getBestDisp()) {
-							solver = solverTJ;
-							p.initialMovementName = "Triple Jump";
-							addPreset(tjMidairs);
-						}
-						else if (solverRCV.getBestDisp() > solverTJ.getBestDisp() && solverRCV.getBestDisp() > solverSideflip.getBestDisp()) {
-							solver = solverRCV;
-							p.initialMovementName = "Motion Cap Throw RCV";
-							addPreset(rcvMidairs);
-						}
-						else {
-							solver = solverSideflip;
-							p.initialMovementName = "Sideflip";
-							addPreset(sideflipMidairs);
-						}
-						retest(solver, diveSolver);
-					}
-					else if (p.initialMovementName.contains("Crouch Roll")) {
-						p.initialMovementName = "Crouch Roll";
-						initialMovement = new Movement(p.initialMovementName);
-						SolverInterface solverCR = runSolver(diveSolver, false);
-						p.initialMovementName = "Crouch Roll (No Vector)";
-						initialMovement = new Movement(p.initialMovementName);
-						SolverInterface solverCRNV = runSolver(diveSolver, false);
-						if (solverCR.getBestDisp() > solverCRNV.getBestDisp()) {
-							solver = solverCR;
-							p.initialMovementName = "Crouch Roll";
-						} else {
-							solver = solverCRNV;
-							p.initialMovementName = "Crouch Roll (No Vector)";
-						}
-						setPropertiesRow(Parameter.initial_movement);
-						initialMovement = new Movement(p.initialMovementName);
-						retest(solver, diveSolver);
-					}
-					else if (p.initialMovementName.contains("Roll Boost")) {
-						p.initialMovementName = "Roll Boost";
-						initialMovement = new Movement(p.initialMovementName);
-						SolverInterface solverRB = runSolver(diveSolver, false);
-						p.initialMovementName = "Roll Boost (No Vector)";
-						initialMovement = new Movement(p.initialMovementName);
-						SolverInterface solverRBNV = runSolver(diveSolver, false);
-						if (solverRB.getBestDisp() > solverRBNV.getBestDisp()) {
-							solver = solverRB;
-							p.initialMovementName = "Roll Boost";
-						} else {
-							solver = solverRBNV;
-							p.initialMovementName = "Roll Boost (No Vector)";
-						}
-						setPropertiesRow(Parameter.initial_movement);
-						initialMovement = new Movement(p.initialMovementName);
-						retest(solver, diveSolver);
-					}
-					else {
-						solver = runSolver(diveSolver, true);
-					}
-					saveMidairs();
-					VectorMaximizer maximizer = solver.getMaximizer();
-					if (solver.solveSuccess() && maximizer != null) {
-						if (p.firstCTIndex >= 0) {
-							if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
-								p.midairs[p.firstCTIndex][0] = TT;
-							else if (maximizer.ctType == Movement.CT)
-								p.midairs[p.firstCTIndex][0] = CT;
-							else
-								p.midairs[p.firstCTIndex][0] = MCCT;
-						}
-						addPreset(p.midairs);
-						setPropertiesRow(Parameter.dive_angle);
-						setPropertiesRow(Parameter.dive_deceleration);
-						//System.out.println("Possible: " + possible + " " + maximizer.ctType);
-						VectorDisplayWindow.generateData(maximizer);
-						VectorDisplayWindow.display();
-					}
-					if (optimalDistanceMotion) {
-						setProperty(Parameter.initial_movement, "Optimal Distance Motion");
-						p.durationFrames = false;
-					}
-					if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
-						setProperty(Parameter.hct_type, p.hctType.name);
-					}
-					setProperty(Parameter.dive_turn, oldTurnDuringDive.displayName); //set back to "Test Both" if that is the setting
+				else {
+					cancelCalculating = true;
 				}
-				else if (p.mode == Mode.CALCULATE) {
-					saveMidairs();
-					VectorMaximizer maximizer = null;
-					if (p.initialMovementName.equals("Optimal Distance Motion")) {
-						p.initialMovementName = "Triple Jump";
-						p.framesJump = 10;
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						VectorMaximizer maximizerTJ = calculate();
-						p.initialMovementName = "Optimal Distance RCV";
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						VectorMaximizer maximizerRC = calculate();
-						p.initialMovementName = "Sideflip";
-						initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
-						VectorMaximizer maximizerSideflip = calculate();
-						Debug.println("TJ: " + maximizerTJ.bestDisp);
-						Debug.println("RC: " + maximizerRC.bestDisp);
-						Debug.println("SF: " + maximizerSideflip.bestDisp);
-						if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
-							if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
-								maximizer = maximizerTJ;
-							}
-							else if (maximizerRC.bestDisp > maximizerTJ.bestDisp && maximizerRC.bestDisp > maximizerSideflip.bestDisp) {
-								maximizer = maximizerRC;
-							}
-							else {
-								maximizer = maximizerSideflip;
-							}
-						}
-						p.initialMovementName = "Optimal Distance Motion";
-					}
-					else {
-						maximizer = getMaximizer();
-						if (maximizer != null) {
-							maximizer.maximize();
-							if (maximizer.hasError()) {
-								setErrorText(maximizer.error);
-								return;
-							}
-							maximizer.recalculateDisps();
-							maximizer.adjustToGivenAngle();
-						}
-					}
-					if (maximizer != null) {
-						VectorDisplayWindow.generateData(maximizer);
-						VectorDisplayWindow.display();
-					}
-					Debug.println();
-					
-				}
-				//for all calculate modes
-				Properties.p_calculated = new Properties();
-                Properties.copyAttributes(p, Properties.p_calculated);
-				UndoManager.recordState(false);
 			}
 		}
 	}
@@ -1346,7 +1234,7 @@ public class VectorCalculator extends JPanel {
 		movementPreparer.print();
 
 		if (errorText.equals("")) {
-			clearMessage();
+			clearMessage(false);
 			VectorMaximizer maximizer = new VectorMaximizer(movementPreparer);
 			return maximizer;
 		}
@@ -1390,7 +1278,7 @@ public class VectorCalculator extends JPanel {
 		VectorMaximizer maximizer = getMaximizer();
 		if (maximizer != null)
 			maximizer.maximize();
-		maximizer.recalculateDisps();
+		maximizer.recalculateDisps(true);
 		maximizer.adjustToGivenAngle();
 		if (maximizer.hasError())
 			maximizer.bestDisp = 0;
@@ -1460,20 +1348,37 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void setProgressText(String progress) {
-		progressMessage.setText(progress);
-		if (progress != "")
-			System.out.println(progress);
+		progressText = progress;
+		if (!progressMessage.getText().equals(progress))
+			progressMessage.setText(progress);
+		errorMessage.setText("");
+		// if (progress != "")
+		// 	System.out.println(progress);
+		if (calculateThread != null)
+			calculateThread.publishText(progress);
 	}
 
 	public static void setErrorText(String error) {
-		errorMessage.setText(error);
-		if (error != "")
-			System.out.println(error);
+		errorText = error;
+		if (!errorMessage.getText().equals(error))
+			errorMessage.setText(error);
+		progressMessage.setText("");
+		// if (error != "")
+		// 	System.out.println(error);
+		if (calculateThread != null)
+			calculateThread.publishText(error);
 	}
 
-	public static void clearMessage() { //clears progress and error text
-		progressMessage.setText("");
-		errorMessage.setText("");
+	public static void clearMessage() {
+		clearMessage(true);
+		clearMessage(false);
+	}
+
+	public static void clearMessage(boolean progress) { //clears progress or error text
+		if (progress)
+			progressMessage.setText("");
+		else
+			errorMessage.setText("");
 	}
 
 	public static void main(String[] args) {
@@ -1564,6 +1469,8 @@ public class VectorCalculator extends JPanel {
         
 			@Override
 			public boolean isCellEditable(int row, int column) {
+				if (calculating)
+					return false;
 				if (!cellsEditable)
 					return false;
 				if (column == 0)
@@ -1673,6 +1580,9 @@ public class VectorCalculator extends JPanel {
 		genPropertiesModel.addTableModelListener(new TableModelListener() {
 
 			public void tableChanged(TableModelEvent e) {
+				if (calculating)
+					return;
+
 				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
 
 				int row = e.getFirstRow();
@@ -1720,6 +1630,8 @@ public class VectorCalculator extends JPanel {
 
 			@Override
 			public boolean isCellEditable(int row, int column) {
+				if (calculating)
+					return false;
 				if (!cellsEditable)
 					return false;
 				if (column == 0 && !p.midairPreset.equals("Custom"))
@@ -1782,7 +1694,8 @@ public class VectorCalculator extends JPanel {
 					}
 				}
 
-				saveMidairs();
+				updateMidairs();
+
 				refreshPropertiesRows(getRowParams(), false);
 				// record undo state for midairs edits
 				if (initialized && !loading && !addingPreset) {

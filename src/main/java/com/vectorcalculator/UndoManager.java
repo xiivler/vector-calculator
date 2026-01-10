@@ -11,9 +11,9 @@ public class UndoManager {
     public static synchronized void recordState(boolean clearMessage) {
         if (VectorCalculator.loading) return;
         // Ensure midairs are saved into Properties before snapshot
-        try {
-            VectorCalculator.saveMidairs();
-        } catch (Exception ex) {}
+        // try {
+        //     VectorCalculator.updateMidairs();
+        // } catch (Exception ex) {}
         // Capture current selected cells
         updateSelectionState();
         Properties snapshot = new Properties();
@@ -35,6 +35,10 @@ public class UndoManager {
         p.lastEditTab = VectorCalculator.tabbedPane.getSelectedIndex();
         p.movementSelectedRow = VectorCalculator.movementTable.getSelectedRow();
         p.movementSelectedCol = VectorCalculator.movementTable.getSelectedColumn();
+    }
+
+    public static synchronized Properties currentState() {
+        return undoStack.peek();
     }
 
     public static synchronized void undo() {

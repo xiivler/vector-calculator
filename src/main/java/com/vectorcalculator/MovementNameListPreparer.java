@@ -177,9 +177,11 @@ public class MovementNameListPreparer {
 		//midair movement
 		String oldName = "";
 		
-		for (int i = 0; i < movementModel.getRowCount(); i++) {
-			name = movementModel.getValueAt(i, 0).toString();
-			frames = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
+		int[][] midairs = p.midairs;
+
+		for (int i = 0; i < midairs.length; i++) {
+			name = VectorCalculator.midairMovementNames[midairs[i][0]];
+			frames = midairs[i][1];
 			
 			if (Movement.isMidairCapThrow(name)) {
 				if (Movement.isMidairCapThrow(oldName))

@@ -129,6 +129,10 @@ public class DiveSolver implements SolverInterface {
             boolean found = false;
             found = (testCT() != -1);
             while (!found) {
+                if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+                    return false;
+                }
+                
                 if (add) {
                     if (delta < 0)
                         delta--;
@@ -155,6 +159,10 @@ public class DiveSolver implements SolverInterface {
         }
 
         System.out.println(p.initialFrames);
+
+        if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+            return false;
+        }
 
         if (solveSecondDive) {
             maximizer = VectorCalculator.getMaximizer();
@@ -195,7 +203,13 @@ public class DiveSolver implements SolverInterface {
             maximizer.maximize();
         }
 
-        maximizer.recalculateDisps();
+        if (maximizer.bestDisp == 0) {
+            success = false;
+            error = "Error: Calculator failed";
+            return false;   
+        }
+
+        maximizer.recalculateDisps(true);
         maximizer.adjustToGivenAngle();
 
         VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
@@ -206,6 +220,10 @@ public class DiveSolver implements SolverInterface {
     }
 
     public int testCT() {
+        if (VectorCalculator.cancelCalculating) {
+            return -1;
+        }
+
         if (p.diveTurn == TurnDuringDive.TEST) {
             int testDiveTurn = testCT(.02, .1, true);
             if (testDiveTurn != -1)

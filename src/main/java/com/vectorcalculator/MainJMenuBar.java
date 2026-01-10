@@ -80,7 +80,7 @@ public class MainJMenuBar extends JMenuBar {
 		addRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut)); // Ctrl+= for add
 		addRow.addActionListener(e -> {
 			try {
-				if (p.midairPreset.equals("Custom")) {
+				if (p.midairPreset.equals("Custom") && !VectorCalculator.calculating) {
 					VectorCalculator.movementModel.addRow(VectorCalculator.movementRows);
 				}
 			} finally {
@@ -92,7 +92,7 @@ public class MainJMenuBar extends JMenuBar {
 		insertRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut | InputEvent.SHIFT_DOWN_MASK)); // Ctrl+Shift+= for insert
 		insertRow.addActionListener(e -> {
 			try {
-				if (p.midairPreset.equals("Custom")) {
+				if (p.midairPreset.equals("Custom") && !VectorCalculator.calculating) {
 					int[] selectedRows = VectorCalculator.movementTable.getSelectedRows();
 					if (selectedRows.length > 0) {
 						int insertIndex = selectedRows[0];
@@ -109,7 +109,7 @@ public class MainJMenuBar extends JMenuBar {
 		removeRow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut)); // Ctrl+- for remove
 		removeRow.addActionListener(e -> {
 			try {
-				if (p.midairPreset.equals("Custom")) {
+				if (p.midairPreset.equals("Custom") && !VectorCalculator.calculating) {
 					VectorCalculator.movementTable.removeEditor();
 					int[] rowsRemove = VectorCalculator.movementTable.getSelectedRows();
 					if (rowsRemove.length > 0)
@@ -132,7 +132,7 @@ public class MainJMenuBar extends JMenuBar {
 		clearAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcut)); // Ctrl+0 for clear
 		clearAll.addActionListener(e -> {
 			try {
-				if (p.midairPreset.equals("Custom")) {
+				if (p.midairPreset.equals("Custom") && !VectorCalculator.calculating) {
 					VectorCalculator.movementModel.setRowCount(0);
 				}
 			} finally {
