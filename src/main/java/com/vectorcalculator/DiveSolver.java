@@ -158,7 +158,7 @@ public class DiveSolver implements SolverInterface {
             }
         }
 
-        System.out.println(p.initialFrames);
+        Debug.println(p.initialFrames);
 
         if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
             return false;
@@ -268,7 +268,7 @@ public class DiveSolver implements SolverInterface {
         for (int i = 0; i < motions.length; i++) {
             y += motions[i].dispY;
             
-            System.out.println(motions[i].movement.movementType + " " + motions[i].dispY);
+            Debug.println(motions[i].movement.movementType + " " + motions[i].dispY);
         }
         return y;
     }

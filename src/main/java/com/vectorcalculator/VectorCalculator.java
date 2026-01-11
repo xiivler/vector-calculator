@@ -1387,23 +1387,27 @@ public class VectorCalculator extends JPanel {
 
 	public static void setProgressText(String progress) {
 		progressText = progress;
-		if (!progressMessage.getText().equals(progress))
-			progressMessage.setText(progress);
-		errorMessage.setText("");
+		if (progressMessage.getText().equals(progress))
+			return;
+		progressMessage.setText(progress);
+		if (!progress.equals(""))
+			clearMessage(false);
 		// if (progress != "")
-		// 	System.out.println(progress);
-		if (calculateThread != null)
+		 	// System.out.println(progress);
+		if (calculateThread != null && !progress.equals(""))
 			calculateThread.publishText(progress);
 	}
 
 	public static void setErrorText(String error) {
 		errorText = error;
-		if (!errorMessage.getText().equals(error))
-			errorMessage.setText(error);
-		progressMessage.setText("");
+		if (errorMessage.getText().equals(error))
+			return;
+		errorMessage.setText(error);
+		if (!error.equals(""))
+			clearMessage(true);
 		// if (error != "")
 		// 	System.out.println(error);
-		if (calculateThread != null)
+		if (calculateThread != null && !error.equals(""))
 			calculateThread.publishText(error);
 	}
 
@@ -1413,10 +1417,14 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void clearMessage(boolean progress) { //clears progress or error text
-		if (progress)
+		if (progress) {
+			progressText = "";
 			progressMessage.setText("");
-		else
+		}
+		else {
+			errorText = "";
 			errorMessage.setText("");
+		}
 	}
 
 	public static void main(String[] args) {

@@ -276,12 +276,11 @@ public class Solver implements SolverInterface {
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
-                System.out.println(final_y_heights[maximizer_firstGPIndex]);
+                Debug.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     success = false;
                     error = "Error: Could not avoid ground/liquid";
-                    System.out.println("Fuck 1");
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -293,7 +292,6 @@ public class Solver implements SolverInterface {
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     error = "Error: Could not avoid ground/liquid";
-                    System.out.println("Fuck 2");
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -304,54 +302,8 @@ public class Solver implements SolverInterface {
         presetMaximizer = VectorCalculator.getMaximizer();
         calcFrameByFrame(presetMaximizer);
         final_y_heights = getFinalYHeights(presetMaximizer);
-        //Debug.println(Arrays.toString(final_y_heights));
-        // if (p.groundTypeSecondGP != GroundType.NONE) {
-        //     int iterations = 0;
-        //     while (final_y_heights[maximizer_secondGPIndex] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
-        //         iterations++;
-        //         //Debug.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
-        //         //Debug.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
-        //         double initialEfficiency = efficiencies[lastFrames[0]];
-        //         if (p.initialFrames <= VectorCalculator.initialMovement.getMinFrames())
-        //             initialEfficiency = Double.MAX_VALUE;
-        //         double diveCapBounceEfficiency = efficiencies[lastFrames[diveCapBounceIndex]];
-        //         if (preset[diveCapBounceIndex - 1][1] <= p.cbCapReturnFrame && throwOrRSAfterCB) //this will break if final cap throw-less jumps are added
-        //             diveCapBounceEfficiency = Double.MAX_VALUE;
-        //         double finalCapThrowEfficiency = efficiencies[lastFrames[finalCapThrowIndex]];
-        //         if (initialEfficiency < diveCapBounceEfficiency && initialEfficiency < finalCapThrowEfficiency) {
-        //             p.initialFrames--;
-        //             lastFrames[0]--;
-        //         }
-        //         else if (diveCapBounceEfficiency < initialEfficiency && diveCapBounceEfficiency < finalCapThrowEfficiency) {
-        //             preset[diveCapBounceIndex - 1][1]--;
-        //             lastFrames[diveCapBounceIndex]--;
-        //             if (preset[diveCapBounceIndex - 1][1] < 1) {
-        //                 success = false;
-        //                 error = "Error: Could not avoid ground/liquid";
-        //                 return false;
-        //             }
-        //         }
-        //         else {
-        //             preset[finalCapThrowIndex - 1][1]--;
-        //             lastFrames[finalCapThrowIndex]--;
-        //             if (preset[finalCapThrowIndex - 1][1] < 8) {
-        //                 success = false;
-        //                 error = "Error: Could not avoid ground/liquid";
-        //                 return false;
-        //             }
-        //         }
-        //         presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
-        //         presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
-        //         final_y_heights = getFinalYHeights(presetMaximizer);
-        //         if (iterations % REFRESH_RATE == 0) {
-        //             VectorCalculator.addPreset(preset);
-        //             presetMaximizer = VectorCalculator.getMaximizer();
-        //             calcFrameByFrame(presetMaximizer);
-        //         }
-        //     }
-        // }
 
-        System.out.println(Arrays.toString(final_y_heights));
+        Debug.println(Arrays.toString(final_y_heights));
         VectorCalculator.addPreset(preset);
 
         hasRCV = p.initialMovementName.contains("RCV");
@@ -392,7 +344,7 @@ public class Solver implements SolverInterface {
                     worstEfficiencyIndex = i;
                 }
             }
-            //System.out.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
+            //Debug.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
             if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
                 p.durationFrames = true;
                 success = false;
@@ -447,7 +399,7 @@ public class Solver implements SolverInterface {
         }
         Debug.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
 
-        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
         Debug.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         Debug.println("Ballpark Y Height: " + y);
 
@@ -742,7 +694,7 @@ public class Solver implements SolverInterface {
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
                 int testDuration = durations[index] + i;
-                if (index == homingMCCTIndex && testDuration > 36 && p.groundType == GroundType.NONE) {
+                if (index == homingMCCTIndex && testDuration > 36 && !(cbvFirst && p.groundTypeCB != GroundType.NONE)) {
                     Debug.println("Skipping HMCCT duration " + testDuration);
                     continue;
                 }

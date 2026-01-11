@@ -127,7 +127,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     VectorCalculator.addPreset(p.midairs);
                     VectorCalculator.setPropertiesRow(Parameter.dive_angle);
                     VectorCalculator.setPropertiesRow(Parameter.dive_deceleration);
-                    //System.out.println("Possible: " + possible + " " + maximizer.ctType);
+                    //Debug.println("Possible: " + possible + " " + maximizer.ctType);
                     VectorDisplayWindow.generateData(maximizer);
                     VectorDisplayWindow.display();
                 }
@@ -245,6 +245,8 @@ class CalculateThread extends SwingWorker<Boolean, String> {
 
     @Override
     public void done() {
+        VectorCalculator.calculating = false;
+        VectorCalculator.cancelCalculating = false;
         VectorCalculator.setProgressText(VectorCalculator.progressText);
         if (VectorCalculator.cancelCalculating) {
             VectorCalculator.setErrorText("Calculations cancelled");
