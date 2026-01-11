@@ -261,6 +261,7 @@ public class Solver implements SolverInterface {
             maximizer_secondGPIndex = presetMaximizer.variableMovement2Index + 2;
         else
             maximizer_secondGPIndex = presetMaximizer.variableMovement2Index + 1;
+        int maximizer_secondDiveIndex = maximizer_secondGPIndex + 1;
 
         //shorten first movement until first GP isn't too low
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
@@ -293,51 +294,51 @@ public class Solver implements SolverInterface {
         calcFrameByFrame(presetMaximizer);
         final_y_heights = getFinalYHeights(presetMaximizer);
         //Debug.println(Arrays.toString(final_y_heights));
-        if (p.groundTypeSecondGP != GroundType.NONE) {
-            int iterations = 0;
-            while (final_y_heights[maximizer_secondGPIndex] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
-                iterations++;
-                //Debug.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
-                //Debug.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
-                double initialEfficiency = efficiencies[lastFrames[0]];
-                if (p.initialFrames <= VectorCalculator.initialMovement.getMinFrames())
-                    initialEfficiency = Double.MAX_VALUE;
-                double diveCapBounceEfficiency = efficiencies[lastFrames[diveCapBounceIndex]];
-                if (preset[diveCapBounceIndex - 1][1] <= p.cbCapReturnFrame && throwOrRSAfterCB) //this will break if final cap throw-less jumps are added
-                    diveCapBounceEfficiency = Double.MAX_VALUE;
-                double finalCapThrowEfficiency = efficiencies[lastFrames[finalCapThrowIndex]];
-                if (initialEfficiency < diveCapBounceEfficiency && initialEfficiency < finalCapThrowEfficiency) {
-                    p.initialFrames--;
-                    lastFrames[0]--;
-                }
-                else if (diveCapBounceEfficiency < initialEfficiency && diveCapBounceEfficiency < finalCapThrowEfficiency) {
-                    preset[diveCapBounceIndex - 1][1]--;
-                    lastFrames[diveCapBounceIndex]--;
-                    if (preset[diveCapBounceIndex - 1][1] < 1) {
-                        success = false;
-                        error = "Error: Could not avoid ground/liquid";
-                        return false;
-                    }
-                }
-                else {
-                    preset[finalCapThrowIndex - 1][1]--;
-                    lastFrames[finalCapThrowIndex]--;
-                    if (preset[finalCapThrowIndex - 1][1] < 8) {
-                        success = false;
-                        error = "Error: Could not avoid ground/liquid";
-                        return false;
-                    }
-                }
-                presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
-                presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
-                final_y_heights = getFinalYHeights(presetMaximizer);
-                if (iterations % REFRESH_RATE == 0) {
-                    VectorCalculator.addPreset(preset);
-                    presetMaximizer = VectorCalculator.getMaximizer();
-                    calcFrameByFrame(presetMaximizer);
-                }
-            }
-        }
+        // if (p.groundTypeSecondGP != GroundType.NONE) {
+        //     int iterations = 0;
+        //     while (final_y_heights[maximizer_secondGPIndex] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
+        //         iterations++;
+        //         //Debug.println("Initial: " + p.initialFrames + " " + efficiencies[lastFrames[0]]);
+        //         //Debug.println("Dive Length: " + preset[diveCapBounceIndex - 1][1] + " " + efficiencies[lastFrames[diveCapBounceIndex]]);
+        //         double initialEfficiency = efficiencies[lastFrames[0]];
+        //         if (p.initialFrames <= VectorCalculator.initialMovement.getMinFrames())
+        //             initialEfficiency = Double.MAX_VALUE;
+        //         double diveCapBounceEfficiency = efficiencies[lastFrames[diveCapBounceIndex]];
+        //         if (preset[diveCapBounceIndex - 1][1] <= p.cbCapReturnFrame && throwOrRSAfterCB) //this will break if final cap throw-less jumps are added
+        //             diveCapBounceEfficiency = Double.MAX_VALUE;
+        //         double finalCapThrowEfficiency = efficiencies[lastFrames[finalCapThrowIndex]];
+        //         if (initialEfficiency < diveCapBounceEfficiency && initialEfficiency < finalCapThrowEfficiency) {
+        //             p.initialFrames--;
+        //             lastFrames[0]--;
+        //         }
+        //         else if (diveCapBounceEfficiency < initialEfficiency && diveCapBounceEfficiency < finalCapThrowEfficiency) {
+        //             preset[diveCapBounceIndex - 1][1]--;
+        //             lastFrames[diveCapBounceIndex]--;
+        //             if (preset[diveCapBounceIndex - 1][1] < 1) {
+        //                 success = false;
+        //                 error = "Error: Could not avoid ground/liquid";
+        //                 return false;
+        //             }
+        //         }
+        //         else {
+        //             preset[finalCapThrowIndex - 1][1]--;
+        //             lastFrames[finalCapThrowIndex]--;
+        //             if (preset[finalCapThrowIndex - 1][1] < 8) {
+        //                 success = false;
+        //                 error = "Error: Could not avoid ground/liquid";
+        //                 return false;
+        //             }
+        //         }
+        //         presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
+        //         presetMaximizer.movementFrames.set(maximizer_capBounceIndex, preset[diveCapBounceIndex - 1][1]);
+        //         final_y_heights = getFinalYHeights(presetMaximizer);
+        //         if (iterations % REFRESH_RATE == 0) {
+        //             VectorCalculator.addPreset(preset);
+        //             presetMaximizer = VectorCalculator.getMaximizer();
+        //             calcFrameByFrame(presetMaximizer);
+        //         }
+        //     }
+        // }
 
         Debug.println(Arrays.toString(final_y_heights));
         VectorCalculator.addPreset(preset);
@@ -345,7 +346,8 @@ public class Solver implements SolverInterface {
         hasRCV = p.initialMovementName.contains("RCV");
 
         VectorMaximizer initialMaximizer = VectorCalculator.getMaximizer();
-        calcFrameByFrame(initialMaximizer);
+        //calcFrameByFrame(initialMaximizer);
+        final_y_heights = getFinalYHeights(initialMaximizer);
 
         Debug.println("Initial End Y Position: " + y);
 
@@ -358,12 +360,19 @@ public class Solver implements SolverInterface {
         //this gives a ballpark estimate of the optimal frames
         
         int iterations = 0;
-        while (y + p.getUpwarpMinusError() < p.y1 - ERROR) {
+        while (true) {
+            boolean endHeightCorrect = final_y_heights[maximizer_secondDiveIndex] + p.getUpwarpMinusError() >= p.y1 - ERROR;
+            boolean secondGPHeightCorrect = p.groundTypeSecondGP == GroundType.NONE || final_y_heights[maximizer_secondGPIndex] >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT;
+            if (endHeightCorrect && secondGPHeightCorrect) {
+                break;
+            }
             iterations++;
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastFrames.length; i++) {
                 if (canSubtractFrame(i, durations[i]) && efficiencies[lastFrames[i]] < worstEfficiency) {
+                    if (i == secondDiveIndex && !secondGPHeightCorrect) //don't remove frames from final dive until second GP height is correct
+                        continue;
                     if (i == firstDiveIndex - 1 && durations[i] <= 28) //28 and 21 are the best for high movement
                         continue;
                     if (i == firstDiveIndex && durations[i] <= 21)
@@ -376,22 +385,30 @@ public class Solver implements SolverInterface {
             if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
                 p.durationFrames = true;
                 success = false;
-                error = "Error: Could not reach target height";
+                if (!secondGPHeightCorrect)
+                    error = "Error: Could not avoid ground/liquid";
+                else
+                    error = "Error: Could not reach target height";
                 return false;
             }
-            y -= y_vels[lastFrames[worstEfficiencyIndex]];
-            durations[worstEfficiencyIndex]--;
-            lastFrames[worstEfficiencyIndex]--;
+            //y -= y_vels[lastFrames[worstEfficiencyIndex]];
+            //durations[worstEfficiencyIndex]--;
+            if (worstEfficiencyIndex == 0)
+                p.initialFrames--;
+            else
+                preset[worstEfficiencyIndex - 1][1] --;
+            //lastFrames[worstEfficiencyIndex]--;
             //we can keep the "removed" frames in the arrays, as they won't be considered anymore
-            p.initialFrames = durations[0];
-            for (int i = 0; i < preset.length; i++) {
-                preset[i][1] = durations[i + 1];
-            }
-            if (iterations % REFRESH_RATE == 0) {
-                VectorCalculator.addPreset(preset);
-                initialMaximizer = VectorCalculator.getMaximizer();
+            // p.initialFrames = durations[0];
+            // for (int i = 0; i < preset.length; i++) {
+            //     preset[i][1] = durations[i + 1];
+            // }
+            VectorCalculator.addPreset(preset);
+            initialMaximizer = VectorCalculator.getMaximizer();
+            if (iterations % REFRESH_RATE == 0) { //recalculate efficiency every REFRESH_RATE times
                 calcFrameByFrame(initialMaximizer);
             }
+            final_y_heights = getFinalYHeights(initialMaximizer);
         }
 
         VectorCalculator.addPreset(preset);
@@ -402,9 +419,9 @@ public class Solver implements SolverInterface {
         if (hasRCV && p.solveForInitialAngle) {
             p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
             Debug.println(firstFrameVelocityAngle);
+            initialMaximizer = VectorCalculator.getMaximizer();         
+            calcFrameByFrame(initialMaximizer);
         }
-        initialMaximizer = VectorCalculator.getMaximizer();         
-        calcFrameByFrame(initialMaximizer);
 
         //calculate the y displacement of each piece of movement
         y_disps = new double[preset.length + 1];
@@ -708,13 +725,13 @@ public class Solver implements SolverInterface {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if (index == rainbowSpinIndex || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36)) {
+        if (index == rainbowSpinIndex || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE)) {
             return test(durations, delta, index + 1, y_pos + y_disps[index]);
         }
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
                 int testDuration = durations[index] + i;
-                if (index == homingMCCTIndex && testDuration > 36) {
+                if (index == homingMCCTIndex && testDuration > 36 && p.groundType == GroundType.NONE) {
                     Debug.println("Skipping HMCCT duration " + testDuration);
                     continue;
                 }
