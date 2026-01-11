@@ -1049,15 +1049,13 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void saveProperties(File file, boolean updateCurrentFile, boolean defaults) {
+		p.isCalculated = Properties.p_calculated != null && Properties.p_calculated.equals(p) && !defaults;
+
 		Properties.p_toSave = new Properties();
 		if (calculating)
 			Properties.copyAttributes(UndoManager.currentState(), Properties.p_toSave);
 		else
 			Properties.copyAttributes(p, Properties.p_toSave);
-		if (Properties.p_calculated == null || !Properties.p_calculated.equals(p) || defaults) {
-			Properties.p_toSave.savedDataTableRows = null;
-			Properties.p_toSave.savedInfoTableRows = null;
-		}
 		
 		boolean saveSuccess = Properties.save(file, defaults);
 		if (!saveSuccess) {
@@ -1143,10 +1141,42 @@ public class VectorCalculator extends JPanel {
 		VectorDisplayWindow.frame.dispatchEvent(new WindowEvent(VectorDisplayWindow.frame, WindowEvent.WINDOW_CLOSING));
 		VectorDisplayWindow.initialize();
 
-		if (p.savedInfoTableRows != null) {
+		if (p.isCalculated) {
 			Properties.p_calculated = new Properties();
 			Properties.copyAttributes(p, Properties.p_calculated);
-			VectorDisplayWindow.display();
+			try {
+				VectorMaximizer maximizer = null;
+				if (p.mode == Mode.CALCULATE) {
+					maximizer = getMaximizer();
+					if (maximizer != null) {
+						maximizer.maximize();
+						maximizer.recalculateDisps(true);
+						maximizer.adjustToGivenAngle();
+					}
+				}
+				else if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
+					SolverInterface solver = p.mode == Mode.SOLVE ? new Solver() : new DiveSolver();
+					retest(solver, p.mode == Mode.SOLVE_DIVES);
+					maximizer = solver.getMaximizer();
+					if (maximizer != null) {
+						if (p.firstCTIndex >= 0) {
+							if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
+								p.midairs[p.firstCTIndex][0] = VectorCalculator.TT;
+							else if (maximizer.ctType == Movement.CT)
+								p.midairs[p.firstCTIndex][0] = VectorCalculator.CT;
+							else
+								p.midairs[p.firstCTIndex][0] = VectorCalculator.MCCT;
+						}
+						VectorCalculator.addPreset(p.midairs);
+						VectorCalculator.setPropertiesRow(Parameter.dive_angle);
+						VectorCalculator.setPropertiesRow(Parameter.dive_deceleration);
+						//System.out.println("Possible: " + possible + " " + maximizer.ctType);
+					}
+				}
+				VectorDisplayWindow.generateData(maximizer);
+				VectorDisplayWindow.display();
+			}
+			catch (Exception ex) {}
 		}
 		
 		if (initialized && defaults && !Properties.isSaved()) {
@@ -1264,6 +1294,14 @@ public class VectorCalculator extends JPanel {
 	public static void retest(SolverInterface solverInterface, boolean diveSolver) {
 		if (!diveSolver) {
 			Solver solver = (Solver) solverInterface;
+			if (solver.bestDurations == null) {
+				solver.setup();
+				solver.bestDurations = new int[p.midairs.length + 1];
+				solver.bestDurations[0] = p.initialFrames;
+				for (int i = 1; i <= p.midairs.length; i++) {
+					solver.bestDurations[i] = p.midairs[i - 1][1];
+				}
+			}
 			solver.test(solver.bestDurations, true, solver.hasRCV);
 		}
 		else

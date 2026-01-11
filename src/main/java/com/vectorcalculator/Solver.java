@@ -38,6 +38,8 @@ public class Solver implements SolverInterface {
 
     boolean throwOrRSAfterCB = true;
 
+    boolean cbvFirst;
+
     Properties p = Properties.p;
 
     VectorMaximizer maximizer;
@@ -130,21 +132,13 @@ public class Solver implements SolverInterface {
         return final_y_heights;
     }
 
-    public boolean solve(int delta) {
-        Debug.println("Starting Solver");
-
-        VectorCalculator.setProgressText("Solver: Finding Ballpark Durations");
-
-        long startTime = System.currentTimeMillis();
-
+    public void setup() {
         if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
             limit = 20;
         }
         else {
             limit = 4;
         }
-
-        this.delta = delta;
 
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
@@ -157,21 +151,13 @@ public class Solver implements SolverInterface {
             VectorCalculator.setProperty(Parameter.jump_button_frames, 10);
         }
 
-        //custom presets not yet supported
-        if (p.midairPreset.equals("Custom")) {
-            success = true;
-            return true;
-        }
-
-        VectorCalculator.addPreset(p.midairPreset, false);
-
         singleThrowAllowed = true;
         mcctAllowed = true;
 
         boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
         boolean mcctFirst =  p.midairPreset.equals("MCCT First");
         boolean ttFirst = mcctFirst && p.tripleThrow == TripleThrow.YES;
-        boolean cbvFirst = p.midairPreset.equals("CBV First");
+        cbvFirst = p.midairPreset.equals("CBV First");
         if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
             initialDurationLimit = p.vaultCapReturnFrame + 11;
         }
@@ -196,13 +182,14 @@ public class Solver implements SolverInterface {
 
         dtAllowed = p.diveTurn;
 
-        int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
-        preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
+        //int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
+        //preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
+        preset = p.midairs;
 
         //find locations of movements in the presets
         for (int i = 0; i < preset.length; i++) {
-            preset[i][0] = unmodifiedPreset[i][0];
-            preset[i][1] = unmodifiedPreset[i][1];
+            //preset[i][0] = unmodifiedPreset[i][0];
+            //preset[i][1] = unmodifiedPreset[i][1];
             if (preset[i][0] == VectorCalculator.RS)
                 rainbowSpinIndex = i + 1;
             else if (preset[i][0] == VectorCalculator.HMCCT) {
@@ -219,11 +206,25 @@ public class Solver implements SolverInterface {
                 secondDiveIndex = i + 1;
                 finalCapThrowIndex = i;
             }
-        } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
+        }
+    }
 
-        //first, fix the preset so that it makes sense with the height of the ground
-        p.onMoon = p.onMoon;
+    public boolean solve(int delta) {
+        Debug.println("Starting Solver");
+
+        VectorCalculator.setProgressText("Solver: Finding Ballpark Durations");
+
+        long startTime = System.currentTimeMillis();
+
+        this.delta = delta;
+
+        VectorCalculator.addPreset(p.midairPreset, false);
         
+        setup();
+
+        //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
+
+        //first, fix the preset so that it makes sense with the height of the ground        
         p.initialDispY = p.y1 - p.y0 - 1000;
         int tooManyFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
         p.initialFrames = Math.min(initialDurationLimit, tooManyFrames);
@@ -873,14 +874,17 @@ public class Solver implements SolverInterface {
             return 0.0;
         }
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
-        double dispY = validateHeights(testDurations, maximizer);
-        if (dispY == FALSE) {
-            return 0.0;
+        if (!fullAccuracy) {
+            double dispY = validateHeights(testDurations, maximizer);
+            if (dispY == FALSE) {
+                return 0.0;
+            }
+            //}
+            bestYDisp = dispY; //for debugging
         }
-        //}
-        bestYDisp = dispY; //for debugging
 
-        if (diveTurns[ctDuration][diveDuration]) {
+        boolean diveTurn = diveTurns != null ? diveTurns[ctDuration][diveDuration] : (p.diveTurn != TurnDuringDive.NO);
+        if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
         }
         else {
@@ -894,7 +898,7 @@ public class Solver implements SolverInterface {
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
         }
-        if (diveCapBounceIndex >= 0) {
+        if (diveCapBounceIndex >= 0 && diveDecels != null && edgeCBAngles != null) {
             p.diveFirstFrameDecel = diveDecels[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
         }

@@ -532,40 +532,10 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);
 		else
 			infoTableModel.setValueAt("No", MADE_JUMP_ROW, 1);
-
-		Properties.p.savedInfoTableRows = new String[infoTableModel.getRowCount()];
-		for (int i = 0; i < infoTableModel.getRowCount(); i++) {
-			Properties.p.savedInfoTableRows[i] = infoTableModel.getValueAt(i, 0) + "\t" + infoTableModel.getValueAt(i, 1);
-		}
-		Properties.p.savedDataTableRows = new String[dataTableModel.getRowCount()][];
-		for (int i = 0; i < dataTableModel.getRowCount(); i++) {
-			Properties.p.savedDataTableRows[i] = new String[7];
-			for (int j = 0; j < 7; j++) {
-				Properties.p.savedDataTableRows[i][j] = dataTableModel.getValueAt(i, j).toString();
-			}
-		}
 	}
 	
 	public static void display() {
-		if (Properties.p.savedInfoTableRows != null && VectorCalculator.loading) {
-			loadSavedData();
-		}
 		frame.setVisible(true);
-	}
-
-	public static void loadSavedData() {
-		//System.out.println("Loading Rows");
-		if (Properties.p.savedInfoTableRows != null) {
-			for (int i = 0; i < Properties.p.savedInfoTableRows.length; i++) {
-				String[] parts = Properties.p.savedInfoTableRows[i].split("\t");
-				infoTableModel.setValueAt(parts[0], i, 0);
-				infoTableModel.setValueAt(parts[1], i, 1);
-			}
-			dataTableModel.setRowCount(0);
-			for (String[] row : Properties.p.savedDataTableRows) {
-				dataTableModel.addRow(row);
-			}
-		}
 	}
 
 	public static void generateTSVTAS(boolean toClipboard) {

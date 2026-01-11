@@ -291,9 +291,7 @@ public class Properties {
     //currently internal setting only
     boolean spreadOutOvershoot = false;
 
-    //saving the VectorDisplayWindow tables
-    String[] savedInfoTableRows = null;
-    String[][] savedDataTableRows = null;
+    boolean isCalculated = false; //whether results have been calculated with the current presets
 
     //UI state
     @XmlTransient
