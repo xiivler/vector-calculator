@@ -31,7 +31,7 @@ public class Solver implements SolverInterface {
 
     boolean singleThrowAllowed = true;
     boolean mcctAllowed = true;
-    TripleThrow ttAllowed;
+    TripleThrow ttAllowed; //whether the cap throw that is bounced on must be a tt or not tt or if the program should test both
     TurnDuringDive dtAllowed;
 
     boolean hasRCV;
@@ -169,11 +169,13 @@ public class Solver implements SolverInterface {
         mcctAllowed = true;
 
         boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
-        boolean ttFirst = p.midairPreset.equals("MCCT First") && p.tripleThrow == TripleThrow.YES;
+        boolean mcctFirst =  p.midairPreset.equals("MCCT First");
+        boolean ttFirst = mcctFirst && p.tripleThrow == TripleThrow.YES;
+        boolean cbvFirst = p.midairPreset.equals("CBV First");
         if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
             initialDurationLimit = p.vaultCapReturnFrame + 11;
         }
-        if (p.midairPreset.equals("CBV First") && p.tripleThrow == TripleThrow.YES) {
+        if (cbvFirst && p.tripleThrow == TripleThrow.YES) {
             if (p.initialMovementName.equals("Vault"))
                 initialDurationLimit = p.vaultCapReturnFrame + 11;
             singleThrowAllowed = false;
@@ -233,6 +235,12 @@ public class Solver implements SolverInterface {
         preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
         preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
         preset[finalCapThrowIndex - 1][1] = tooManyFrames;
+        if (p.groundTypeCB != GroundType.NONE && cbvFirst) {
+            if (p.tripleThrow == TripleThrow.YES)
+                preset[homingTTIndex - 1][1] += 2;
+            else
+                preset[homingMCCTIndex - 1][1] += 8;
+        }
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
 
@@ -267,11 +275,12 @@ public class Solver implements SolverInterface {
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
-                //Debug.println(final_y_heights[maximizer_firstGPIndex]);
+                System.out.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     success = false;
                     error = "Error: Could not avoid ground/liquid";
+                    System.out.println("Fuck 1");
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -283,6 +292,7 @@ public class Solver implements SolverInterface {
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     error = "Error: Could not avoid ground/liquid";
+                    System.out.println("Fuck 2");
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -340,7 +350,7 @@ public class Solver implements SolverInterface {
         //     }
         // }
 
-        Debug.println(Arrays.toString(final_y_heights));
+        System.out.println(Arrays.toString(final_y_heights));
         VectorCalculator.addPreset(preset);
 
         hasRCV = p.initialMovementName.contains("RCV");
@@ -392,12 +402,12 @@ public class Solver implements SolverInterface {
                 return false;
             }
             //y -= y_vels[lastFrames[worstEfficiencyIndex]];
-            //durations[worstEfficiencyIndex]--;
+            durations[worstEfficiencyIndex]--;
             if (worstEfficiencyIndex == 0)
                 p.initialFrames--;
             else
                 preset[worstEfficiencyIndex - 1][1] --;
-            //lastFrames[worstEfficiencyIndex]--;
+            lastFrames[worstEfficiencyIndex]--;
             //we can keep the "removed" frames in the arrays, as they won't be considered anymore
             // p.initialFrames = durations[0];
             // for (int i = 0; i < preset.length; i++) {
@@ -436,7 +446,7 @@ public class Solver implements SolverInterface {
         }
         Debug.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
 
-        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
+        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
         Debug.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         Debug.println("Ballpark Y Height: " + y);
 
