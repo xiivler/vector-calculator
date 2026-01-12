@@ -1,5 +1,7 @@
 Vector Calculator is a program for TASing jumps in Super Mario Odyssey by Xiivler. Special thanks to MonsterDruide1 for some menu code and to Tetraxile, whose absolute joystick mod is bundled in this program's release.
 
+Check out the [tutorial](tutorial.md) for step-by-step instructions on using the mod.
+
 Vector Calculator has 3 modes: Solve, Calculate (Solve Dives), and Calculate, of which Solve is the most automated and Calculate is the least.
 
 Solve: Determines optimal durations and inputs for each piece of movement
@@ -61,7 +63,7 @@ Camera Angle:
     Which angle the camera is pointing toward during the jump, which shifts the joystick angles the program calculates.
     Initial Angle: the jump's initial angle
     Target Angle: the jump's target angle
-    Absolute: The joystick angles are fixed instead of being dependent on the camera angle. This is for use with tetraxile's absolute joystick mod.
+    Absolute (Recommended): The joystick angles are fixed instead of being dependent on the camera angle. This is for use with tetraxile's absolute joystick mod. Using tetraxile's mod and this setting allows you to TAS jumps without a top-down camera angle.
     Custom: Allows the user to specify any angle
 
 Midair Properties:
