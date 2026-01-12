@@ -1,0 +1,84 @@
+$initial_joystick_angle = 349.9628			
+$ledge_angle = 0			
+$vector_direction = -1			
+			
+$rotation = $ledge_angle - $vector_direction * 65			
+$counterrotation = 2 * $initial_joystick_angle - $rotation			
+			
+1	r		
+1	m-uu		
+1			ls($initial_joystick_angle - $vector_direction * 85)
+20	r/		
+1	a		
+3			
+36	zl		
+1	zl	y	
+1	m-dd	a	
+1			ls($initial_joystick_angle  - $vector_direction * 4)
+13	r		ls($initial_joystick_angle  - $vector_direction * 90.58)
+4			ls($initial_joystick_angle)
+1	a		ls($initial_joystick_angle)
+4	a		ls($initial_joystick_angle  + $vector_direction * 150)
+4	[2] a		ls($initial_joystick_angle  - $vector_direction * 30)
+14			ls($counterrotation)
+14			ls($rotation)
+2	y		
+1	y		
+1	y		ls(79.9628)
+37			ls(79.9628)
+1	m-u		ls(79.9628)
+6			ls(285.9521)
+1	m-d		ls(285.9521)
+17			ls(285.9521)
+1			ls(18.7646)
+1	b		ls(18.7646)
+31			ls(63.3602)
+1	y		ls(18.3602)
+1			ls(336.8901)
+1			ls(289.8602)
+1			ls(290.2602)
+1			ls(290.6602)
+1			ls(291.0602)
+1			ls(291.4602)
+1			ls(291.8602)
+1			ls(292.2602)
+1			ls(292.6602)
+1			ls(293.0602)
+12			ls(293.1944)
+1			ls(0.11; 112.1944)
+1			ls(291.1944)
+3			ls(359.2001)
+1	zl		ls(359.2001)
+1	y		
+1	y		ls(269.2001)
+1	y		ls(268.8420)
+1	y		ls(268.4839)
+1	y		ls(268.1258)
+1	y		ls(267.7677)
+1	y		ls(267.4096)
+1	y		ls(267.0515)
+1	y		ls(266.6934)
+1	y		ls(266.3353)
+1	y		ls(265.9772)
+1	y		ls(265.6191)
+1	y		ls(265.2611)
+1	y		ls(264.9030)
+1	y		ls(264.5449)
+1	y		ls(264.1868)
+1	y		ls(263.8287)
+1	y		ls(263.4706)
+1	y		ls(263.1125)
+1	y		ls(262.7544)
+1	y		ls(262.3963)
+1	y		ls(262.0382)
+1	y		ls(81.1801)
+28			ls(81.1801)
+1	m-u		ls(81.1801)
+21			ls(292.4981)
+1			ls(0.11; 111.4981)
+1			ls(290.4981)
+1			ls(297.4981)
+2			ls(359.9981)
+1	zl		ls(359.9981)
+1	y		
+19			

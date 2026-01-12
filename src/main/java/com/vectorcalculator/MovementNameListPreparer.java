@@ -91,19 +91,19 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames - 56);
 		}
 		else if (name.equals("Ground Pound Roll (No Vector)") && frames > 43) {
-			movementNames.add("Ground Pound Roll");
+			movementNames.add("Ground Pound Roll (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);
 		}
 		else if (name.equals("Crouch Roll (No Vector)") && frames > 57) {
-			movementNames.add("Crouch Roll");
+			movementNames.add("Crouch Roll (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);
 		}
 		else if (name.equals("Roll Boost (No Vector)") && frames > 56) {
-			movementNames.add("Roll Boost");
+			movementNames.add("Roll Boost (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);

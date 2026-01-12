@@ -1,0 +1,42 @@
+//	Moonwalk triple jump template for Vector Calculator					
+//	by Xiivler					
+						
+//	Edit the following parameters					
+$initial_angle = 110			// input value from Vector Calculator			
+$ledge_angle = 90			// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)			
+$vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)			
+$moonwalk_rotation_strength = 60			// reduce this value if Mario is single jumping			
+$frames_y = 15			// this is how many additional frames the Y button is held for setting up triple throws			
+$camera_angle = 90			// choose whatever you want			
+						
+//	Do not edit these parameters					
+$initial_angle_joystick = -1 * $initial_angle						
+$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength						
+$rc_angle = $moonwalk_rotation + $vector_direction * 15						
+$turnaround_angle = $moonwalk_rotation - $vector_direction * 125						
+$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle						
+						
+1	r					
+1	m-uu					
+1			ls($camera_angle)			
+60	r/					
+1	m-uu					
+1			ls($initial_angle_joystick)			
+80						
+10	a					
+4						
+1	m-u					
+10						
+40	zl					
+1	zl	y				
+10	zl					
+1	m-u	a				
+1		y	ls($rc_angle)			
+6		y	ls($initial_angle_joystick)			
+1	a	y	ls($initial_angle_joystick)			
+22		y				// change the duration of this frame as needed
+1		y	ls(.11; $turnaround_angle)			
+1		y	ls($initial_angle_joystick)			
+1	a	y	ls(.11; $counter_turnaround_angle)			
+31		[# + $frames_y] y				// change the duration of this frame as needed
+1	b	// Paste the script from Vector Calculator to overwrite this row once the triple jump is as close to the edge as possible				

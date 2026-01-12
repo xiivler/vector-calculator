@@ -323,6 +323,7 @@ public class Movement {
 		
 		//technically there are 4 varieties, at speeds 20, 23, and 26
 		else if (movementType.contains("Roll Boost")) {
+			displayName = "Roll Boost";
 			initialVerticalSpeed = 12;
 			if (initialHorizontalSpeed <= 20)
 				initialHorizontalSpeed = 20;

@@ -24,7 +24,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
             boolean optimalDistanceMotion = p.initialMovementName.equals("Optimal Distance Motion");
             if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
                 if (p.initialMovementName.equals("Optimal Distance RCV")) {
-                    publish("Error: Optimal Distance RCV not supported in this mode");
+                    VectorCalculator.setErrorText("Error: Optimal Distance RCV not supported in this mode");
                     return false;
                 }
 
@@ -174,7 +174,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     if (maximizer != null) {
                         maximizer.maximize();
                         if (maximizer.hasError()) {
-                            publish(maximizer.error);
+                            VectorCalculator.setErrorText(maximizer.error);
                             return false;
                         }
                         maximizer.recalculateDisps(true);

@@ -1,0 +1,101 @@
+$initial_angle = 19.6463			
+$ledge_angle = 0			
+$vector_direction = -1			
+$frames_decel = 8			
+$initial_offset = -1.78			
+$camera_angle = 0			
+			
+$initial_joystick_angle = -1 * $initial_angle - $vector_direction * (20 + $initial_offset)			
+$initial_rotation = -$ledge_angle + $vector_direction * 60			
+$rc_angle = $initial_joystick_angle + $vector_direction * 20			
+			
+1	r		
+1	y		
+1			ls($camera_angle)
+58		r/	
+1	y		
+1			ls($initial_joystick_angle)
+42			
+16			ls(0)/ls(120)/ls(240)
+1	a		ls($initial_joystick_angle)
+7	zl		ls($initial_joystick_angle)
+1	zl	y	ls($initial_joystick_angle)
+1	m-u	a	ls($initial_joystick_angle)
+2			ls($rc_angle)
+1	a		ls($rc_angle)
+$frames_decel		y	ls($rc_angle + 180)
+16 - $frames_decel		y	ls($rc_angle)
+11		y	[12] ls($initial_rotation)
+1	y		
+1	y		ls(70.3537)
+61			ls(70.3537)
+1	m-u		ls(70.3537)
+1			ls(318.5741)
+18			ls(288.5741)
+1	m-d		
+4			ls(288.5741)
+3			ls(334.1536)
+8			ls(353.8411)
+1	b		ls(353.8411)
+31			ls(68.8807)
+1	m-u		ls(23.8807)
+1			ls(336.3818)
+1			ls(295.3807)
+1			ls(295.7807)
+1			ls(296.1807)
+1			ls(296.5807)
+1			ls(296.9807)
+1			ls(297.3807)
+1			ls(297.7807)
+1			ls(298.1807)
+1			ls(298.5807)
+1			ls(298.9807)
+1			ls(299.3807)
+1			ls(299.7807)
+1			ls(300.1807)
+1			ls(300.5807)
+1			ls(300.9807)
+1			ls(301.3807)
+1			ls(301.7807)
+1			ls(302.1807)
+4			ls(302.2295)
+1			ls(0.11; 102.9768)
+5			ls(354.8768)
+1	zl		ls(354.8768)
+1	y		
+1	y		ls(0.65; 174.8768)
+1	y		ls(264.8768)
+1	y		ls(264.5128)
+1	y		ls(264.1488)
+1	y		ls(263.7848)
+1	y		ls(263.4208)
+1	y		ls(263.0568)
+1	y		ls(262.6928)
+1	y		ls(262.3288)
+1	y		ls(261.9648)
+1	y		ls(261.6008)
+1	y		ls(261.2367)
+1	y		ls(260.8727)
+1	y		ls(260.5087)
+1	y		ls(260.1447)
+1	y		ls(259.7807)
+1	y		ls(259.4167)
+1	y		ls(259.0527)
+1	y		ls(258.6887)
+1	y		ls(258.3247)
+1	y		ls(257.9607)
+1	y		ls(257.5967)
+1	y		ls(257.2326)
+1	y		ls(256.8686)
+1	y		ls(256.5046)
+1	y		ls(75.6426)
+41			ls(75.6426)
+1	m-u		ls(75.6426)
+21			ls(295.0191)
+1			ls(0.11; 114.0191)
+1			ls(293.0191)
+1			ls(0.0032)
+6			ls(0.0032)
+1	zl		ls(0.0032)
+1	y		
+24			

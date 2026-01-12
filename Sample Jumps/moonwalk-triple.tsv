@@ -1,0 +1,111 @@
+$initial_angle = 110						
+$ledge_angle = 90						
+$vector_direction = -1						
+$moonwalk_rotation_strength = 60						
+$camera_angle = 90						
+						
+$initial_angle_joystick = -1 * $initial_angle						
+$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength						
+$rc_angle = $moonwalk_rotation + $vector_direction * 15						
+$turnaround_angle = $moonwalk_rotation - $vector_direction * 125						
+$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle						
+						
+1	r					
+1	m-uu					
+1			ls($camera_angle)			
+60	r/					
+1	m-uu					
+1			ls($initial_angle_joystick)			
+80						
+10	a					
+4						
+1	m-u					
+10						
+40	zl					
+1	zl	y				
+10	zl					
+1	m-u	a				
+1		y	ls($rc_angle)			
+6		y	ls($initial_angle_joystick)			
+1	a	y	ls($initial_angle_joystick)			
+22		y				// change the duration of this frame as needed
+1		y	ls(.11; $turnaround_angle)			
+1		y	ls($initial_angle_joystick)			
+1	a	y	ls(.11; $counter_turnaround_angle)			
+31		y				// change the duration of this frame as needed
+2						
+3			ls(20.9688)			
+1	b		ls(20.9688)			
+9	b		ls(290.9688)			
+57			ls(290.9688)			
+1	m-d		ls(290.9688)			
+1			ls(22.3629)			
+1			ls(69.5226)			
+1			ls(69.1226)			
+1			ls(68.7226)			
+1			ls(68.3226)			
+1			ls(67.9226)			
+1			ls(67.5226)			
+1			ls(67.1226)			
+1			ls(66.7226)			
+1			ls(66.3226)			
+1			ls(65.9226)			
+1			ls(65.5226)			
+1			ls(65.1226)			
+1			ls(64.7226)			
+1			ls(64.3226)			
+1			ls(63.9226)			
+1			ls(63.5226)			
+5			ls(63.1226)			
+1			ls(61.6976)			
+1			ls(0.11; 256.0379)			
+3			ls(4.1379)			
+1	zl		ls(4.1379)			
+1	y					
+1	y		ls(94.1379)			
+1	y		ls(94.4960)			
+1	y		ls(94.8540)			
+1	y		ls(95.2121)			
+1	y		ls(95.5702)			
+1	y		ls(95.9283)			
+1	y		ls(96.2864)			
+1	y		ls(96.6445)			
+1	y		ls(97.0026)			
+1	y		ls(97.3607)			
+1	y		ls(97.7188)			
+1	y		ls(98.0769)			
+1	y		ls(98.4350)			
+1	y		ls(98.7931)			
+1	y		ls(99.1512)			
+1	y		ls(99.5093)			
+1	y		ls(99.8674)			
+1	y		ls(100.2255)			
+1	y		ls(100.5836)			
+1	y		ls(100.9416)			
+1	y		ls(101.2997)			
+1	y		ls(101.6578)			
+1	y		ls(102.0159)			
+1	y		ls(102.3740)			
+1	y		ls(102.7321)			
+1	y		ls(103.0902)			
+1	y		ls(283.9483)			
+39			ls(283.9483)			
+1	m-u		ls(283.9483)			
+1			ls(35.8981)			
+18			ls(65.8981)			
+1	m-d					
+4			ls(65.8981)			
+3			ls(20.3185)			
+8			ls(25.9435)			
+1	b		ls(25.9435)			
+31			ls(291.6967)			
+1	m-u		ls(336.6967)			
+21			ls(66.6967)			
+1			ls(0.11; 247.6967)			
+1			ls(68.6967)			
+8			ls(0.7568)			
+1	zl		ls(0.7568)			
+1	y					
+24						
+1	y					
+24						

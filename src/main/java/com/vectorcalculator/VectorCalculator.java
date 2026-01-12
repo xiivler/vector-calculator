@@ -184,8 +184,10 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.upwarp);
 			params.add(null);
 
-			params.add(Parameter.duration_search_range);
-			params.add(null);
+			if (p.mode == Mode.SOLVE) {
+				params.add(Parameter.duration_search_range);
+				params.add(null);
+			}
 
 			params.add(Parameter.turnarounds);
 

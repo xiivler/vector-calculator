@@ -1,0 +1,31 @@
+//	Downthrow jumpvault template for Vector Calculator		
+//	by Xiivler		
+			
+//	Edit the following parameters		
+$initial_joystick_angle = 349.9628			// input value from Vector Calculator
+$ledge_angle = 0			// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)
+$vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)
+			
+//	Do not edit these parameters		
+$rotation = $ledge_angle - $vector_direction * 65			
+$counterrotation = 2 * $initial_joystick_angle - $rotation			
+			
+1	r		
+1	m-uu		
+1			ls($initial_joystick_angle - $vector_direction * 85)
+20	r/		
+1	a		
+3			
+36	zl		
+1	zl	y	
+1	m-dd	a	
+1			ls($initial_joystick_angle  - $vector_direction * 4)
+13	r		ls($initial_joystick_angle  - $vector_direction * 90.58)
+4			ls($initial_joystick_angle)
+1	a		ls($initial_joystick_angle)
+4	a		ls($initial_joystick_angle  + $vector_direction * 150)
+4	[2] a		ls($initial_joystick_angle  - $vector_direction * 30)
+14			ls($counterrotation)
+14			ls($rotation)
+2	[4] y		
+//	Paste the script from Vector Calculator to overwrite this row once the vault is as close to the edge as possible		

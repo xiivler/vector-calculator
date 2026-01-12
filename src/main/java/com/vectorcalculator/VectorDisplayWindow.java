@@ -367,6 +367,11 @@ public class VectorDisplayWindow {
 				}
 				inputs.add(Inputs.MD);
 			}
+			else if (motion.movement.movementType.contains("(No Vector)")) { //crouch rolls and roll boosts where Mario stays in the roll as long as possible
+				for (int i = 1; i < motion.frames - 10; i++) {
+					motion.movement.inputs1.add(Inputs.ZL);
+				}
+			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();

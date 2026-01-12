@@ -1,0 +1,19 @@
+//	RCV template for Vector Calculator			
+//	by Xiivler			
+				
+//	Edit the following parameters			
+$initial_joystick_angle = 5			// input value from Vector Calculator	
+$camera_angle = 0			// choose whatever you want	
+				
+1	r			
+1	m-uu			
+1			ls($camera_angle)	
+60	r/			
+1	m-u			
+1			ls($initial_joystick_angle)	
+60				
+1	a			
+3				
+36	zl			
+1	zl	y		
+1	m-u	b		// Paste the script from Vector Calculator to overwrite this row once the RCV is as close to the edge as possible

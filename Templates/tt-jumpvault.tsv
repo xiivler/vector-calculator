@@ -1,0 +1,36 @@
+//	Triple throw jumpvault template for Vector Calculator		
+//	by Xiivler		
+			
+//	"Set ""Vault Cap Return Frame"" to 27 in Vector Calculator"		
+			
+//	Edit the following parameters		
+$initial_angle = 19.6463		// input value from Vector Calculator	
+$ledge_angle = 0		// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)	
+$vector_direction = -1		// input -1 for left or 1 for right	
+$frames_decel = 8		// modify to a different whole number if Mario is not bouncing	
+$initial_offset = -1.78		// modify so that Mario's velocity angle matches the initial angle one frame before the vault	
+$camera_angle = 0		// choose whatever you want	
+			
+//	Do not edit these parameters		
+$initial_joystick_angle = -1 * $initial_angle - $vector_direction * (20 + $initial_offset)			
+$initial_rotation = -$ledge_angle + $vector_direction * 60			
+$rc_angle = $initial_joystick_angle + $vector_direction * 20			
+			
+1	r		
+1	y		
+1			ls($camera_angle)
+58		r/	
+1	y		
+1			ls($initial_joystick_angle)
+42			
+16			ls(0)/ls(120)/ls(240)
+1	a		ls($initial_joystick_angle)
+7	zl		ls($initial_joystick_angle)
+1	zl	y	ls($initial_joystick_angle)
+1	m-u	a	ls($initial_joystick_angle)
+2			ls($rc_angle)
+1	a		ls($rc_angle)
+$frames_decel		y	ls($rc_angle + 180)
+16 - $frames_decel		y	ls($rc_angle)
+11		[13] y	[12] ls($initial_rotation)
+//	Paste the script from Vector Calculator to overwrite this row once the vault is as close to the edge as possible		
