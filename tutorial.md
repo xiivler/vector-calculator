@@ -1,50 +1,51 @@
-#Vector Calculator Tutorial
+# Vector Calculator Tutorial
 
-This tutorial will help someone who has no experience TASing TAS jumps using Vector Calculator.
+This tutorial is for anyone who wants to learn how to TAS jumps using Vector Calculator. Previous TASing experience is not required, though following the tutorial will take longer if you do not have any.
 
-##Part 1: Setting up TASing tools
+## Part 1: Setting up TASing tools
 
-Join the Super Mario Odyssey TAS server and follow the instructions in #resources to set up either Practice Mod or LunaKit to TAS with. If using practice mod, make sure you install and test the smo-practice-server before continuing.
+Join the [Super Mario Odyssey TAS server](https://discord.gg/HdB2P586ch) and follow the instructions in `#resources` to set up either `smo-practice` or `smo-lunakit` to TAS with. If using `smo-practice`, make sure you install and test the `smo-practice-server` before continuing.
 
-This tutorial assumes that you will be using TSV-TAS-2 as your script format, as it is recommended for Vector Calculator because it works the most easily. (Link to this.) Make sure to familiarize yourself with the script format by reading the tutorial.
+This tutorial assumes that you will be using [TSV-TAS-2](https://github.com/xiivler/TSV-TAS-2) as your script format, as it is recommended for Vector Calculator because it works the most easily. Make sure to familiarize yourself with the script format by reading its [documentation](https://docs.google.com/document/d/1vW-swF3k96YxaIJqXbtRXbQ54mKKgeWfPFlW2hYBa_Q/edit?usp=sharing). This script format is compatible with both `smo-practice` and `smo-lunakit`.
 
-Additionally, copy the folder `absolute-joystick` to the SD:/atmosphere/exefs. This mod, created by tetraxile, will cause the game to ignore the camera angle when translating joystick angles to Mario's movement, making it possible to TAS jumps without having to point the camera downward to prevent the camera from turning. This step is not required to use Vector Calculator, but the rest of the tutorial assumes yoyu have completed it.
+Additionally, copy the folder `absolute-joystick` into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute_stick_angles/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, will cause the game to ignore the camera angle when translating joystick angles to Mario's movement, making it possible to TAS jumps without having to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
 
-##Part 2: TASing a Vault
+Finally, if you haven't already, download the latest version of Vector Calculator from GitHub (under Releases).
 
-If double clicking Vector Calculator does not open it, open it by navigating to its directory in a terminal window and running the command java -jar vector-calculator.jar. If this does not work, make sure you have Java installed.
+## Part 2: TASing a Vault
 
-Click the menu item `Reset to Program Defaults` in the File menu.
+If double clicking Vector Calculator does not open it, open it by navigating to its directory in a terminal window and running the command `java -jar vector-calculator.jar`. If this does not work, make sure you have Java installed.
 
-In Super Mario Odyssey, stand at the point where the vault begins. This does not have to be exactly precise.
+Click the menu item `Reset to Program Defaults` in the `File` menu.
 
-In Vector Calculator, click on the `value` cell of the Initital Coordinates row (it says (0, 0, 0)) and then enter Mario's X, Y, and Z coordinates from the game.
+In Super Mario Odyssey, stand at the approximate point at which the vault should begin.
 
-Now, stand at the point where you believe the vault will land, and enter Mario's coordinates in the Target Coordinates row.
+In Vector Calculator, click on the `value` cell of the `Initital Coordinates` row (it says `(0, 0, 0)`) and then enter Mario's X, Y, and Z coordinates from the game.
 
-Select Vault as the initial movement type, and choose the direction you want the vault to go in in the Vector Direction row.
+Now, stand at the point where you believe the vault will land, and enter Mario's coordinates in the `Target Coordinates` row.
 
-Select the type of midairs you want from the midairs row. If you want to have a triple throw, set the value of the Triple Throw row to `Yes`.
+Select `Vault` as the `Initial Movement Type`, and choose whether you want a left or right vector for the vault in the `Vector Direction` row.
 
-Now, press the Solve button. After some time, a window will open with frame-by-frame information about the jump. This is a good time to save your Vector Calculator project, which you can do by typing command/control + S while the main window is selected.
+Select the type of midairs you want from the `Midairs` row. If you want to have a triple throw, set the value of the `Triple Throw` row to `Yes`.
 
-Make a copy of `ud-vault.tsv` from the Templates folder and open this file in a spreadsheet editor or even a text editor. Replace the current value for $initial_joystick_angle with the number Vector Calculator displays in the window that opened after you clicked `Solve`. The camera angle can be set to whatever you want; the Target Angle from Vector Calculator usually looks good.
+Now, press the `Solve` button. After some time, a window will open with frame-by-frame information about the jump. This is a good time to save your Vector Calculator project, which you can do by typing control + S while the main window is selected (command + S for Mac users).
 
-! Lunakit is different
+Make a copy of `ud-vault.tsv` from the `Templates` folder and open this file in a spreadsheet editor or even a text editor. Replace the current value for `$initial_joystick_angle` with the number Vector Calculator displays in the window that opened after you clicked `Solve`. The camera angle can be set to whatever you want; the Target Angle from Vector Calculator usually looks good. Use `tsv-tas.py` to generate the script file and send it to your Switch.
 
-In the SMO practice server, use the tp command to teleport to where you think the up-down vault should start. Now, run the TSV-TAS script and see if you get a vault. Keep playing around with the teleport coordinates until you get a vault as close to the edge as possible.
+#### (SMO Practice Only)
 
-Now, click the `Copy to Clipboard` button in Vector Calculator and paste the result to overwrite the commented row at the bottom of the template. Run the script again and the inputs that Vector Calculator solved will be performed in-game.
+In the SMO practice server, use the `tp` command to teleport to where you think Mario should ground pound to begin the up-down vault.
 
-Part 3: TASing other jumps
+#### (LunaKit Only)
+
+Insert a line at the top of your copy of `ud-vault.tsv` that reads `$position = (x; y; z)`, replacing `x`, `y`, and `z` with the coordinates you think Mario should ground pound to begin the up-down vault. Configure all the other LunaKit variables as necessary using this [documentation](https://docs.google.com/document/d/1vW-swF3k96YxaIJqXbtRXbQ54mKKgeWfPFlW2hYBa_Q/edit?tab=t.8gdkfr3frur8#heading=h.gu4mp3nt9u0p).
+
+#### (Both Mods)
+
+Now, run the TSV-TAS script and see if you get a vault. Keep playing around with the teleport coordinates until you get a vault as close to the edge as possible.
+
+Once you have done this, click the `Copy to Clipboard` button in Vector Calculator and paste the result to overwrite the commented row at the bottom of the template. Run the script again and the inputs that Vector Calculator solved will be performed in-game.
+
+## Part 3: TASing other jumps
 
 You should now be able to TAS other types of jumps as well. The moonwalk triple and RCV templates are the next easiest to use. If you are familiar with TASing Super Mario Odyssey, you can also just write your own inputs leading up to the jump or modify the templates further to suit your needs.
-
-
-Some other stuff to include
-
-Trickjump TAS guide
-initial_angle is the same initial angle as Vector Calculator, assuming you have the 0 Degree Axis set to X. (If you have 0 Degree Axis set to Z, it should be 90 minus the initial angle from Vector Caclulator.)
-ledge_angle is the angle of the ledge. To find this angle, walk directly toward the edge (along a line perpendicular to the edge) and record the velocity angle from Practice Mod.
-vector_direction should be -1 if the initial movement has a left vector, or 1 if it has a right vector.
-moonwalk_rotation_strength is how rotated Mario is when he moonwalks. 60 results in the most possible distance, but if Mario does not get a triple jump, reduce this value.

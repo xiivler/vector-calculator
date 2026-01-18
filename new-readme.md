@@ -1,9 +1,9 @@
 # vector-calculator
-Vector Calculator is a program for optimizng jumps in Super Mario Odyssey, primarily for use in TASing. Special thanks to MonsterDruide1 for some menu code and to Tetraxile, whose Absolute Joystick mod is bundled in this program's release.
+Vector Calculator is a program for optimizing jumps in Super Mario Odyssey, primarily for use in TASing. Special thanks to MonsterDruide1 for some menu code and to Tetraxile, whose Absolute Joystick mod is bundled in this program's release.
 
 To open the program, run the command `java -jar vector-calculator.jar`. You need to have Java installed.
 
-Check out the [tutorial](tutorial.md) for step-by-step instructions on TASing a trickump with Vector Calculator. Read below for a detailed description of the various modes and settings the program has to offer.
+Check out the [tutorial](tutorial.md) for step-by-step instructions on TASing a trickjump with Vector Calculator. Read below for a detailed description of the various modes and settings the program has to offer.
 
 ## Optimization Modes
 Vector Calculator has 3 modes: `Solve`, `Calculate (Solve Dives)`, and `Calculate`, of which `Solve` is the most automated and `Calculate` is the least automated.
@@ -21,7 +21,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Calculator Mode**: The mode the calculator is running in (`Solve`, `Calculate (Solve Dives)`, or `Calculate`)
 
-* **Intial Coordinates**: The coordinates of Mario one frame before he jumps
+* **Initial Coordinates**: The coordinates of Mario one frame before he jumps
 
 * **Calculate Using**: Whether the jump is calculated based on its `Initial Angle`, `Target Angle`, or `Target Coordinates`
     * `Initial Angle`: The direction Mario is moving in one frame before the jump
@@ -74,7 +74,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Enable Turnarounds**: Whether the program uses fast turnarounds to optimize cap throws.
 
-* **Edge Cap Bounce Angle**: How far to the side cappy is thrown relative to the dive angle. The solve modes solve for this value.
+* **Edge Cap Bounce Angle**: How far to the side Cappy is thrown relative to the dive angle. The solve modes solve for this value.
 
 * **Edge Cap Bounce Angle Tolerance**: How precise, in degrees, the cap bounce is allowed to be. If the cap bounce is failing in game, set this to a higher value, but this may reduce the distance of the jump.
 
@@ -85,36 +85,36 @@ Vector Calculator has several properties that can be configured by the user. Som
 * **CB Cap Return Frame**: The frame during the cap bounce that Cappy returns to Mario's head.
 
 * **Homing Throw Type**:
-    * `Relax`: Relax tech is used (neutral joystick during the homing to make cappy return faster)
+    * `Relax`: Relax tech is used (neutral joystick when Cappy is homed to make him return faster)
     * `Relaxless`: No relax tech is used
-    * `Custom`: Use for further customization, especially for unusual cases like wall HCTs
+    * `Custom`: Allows for further customization (especially useful for unusual cases like wall HCTs)
         * **Homing Throw Angle**: How sharply Cappy is thrown
         * **Neutral Joystick During Homing**: Whether the joystick is neutral on the frame Cappy is homed
         * **Homing Direction**: The direction Cappy is homed in
-        * **Frames Before Home**: The number of frames before cappy is homed
+        * **Frames Before Home**: The number of frames before Cappy is homed
         * **HCT Cap Return Frame**: The frame that Cappy returns to Mario's head
 
-* **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`
+* **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`.
     * **Type**: Whether there is ground, lava, or poison underneath the jump.
     * **Height**: The height of the ground, lava, or poison underneath the jump.
 
 ## Midair Movement Table
 
-This table appears below the list of general/midair properties and displays the sequence of actions Mario takes during the jump, as well as their durations. Except in the `Solve` mode, each action's duration can be edited by the user. If the **Midairs** property is set to `Custom`, the entire sequence of actions can be edited. Use the plus and minus buttons to add and remove rows, and click on the movement's name to display a list of possible options.
+This table appears below the list of general/midair properties and displays the sequence of actions Mario takes during the jump, as well as their durations. Except in the `Solve` mode, each action's duration can be edited by the user. If the **Midairs** property is set to `Custom`, the entire sequence of actions can be edited. Use the plus and minus buttons to add and remove rows, and click on a movement's name to display a list of possible options.
 
 ## Menu Options
 
 Vector Calculator now has options for saving and loading project files, undoing and redoing steps, and more.
 
-`Save as User Defaults` saves the current project's parameters as the user defaults, which can be restored by using Reset to User Defaults. New files are created with these defaults.
+`Save as User Defaults` saves the current project's parameters as the user defaults, which can be restored by clicking `Reset to User Defaults`. Every new project file is created with these defaults. User defaults are saved to the file `user-defaults.xml`, which is located in the same folder as `vector-calculator.jar`.
 
-`Reset to Program Defaults` resets the current project's parameters to the program's default values.
+`Reset to Program Defaults` resets the current project's parameters to the program's default values. (This option does not change the user defaults.)
 
 ## Vector Display Window
 
-This is the window that provides frame-by-frame information once you click `Solve`/`Calculate`.
+After you click `Solve`/`Calculate`, the program will optimize the jump, then a window will open with two tables displaying information about the optimized jump.
 
-The upper table displays the following attributes:
+The upper table displays the following attributes of the jump:
 
 * **Initial Angle**: The jump's initial angle (if the user specified it), or what it should be to achieve the optimal distance with the jump
 
@@ -132,4 +132,4 @@ The upper table displays the following attributes:
 
 * **Made Jump**: Whether or not Mario made the jump based on the initial and target coordinates the user entered. (This is not reliable if the coordinates were not inputted precisely.)
 
-The lower table gives frame-by-frame information about the movenet which can be used to diagnose issues if Mario behaves differently in-game than expected. The **Value** column displays how valuable each frame is toward maximizing the jump's distance. If a frame has a blank value, Mario is moving upward and this frame should not be removed in a trickjumping context. Frames with low values are the best to remove when optimizing a jump using the Calculate (Solve Dives) or Calculate modes.
+The lower table provides frame-by-frame information about the movement, which can be used to diagnose issues if Mario behaves differently in-game than expected. The **Value** column displays how valuable each frame is toward maximizing the jump's distance. If a frame has a blank value, Mario is moving upward and this frame should not be removed in a trickjumping context. Frames with low values are the best to remove when optimizing a jump using the Calculate (Solve Dives) or Calculate modes.

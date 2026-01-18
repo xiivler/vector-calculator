@@ -3,7 +3,7 @@
 						
 //	Edit the following parameters					
 $initial_angle = 110			// input value from Vector Calculator			
-$ledge_angle = 90			// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)			
+$ledge_angle = 90			// input the direction Mario is moving when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)			
 $vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)			
 $moonwalk_rotation_strength = 60			// reduce this value if Mario is single jumping			
 $frames_y = 15			// this is how many additional frames the Y button is held for setting up triple throws			

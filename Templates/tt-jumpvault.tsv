@@ -5,7 +5,7 @@
 			
 //	Edit the following parameters		
 $initial_angle = 19.6463		// input value from Vector Calculator	
-$ledge_angle = 0		// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)	
+$ledge_angle = 0		// input the direction Mario is moving when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)	
 $vector_direction = -1		// input -1 for left or 1 for right	
 $frames_decel = 8		// modify to a different whole number if Mario is not bouncing	
 $initial_offset = -1.78		// modify so that Mario's velocity angle matches the initial angle one frame before the vault	

@@ -1,7 +1,5 @@
 *.DS_Store
 *.xml
-!factory-defaults.xml
-!user-defaults.xml
 
 # Compiled class file
 *.class
@@ -26,3 +24,6 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+testing
+testing/*

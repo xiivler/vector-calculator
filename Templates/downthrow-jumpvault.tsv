@@ -3,7 +3,7 @@
 			
 //	Edit the following parameters		
 $initial_joystick_angle = 349.9628			// input value from Vector Calculator
-$ledge_angle = 0			// input the direction Mario is facing when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)
+$ledge_angle = 0			// input the direction Mario is moving when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)
 $vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)
 			
 //	Do not edit these parameters		
