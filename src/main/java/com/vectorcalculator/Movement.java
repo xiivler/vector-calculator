@@ -191,6 +191,20 @@ public class Movement {
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
+		else if (movementType.equals("Rocket Flower Jump")) {
+			variableInitialHorizontalSpeed = false;
+			initialHorizontalSpeed = 38;
+			defaultSpeedCap = 38;
+			trueSpeedCap = 38;
+			initialVerticalSpeed = 18;
+			framesAtMaxVerticalSpeed = framesJump;
+			gravity = 1;
+			moonGravity = .35;
+			variableJumpFrames = true;
+			displayName = "RF Jump";
+			for (int i = 0; i < framesJump; i++)
+				inputs1.add(Inputs.B);
+		}
 
 		else if (movementType.equals("Moonwalk")) {
 			forwardAccel = 0;

@@ -787,7 +787,7 @@ public class VectorCalculator extends JPanel {
 
 	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
-		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
+		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump", "Rocket Flower Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
@@ -1683,6 +1683,8 @@ public class VectorCalculator extends JPanel {
 				if (!cellsEditable)
 					return false;
 				if (column == 0 && !p.midairPreset.equals("Custom"))
+					return false;
+				if (p.mode == Mode.SOLVE)
 					return false;
 				return true;
 			}
