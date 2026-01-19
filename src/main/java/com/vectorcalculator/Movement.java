@@ -215,7 +215,7 @@ public class Movement {
 			moonGravity = 3;
 		}
 		
-		else if (movementType.equals("Cap Return Jump")) {
+		else if (movementType.equals("Cap Return Jump") || movementType.equals("Rocket Flower Cap Return Jump")) {
 			initialVerticalSpeed = 22;
 			framesAtMaxVerticalSpeed = framesJump;
 			gravity = 1.3;
@@ -224,6 +224,13 @@ public class Movement {
 			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
+			if (movementType.equals("Rocket Flower Cap Return Jump")) {
+				displayName = "RF Cap Return Jump";
+				variableInitialHorizontalSpeed = false;
+				initialHorizontalSpeed = 38;
+				defaultSpeedCap = 38;
+				trueSpeedCap = 38;
+			}
 		}
 		
 		else if (movementType.equals("Ground Pound Jump")) {
@@ -259,7 +266,7 @@ public class Movement {
 			inputs1.add(Inputs.B);
 		}
 	
-		else if (movementType.equals("Vault")) {
+		else if (movementType.equals("Vault") || movementType.equals("Rocket Flower Vault")) {
 			if (p.onMoon)
 				initialVerticalSpeed = 30;
 			else
@@ -267,6 +274,13 @@ public class Movement {
 			gravity = 1;
 			inputs1.add(Inputs.Y);
 			inputs1.add(Inputs.Y);
+			if (movementType.equals("Rocket Flower Vault")) {
+				displayName = "RF Vault";
+				variableInitialHorizontalSpeed = false;
+				initialHorizontalSpeed = 38;
+				defaultSpeedCap = 38;
+				trueSpeedCap = 38;
+			}
 		}
 		
 		else if (movementType.equals("Sideflip")) {

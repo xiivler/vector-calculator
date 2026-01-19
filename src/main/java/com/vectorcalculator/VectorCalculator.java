@@ -794,9 +794,10 @@ public class VectorCalculator extends JPanel {
 			p.chooseDurationType = true;
 	}
 
-	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
+	static String[] initialMovementCategories = {"Jump", "Rocket Flower Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
-		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump", "Rocket Flower Jump"},
+		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
+		{"Rocket Flower Jump", "Rocket Flower Vault", "Rocket Flower Cap Return Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
@@ -804,7 +805,7 @@ public class VectorCalculator extends JPanel {
 		{"Uncapture", "Flip Forward", "Swinging Jump"},
 		{"Optimal Distance Motion", "Optimal Distance RCV"},
 		{"None"}};
-	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion", "None"};
+	static String[] initialMovementDefaults = {"Triple Jump", "Rocket Flower Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion", "None"};
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
