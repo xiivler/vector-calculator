@@ -388,6 +388,7 @@ public class Solver implements SolverInterface {
 
         //calculate the y displacement of each piece of movement
         y_disps = new double[preset.length + 1];
+        double[] y_heights = new double[preset.length + 1];
         for (int i = 0; i < preset.length + 1; i++) {
             y_disps[i] = 0;
             int firstFrame = 0;
@@ -396,12 +397,18 @@ public class Solver implements SolverInterface {
             int lastFrame = lastFrames[i];
             for (int j = firstFrame; j <= lastFrame; j++)
                 y_disps[i] += y_vels[j];
+            if (i == 0)
+                y_heights[0] = p.y0 + y_disps[0];
+            else
+                y_heights[i] = y_heights[i - 1] + y_disps[i];
         }
-        Debug.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
 
-        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
-        Debug.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
-        Debug.println("Ballpark Y Height: " + y);
+        // System.out.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
+        // System.out.println("Ballpark Y Heights: " + Arrays.toString(y_heights));
+
+        // System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        // System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
+        // System.out.println("Ballpark Y Height: " + y);
 
         //create a new maximizer with some extra frames so the testing works
         p.initialFrames = durations[0] + delta;
@@ -695,7 +702,6 @@ public class Solver implements SolverInterface {
             for (int i = -delta; i <= delta; i++) {
                 int testDuration = durations[index] + i;
                 if (index == homingMCCTIndex && testDuration > 36 && !(cbvFirst && p.groundTypeCB != GroundType.NONE)) {
-                    Debug.println("Skipping HMCCT duration " + testDuration);
                     continue;
                 }
                 if (index == 0 && testDuration > initialDurationLimit) {
@@ -704,7 +710,7 @@ public class Solver implements SolverInterface {
                 if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
                     continue;
                 }
-                if (!canSubtractFrame(index, testDuration)) {
+                if (!canSubtractFrame(index, testDuration + 1)) {
                     continue;
                 }
                 double test_y_pos = y_pos + y_disps[index];
