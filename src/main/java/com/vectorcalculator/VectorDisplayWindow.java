@@ -112,6 +112,7 @@ public class VectorDisplayWindow {
 		infoTable.setRowHeight(infoTable.getRowHeight() + 2);
 		infoTable.setColumnSelectionAllowed(true);
 		infoTable.getTableHeader().setReorderingAllowed(false);
+		infoTable.setShowGrid(false);
 		
 		infoTable.getColumnModel().getColumn(0).setMinWidth(260);
 		infoTable.getColumnModel().getColumn(0).setMaxWidth(260);
@@ -137,6 +138,7 @@ public class VectorDisplayWindow {
 		dataTable.setFont(VectorCalculator.tableFont);
 		dataTable.setRowHeight(dataTable.getRowHeight() + 2);
 		dataTable.setColumnSelectionAllowed(true);
+		dataTable.setShowGrid(false);
 		
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(200);

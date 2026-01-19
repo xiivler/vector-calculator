@@ -631,15 +631,24 @@ public class VectorCalculator extends JPanel {
 			break;
 		case triple_throw:
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
-			int[][] oldMidairs = p.midairs;
+			// int[][] oldMidairs = new int[p.midairs.length][p.midairs[0].length];
+			// int[][] newMidairs = new int[p.midairs.length][p.midairs[0].length];
+			// for (int i = 0; i < p.midairs.length; i++) {
+			// 	oldMidairs[i][0] = p.midairs[i][0];
+			// 	oldMidairs[i][1] = p.midairs[i][1];
+			// }
 			addPreset(p.midairPreset, false);
-			for (int i = 0; i < p.midairs.length; i++) { //copy all the durations the user has customized
-				p.midairs[i][1] = oldMidairs[i][1];
-			}
-			if (p.tripleThrow != TripleThrow.NO && p.midairPreset.equals("CBV First")) { //conform cb duration
-				p.midairs[2][1] = Math.min(p.midairs[2][1], 36);
-			}
-			addPreset(p.midairs);
+			// if (p.mode != Mode.SOLVE) {
+			// 	for (int i = 0; i < p.midairs.length; i++) { //copy all the durations the user has customized
+			// 		newMidairs[i][0] = p.midairs[i][0];
+			// 		newMidairs[i][1] = oldMidairs[i][1];
+			// 	}
+			// 	if (p.tripleThrow != TripleThrow.NO && p.midairPreset.equals("CB First")) { //conform cb duration
+			// 		newMidairs[2][1] = Math.min(newMidairs[2][1], 36);
+			// 	}
+			// 	addPreset(newMidairs);
+			// 	System.out.println(p.midairs[6][1]);
+			// }
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");
@@ -797,7 +806,7 @@ public class VectorCalculator extends JPanel {
 		{"None"}};
 	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion", "None"};
 	
-	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CBV First", "None", "Custom"};
+	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
 
@@ -952,7 +961,7 @@ public class VectorCalculator extends JPanel {
 					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
 				case "MCCT First":
 					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
-				case "CBV First":
+				case "CB First":
 					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
 				case "None":
 				default:
@@ -967,7 +976,7 @@ public class VectorCalculator extends JPanel {
 					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 				case "MCCT First":
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
-				case "CBV First":
+				case "CB First":
 					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 				case "None":
 				default:
@@ -1001,7 +1010,6 @@ public class VectorCalculator extends JPanel {
 		updateMidairProperties();
 		if (calculating) return;
 		addingPreset = true;
-		if (!calculating)
 		movementModel.setRowCount(0);
 		for (int[] row : preset) {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
@@ -1051,6 +1059,10 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void saveProperties(File file, boolean updateCurrentFile, boolean defaults) {
+		if (Properties.p_calculated != null) { //variables that do not require recalculating anything
+			Properties.p_calculated.scriptPath = p.scriptPath;
+			Properties.p_calculated.scriptType = p.scriptType;
+		}
 		p.isCalculated = Properties.p_calculated != null && Properties.p_calculated.equals(p) && !defaults;
 
 		Properties.p_toSave = new Properties();
@@ -1193,12 +1205,12 @@ public class VectorCalculator extends JPanel {
 				VectorDisplayWindow.frame.setTitle("Calculations: " + VectorCalculator.projectName);
 			}
 		}
-		if (defaults)
-			UndoManager.recordState(true);
-		else
-			UndoManager.clear();
 
 		loading = false;
+
+		if (!defaults)
+			UndoManager.clear();
+		UndoManager.recordState(true);
 	}
 
 	static class MyComboBoxRenderer extends JComboBox implements TableCellRenderer {
@@ -1430,6 +1442,8 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static void main(String[] args) {
+		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+
 		File program;
 		try {
 			program = new File(VectorCalculator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -1554,7 +1568,8 @@ public class VectorCalculator extends JPanel {
 		genPropertiesTable.setRowHeight(genPropertiesTable.getRowHeight() + 2);
 		genPropertiesTable.setColumnSelectionAllowed(true);
 		genPropertiesTable.getTableHeader().setReorderingAllowed(false);
-		
+		genPropertiesTable.setShowGrid(false);
+
 		genPropertiesTable.getColumnModel().getColumn(0).setMinWidth(265);
 		genPropertiesTable.getColumnModel().getColumn(0).setMaxWidth(265);
 		
@@ -1696,7 +1711,8 @@ public class VectorCalculator extends JPanel {
 		movementTable.setRowHeight(movementTable.getRowHeight() + 2);
 		movementTable.setPreferredScrollableViewportSize(new Dimension(300, 185));
 		movementTable.getTableHeader().setReorderingAllowed(false);
-		
+		movementTable.setShowGrid(false);
+
 		// Prevent menu accelerators from activating cell editors
 		movementTable.addKeyListener(new java.awt.event.KeyAdapter() {
 			@Override
@@ -1804,7 +1820,10 @@ public class VectorCalculator extends JPanel {
         });
         tabbedPane.addTab("General Properties",genPropertiesScrollPane);
         tabbedPane.addTab("Midair Properties", null);
-        tabbedPane.setPreferredSize(new Dimension(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT));
+		if (isWindows)
+			tabbedPane.setPreferredSize(new Dimension(WINDOW_WIDTH - 30, PROPERTIES_TABLE_HEIGHT));
+		else
+        	tabbedPane.setPreferredSize(new Dimension(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT));
 		tabPanel.add(tabbedPane);
 
 		//genPropertiesTable.setTableHeader(null);

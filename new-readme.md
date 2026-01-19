@@ -1,7 +1,7 @@
 # vector-calculator
 Vector Calculator is a program for optimizing jumps in Super Mario Odyssey, primarily for use in TASing. Special thanks to MonsterDruide1 for some menu code and to Tetraxile, whose Absolute Joystick mod is bundled in this program's release.
 
-To open the program, run the command `java -jar vector-calculator.jar`. You need to have Java installed.
+To open the program, double click `vector-calculator.jar` or run the command `java -jar vector-calculator.jar`. You need to have Java 25 installed.
 
 Check out the [tutorial](tutorial.md) for step-by-step instructions on TASing a trickjump with Vector Calculator. Read below for a detailed description of the various modes and settings the program has to offer.
 
@@ -34,9 +34,10 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Initial Movement Category**: The category of the initial movement (ex. `Jump`, `Roll`, or `RCV`)
     * `Optimal Distance Motion` finds the optimal initial motion type for the jump (either a triple jump, MCCT RCV, or sideflip)
-    * `Optimal Distance RCV` tests all the different types of RCVs, but only currently works in the `Calculate` mode.
+    * `None` means that no initial movement is calculated, and the first midair is treated as the beginning of the jump (ex. this could be used for a jump that starts with a dive)
 
 * **Initial Movement Type**: The specific type of the initial movement (ex. `Triple Jump`, `GP Roll`, or `Upthrow RCV`)
+    * `Optimal Distance RCV` tests all the different types of RCVs, but only currently works in the `Calculate` mode.
 
 * **Duration Type** *(not available in `Solve` mode)*: Whether to specify the duration of the initial movement in terms of frames or vertical displacement
     * **Frames**: The number of frames the initial movement lasts. (The `Solve` mode solves for this value, so you do not need to enter anything yourself in that mode.)
@@ -69,6 +70,8 @@ Vector Calculator has several properties that can be configured by the user. Som
     * `Custom`: Allows the user to specify any camera angle
 
 ### Midair Properties
+
+* **Mode**, **Midairs**, **Triple Throw**, and **Maximum Upwarp** are also present in this properties tab for convenience.
 
 * **Duration Search Range**: For the Solve mode, this parameter represents how many frames the program searches in each direction to find the best durations for each part of the movement once it has found a rough optimization of the jump. Set this to a lower value if the calculation is taking too long. (For RCVs, the program limits the range to 3 even if the user enters a higher range value.)
 
@@ -118,7 +121,7 @@ The upper table displays the following attributes of the jump:
 
 * **Initial Angle**: The jump's initial angle (if the user specified it), or what it should be to achieve the optimal distance with the jump
 
-* **Initial Angle**: The jump's target angle
+* **Target Angle**: The jump's target angle
 
 * **Initial Joystick Angle**: The joystick angle that can be held in game so that Mario moves in the initial angle before the jump
 
@@ -133,3 +136,6 @@ The upper table displays the following attributes of the jump:
 * **Made Jump**: Whether or not Mario made the jump based on the initial and target coordinates the user entered. (This is not reliable if the coordinates were not inputted precisely.)
 
 The lower table provides frame-by-frame information about the movement, which can be used to diagnose issues if Mario behaves differently in-game than expected. The **Value** column displays how valuable each frame is toward maximizing the jump's distance. If a frame has a blank value, Mario is moving upward and this frame should not be removed in a trickjumping context. Frames with low values are the best to remove when optimizing a jump using the Calculate (Solve Dives) or Calculate modes.
+
+## Current Limitations
+The `Solve` mode does not yet support custom midairs, 2P jumps, or moon gravity. It also only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts.

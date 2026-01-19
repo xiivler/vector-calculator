@@ -10,11 +10,13 @@ This tutorial assumes that you will be using [TSV-TAS-2](https://github.com/xiiv
 
 Additionally, copy the folder `absolute-joystick` into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute_stick_angles/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, will cause the game to ignore the camera angle when translating joystick angles to Mario's movement, making it possible to TAS jumps without having to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
 
+Note: To uninstall this mod at any time so that you can play the game normally, simply delete the `absolute-joystick` folder from the SD card.
+
 Finally, if you haven't already, download the latest version of Vector Calculator from GitHub (under Releases).
 
 ## Part 2: TASing a Vault
 
-If double clicking Vector Calculator does not open it, open it by navigating to its directory in a terminal window and running the command `java -jar vector-calculator.jar`. If this does not work, make sure you have Java installed.
+If double clicking Vector Calculator does not open it, open it by navigating to its directory in a terminal window and running the command `java -jar vector-calculator.jar`. If this does not work, make sure you have Java 25 installed.
 
 Click the menu item `Reset to Program Defaults` in the `File` menu.
 

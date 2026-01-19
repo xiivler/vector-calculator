@@ -183,7 +183,7 @@ public class MainJMenuBar extends JMenuBar {
 						VectorCalculator.saveProperties(VectorCalculator.file, true, false);
 					}
 				}
-				VectorCalculator.loadProperties(VectorCalculator.userDefaults, true);
+				VectorCalculator.loadUserDefaults();
 				VectorCalculator.file = null;
 				VectorCalculator.projectName = "Untitled Project";
 				VectorCalculator.f.setTitle("Untitled Project");

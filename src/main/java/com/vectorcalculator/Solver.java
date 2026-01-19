@@ -157,7 +157,7 @@ public class Solver implements SolverInterface {
         boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
         boolean mcctFirst =  p.midairPreset.equals("MCCT First");
         boolean ttFirst = mcctFirst && p.tripleThrow == TripleThrow.YES;
-        cbvFirst = p.midairPreset.equals("CBV First");
+        cbvFirst = p.midairPreset.equals("CB First");
         if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
             initialDurationLimit = p.vaultCapReturnFrame + 11;
         }
@@ -183,13 +183,13 @@ public class Solver implements SolverInterface {
         dtAllowed = p.diveTurn;
 
         //int[][] unmodifiedPreset = VectorCalculator.getPreset(p.midairPreset);
-        //preset = new int[unmodifiedPreset.length][unmodifiedPreset[0].length];
-        preset = p.midairs;
+        preset = new int[p.midairs.length][p.midairs[0].length];
+        //preset = p.midairs;
 
         //find locations of movements in the presets
         for (int i = 0; i < preset.length; i++) {
-            //preset[i][0] = unmodifiedPreset[i][0];
-            //preset[i][1] = unmodifiedPreset[i][1];
+            preset[i][0] = p.midairs[i][0];
+            preset[i][1] = p.midairs[i][1];
             if (preset[i][0] == VectorCalculator.RS)
                 rainbowSpinIndex = i + 1;
             else if (preset[i][0] == VectorCalculator.HMCCT) {
@@ -1063,8 +1063,9 @@ public class Solver implements SolverInterface {
     public void setDurations(int[] testDurations) {
         p.initialFrames = testDurations[0];
         VectorCalculator.setProperty(Parameter.initial_frames, testDurations[0]);
-        int[][] midairs = preset.clone();
+        int[][] midairs = new int[p.midairs.length][p.midairs[0].length];
         for (int i = 0; i < preset.length; i++) {
+            midairs[i][0] = p.midairs[i][0];
             midairs[i][1] = testDurations[i + 1];
         }
         //Debug.printArray(midairs);

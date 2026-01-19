@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(exclude = {"currentTab", "savedInfoTableRows", "savedDataTableRows", "selectedParam", "movementSelectedRow", "movementSelectedCol"})
+@EqualsAndHashCode(exclude = {"currentTab", "lastEditTab", "selectedParam", "movementSelectedRow", "movementSelectedCol"})
 @XmlRootElement
 public class Properties {
     static Properties p; //the current properties
@@ -249,7 +249,7 @@ public class Properties {
     boolean turnarounds = true;
     double upwarp = 40;
 
-    int durationSearchRange = 4;
+    int durationSearchRange = 3;
 
 	boolean onMoon = false;
 
