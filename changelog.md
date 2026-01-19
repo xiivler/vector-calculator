@@ -11,6 +11,7 @@
     * Made homing MCCTs customizable, allowing for relaxless and wall MCCTs
     * Allowed rolls to be held, which is optimal if they are at high speed
     * Implemented speedflips
+    * Changed how rotation is handled during cap throws before cap bounces so that they are more accurate compared to the game
 * Quality of life improvements
     * Target coordinates can now be specified instead of target angle
     * Presets for common midairs (ex. MCCT first)

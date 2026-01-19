@@ -138,4 +138,9 @@ The upper table displays the following attributes of the jump:
 The lower table provides frame-by-frame information about the movement, which can be used to diagnose issues if Mario behaves differently in-game than expected. The **Value** column displays how valuable each frame is toward maximizing the jump's distance. If a frame has a blank value, Mario is moving upward and this frame should not be removed in a trickjumping context. Frames with low values are the best to remove when optimizing a jump using the Calculate (Solve Dives) or Calculate modes.
 
 ## Current Limitations
-The `Solve` mode does not yet support custom midairs, 2P jumps, or moon gravity. It also only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts.
+* The `Solve` mode does not yet support custom midairs, 2P jumps, or moon gravity.
+* Skew is not accounted for, affecting jumps such as triple jump semi-verticals if the triple jump is short enough
+* `Solve` only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts.
+* Solving for RCVs is time-intensive.
+* Optimization for final cap throw-less jumps can be improved
+* Vector Calculator does not yet fully optimize for non-moonwalk edge triples, as it is most optimal to start off the edge triple running more straight and then turning to the side.
