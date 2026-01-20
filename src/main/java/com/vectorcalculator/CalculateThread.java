@@ -1,5 +1,6 @@
 package com.vectorcalculator;
 
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.SwingWorker;
@@ -199,6 +200,10 @@ class CalculateThread extends SwingWorker<Boolean, String> {
             UndoManager.recordState(false);
         }
         catch (Exception ex) {
+            System.out.println(ex);
+            ex.printStackTrace(System.out);
+            VectorCalculator.calculating = false;
+            VectorCalculator.cancelCalculating = false;
             VectorCalculator.loadProperties(UndoManager.currentState(), false);
             VectorCalculator.calculateVector.setText(p.mode.name);
         }

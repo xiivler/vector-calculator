@@ -249,7 +249,7 @@ public class Solver implements SolverInterface {
 
         int maximizer_initialMovementIndex = -1;
         for (int i = 1; i < presetMaximizer.movementNames.size(); i++) {
-            if (Movement.isMidairCapThrow(presetMaximizer.movementNames.get(i))) {
+            if (Movement.isMidairCapThrow(presetMaximizer.movementNames.get(i)) || presetMaximizer.movementNames.get(i).equals("Rainbow Spin")) { //the first movement is right before the first cap throw or rainbow spin
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }
@@ -276,7 +276,7 @@ public class Solver implements SolverInterface {
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
             while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
-                Debug.println(final_y_heights[maximizer_firstGPIndex]);
+                // System.out.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     success = false;
@@ -324,6 +324,12 @@ public class Solver implements SolverInterface {
         
         int iterations = 0;
         while (true) {
+            int maximizer_finalCTIndex = initialMaximizer.variableMovement2Index;
+            if (durations[finalCapThrowIndex] > 24) //refresh index of second dive
+                maximizer_secondGPIndex = maximizer_finalCTIndex + 2;
+            else
+                maximizer_secondGPIndex = maximizer_finalCTIndex + 1;
+            maximizer_secondDiveIndex = maximizer_secondGPIndex + 1;
             boolean endHeightCorrect = final_y_heights[maximizer_secondDiveIndex] + p.getUpwarpMinusError() >= p.y1 - ERROR;
             boolean secondGPHeightCorrect = p.groundTypeSecondGP == GroundType.NONE || final_y_heights[maximizer_secondGPIndex] >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT;
             if (endHeightCorrect && secondGPHeightCorrect) {
@@ -368,7 +374,7 @@ public class Solver implements SolverInterface {
             // }
             VectorCalculator.addPreset(preset);
             initialMaximizer = VectorCalculator.getMaximizer();
-            if (iterations % REFRESH_RATE == 0) { //recalculate efficiency every REFRESH_RATE times
+            if (iterations % REFRESH_RATE == 0 || durations[finalCapThrowIndex] == 24) { //recalculate efficiency every REFRESH_RATE times
                 calcFrameByFrame(initialMaximizer);
             }
             final_y_heights = getFinalYHeights(initialMaximizer);
@@ -956,6 +962,7 @@ public class Solver implements SolverInterface {
         if (yDiff < 0)
             return y_pos;
         if (yDiff < -y_vel) {
+            // System.out.println("Adjusted " + y_pos + " to " + (y_pos + yDiff));
             return y_pos + yDiff;
         }
         else
