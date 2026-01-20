@@ -663,7 +663,7 @@ public class Solver implements SolverInterface {
         //ballparkMaximizer.maxRCVNudges = 5;
         ballparkMaximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         p.diveFirstFrameDecel = 0;
-        if (zeroAngleTolerance)
+        if (zeroAngleTolerance && userTolerance < .1)
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.maximize();

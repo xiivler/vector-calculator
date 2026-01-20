@@ -1,0 +1,35 @@
+//	Edge triple jump template for Vector Calculator					
+//	by Xiivler					
+						
+//	Edit the following parameters					
+$initial_angle = 110			// input value from Vector Calculator			
+$ledge_angle = 90			// input the direction Mario is moving when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)			
+$vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)			
+$frames_y = 15			// this is how many additional frames the Y button is held for setting up triple throws			
+$camera_angle = 90			// choose whatever you want			
+						
+//	Do not edit these parameters					
+$initial_angle_joystick = -1 * $initial_angle						
+$rc_angle = $initial_angle_joystick + $vector_direction * 90						
+						
+1	r					
+1	m-uu					
+1			ls(-$camera_angle)			
+60	r/					
+1	m-uu					
+1			ls($initial_angle_joystick)			
+80						
+10	a					
+4						
+1	m-u					// remove this row to set up a CB first jump with TT
+23						// remove this row to set up a CB first jump with TT
+40	zl					
+1	zl	y				
+1	m-u	a				
+1		y	ls($rc_angle)			
+6		y	ls($initial_angle_joystick)			
+1	a	y	ls($initial_angle_joystick)			// change the duration of this frame to change single jump height
+23		y	ls($initial_angle_joystick)			// change the duration of this frame as needed
+1	a	y	ls($initial_angle_joystick)			// change the duration of this frame to change double jump height
+36		[# + $frames_y] y	[# + 1] ls($initial_angle_joystick)			// change the duration of this frame as needed
+	b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				

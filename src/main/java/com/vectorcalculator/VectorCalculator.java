@@ -617,7 +617,7 @@ public class VectorCalculator extends JPanel {
 			boolean oldCanTripleThrow = p.canTripleThrow;
 			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom") || name.equals("None"));
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (name.equals("Spinless") || name.equals("Simple Tech"));
-			if (!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow))
+			if ((!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow)) && !name.equals("Custom"))
 				setProperty(Parameter.triple_throw, "No");
 			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
 				setProperty(Parameter.triple_throw, "No");
@@ -625,30 +625,33 @@ public class VectorCalculator extends JPanel {
 				addPreset(name, false);
 			if ((name.equals("Custom") || name.equals("None")) && p.mode == Mode.SOLVE) {
 				Debug.println("Should switch");
+				setProperty(Parameter.triple_throw, "No"); //do this now so it doesn't change the tt to not be a tt when switching to custom preset
 				setProperty(Parameter.mode, Mode.SOLVE_DIVES.name);
 				
 			}
 			break;
 		case triple_throw:
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
-			// int[][] oldMidairs = new int[p.midairs.length][p.midairs[0].length];
-			// int[][] newMidairs = new int[p.midairs.length][p.midairs[0].length];
-			// for (int i = 0; i < p.midairs.length; i++) {
-			// 	oldMidairs[i][0] = p.midairs[i][0];
-			// 	oldMidairs[i][1] = p.midairs[i][1];
-			// }
-			addPreset(p.midairPreset, false);
-			// if (p.mode != Mode.SOLVE) {
-			// 	for (int i = 0; i < p.midairs.length; i++) { //copy all the durations the user has customized
-			// 		newMidairs[i][0] = p.midairs[i][0];
-			// 		newMidairs[i][1] = oldMidairs[i][1];
-			// 	}
-			// 	if (p.tripleThrow != TripleThrow.NO && p.midairPreset.equals("CB First")) { //conform cb duration
-			// 		newMidairs[2][1] = Math.min(newMidairs[2][1], 36);
-			// 	}
-			// 	addPreset(newMidairs);
-			// 	System.out.println(p.midairs[6][1]);
-			// }
+			if (!p.midairPreset.equals("Custom")) {
+				// int[][] oldMidairs = new int[p.midairs.length][p.midairs[0].length];
+				// int[][] newMidairs = new int[p.midairs.length][p.midairs[0].length];
+				// for (int i = 0; i < p.midairs.length; i++) {
+				// 	oldMidairs[i][0] = p.midairs[i][0];
+				// 	oldMidairs[i][1] = p.midairs[i][1];
+				// }
+				addPreset(p.midairPreset, false);
+				// if (p.mode != Mode.SOLVE) {
+				// 	for (int i = 0; i < p.midairs.length; i++) { //copy all the durations the user has customized
+				// 		newMidairs[i][0] = p.midairs[i][0];
+				// 		newMidairs[i][1] = oldMidairs[i][1];
+				// 	}
+				// 	if (p.tripleThrow != TripleThrow.NO && p.midairPreset.equals("CB First")) { //conform cb duration
+				// 		newMidairs[2][1] = Math.min(newMidairs[2][1], 36);
+				// 	}
+				// 	addPreset(newMidairs);
+				// 	System.out.println(p.midairs[6][1]);
+				// }
+			}
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");

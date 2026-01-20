@@ -1,3 +1,5 @@
+Changelog for Version 2.0.0:
+
 * Added two new optimization modes
     * `Solve` finds not only optimal inputs but also optimal durations for each part of the jump, almost entirely automating TASing jumps. It tests various types of cap throws, including various MCCT directions, to find the optimal one for the given jump.
     * `Calculate (Solve Dives)` is a less automated mode that functions like previous versions of Vector Calculator, but ensures that the dive before the cap bounce is a possible duration, and lengthens or shortens the last dive until it lands at the target Y position

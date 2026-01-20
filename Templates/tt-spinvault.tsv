@@ -18,7 +18,7 @@ $rc_angle = $initial_joystick_angle + $vector_direction * 20
 			
 1	r		
 1	y		
-1			ls($camera_angle)
+1			ls(-$camera_angle)
 58		r/	
 1	y		
 1			ls($initial_joystick_angle)

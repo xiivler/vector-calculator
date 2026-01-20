@@ -18,25 +18,25 @@ $counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle
 						
 1	r					
 1	m-uu					
-1			ls($camera_angle)			
+1			ls(-$camera_angle)			
 60	r/					
 1	m-uu					
 1			ls($initial_angle_joystick)			
 80						
 10	a					
 4						
-1	m-u					
-10						
+1	m-u					// remove this row to set up a CB first jump with TT
+23						// remove this row to set up a CB first jump with TT
 40	zl					
 1	zl	y				
-10	zl					
 1	m-u	a				
 1		y	ls($rc_angle)			
-6		y	ls($initial_angle_joystick)			
-1	a	y	ls($initial_angle_joystick)			
-22		y				// change the duration of this frame as needed
+6		y	[# + 1] ls($initial_angle_joystick)			
+1	a	y				// change the duration of this frame to change single jump height
+24		y				// change the duration of this frame as needed
 1		y	ls(.11; $turnaround_angle)			
 1		y	ls($initial_angle_joystick)			
-1	a	y	ls(.11; $counter_turnaround_angle)			
-31		[# + $frames_y] y				// change the duration of this frame as needed
-1	b	// Paste the script from Vector Calculator to overwrite this row once the triple jump is as close to the edge as possible				
+1		y	ls(.11; $counter_turnaround_angle)			
+1	a	y				// change the duration of this frame to change double jump height
+29		[# + $frames_y] y				// change the duration of this frame as needed
+6	[5] | b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				

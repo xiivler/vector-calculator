@@ -7,7 +7,7 @@ $camera_angle = 0			// choose whatever you want
 				
 1	r			
 1	m-uu			
-1				ls($camera_angle)
+1				ls(-$camera_angle)
 60	r/			
 1	m-uu			
 1			y	ls($initial_joystick_angle)
