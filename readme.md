@@ -1,18 +1,18 @@
 # vector-calculator
 Vector Calculator is a program for optimizing jumps in Super Mario Odyssey, primarily for use in TASing. Special thanks to MonsterDruide1 for some menu code and to Tetraxile, whose Absolute Joystick mod is bundled in this program's release.
 
-To open the program, double click `vector-calculator.jar` or run the command `java -jar vector-calculator.jar`. You need to have Java 25 installed.
+To open the program, double-click `vector-calculator.jar` or run the command `java -jar vector-calculator.jar`. You need to have Java 25 installed.
 
 Check out the [tutorial](tutorial.md) for step-by-step instructions on TASing a trickjump with Vector Calculator. Read below for a detailed description of the various modes and settings the program has to offer.
 
 ## Optimization Modes
-Vector Calculator has 3 modes: `Solve`, `Calculate (Solve Dives)`, and `Calculate`, of which `Solve` is the most automated and `Calculate` is the least automated.
+Vector Calculator has three modes: `Solve`, `Calculate (Solve Dives)`, and `Calculate`, of which `Solve` is the most automated and `Calculate` is the least automated.
 
 * `Solve`: Determines optimal durations and inputs for each piece of movement
 
 * `Calculate (Solve Dives)`: Determines optimal inputs for each piece of movement, ensures that the dive before the cap bounce is a possible duration, and lengthens or shortens the last dive until it lands at the target Y position
 
-* `Calculate`: Determines optimal inputs for each piece of movement given the durations the user inputted
+* `Calculate`: Determines optimal inputs for each piece of movement given the durations the user entered
 
 ## Properties
 Vector Calculator has several properties that can be configured by the user. Some of these are only visible depending on the settings of other properties. There are two sets of properties: `General Properties` and `Midair Properties`.
@@ -37,7 +37,7 @@ Vector Calculator has several properties that can be configured by the user. Som
     * `None` means that no initial movement is calculated, and the first midair is treated as the beginning of the jump (ex. this could be used for a jump that starts with a dive)
 
 * **Initial Movement Type**: The specific type of the initial movement (ex. `Triple Jump`, `GP Roll`, or `Upthrow RCV`)
-    * `Optimal Distance RCV` tests all the different types of RCVs, but only currently works in the `Calculate` mode.
+    * `Optimal Distance RCV` tests all the different types of RCVs, but currently only works in the `Calculate` mode.
 
 * **Duration Type** *(not available in `Solve` mode)*: Whether to specify the duration of the initial movement in terms of frames or vertical displacement
     * **Frames**: The number of frames the initial movement lasts. (The `Solve` mode solves for this value, so you do not need to enter anything yourself in that mode.)
