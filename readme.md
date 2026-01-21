@@ -57,7 +57,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Triple Throw**: For Spinless and Simple Tech midairs, this preset determines whether the throw before the cap bounce is or is not a triple throw. Use `Test Both` if you want the Solver to test with and without triple throw to figure out which is best. For `MCCT First` and `CB First` midairs, this parameter specifies whether the homing throw is a MCCT or triple throw.
 
-* **Maximum Upwarp**: The biggest upwarp Vector Calculator will allow. Just like in the game, the speed on the frame of the upwarp is also taken into consideration, so Mario moving up 15 units on a frame where his vertical velocity is -16 is a 31 unit upwarp. The default value of 40 is generally good, but if you are finishing a height jump at an angle or trying to upwarp before the +2 vertical velocity frame of the dive, this value may need to be reduced.
+* **Maximum Upwarp**: The biggest upwarp Vector Calculator will allow. Just like in the game, the speed on the frame of the upwarp is also taken into consideration, so Mario moving up 15 units on a frame where his vertical velocity is -16 is a 31 unit upwarp. The default value of 40 is generally good, but if you are finishing a height jump at an angle or trying to upwarp before the +2 vertical velocity frame of the dive, this value may need to be reduced. **Set this parameter to 0 for bonk or overshoot jumps.**
 
 * **Gravity**: Whether the jump is in regular or moon gravity. Moon gravity is not yet supported for either of the solve modes.
 
@@ -99,7 +99,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`.
     * **Type**: Whether there is ground, lava, or poison underneath the jump.
-    * **Height**: The height of the ground, lava, or poison underneath the jump.
+    * **Height**: The height of the ground, lava, or poison underneath the jump. You can obtain this value by standing on the ground or falling into the lava/poison, and recording Mario's Y coordinate.
 
 ## Midair Movement Table
 

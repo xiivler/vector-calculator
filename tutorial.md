@@ -4,15 +4,23 @@ This tutorial is for anyone who wants to learn how to TAS jumps using Vector Cal
 
 ## Part 1: Setting up TASing tools
 
+If you haven't already, download the latest version of Vector Calculator from GitHub (under Releases).
+
 Join the [Super Mario Odyssey TAS server](https://discord.gg/HdB2P586ch) and follow the instructions in `#resources` to set up either `smo-practice` or `smo-lunakit` to TAS with. If using `smo-practice`, make sure you install and test the `smo-practice-server` before continuing.
 
 This tutorial assumes that you will be using [TSV-TAS-2](https://github.com/xiivler/TSV-TAS-2) as your script format because it works most smoothly with Vector Calculator. Make sure to familiarize yourself with the script format by reading its [documentation](https://docs.google.com/document/d/1vW-swF3k96YxaIJqXbtRXbQ54mKKgeWfPFlW2hYBa_Q/edit?usp=sharing). This script format is compatible with both `smo-practice` and `smo-lunakit`.
 
-Additionally, copy the folder `absolute-joystick` into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute_stick_angles/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
+Now, install the absolute joystick mod.
 
-Note: To uninstall this mod at any time so that you can play the game normally, simply delete the `absolute-joystick` folder from the SD card.
+#### (On Switch)
 
-Finally, if you haven't already, download the latest version of Vector Calculator from GitHub (under Releases).
+Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute-joystick/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
+
+To uninstall this mod at any time so that you can play the game normally, simply delete the mod.
+
+#### (On Emulator)
+
+Right click SMO in the emulator and select `Open Mod Directory` (Ryujinx) or `Open Mod Data Location` (Yuzu). Copy the folder `absolute-joystick` that came with Vector Calculator into the folder that opens. Open the `absolute-joystick` folder and create a folder called `exefs` inside, and move `3CA12DFAAF9C82DA064D1698DF79CDA1.ips` into that folder. (There should now be a file `absolute-joystick/exefs/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.)
 
 ## Part 2: TASing a Vault
 
@@ -51,3 +59,11 @@ Once you have done this, click the `Copy to Clipboard` button in Vector Calculat
 ## Part 3: TASing other jumps
 
 You should now be able to TAS other types of jumps as well. The moonwalk triple and RCV templates are the next easiest to use. If you are familiar with TASing Super Mario Odyssey, you can also write your own inputs leading up to the jump or modify the templates further to suit your needs.
+
+For bonk or overshoot jumps, make sure to set Maximum Upwarp to 0.
+
+## TASing Guidelines
+
+* If you are TASing without the absolute joystick mod, you will need to turn your camera down to ensure optimal vectors.
+* Make sure your `initial angle` is correct in game each time you recalculate in vector-calculator. If you are not using a template, you can often set up the correct initial angle by throwing cappy while holding the `initial joystick angle` that vector-calculator outputs.
+* If your TAS fails to get a cap bounce, it is likely because your in-game `initial angle` does not match the one in vector-calculator. If your initial angle is accurate and you still do not get a cap bounce, try raising the `Edge Cap Bounce Angle Tolerance`.
