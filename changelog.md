@@ -1,4 +1,12 @@
-Changelog for Version 2.0.0:
+Version 2.1.0:
+
+* Fixed bug with generating two triple throws in a jump using the `Calculate (Solve Dives)` mode
+* Track which version of vector-calculator a file was created on
+* Fixed dives to work in moon gravity
+* Allow moon gravity in `Calculate (Solve Dives)` mode
+* Added Help menu
+
+Version 2.0.0:
 
 * Added two new optimization modes
     * `Solve` finds not only optimal inputs but also optimal durations for each part of the jump, almost entirely automating TASing jumps. It tests various types of cap throws, including various MCCT directions, to find the optimal one for the given jump.

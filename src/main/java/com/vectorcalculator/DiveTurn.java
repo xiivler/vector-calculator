@@ -48,14 +48,14 @@ public class DiveTurn extends SimpleMotion {
 	public void calcDisp() {
 		dispForward = 0;
 		dispSideways = 0;
-		double forwardVelocity = 20;
-		double forwardVelocityCap = 20;
+		double forwardVelocity = movement.initialHorizontalSpeed;
+		double forwardVelocityCap = movement.initialHorizontalSpeed;
 		double sidewaysVelocity = 0;
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);
 		double normalizer = forwardVelocityCap / uncappedVelocity;
 
-		//cap at 20 u/fr speed
+		//cap at 20 u/fr speed (18 u/fr for moon)
 		//double multiplier
 
 		int endDecelFrames = (int) (endDecel + .999);
@@ -137,8 +137,8 @@ public class DiveTurn extends SimpleMotion {
 		double sinInitialAngle = Math.sin(initialAngle);
 		double cosNormalAngle = Math.cos(normalAngle);
 		double sinNormalAngle = Math.sin(normalAngle);
-		double forwardVelocity = 20;
-		double forwardVelocityCap = 20;
+		double forwardVelocity = movement.initialHorizontalSpeed;
+		double forwardVelocityCap = movement.initialHorizontalSpeed;
 		double sidewaysVelocity = 0;
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);
@@ -248,8 +248,8 @@ public class DiveTurn extends SimpleMotion {
 		double sinInitialAngle = Math.sin(initialAngle);
 		double cosNormalAngle = Math.cos(normalAngle);
 		double sinNormalAngle = Math.sin(normalAngle);
-		double forwardVelocity = 20;
-		double forwardVelocityCap = 20;
+		double forwardVelocity = movement.initialHorizontalSpeed;
+		double forwardVelocityCap = movement.initialHorizontalSpeed;
 		double sidewaysVelocity = 0;
 		double sidewaysAccel = baseSidewaysAccel * Math.sin(holdingAngle);
 		double uncappedVelocity = Math.sqrt(forwardVelocity * forwardVelocity + sidewaysAccel * sidewaysAccel);

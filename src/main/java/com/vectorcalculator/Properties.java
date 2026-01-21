@@ -209,6 +209,8 @@ public class Properties {
         }
     }
 
+    String version = VectorCalculator.VERSION;
+
     Mode mode = Mode.SOLVE;
 
     double x0 = 0, y0 = 0, z0 = 0;

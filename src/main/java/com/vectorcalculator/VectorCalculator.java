@@ -55,6 +55,8 @@ import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
 	
+	public static final String VERSION = "2.1.0";
+
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 435;
 	public static final int MIDAIR_PANEL_HEIGHT = 275;
@@ -483,6 +485,7 @@ public class VectorCalculator extends JPanel {
 	static void setProperty(Parameter param, Object value) {
 		if (param == null)
 			return;
+		p.version = VERSION; // update version of the current project
 		switch(param) {
 		case mode:
 			Mode oldMode = p.mode;
@@ -631,8 +634,9 @@ public class VectorCalculator extends JPanel {
 			}
 			break;
 		case triple_throw:
+			TripleThrow oldTripleThrow = p.tripleThrow;
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
-			if (!p.midairPreset.equals("Custom")) {
+			if (oldTripleThrow != p.tripleThrow && !p.midairPreset.equals("Custom")) {
 				// int[][] oldMidairs = new int[p.midairs.length][p.midairs[0].length];
 				// int[][] newMidairs = new int[p.midairs.length][p.midairs[0].length];
 				// for (int i = 0; i < p.midairs.length; i++) {
@@ -1138,6 +1142,7 @@ public class VectorCalculator extends JPanel {
 	public static void loadUserDefaults() {
 		try {
 			loadProperties(userDefaults, true);
+			p.version = VERSION;
 		}
 		catch (Exception ex) {
 			loadProperties(new Properties(), false);
@@ -1150,6 +1155,10 @@ public class VectorCalculator extends JPanel {
 		Properties pl = Properties.load(file, defaults);
 		if (pl == null && !defaults) {
 			setErrorText("Error: File could not be loaded");
+		}
+
+		if (!defaults && !pl.version.equals(VERSION)) {
+			JOptionPane.showMessageDialog(VectorCalculator.f, "This file was created in a different version of Vector Calculator. It may not behave as expected.", "File Version", JOptionPane.INFORMATION_MESSAGE);
 		}
 		
 		loadProperties(pl, false);
@@ -1550,7 +1559,7 @@ public class VectorCalculator extends JPanel {
 					case initial_speed:
 						return p.chooseInitialHorizontalSpeed;
 					case gravity:
-						return p.mode == Mode.CALCULATE;
+						return p.mode == Mode.CALCULATE || p.mode == Mode.SOLVE_DIVES;
 					default:
 						return true;
 				}

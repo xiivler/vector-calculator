@@ -8,6 +8,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.net.URI;
 
 public class MainJMenuBar extends JMenuBar {
     private static final int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
@@ -29,6 +30,44 @@ public class MainJMenuBar extends JMenuBar {
 			add(editMenu);
 		JMenu viewMenu = createViewMenu();
 		add(viewMenu);
+
+		// Help menu: contains Open Readme and About
+		JMenu helpMenu = new JMenu("Help");
+
+		JMenuItem openReadme = new JMenuItem("Open Readme");
+		openReadme.addActionListener(e -> {
+			try {
+				Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+				if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+					desktop.browse(new URI("https://github.com/xiivler/vector-calculator/blob/master/readme.md"));
+				} else {
+					JOptionPane.showMessageDialog(VectorCalculator.f,
+						"Opening browser is not supported on this platform.",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				}
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(VectorCalculator.f,
+					"Failed to open help: " + ex.getMessage(),
+					"Error", JOptionPane.ERROR_MESSAGE);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+		helpMenu.add(openReadme);
+
+		JMenuItem aboutItem = new JMenuItem("About");
+		aboutItem.addActionListener(e -> {
+			try {
+				JOptionPane.showMessageDialog(VectorCalculator.f,
+					"Vector Calculator " + VectorCalculator.VERSION,
+					"About", JOptionPane.INFORMATION_MESSAGE);
+			} finally {
+				VectorCalculator.cellsEditable = true;
+			}
+		});
+		helpMenu.add(aboutItem);
+
+		add(helpMenu);
     }
 
 	// Check whether any enabled menu item uses the given accelerator keystroke
