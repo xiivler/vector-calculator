@@ -16,11 +16,11 @@ Now, install the absolute joystick mod.
 
 Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute-joystick/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
 
-To uninstall this mod at any time so that you can play the game normally, simply delete the mod.
-
 #### (On Emulator)
 
 Right click SMO in the emulator and select `Open Mod Directory` (Ryujinx) or `Open Mod Data Location` (Yuzu). Copy the folder `absolute-joystick` that came with Vector Calculator into the folder that opens. Open the `absolute-joystick` folder and create a folder called `exefs` inside, and move `3CA12DFAAF9C82DA064D1698DF79CDA1.ips` into that folder. (There should now be a file `absolute-joystick/exefs/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.)
+
+Make sure to delete the mod file if you want to play the game normally.
 
 ## Part 2: TASing a Vault
 
