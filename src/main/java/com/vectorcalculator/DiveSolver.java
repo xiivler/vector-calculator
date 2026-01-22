@@ -59,10 +59,17 @@ public class DiveSolver implements SolverInterface {
     public boolean solve(int maxDelta) {
         long startTime = System.currentTimeMillis();
 
+        //make sure inputs are valid
+        maximizer = VectorCalculator.getMaximizer();
+        if (maximizer == null) {
+            error = VectorCalculator.errorText;
+            return false;
+        }
+
         boolean oldDurationFrames = p.durationFrames;
 
         if (!p.durationFrames) {
-            p.initialFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+            p.initialFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getCoyoteDisp());
         }
         p.durationFrames = true;
 

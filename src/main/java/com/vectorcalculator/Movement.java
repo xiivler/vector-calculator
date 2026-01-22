@@ -214,6 +214,16 @@ public class Movement {
 			gravity = 3;
 			moonGravity = 3;
 		}
+
+		else if (movementType.equals("Coyote Time")) {
+			forwardAccel = 0;
+			vectorAccel = 0;
+			defaultSpeedCap = initialHorizontalSpeed;
+			trueSpeedCap = initialHorizontalSpeed;
+			initialVerticalSpeed = -7;
+			gravity = 0;
+			moonGravity = 0;
+		}
 		
 		else if (movementType.equals("Cap Return Jump") || movementType.equals("Rocket Flower Cap Return Jump")) {
 			initialVerticalSpeed = 22;
@@ -853,6 +863,9 @@ public class Movement {
 	public SimpleMotion getMotion(int frames, boolean rightVector, boolean complex) {
 		if (movementType.contains("RCV")) {
 			return new GroundedCapThrow(this, !rightVector);
+		}
+		if (movementType.equals("Coyote Time")) {
+			return new CoyoteTime(this, frames);
 		}
 		else if (vectorAccel == 0)
 			if (complex && movementType.equals("Dive"))

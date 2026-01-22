@@ -51,6 +51,25 @@ public class Properties {
         }
 	}
 
+    static enum CoyoteType {
+		MOONWALK("Moonwalk"), RUNNING("Running"), NONE("None");
+
+        String name;
+
+        CoyoteType(String string) {
+            this.name = string;
+        }
+
+        static CoyoteType fromName(String string) {
+            for (CoyoteType ct : CoyoteType.values()) {
+                if (ct.name.equals(string)) {
+                    return ct;
+                }
+            }
+            return NONE;
+        }
+	}
+
     static enum TripleThrow {
         YES("Yes"), NO("No"), TEST("Test Both");
 
@@ -231,7 +250,9 @@ public class Properties {
     boolean chooseJumpFrames = true;
 	int framesJump = 10;
 	boolean canMoonwalk = true;
+    CoyoteType coyoteType = CoyoteType.MOONWALK;
 	int framesMoonwalk = 5;
+    int framesRun = 0; //frames of running coyote time (1st doesn't have any walking deceleration)
     boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;

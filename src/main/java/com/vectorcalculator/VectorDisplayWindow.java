@@ -408,7 +408,7 @@ public class VectorDisplayWindow {
 					}
 				}
 				if (i == info.length - 1) {
-					if (p.groundTypeFirstGP == GroundType.GROUND && firstDive && !motion.movement.movementType.equals("Moonwalk")) {
+					if (p.groundTypeFirstGP == GroundType.GROUND && firstDive && !motion.movement.movementType.equals("Moonwalk") && !motion.movement.movementType.equals("Coyote Time")) {
 						if (y < p.groundHeightFirstGP) {
 							y = p.groundHeightFirstGP;
 							rowContents[1] = "(Hit Ground)";

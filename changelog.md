@@ -1,10 +1,13 @@
 Version 2.1.0:
 
-* Fixed bug with generating two triple throws in a jump using the `Calculate (Solve Dives)` mode
-* Track which version of vector-calculator a file was created on
+* Added support for edge triples
 * Fixed dives to work in moon gravity
-* Allow moon gravity in `Calculate (Solve Dives)` mode
+* Added moon gravity in `Calculate (Solve Dives)` mode
+* Fixed bug with generating two triple throws in a jump using the `Calculate (Solve Dives)` mode
+* Added tracking of which version of vector-calculator a file was created on
 * Added Help menu
+* Prevented coordinate windows from opening while calculations are in progress
+* Minor bugfixes
 
 Version 2.0.0:
 

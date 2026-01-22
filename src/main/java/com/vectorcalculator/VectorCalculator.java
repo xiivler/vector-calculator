@@ -45,6 +45,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
 import com.vectorcalculator.Properties.CameraType;
+import com.vectorcalculator.Properties.CoyoteType;
 import com.vectorcalculator.Properties.GroundMode;
 import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctType;
@@ -96,7 +97,7 @@ public class VectorCalculator extends JPanel {
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
-		jump_button_frames("Frames of Holding A/B"), moonwalk_frames("Moonwalk Frames"), initial_speed("Initial Horizontal Speed"),
+		jump_button_frames("Frames of Holding A/B"), coyote_type("Coyote Time"), moonwalk_frames("Moonwalk Frames"), running_frames("Running Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
@@ -156,13 +157,20 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.vault_cap_return_frame);
 				if (p.chooseJumpFrames)
 					params.add(Parameter.jump_button_frames);
-				if (p.canMoonwalk)
-					params.add(Parameter.moonwalk_frames);
 			}
 			if (p.chooseInitialHorizontalSpeed)
 				params.add(Parameter.initial_speed);
 			params.add(Parameter.vector_direction);
 			params.add(null);
+
+			if (p.canMoonwalk) {
+				params.add(Parameter.coyote_type);
+				if (p.coyoteType == CoyoteType.MOONWALK)
+					params.add(Parameter.moonwalk_frames);
+				if (p.coyoteType == CoyoteType.RUNNING)
+					params.add(Parameter.running_frames);
+				params.add(null);
+			}
 
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
@@ -349,8 +357,14 @@ public class VectorCalculator extends JPanel {
 		case jump_button_frames:
 			value = p.framesJump;
 			break;
+		case coyote_type:
+			value = p.coyoteType.name;
+			break;
 		case moonwalk_frames:
 			value = p.framesMoonwalk;
+			break;
+		case running_frames:
+			value = p.framesRun;
 			break;
 		case initial_speed:
 			value = p.initialHorizontalSpeed;
@@ -571,18 +585,18 @@ public class VectorCalculator extends JPanel {
 			initialMovement.initialHorizontalSpeed = p.initialHorizontalSpeed;
 			initialMotion = initialMovement.getMotion(p.initialFrames, false, false);
 			if (p.durationFrames && !oldDurationFrames)
-				setProperty(Parameter.initial_frames, initialMotion.calcFrames(p.initialDispY - getMoonwalkDisp()));
+				setProperty(Parameter.initial_frames, initialMotion.calcFrames(p.initialDispY - getCoyoteDisp()));
 			else if (!p.durationFrames && oldDurationFrames)
-				setProperty(Parameter.initial_displacement, initialMotion.calcDispY(p.initialFrames) + getMoonwalkDisp());
+				setProperty(Parameter.initial_displacement, initialMotion.calcDispY(p.initialFrames) + getCoyoteDisp());
 			break;
 		case initial_frames:
 			int minFrames = initialMovement.minFrames;
 			p.initialFrames = clampInt(parseIntWithDefault(value, minFrames), minFrames, Integer.MAX_VALUE);
-			p.initialDispY = initialMotion.calcDispY(p.initialFrames) + getMoonwalkDisp();
+			p.initialDispY = initialMotion.calcDispY(p.initialFrames) + getCoyoteDisp();
 			break;
 		case initial_displacement:
 			p.initialDispY = parseDoubleWithDefault(value, 0);
-			p.initialFrames = initialMotion.calcFrames(p.initialDispY - getMoonwalkDisp());
+			p.initialFrames = initialMotion.calcFrames(p.initialDispY - getCoyoteDisp());
 			break;
 		case duration_search_range:
 			p.durationSearchRange = clampInt(parseIntWithDefault(value, 4), 2, 5);
@@ -593,8 +607,24 @@ public class VectorCalculator extends JPanel {
 		case jump_button_frames:
 			p.framesJump = clampInt(parseIntWithDefault(value, 1), 1, 10);
 			break;
+		case coyote_type:
+			p.coyoteType = CoyoteType.fromName(value.toString());
+			if (p.coyoteType == CoyoteType.NONE) {
+				p.framesMoonwalk = 0;
+				p.framesRun = 0;
+			}
+			else if (p.coyoteType == CoyoteType.MOONWALK) {
+				p.framesRun = 0;
+			}
+			else if (p.coyoteType == CoyoteType.RUNNING) {
+				p.framesMoonwalk = 0;
+			}
+			break;
 		case moonwalk_frames:
 			p.framesMoonwalk = clampInt(parseIntWithDefault(value, 0), 0, 5);
+			break;
+		case running_frames:
+			p.framesRun = clampInt(parseIntWithDefault(value, 0), 0, 6);
 			break;
 		case initial_speed:
 			if (p.chooseInitialHorizontalSpeed)
@@ -858,7 +888,7 @@ public class VectorCalculator extends JPanel {
 		for (int i = 0; i < p.midairs.length; i++) {
 			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
 				p.diveCapBounce = true;
-				if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT) {
+				if (i > 1 && (p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT)) {
 					p.firstCTIndex = i - 2;
 				}
 			}
@@ -898,7 +928,6 @@ public class VectorCalculator extends JPanel {
 	
 	static JTable genPropertiesTable;
 	static DefaultTableModel genPropertiesModel;
-	static JumpDialogWindow dialogWindow = new JumpDialogWindow("Choose Initial Movement", initialMovementCategories, initialMovementNames);
 	static CoordinateWindow initial_CoordinateWindow = new CoordinateWindow("Initial Coordinates");
 	static CoordinateWindow target_CoordinateWindow = new CoordinateWindow("Target Coordinates");
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
@@ -941,20 +970,27 @@ public class VectorCalculator extends JPanel {
 		return targetAngle;
 	}
 	
-	public static int getMoonwalkDisp() {
-		if (p.framesMoonwalk == 0)
-			return 0;
-		else if (p.framesMoonwalk == 1)
-			return -3;
-		else if (p.framesMoonwalk == 2)
-			return -9;
-		else if (p.framesMoonwalk == 3)
-			return -18;
-		else if (p.framesMoonwalk == 4)
-			return -30;
-		else if (p.framesMoonwalk == 5)
-			return -45;
-		else //impossible case
+	public static int getCoyoteDisp() {
+		if (p.coyoteType == CoyoteType.MOONWALK) {
+			if (p.framesMoonwalk == 0)
+				return 0;
+			else if (p.framesMoonwalk == 1)
+				return -3;
+			else if (p.framesMoonwalk == 2)
+				return -9;
+			else if (p.framesMoonwalk == 3)
+				return -18;
+			else if (p.framesMoonwalk == 4)
+				return -30;
+			else if (p.framesMoonwalk == 5)
+				return -45;
+			else //impossible case
+				return 0;
+		}
+		else if (p.coyoteType == CoyoteType.RUNNING) {
+			return p.framesRun * CoyoteTime.WALKING_Y_VEL;
+		}
+		else
 			return 0;
 	}
 
@@ -1040,8 +1076,10 @@ public class VectorCalculator extends JPanel {
 			p.chooseJumpFrames = false;
 		boolean oldCanMoonwalk = p.canMoonwalk;
 		p.canMoonwalk = initialMovement.canMoonwalk;
-		if (!(p.canMoonwalk && oldCanMoonwalk))
+		if (!(p.canMoonwalk && oldCanMoonwalk)) {
 			p.framesMoonwalk = 0;
+			p.framesRun = 0;
+		}
 		p.chooseInitialHorizontalSpeed = initialMovement.variableInitialHorizontalSpeed();
 		if (p.chooseInitialHorizontalSpeed) {
 			if (suggestSpeed) //if the player is sticking to the suggested speed, give it again
@@ -1492,6 +1530,8 @@ public class VectorCalculator extends JPanel {
 						return dropdown(options);
 					case duration_type:
 						return dropdown(new String[]{"Frames", "Vertical Displacement"});
+					case coyote_type:
+						return dropdown(new String[]{"Moonwalk", "Running", "None"});
 					case vector_direction:
 						return dropdown(new String[]{"Left", "Right"});
 					case midairs:
@@ -1611,6 +1651,8 @@ public class VectorCalculator extends JPanel {
 				int row = genPropertiesTable.rowAtPoint(evt.getPoint());
 				int column = genPropertiesTable.columnAtPoint(evt.getPoint());
 				if (row == -1 || column == -1 || column == 0)
+					return;
+				if (calculating)
 					return;
 				Parameter param = rowParams.get(row);
 				switch(param) {

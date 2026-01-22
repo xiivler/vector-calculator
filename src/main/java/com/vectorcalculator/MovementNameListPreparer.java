@@ -36,7 +36,7 @@ public class MovementNameListPreparer {
 		}
 		else {
 			VectorCalculator.initialMotion = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false);
-			frames = VectorCalculator.initialMotion.calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+			frames = VectorCalculator.initialMotion.calcFrames(p.initialDispY - VectorCalculator.getCoyoteDisp());
 			p.initialFrames = frames;
 		}
 
@@ -44,6 +44,10 @@ public class MovementNameListPreparer {
 		if (p.canMoonwalk && p.framesMoonwalk > 0) {
 			movementNames.add("Moonwalk");
 			movementFrames.add(p.framesMoonwalk);
+		}
+		else if (p.canMoonwalk && p.framesRun > 0) {
+			movementNames.add("Coyote Time");
+			movementFrames.add(p.framesRun);
 		}
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt

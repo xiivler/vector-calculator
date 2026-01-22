@@ -886,14 +886,14 @@ public class VectorMaximizer {
 			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
-			if (!motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || movementNames.get(startIndex).equals("Ground Pound"))
+			if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
 				currentVectorRight = !currentVectorRight;
 		}
 
 		for (int i = nextIndex; i < motionGroup.length; i++) {
 			int j = i + startIndex;
 			Movement currentMovement;
-			if (movementNames.get(j - 1).equals("Moonwalk"))
+			if (movementNames.get(j - 1).equals("Moonwalk") || movementNames.get(j - 1).equals("Coyote Time"))
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
 			else
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);

@@ -226,7 +226,7 @@ public class Solver implements SolverInterface {
 
         //first, fix the preset so that it makes sense with the height of the ground        
         p.initialDispY = p.y1 - p.y0 - 1000;
-        int tooManyFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getMoonwalkDisp());
+        int tooManyFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getCoyoteDisp());
         p.initialFrames = Math.min(initialDurationLimit, tooManyFrames);
 
         p.durationFrames = true;
