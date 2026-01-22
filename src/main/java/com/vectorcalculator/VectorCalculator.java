@@ -12,8 +12,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -59,7 +57,7 @@ public class VectorCalculator extends JPanel {
 	public static final String VERSION = "2.1.0";
 
 	public static final int WINDOW_WIDTH = 550;
-	public static final int PROPERTIES_TABLE_HEIGHT = 435;
+	public static final int PROPERTIES_TABLE_HEIGHT = 453;
 	public static final int MIDAIR_PANEL_HEIGHT = 275;
 
 	public static CalculateThread calculateThread = null;
@@ -68,7 +66,6 @@ public class VectorCalculator extends JPanel {
 	static boolean stop = false;
 	static boolean saved = true;
 	static boolean initialized = false;
-	//static boolean editedSinceCalculate = true;
 	static boolean loading = false;
 	static boolean cellsEditable = true;
 	static boolean addingPreset = false;
@@ -160,17 +157,15 @@ public class VectorCalculator extends JPanel {
 			}
 			if (p.chooseInitialHorizontalSpeed)
 				params.add(Parameter.initial_speed);
-			params.add(Parameter.vector_direction);
-			params.add(null);
-
 			if (p.canMoonwalk) {
 				params.add(Parameter.coyote_type);
 				if (p.coyoteType == CoyoteType.MOONWALK)
 					params.add(Parameter.moonwalk_frames);
 				if (p.coyoteType == CoyoteType.RUNNING)
 					params.add(Parameter.running_frames);
-				params.add(null);
 			}
+			params.add(Parameter.vector_direction);
+			params.add(null);
 
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
@@ -851,28 +846,11 @@ public class VectorCalculator extends JPanel {
 	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8;
 
 	static void updateMidairs() {
-		// if (p.midairPreset.equals("Custom"))
-		// 	p.tripleThrow = TripleThrow.NO;
-		
-		// p.hct = false;
-		// p.diveCapBounce = false;
-		// p.firstCTIndex = -1;
 		p.midairs = new int[movementModel.getRowCount()][2];
 		List<String> types = Arrays.asList(midairMovementNames);
 		for (int i = 0; i < movementModel.getRowCount(); i++) {
 			p.midairs[i][0] = types.indexOf(movementModel.getValueAt(i, 0).toString());
 			p.midairs[i][1] = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
-			// if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
-			// 	p.diveCapBounce = true;
-			// 	if (i > 1 && p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT) {
-			// 		p.firstCTIndex = i - 2;
-			// 	}
-			// }
-			// else if (p.midairs[i][0] == HMCCT)
-			// 	p.hct = true;
-			// else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == TT) {
-			// 	p.tripleThrow = TripleThrow.YES;
-			// }
 		}
 		updateMidairProperties();
 		/* for (int i = 0; i < p.midairs.length; i++)
@@ -1135,7 +1113,6 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	//if dispose is true, editedSinceCalculate is set to true and the snapshot of the display window tables is trashed
 	public static void checkIfSaved(boolean dispose) {
 		if (Properties.isSaved()) {
 			saved = true;
@@ -1903,7 +1880,6 @@ public class VectorCalculator extends JPanel {
 		initialized = true;
 		MainJMenuBar.updateCalculatorMenuItems();
 		
-		//f.add(resize, BorderLayout.CENTER);
 		f.setSize(WINDOW_WIDTH, PROPERTIES_TABLE_HEIGHT + MIDAIR_PANEL_HEIGHT);
 		//f.setResizable(false);
 		f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

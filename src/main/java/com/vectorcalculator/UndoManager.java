@@ -10,10 +10,6 @@ public class UndoManager {
 
     public static synchronized void recordState(boolean clearMessage) {
         if (VectorCalculator.loading) return;
-        // Ensure midairs are saved into Properties before snapshot
-        // try {
-        //     VectorCalculator.updateMidairs();
-        // } catch (Exception ex) {}
         // Capture current selected cells
         updateSelectionState();
         Properties snapshot = new Properties();

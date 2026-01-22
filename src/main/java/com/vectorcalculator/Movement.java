@@ -201,6 +201,7 @@ public class Movement {
 			gravity = 1;
 			moonGravity = .35;
 			variableJumpFrames = true;
+			canMoonwalk = true;
 			displayName = "RF Jump";
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
@@ -257,6 +258,7 @@ public class Movement {
 		else if (movementType.equals("Crouch")) {
 			initialVerticalSpeed = 0;
 			gravity = 0;
+			forwardAccel = 0;
 			vectorAccel = 0;
 			defaultSpeedCap = 3.5;
 			trueSpeedCap = 100;

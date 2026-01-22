@@ -757,7 +757,7 @@ public class VectorMaximizer {
 			//Debug.println("Initial Rotation: " + Math.toDegrees(initialRotation));
 		}
 		else {
-			movement = new Movement(movementNames.get(index), listPreparer.initialVelocity);
+			movement = new Movement(movementNames.get(index), p.initialHorizontalSpeed);
 			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
 			angleCalculator.setInitialAngle(Math.PI / 2);
 			angleCalculator.setInitialRotation(Math.PI / 2);
@@ -1098,7 +1098,7 @@ public class VectorMaximizer {
 					int totalFrames = rcMotion.calcFrames(p.initialDispY);
 					movementFrames.set(0, rc.minFrames);
 					movementFrames.set(1, totalFrames - rc.minFrames);
-					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
+					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), p.initialHorizontalSpeed, movementFrames.get(1));
 
 					maximize_HCT();
 
@@ -1118,7 +1118,7 @@ public class VectorMaximizer {
 				rcFinalAngleDiff = bestRCFinalAngleDiff;
 			}
 			else {
-				rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), listPreparer.initialVelocity, movementFrames.get(1));
+				rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), p.initialHorizontalSpeed, movementFrames.get(1));
 			}
 			
 			//optimize the rc, then try to get the rc initial angle to be the same as the target angle
@@ -1284,7 +1284,7 @@ public class VectorMaximizer {
 		currentVectorRight = rightVector;
 
 		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
-		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), listPreparer.initialVelocity, p.framesJump);
+		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), p.initialHorizontalSpeed, p.framesJump);
 		sumXDisps(motionGroup1);
 		sumYDisps(motionGroup1);
 		dispZMotionGroup1 = dispZ;
@@ -1552,7 +1552,7 @@ public class VectorMaximizer {
 		if (variableMovement2Index - 1 >= 0)
 			initialForwardVelocity = motions[variableMovement2Index - 1].finalSpeed;
 		else
-			initialForwardVelocity = listPreparer.initialVelocity;
+			initialForwardVelocity = p.initialHorizontalSpeed;
 		
 		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity);
 		variableMovement2Vector = (ComplexVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, true);
@@ -1859,7 +1859,7 @@ public class VectorMaximizer {
 	}
 
 	public void calcYDisps() { //calculates Y disps of every motion
-		calcMotionGroup(0, movementNames.size(), listPreparer.initialVelocity, p.framesJump);
+		calcMotionGroup(0, movementNames.size(), p.initialHorizontalSpeed, p.framesJump);
 		for (int i = 0; i < motions.length; i++) {
 			if (motions[i].movement.movementType.equals("Falling") && i > 0)
 				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();

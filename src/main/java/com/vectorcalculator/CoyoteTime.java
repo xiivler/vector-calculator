@@ -5,10 +5,12 @@ public class CoyoteTime extends SimpleMotion {
 	
 	public CoyoteTime(Movement movement, int frames) {
 		super(movement, frames);
+		initialForwardVelocity = p.initialHorizontalSpeed;
 	}
 
 	public CoyoteTime(Movement movement, double initialAngle, int frames) {
 		super(movement, initialAngle, frames);
+		initialForwardVelocity = p.initialHorizontalSpeed;
 	}
 
 	Properties p = Properties.p;
@@ -24,7 +26,7 @@ public class CoyoteTime extends SimpleMotion {
 
 		for (int i = 0; i < frames; i++) {
 			dispForward += forwardVelocity;
-			if (i < frames - 1 && forwardVelocity > 14) {
+			if (i < frames - 1 && forwardVelocity > 14 && !p.initialMovementName.contains("Rocket Flower")) {
 				forwardVelocity -= WALKING_DECEL;
 				if (forwardVelocity < 14)
 					forwardVelocity = 14;
@@ -77,7 +79,7 @@ public class CoyoteTime extends SimpleMotion {
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
 			info[i][6] = forwardVelocity;
-			if (forwardVelocity > 14) {
+			if (forwardVelocity > 14 && !p.initialMovementName.contains("Rocket Flower")) {
 				forwardVelocity -= WALKING_DECEL;
 				if (forwardVelocity < 14)
 					forwardVelocity = 14;

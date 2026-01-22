@@ -13,7 +13,7 @@ public class MovementNameListPreparer {
 	ArrayList<String> movementNames = new ArrayList<String>();
 	ArrayList<Integer> movementFrames = new ArrayList<Integer>();
 	
-	double initialVelocity = 0;
+	//double initialVelocity = 0;
 	int framesJump = 0;
 
 	int lastInitialMovementFrame = 0;
@@ -163,10 +163,10 @@ public class MovementNameListPreparer {
 			movementFrames.add(frames);
 		}
 		
-		if (p.chooseInitialHorizontalSpeed) {
+		//if (p.chooseInitialHorizontalSpeed) {
 			//initialVelocity = Double.parseDouble(genPropertiesModel.getValueAt(VectorCalculator.INITIAL_HORIZONTAL_SPEED_ROW, 1).toString());
-			initialVelocity = p.initialHorizontalSpeed;
-		}
+			//initialVelocity = p.initialHorizontalSpeed;
+		//}
 		if (p.chooseJumpFrames) {
 			//framesJump = Integer.parseInt(genPropertiesModel.getValueAt(VectorCalculator.HOLD_JUMP_FRAMES_ROW, 1).toString());
 			framesJump = p.framesJump;
