@@ -47,7 +47,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Frames of Holding A/B** *(for some movement types)*: For certain jump types, the duration of holding A/B affects how much height is gained. This parameter ranges from 1 to 10 frames.
 
-* **Coyote Time** *(for some movement types)*: What type of coyote time to use for the jump.
+* **Coyote Time** *(for some movement types)*: What type of coyote time to use for the jump. The `Solve` mode does not currently solve for the type or duration of coyote time.
     * `Moonwalk`: Mario's coyote time is in the idle animation so that no speed is lost.
     * `Running`: Mario runs during the coyote time (i.e. edge triple for triple jumps)
     * `None`: Mario jumps immediately
