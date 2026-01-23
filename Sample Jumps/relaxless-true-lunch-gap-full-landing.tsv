@@ -1,116 +1,116 @@
-//	TASed by Xiivler					
-						
-//	go LavaWorldHomeStage 8 start false					
-//	tp 21854 200 9900					
-						
-$initial_angle = 202.2015						
-$ledge_angle = 180						
-$vector_direction = -1						
-$moonwalk_rotation_strength = 60						
-$camera_angle = 180						
-						
-$initial_angle_joystick = -1 * $initial_angle						
-$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength						
-$rc_angle = $moonwalk_rotation + $vector_direction * 15						
-$turnaround_angle = $moonwalk_rotation - $vector_direction * 125						
-$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle						
-						
-1	r					
-1	m-uu					
-1			ls(-$camera_angle)			
-60	r/					
-1	m-uu					
-1			ls($initial_angle_joystick)			
-80						
-10	a					
-4						
-1	m-u					
-10						
-40	zl					
-1	zl	y				
-10	zl					
-1	m-u	a				
-1		y	ls($rc_angle)			
-6		y	ls($initial_angle_joystick)			
-1	a	y	ls($initial_angle_joystick)			// change the duration of this frame as needed
-22		y				
-1		y	ls(.11; $turnaround_angle)			
-1		y	ls($initial_angle_joystick)			
-1	a	y	ls(.11; $counter_turnaround_angle)			// change the duration of this frame as needed
-32		y				
-2						
-3			ls(157.7985)			
-1	b		ls(157.7985)			
-9	b		ls(247.7985)			
-63			ls(247.7985)			
-1	m-d		ls(247.7985)			
-1			ls(156.9529)			
-1			ls(111.6789)			
-1			ls(112.0789)			
-1			ls(112.4789)			
-1			ls(112.8789)			
-1			ls(113.2789)			
-1			ls(113.6789)			
-1			ls(114.0789)			
-1			ls(114.4789)			
-1			ls(114.8789)			
-1			ls(115.2789)			
-1			ls(115.6789)			
-1			ls(116.0789)			
-1			ls(116.4789)			
-1			ls(116.8789)			
-1			ls(117.2789)			
-1			ls(117.6789)			
-1			ls(118.0789)			
-1			ls(118.4789)			
-3			ls(118.8789)			
-1			ls(119.3139)			
-1			ls(0.11; 284.9879)			
-3			ls(176.8879)			
-1	zl		ls(176.8879)			
-1	y					
-1	y		ls(86.8879)			
-1	y		ls(86.5298)			
-1	y		ls(86.1717)			
-1	y		ls(85.8136)			
-1	y		ls(85.4555)			
-1	y		ls(85.0975)			
-1	y		ls(84.7394)			
-1	y		ls(84.3813)			
-1	y		ls(84.0232)			
-1	y		ls(83.6651)			
-1	y		ls(83.3070)			
-1	y		ls(82.9489)			
-1	y		ls(82.5908)			
-1	y		ls(82.2327)			
-1	y		ls(81.8746)			
-1	y		ls(81.5165)			
-1	y		ls(81.1584)			
-1	y		ls(80.8003)			
-1	y		ls(80.4422)			
-1	y		ls(80.0841)			
-1	y		ls(79.7260)			
-1	y		ls(79.3679)			
-1	y		ls(79.0099)			
-1	y		ls(78.6518)			
-1	y		ls(78.2937)			
-1	y		ls(77.9356)			
-1	y		ls(257.0775)			
-39			ls(257.0775)			
-1	m-u		ls(257.0775)			
-1			ls(145.1277)			
-18			ls(115.1277)			
-1	m-d		ls(115.1277)			
-4			ls(115.1277)			
-3			ls(160.1277)			
-10			ls(157.3152)			
-1	b		ls(157.3152)			
-31			ls(249.2844)			
-1	m-u		ls(204.2844)			
-21			ls(114.2844)			
-1			ls(0.11; 293.2844)			
-1			ls(112.2844)			
-8			ls(180.0046)			
-1	zl		ls(180.0046)			
-1	y					
-26						
+//	TASed by Xiivler		
+			
+//	go LavaWorldHomeStage 8 start false		
+//	tp 21854 200 9900		
+			
+$initial_angle = 202.2015			
+$ledge_angle = 180			
+$vector_direction = -1			
+$moonwalk_rotation_strength = 60			
+$camera_angle = 180			
+			
+$initial_angle_joystick = -1 * $initial_angle			
+$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength			
+$rc_angle = $moonwalk_rotation + $vector_direction * 15			
+$turnaround_angle = $moonwalk_rotation - $vector_direction * 125			
+$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle			
+			
+1	r		
+1	m-uu		
+1			ls(-$camera_angle)
+60	r/		
+1	m-uu		
+1			ls($initial_angle_joystick)
+80			
+10	a		
+4			
+1	m-u		
+10			
+40	zl		
+1	zl	y	
+10	zl		
+1	m-u	a	
+1		y	ls($rc_angle)
+6		y	ls($initial_angle_joystick)
+1	a	y	ls($initial_angle_joystick)
+22		y	
+1		y	ls(.11; $turnaround_angle)
+1		y	ls($initial_angle_joystick)
+1	a	y	ls(.11; $counter_turnaround_angle)
+32		y	
+2			
+3			ls(157.7985)
+1	b		ls(157.7985)
+9	b		ls(247.7985)
+63			ls(247.7985)
+1	m-d		ls(247.7985)
+1			ls(156.9529)
+1			ls(111.6789)
+1			ls(112.0789)
+1			ls(112.4789)
+1			ls(112.8789)
+1			ls(113.2789)
+1			ls(113.6789)
+1			ls(114.0789)
+1			ls(114.4789)
+1			ls(114.8789)
+1			ls(115.2789)
+1			ls(115.6789)
+1			ls(116.0789)
+1			ls(116.4789)
+1			ls(116.8789)
+1			ls(117.2789)
+1			ls(117.6789)
+1			ls(118.0789)
+1			ls(118.4789)
+3			ls(118.8789)
+1			ls(119.3139)
+1			ls(0.11; 284.9879)
+3			ls(176.8879)
+1	zl		ls(176.8879)
+1	y		
+1	y		ls(86.8879)
+1	y		ls(86.5298)
+1	y		ls(86.1717)
+1	y		ls(85.8136)
+1	y		ls(85.4555)
+1	y		ls(85.0975)
+1	y		ls(84.7394)
+1	y		ls(84.3813)
+1	y		ls(84.0232)
+1	y		ls(83.6651)
+1	y		ls(83.3070)
+1	y		ls(82.9489)
+1	y		ls(82.5908)
+1	y		ls(82.2327)
+1	y		ls(81.8746)
+1	y		ls(81.5165)
+1	y		ls(81.1584)
+1	y		ls(80.8003)
+1	y		ls(80.4422)
+1	y		ls(80.0841)
+1	y		ls(79.7260)
+1	y		ls(79.3679)
+1	y		ls(79.0099)
+1	y		ls(78.6518)
+1	y		ls(78.2937)
+1	y		ls(77.9356)
+1	y		ls(257.0775)
+39			ls(257.0775)
+1	m-u		ls(257.0775)
+1			ls(145.1277)
+18			ls(115.1277)
+1	m-d		ls(115.1277)
+4			ls(115.1277)
+3			ls(160.1277)
+10			ls(157.3152)
+1	b		ls(157.3152)
+31			ls(249.2844)
+1	m-u		ls(204.2844)
+21			ls(114.2844)
+1			ls(0.11; 293.2844)
+1			ls(112.2844)
+8			ls(180.0046)
+1	zl		ls(180.0046)
+1	y		
+26			
