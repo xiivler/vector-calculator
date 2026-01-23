@@ -500,14 +500,12 @@ public class VectorCalculator extends JPanel {
 			Mode oldMode = p.mode;
 			p.mode = Properties.Mode.fromName(value.toString());
 			if (p.mode == Mode.SOLVE) {
-				setProperty(Parameter.gravity, "Regular");
 				if (p.midairPreset.equals("Custom"))
 					setProperty(Parameter.midairs, "Spinless");
 				if (p.initialAndTargetGiven && oldMode != Mode.SOLVE)
 					setProperty(Parameter.solve_for_initial_angle, "Yes");
 			}
 			else if (p.mode == Mode.SOLVE_DIVES) {
-				setProperty(Parameter.gravity, "Regular");
 				p.solveForInitialAngle = false;
 			}
 			else {
@@ -834,10 +832,10 @@ public class VectorCalculator extends JPanel {
 		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
 		{"Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Bouncy Object Bounce", "Flower Bounce"},
-		{"Uncapture", "Flip Forward", "Swinging Jump"},
+		{"Falling", "Uncapture", "Flip Forward", "Swinging Jump"},
 		{"Optimal Distance Motion", "Optimal Distance RCV"},
 		{"None"}};
-	static String[] initialMovementDefaults = {"Triple Jump", "Rocket Flower Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Uncapture", "Optimal Distance Motion", "None"};
+	static String[] initialMovementDefaults = {"Triple Jump", "Rocket Flower Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Falling", "Optimal Distance Motion", "None"};
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
@@ -1575,8 +1573,6 @@ public class VectorCalculator extends JPanel {
 						return false;
 					case initial_speed:
 						return p.chooseInitialHorizontalSpeed;
-					case gravity:
-						return p.mode == Mode.CALCULATE || p.mode == Mode.SOLVE_DIVES;
 					default:
 						return true;
 				}

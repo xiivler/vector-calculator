@@ -47,7 +47,14 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Frames of Holding A/B** *(for some movement types)*: For certain jump types, the duration of holding A/B affects how much height is gained. This parameter ranges from 1 to 10 frames.
 
-* **Moonwalk Frames** *(for some movement types)*: How many frames of coyote time before jumping. The coyote time is spent in the idle animation so that no speed is lost.
+* **Coyote Time** *(for some movement types)*: What type of coyote time to use for the jump.
+    * `Moonwalk`: Mario's coyote time is in the idle animation so that no speed is lost.
+    * `Running`: Mario runs during the coyote time (i.e. edge triple for triple jumps)
+    * `None`: Mario jumps immediately
+
+* **Moonwalk Frames** *(for some movement types)*: How many frames of moonwalk coyote time before jumping (maximum 5 frames).
+
+* **Running Frames** *(for some movement types)*: How many frames of running coyote before jumping (maximum 6 frames). Speedloss during these frames is calculated.
 
 * **Initial Horizontal Speed** *(configurable for some movement types)*: Mario's horizontal speed when the initial movement begins
 
@@ -138,9 +145,10 @@ The upper table displays the following attributes of the jump:
 The lower table provides frame-by-frame information about the movement, which can be used to diagnose issues if Mario behaves differently in-game than expected. The **Value** column displays how valuable each frame is toward maximizing the jump's distance. If a frame has a blank value, Mario is moving upward and this frame should not be removed in a trickjumping context. Frames with low values are the best to remove when optimizing a jump using the Calculate (Solve Dives) or Calculate modes.
 
 ## Current Limitations
-* The `Solve` mode does not yet support custom midairs, 2P jumps, or moon gravity.
+* The `Solve` mode does not yet support custom midairs, or 2P jumps
 * Skew is not accounted for, affecting jumps such as triple jump semi-verticals if the triple jump is short enough
+* Optimization for final cap throw-less jumps can be improved
+* Cap throws are not fully optimized in moon gravity
+* Jumps over ground are not properly optimized in moon gravity
 * `Solve` only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts.
 * Solving for RCVs is time-intensive.
-* Optimization for final cap throw-less jumps can be improved
-* Vector Calculator does not yet fully optimize for non-moonwalk edge triples, as it is most optimal to start off the edge triple running more straight and then turning to the side.

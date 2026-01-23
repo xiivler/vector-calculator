@@ -439,6 +439,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = -45;
 			recommendedInitialHorizontalSpeed = 0;
+			forwardAccel = 0;
 			vectorAccel = 0;
 			moonGravity = 1.5;
 			defaultSpeedCap = 0;
@@ -687,6 +688,8 @@ public class Movement {
 			displayName = "";
 			defaultSpeedCap = 11;
 			trueSpeedCap = 30;
+			initialVerticalSpeed = -7;
+			canMoonwalk = true;
 		}
 		
 		else if (movementType.equals("Pre-Uncapture")) {
@@ -701,9 +704,9 @@ public class Movement {
 		
 		else if (movementType.equals("Uncapture")) {
 			initialVerticalSpeed = 20;
-			recommendedInitialHorizontalSpeed = 0;
+			recommendedInitialHorizontalSpeed = 5;
 			//one frame of 0 motion beforehand
-			initialHorizontalSpeed = 5;
+			initialHorizontalSpeed = p.initialHorizontalSpeed;
 			inputs1.add(Inputs.ZL);
 		}
 		

@@ -468,6 +468,10 @@ public class VectorDisplayWindow {
 				dataTableModel.addRow(rowContents);
 
 				//configure the Inputs array
+				if (row == 1 && p.framesRun > 0) {
+					inputs.remove(0);
+					inputs.add(new Inputs(info[i][8], theta));
+				}
 				inputs.add(new Inputs(info[i][8], theta));
 				if (i < motion.movement.inputs1.size()) {
 					int offset = -1;

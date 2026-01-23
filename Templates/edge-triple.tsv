@@ -31,5 +31,5 @@ $rc_angle = $initial_angle_joystick + $vector_direction * 90
 1	a	y	ls($initial_angle_joystick)			// change the duration of this frame to change single jump height
 23		y	ls($initial_angle_joystick)			// change the duration of this frame as needed
 1	a	y	ls($initial_angle_joystick)			// change the duration of this frame to change double jump height
-36		[# + $frames_y] y	[# + 1] ls($initial_angle_joystick)			// change the duration of this frame as needed
-	b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				
+30		[# + $frames_y] y	[# + 1] ls($initial_angle_joystick)			// change the duration of this frame as needed
+7	[6] | b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				

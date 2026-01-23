@@ -44,7 +44,8 @@ public class CoyoteTime extends SimpleMotion {
 	}
 
 	public double calcDispY() {
-		return WALKING_Y_VEL * frames;
+		dispY = WALKING_Y_VEL * frames;
+		return dispY;
 	}
 
 	//must run calcDisp() first to calculate acceleration values and vectorFrames
@@ -66,12 +67,8 @@ public class CoyoteTime extends SimpleMotion {
 			zVelocity = forwardVelocity * cosInitialAngle;
 			xVelocity = forwardVelocity * sinInitialAngle;
 			dispZ += zVelocity;
-			if (i >= movement.frameOffset) {
-				dispY += WALKING_Y_VEL;
-				info[i][4] = WALKING_Y_VEL;
-			}
-			else
-				info[i][4] = 0;
+			dispY += WALKING_Y_VEL;
+			info[i][4] = WALKING_Y_VEL;
 			dispX += xVelocity;
 			info[i][0] = dispX;
 			info[i][1] = dispY;

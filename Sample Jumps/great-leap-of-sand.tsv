@@ -1,113 +1,113 @@
-//	TASed by Xiivler					
-						
-//	go SandWorldHomeStage 5 pyramid01 false					
-//	go SandWorldPyramid000Stage 5 pyramid01 false				// may crash in practice mod if you don't run the previous command first	
-//	tp 5108 400 -9300					
-						
-$initial_angle = 140.3238						
-$ledge_angle = 120						
-$vector_direction = -1						
-$moonwalk_rotation_strength = 60						
-$camera_angle = 120						
-						
-$initial_angle_joystick = -1 * $initial_angle						
-$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength						
-$rc_angle = $moonwalk_rotation + $vector_direction * 15						
-$turnaround_angle = $moonwalk_rotation - $vector_direction * 125						
-$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle						
-						
-1	r					
-1	m-uu					
-1			ls(-$camera_angle)			
-60	r/					
-1	m-uu					
-1			ls($initial_angle_joystick)			
-80						
-10	a					
-4						
-1	m-u					
-23						
-40	zl					
-1	zl	y				
-1	m-u	a				
-1		y	ls($rc_angle)			
-6		y	ls($initial_angle_joystick)			
-1	a	y	ls($initial_angle_joystick)			
-25		y				// change the duration of this frame as needed
-1		y	ls(.11; $turnaround_angle)			
-1		y	ls($initial_angle_joystick)			
-1	[2] a	y	ls(.11; $counter_turnaround_angle)			
-37		y				// change the duration of this frame as needed
-2		y				
-3		y	ls(219.6762)			
-1	b	y	ls(219.6762)			
-9	b	y	ls(309.6762)			
-58		[12] y	ls(309.6762)			
-1	m-u		ls(309.6762)			
-8			ls(170.0407)			
-1	m-d		ls(170.0407)			
-15			ls(170.0407)			
-3			ls(215.0407)			
-3			ls(234.7282)			
-1	b		ls(234.7282)			
-31			ls(307.1455)			
-1	m-d		ls(262.1455)			
-1			ls(215.8450)			
-1			ls(173.6455)			
-1			ls(174.0455)			
-1			ls(174.4455)			
-1			ls(174.8455)			
-1			ls(175.2455)			
-1			ls(175.6455)			
-1			ls(176.0455)			
-1			ls(176.4455)			
-1			ls(176.8455)			
-1			ls(177.2455)			
-1			ls(177.6455)			
-1			ls(178.0455)			
-1			ls(178.4455)			
-1			ls(178.8455)			
-1			ls(179.2455)			
-1			ls(179.6455)			
-1			ls(180.0455)			
-4			ls(180.4455)			
-1			ls(180.7605)			
-1			ls(0.11; 342.5600)			
-3			ls(234.4600)			
-1	zl		ls(234.4600)			
-1	y					
-1	y		ls(144.4600)			
-1	y		ls(144.1019)			
-1	y		ls(143.7438)			
-1	y		ls(143.3857)			
-1	y		ls(143.0276)			
-1	y		ls(142.6695)			
-1	y		ls(142.3114)			
-1	y		ls(141.9533)			
-1	y		ls(141.5952)			
-1	y		ls(141.2371)			
-1	y		ls(140.8790)			
-1	y		ls(140.5209)			
-1	y		ls(140.1628)			
-1	y		ls(139.8047)			
-1	y		ls(139.4466)			
-1	y		ls(139.0885)			
-1	y		ls(138.7305)			
-1	y		ls(138.3724)			
-1	y		ls(138.0143)			
-1	y		ls(137.6562)			
-1	y		ls(137.2981)			
-1	y		ls(136.9400)			
-1	y		ls(136.5819)			
-1	y		ls(136.2238)			
-1	y		ls(135.8657)			
-1	y		ls(315.0076)			
-42			ls(315.0076)			
-1	m-u		ls(315.0076)			
-21			ls(175.0292)			
-1			ls(0.11; 354.0292)			
-1			ls(173.0292)			
-7			ls(240.0023)			
-1	zl		ls(240.0023)			
-1	y					
-25						
+//	TASed by Xiivler				
+					
+//	go SandWorldHomeStage 5 pyramid01 false				
+//	go SandWorldPyramid000Stage 5 pyramid01 false				// may crash in practice mod if you don't run the previous command first
+//	tp 5108 400 -9300				
+					
+$initial_angle = 140.3238					
+$ledge_angle = 120					
+$vector_direction = -1					
+$moonwalk_rotation_strength = 60					
+$camera_angle = 120					
+					
+$initial_angle_joystick = -1 * $initial_angle					
+$moonwalk_rotation = -$ledge_angle + $vector_direction * $moonwalk_rotation_strength					
+$rc_angle = $moonwalk_rotation + $vector_direction * 15					
+$turnaround_angle = $moonwalk_rotation - $vector_direction * 125					
+$counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle					
+					
+1	r				
+1	m-uu				
+1			ls(-$camera_angle)		
+60	r/				
+1	m-uu				
+1			ls($initial_angle_joystick)		
+80					
+10	a				
+4					
+1	m-u				
+23					
+40	zl				
+1	zl	y			
+1	m-u	a			
+1		y	ls($rc_angle)		
+6		y	ls($initial_angle_joystick)		
+1	a	y	ls($initial_angle_joystick)		
+25		y			
+1		y	ls(.11; $turnaround_angle)		
+1		y	ls($initial_angle_joystick)		
+1	[2] a	y	ls(.11; $counter_turnaround_angle)		
+37		y			
+2		y			
+3		y	ls(219.6762)		
+1	b	y	ls(219.6762)		
+9	b	y	ls(309.6762)		
+58		[12] y	ls(309.6762)		
+1	m-u		ls(309.6762)		
+8			ls(170.0407)		
+1	m-d		ls(170.0407)		
+15			ls(170.0407)		
+3			ls(215.0407)		
+3			ls(234.7282)		
+1	b		ls(234.7282)		
+31			ls(307.1455)		
+1	m-d		ls(262.1455)		
+1			ls(215.8450)		
+1			ls(173.6455)		
+1			ls(174.0455)		
+1			ls(174.4455)		
+1			ls(174.8455)		
+1			ls(175.2455)		
+1			ls(175.6455)		
+1			ls(176.0455)		
+1			ls(176.4455)		
+1			ls(176.8455)		
+1			ls(177.2455)		
+1			ls(177.6455)		
+1			ls(178.0455)		
+1			ls(178.4455)		
+1			ls(178.8455)		
+1			ls(179.2455)		
+1			ls(179.6455)		
+1			ls(180.0455)		
+4			ls(180.4455)		
+1			ls(180.7605)		
+1			ls(0.11; 342.5600)		
+3			ls(234.4600)		
+1	zl		ls(234.4600)		
+1	y				
+1	y		ls(144.4600)		
+1	y		ls(144.1019)		
+1	y		ls(143.7438)		
+1	y		ls(143.3857)		
+1	y		ls(143.0276)		
+1	y		ls(142.6695)		
+1	y		ls(142.3114)		
+1	y		ls(141.9533)		
+1	y		ls(141.5952)		
+1	y		ls(141.2371)		
+1	y		ls(140.8790)		
+1	y		ls(140.5209)		
+1	y		ls(140.1628)		
+1	y		ls(139.8047)		
+1	y		ls(139.4466)		
+1	y		ls(139.0885)		
+1	y		ls(138.7305)		
+1	y		ls(138.3724)		
+1	y		ls(138.0143)		
+1	y		ls(137.6562)		
+1	y		ls(137.2981)		
+1	y		ls(136.9400)		
+1	y		ls(136.5819)		
+1	y		ls(136.2238)		
+1	y		ls(135.8657)		
+1	y		ls(315.0076)		
+42			ls(315.0076)		
+1	m-u		ls(315.0076)		
+21			ls(175.0292)		
+1			ls(0.11; 354.0292)		
+1			ls(173.0292)		
+7			ls(240.0023)		
+1	zl		ls(240.0023)		
+1	y				
+25					

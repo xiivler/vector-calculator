@@ -39,6 +39,7 @@ public class Solver implements SolverInterface {
     boolean throwOrRSAfterCB = true;
 
     boolean cbvFirst;
+    boolean mcctFirst;
 
     Properties p = Properties.p;
 
@@ -155,7 +156,7 @@ public class Solver implements SolverInterface {
         mcctAllowed = true;
 
         boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
-        boolean mcctFirst =  p.midairPreset.equals("MCCT First");
+        mcctFirst =  p.midairPreset.equals("MCCT First");
         boolean ttFirst = mcctFirst && p.tripleThrow == TripleThrow.YES;
         cbvFirst = p.midairPreset.equals("CB First");
         if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
@@ -242,6 +243,23 @@ public class Solver implements SolverInterface {
             else
                 preset[homingMCCTIndex - 1][1] += 8;
         }
+        if (p.onMoon) { //make movement longer to account for this
+            if (cbvFirst || mcctFirst) {
+                if (p.tripleThrow == TripleThrow.YES)
+                    preset[homingTTIndex - 1][1] = 48;
+                else
+                    preset[homingMCCTIndex - 1][1] = 48;
+                // if (rainbowSpinIndex >= 0)
+                //     preset[rainbowSpinIndex - 1][1] = 32;
+            }
+            else {
+                if (rainbowSpinIndex >= 0)
+                    preset[rainbowSpinIndex - 1][1] = 40;
+            }
+            preset[firstDiveIndex - 1][1] = 32;
+            if (firstDiveIndex - 2 >= 0)
+                preset[firstDiveIndex - 2][1] = 33;
+        }
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
 
@@ -303,7 +321,6 @@ public class Solver implements SolverInterface {
         calcFrameByFrame(presetMaximizer);
         final_y_heights = getFinalYHeights(presetMaximizer);
 
-        Debug.println(Arrays.toString(final_y_heights));
         VectorCalculator.addPreset(preset);
 
         hasRCV = p.initialMovementName.contains("RCV");
@@ -420,7 +437,7 @@ public class Solver implements SolverInterface {
         p.initialFrames = durations[0] + delta;
         for (int i = 0; i < preset.length; i++) {
             preset[i][1] = durations[i + 1];
-            if (!(preset[i][0] == VectorCalculator.RS || preset[i][0] == VectorCalculator.HMCCT)) {
+            if (!(preset[i][0] == VectorCalculator.RS || preset[i][0] == VectorCalculator.HMCCT) || p.onMoon) {
                 preset[i][1] += delta;
             }
         }
@@ -434,7 +451,7 @@ public class Solver implements SolverInterface {
 
         for (int i = 0; i < delta; i++) { //the new last frames are different
             for (int j = 0; j < preset.length + 1; j++) {
-                if (j != rainbowSpinIndex && j != homingMCCTIndex) {
+                if ((j != rainbowSpinIndex && j != homingMCCTIndex) || p.onMoon) {
                     y -= y_vels[lastFrames[j]];
                     lastFrames[j]--;
                     durations[j]--;
@@ -701,13 +718,13 @@ public class Solver implements SolverInterface {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if (index == rainbowSpinIndex || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE)) {
+        if ((index == rainbowSpinIndex && !p.onMoon) || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE && !p.onMoon)) {
             return test(durations, delta, index + 1, y_pos + y_disps[index]);
         }
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
                 int testDuration = durations[index] + i;
-                if (index == homingMCCTIndex && testDuration > 36 && !(cbvFirst && p.groundTypeCB != GroundType.NONE)) {
+                if (index == homingMCCTIndex && testDuration > 36 && !(cbvFirst && p.groundTypeCB != GroundType.NONE) && !p.onMoon) {
                     continue;
                 }
                 if (index == 0 && testDuration > initialDurationLimit) {
@@ -731,7 +748,7 @@ public class Solver implements SolverInterface {
                 }
                 else if (i > 0) {
                     for (int j = 1; j <= i; j++) {
-                        test_y_pos += y_vels[lastFrame + j]; //something is broken here
+                        test_y_pos += y_vels[lastFrame + j];
                     }
                 }
                 test_y_pos = validateHeight(index, test_y_pos, y_vels[lastFrame + i], testDurations);
@@ -979,7 +996,7 @@ public class Solver implements SolverInterface {
 
         int maximizer_initialMovementIndex = -1;
         for (int i = 1; i < motions.length; i++) {
-            if (Movement.isMidairCapThrow(motions[i].movement.movementType)) {
+            if (Movement.isMidairCapThrow(motions[i].movement.movementType) || motions[i].movement.movementType.equals("Rainbow Spin")) {
                 maximizer_initialMovementIndex = i - 1;
                 break;
             }
