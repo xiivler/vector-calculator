@@ -30,7 +30,7 @@ Click the menu item `Reset to Program Defaults` in the `File` menu.
 
 In Super Mario Odyssey, stand at the approximate point at which the vault should begin.
 
-In Vector Calculator, click the `value` cell of the `Initial Coordinates` row (it says `(0, 0, 0)`) and then enter Mario's X, Y, and Z coordinates from the game.
+In Vector Calculator, click the `value` cell of the `Initial Coordinates` row (it says `(0, 0, 0)`) and then enter Mario's X and Z coordinates from the game. Enter his Y coordinate from the game minus 7, as he will probably move downward for 1f before the vault occurs.
 
 Now, stand at the point where you believe the vault will land, and enter Mario's coordinates in the `Target Coordinates` row.
 
@@ -67,3 +67,4 @@ For bonk or overshoot jumps, make sure to set Maximum Upwarp to 0.
 * If you are TASing without the absolute joystick mod, you will need to turn your camera down to ensure optimal vectors.
 * Make sure your `initial angle` is correct in game each time you recalculate in vector-calculator. If you are not using a template, you can often set up the correct initial angle by throwing cappy while holding the `initial joystick angle` that vector-calculator outputs.
 * If your TAS fails to get a cap bounce, it is likely because your in-game `initial angle` does not match the one in vector-calculator. If your initial angle is accurate and you still do not get a cap bounce, try raising the `Edge Cap Bounce Angle Tolerance`.
+* Your initial Y coordinate is very important and may not be the height of the ground at the beginning of the jump. For example, for vaults and roll cancel vectors, there is often a frame where Mario's height decreases by 7 units while he is rolling before he actually vaults or roll cancels. If using the built-in support for moonwalk or edge triples, Mario's initial Y position is just his Y position when standing on the ground.
