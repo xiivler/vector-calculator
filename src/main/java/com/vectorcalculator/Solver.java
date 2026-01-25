@@ -858,13 +858,7 @@ public class Solver implements SolverInterface {
         }
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
         if (!fullAccuracy) {
-            if (testDurations[0] == 63) {
-                System.out.println("Yay");
-            }
             double dispY = validateHeights(testDurations, maximizer);
-            if (testDurations[0] == 63) {
-                System.out.println(dispY);
-            }
             if (dispY == FALSE) {
                 return 0.0;
             }
