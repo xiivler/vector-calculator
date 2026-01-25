@@ -1,5 +1,6 @@
 Version 2.1.1:
 * Fixed error in optimizing MCCT first jumps over ground, allowing for ground boosts to be properly considered
+* New absolute-joystick version allows for absolute joystick angles to be toggled on and off by pressing down the left stick
 
 Version 2.1.0:
 

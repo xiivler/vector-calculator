@@ -73,7 +73,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 * **Camera Angle**: Which angle the camera is pointing toward during the jump, which shifts the joystick angles the program calculates.
     * `Initial Angle`: the jump's initial angle
     * `Target Angle`: the jump's target angle
-    * `Absolute` *(Recommended)*: The joystick angles are fixed instead of being dependent on the camera angle. This is for use with tetraxile's Absolute Joystick mod (bundled with the current release of Vector Calculator). Using tetraxile's mod and this setting allows you to TAS jumps without a top-down camera angle.
+    * `Absolute` *(Recommended)*: The joystick angles are fixed instead of being dependent on the camera angle. This is for use with tetraxile's Absolute Joystick mod (bundled with the current release of Vector Calculator). Using tetraxile's mod and this setting allows you to TAS jumps without a top-down camera angle. In the mod, press down the left stick to toggle between regular and absolute joystick angles.
     * `Custom`: Allows the user to specify any camera angle
 
 ### Midair Properties

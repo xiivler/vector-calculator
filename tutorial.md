@@ -10,17 +10,15 @@ Join the [Super Mario Odyssey TAS server](https://discord.gg/HdB2P586ch) and fol
 
 This tutorial assumes that you will be using [TSV-TAS-2](https://github.com/xiivler/TSV-TAS-2) as your script format because it works most smoothly with Vector Calculator. Make sure to familiarize yourself with the script format by reading its [documentation](https://docs.google.com/document/d/1vW-swF3k96YxaIJqXbtRXbQ54mKKgeWfPFlW2hYBa_Q/edit?usp=sharing). This script format is compatible with both `smo-practice` and `smo-lunakit`.
 
-Now, install the absolute joystick mod.
+Now, install the absolute joystick mod. This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This is not required to use Vector Calculator, but the rest of the tutorial assumes you have this mod installed. With this mod, while in the game, you can press down the left stick to toggle between absolute and regular joystick angles.
 
 #### (On Switch)
 
-Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card. (There should now be a file `sd:/atmosphere/exefs_patches/absolute-joystick/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.) This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This step is not required to use Vector Calculator, but the rest of the tutorial assumes you have completed it.
+Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card.
 
 #### (On Emulator)
 
-Right click SMO in the emulator and select `Open Mod Directory` (Ryujinx) or `Open Mod Data Location` (Yuzu). Copy the folder `absolute-joystick` that came with Vector Calculator into the folder that opens. Open the `absolute-joystick` folder and create a folder called `exefs` inside, and move `3CA12DFAAF9C82DA064D1698DF79CDA1.ips` into that folder. (There should now be a file `absolute-joystick/exefs/3CA12DFAAF9C82DA064D1698DF79CDA1.ips`.)
-
-Make sure to delete the mod file if you want to play the game normally.
+Right click SMO in the emulator and select `Open Mod Directory` (Ryujinx) or `Open Mod Data Location` (Yuzu). Copy the folder `absolute-joystick` that came with Vector Calculator into the folder that opens. Open the `absolute-joystick` folder and create a folder called `exefs` inside, and move `main.ndpm` and `subsdk4` into that folder.
 
 ## Part 2: TASing a Vault
 
@@ -52,13 +50,15 @@ Insert a line at the top of your copy of `ud-vault.tsv` that reads `$position = 
 
 #### (Both Mods)
 
-Now, run the TSV-TAS script and see if you get a vault. Keep tweaking the teleport coordinates until you get a vault as close to the edge as possible.
+If you have not yet activated absolute joystick angles in-game, do so by pressing in the left joystick. It will be clear that they are active, as Mario will go in the same direction if you hold a certain angle on the joystick no matter the camera angle.
+
+Run the TSV-TAS script and see if you get a vault. Keep tweaking the teleport coordinates until you get a vault as close to the edge as possible.
 
 Once you have done this, click the `Copy to Clipboard` button in Vector Calculator and paste the result to overwrite the commented row at the bottom of the template. Run the script again and the inputs that Vector Calculator solved will be performed in-game.
 
 ## Part 3: TASing other jumps
 
-You should now be able to TAS other types of jumps as well. The moonwalk triple and RCV templates are the next easiest to use. If you are familiar with TASing Super Mario Odyssey, you can also write your own inputs leading up to the jump or modify the templates further to suit your needs.
+You should now be able to TAS other types of jumps as well. The triple and RCV templates are the next easiest to use. If you are familiar with TASing Super Mario Odyssey, you can also write your own inputs leading up to the jump or modify the templates further to suit your needs.
 
 For bonk or overshoot jumps, make sure to set Maximum Upwarp to 0.
 
