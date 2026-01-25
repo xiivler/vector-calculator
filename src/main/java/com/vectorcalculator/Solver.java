@@ -719,7 +719,8 @@ public class Solver implements SolverInterface {
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
         if ((index == rainbowSpinIndex && !p.onMoon) || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE && !p.onMoon)) {
-            return test(durations, delta, index + 1, y_pos + y_disps[index]);
+            double test_y_pos = validateHeight(index, y_pos + y_disps[index], y_vels[lastFrames[index]], durations);
+            return test(durations, delta, index + 1, test_y_pos);
         }
         if (index < durations.length - 1) {
             for (int i = -delta; i <= delta; i++) {
@@ -752,7 +753,6 @@ public class Solver implements SolverInterface {
                     }
                 }
                 test_y_pos = validateHeight(index, test_y_pos, y_vels[lastFrame + i], testDurations);
-                //Debug.println("Index " + index + " Delta " + i + " YPos " + test_y_pos);
                 if (test_y_pos == FALSE) { //we were too low with respect to the ground
                     result = new DoubleIntArray(0, testDurations);
                 }

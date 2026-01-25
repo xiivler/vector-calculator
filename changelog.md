@@ -1,3 +1,6 @@
+Version 2.1.1:
+* Fixed error in optimizing MCCT first jumps over ground, allowing for ground boosts to be properly considered
+
 Version 2.1.0:
 
 * Added support for edge triples
