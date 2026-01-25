@@ -136,6 +136,9 @@ public class Solver implements SolverInterface {
     public void setup() {
         if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
             limit = 20;
+            if (p.groundTypeSecondGP != GroundType.NONE) {
+                limit = 30;
+            }
         }
         else {
             limit = 4;
