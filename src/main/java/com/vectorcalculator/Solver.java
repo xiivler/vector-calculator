@@ -858,7 +858,13 @@ public class Solver implements SolverInterface {
         }
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
         if (!fullAccuracy) {
+            if (testDurations[0] == 63) {
+                System.out.println("Yay");
+            }
             double dispY = validateHeights(testDurations, maximizer);
+            if (testDurations[0] == 63) {
+                System.out.println(dispY);
+            }
             if (dispY == FALSE) {
                 return 0.0;
             }
@@ -917,7 +923,7 @@ public class Solver implements SolverInterface {
             //Debug.println(y_pos);
             if (p.groundTypeFirstGP == GroundType.NONE)
                 return y_pos;
-            else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundHeightFirstGP)
+            else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
                 return FALSE;
             else
                 yDiff = p.groundHeightFirstGP - y_pos;
@@ -931,7 +937,7 @@ public class Solver implements SolverInterface {
             if (rainbowSpinIndex < diveCapBounceIndex) { //rainbow spin first
                 if (p.groundTypeFirstGP == GroundType.NONE)
                     return y_pos;
-                else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos <= p.groundHeightFirstGP)
+                else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
                     return FALSE;
                 else
                     yDiff = p.groundHeightFirstGP - y_pos;
@@ -939,7 +945,7 @@ public class Solver implements SolverInterface {
             else { //rainbow spin second
                 if (p.groundTypeSecondGP == GroundType.NONE)
                     return y_pos;
-                else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundHeightSecondGP)
+                else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
                     return FALSE;
                 else
                     yDiff = p.groundHeightSecondGP - y_pos;
@@ -952,7 +958,7 @@ public class Solver implements SolverInterface {
                 return FALSE;
         }
         else if (motionIndex == firstDiveIndex) {
-            if (p.groundTypeCB == GroundType.NONE || y_pos > p.groundHeightCB)
+            if (p.groundTypeCB == GroundType.NONE || y_pos >= p.groundHeightCB)
                 return y_pos;
             else
                 return FALSE;
@@ -960,7 +966,7 @@ public class Solver implements SolverInterface {
         else if (motionIndex == diveCapBounceIndex) {
             if (p.groundTypeSecondGP == GroundType.NONE)
                 return y_pos;
-            else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos <= p.groundHeightSecondGP)
+            else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
                 return FALSE;
             else
                 yDiff = p.groundHeightSecondGP - y_pos;
@@ -991,6 +997,7 @@ public class Solver implements SolverInterface {
     
     //make sure the durations are actually possible
     public double validateHeights(int[] testDurations, VectorMaximizer maximizer) {
+
         double[] final_y_heights = getFinalYHeights(maximizer);
         SimpleMotion[] motions = maximizer.getMotions();
 
