@@ -104,7 +104,7 @@ Vector Calculator has several properties that can be configured by the user. Som
         * **Frames Before Home**: The number of frames before Cappy is homed
         * **HCT Cap Return Frame**: The frame that Cappy returns to Mario's head
 
-* **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`.
+* **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`. A higher `Duration Search Range` is recommended for jumps over ground or liquid.
     * **Type**: Whether there is ground, lava, or poison underneath the jump.
     * **Height**: The height of the ground, lava, or poison underneath the jump. You can obtain this value by standing on the ground or falling into the lava/poison, and recording Mario's Y coordinate. If the jump fails from landing on the ground, first make sure your initial Y coordinate is right. If the issue is still not resolved, try increasing the ground height a tiny bit.
 

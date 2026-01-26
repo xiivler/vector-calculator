@@ -721,7 +721,7 @@ public class Solver implements SolverInterface {
             innerCalls++;
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
-        if ((index == rainbowSpinIndex && !p.onMoon) || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE && !p.onMoon)) {
+        if ((index == rainbowSpinIndex && !p.onMoon && p.groundType == GroundType.NONE) || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE && !p.onMoon)) {
             double test_y_pos = validateHeight(index, y_pos + y_disps[index], y_vels[lastFrames[index]], durations);
             return test(durations, delta, index + 1, test_y_pos);
         }

@@ -54,7 +54,7 @@ import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
 	
-	public static final String VERSION = "2.1.2";
+	public static final String VERSION = "2.1.3";
 
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 453;

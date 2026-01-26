@@ -1,3 +1,6 @@
+Version 2.1.3:
+* Additional improvements in optimizing jumps over ground
+
 Version 2.1.2:
 * Fixed error in optimizing jumps over ground
 
