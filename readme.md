@@ -5,6 +5,8 @@ To open the program, double-click `vector-calculator.jar` or run the command `ja
 
 Check out the [tutorial](tutorial.md) for step-by-step instructions on TASing a trickjump with Vector Calculator. Read below for a detailed description of the various modes and settings the program has to offer.
 
+If you are curious about how the porgram optimizes jumps, read the [explanation](explanation.md).
+
 ## Optimization Modes
 Vector Calculator has three modes: `Solve`, `Calculate (Solve Dives)`, and `Calculate`, of which `Solve` is the most automated and `Calculate` is the least automated.
 
