@@ -23,7 +23,7 @@ The solver tests all permutations of cap throw and dive lengths that are within 
 The calculator tests the following parameters:
 1. The angle at which the cap throw before the dive cap bounce is thrown
 2. The angle at which the final cap throw is thrown (so that Mario ends up diving in the direction of the target angle)
-3. The joystick angle for the falling part of a homing cap throw
+3. The joystick angle for the falling part of a homing cap throw (the part in which Mario's gravity returns to normal 24 frames after the cap throw begins)
 
 Generally, the calculator vectors as strongly as possible (90 degrees from initial velocity angle), unless Mario can accelerate forward, in which case it holds in the direction of the initial velocity angle.
 
