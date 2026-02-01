@@ -1026,12 +1026,6 @@ public class VectorMaximizer {
 		}
 	}
 	
-	//the actual maximization function
-	//calls more maximization functions for each step
-	//this function finds the correct/optimal RCV if applicable
-	//then calls maximize_HCT (whether or not to turn dive before cbv)
-	//which calls maximize_HCT (hct falling vectoring)
-	//which calls maximize_variableAngle1 (first cap throw angle)
 	public double maximize() {
 		try {
 			return maximize_try();
@@ -1044,6 +1038,11 @@ public class VectorMaximizer {
 		}
 	}
 
+	//the actual maximization function
+	//calls more maximization functions for each step
+	//this function finds the correct/optimal RCV if applicable
+	//then calls maximize_HCT (hct falling vectoring)
+	//which calls maximize_variableAngle1 (first cap throw angle)
 	public double maximize_try() {
 		long startTime = System.currentTimeMillis();
 		
