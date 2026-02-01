@@ -20,9 +20,9 @@ The solver tests all permutations of cap throw and dive lengths that are within 
 2. The solver tests the best results from part 1 using the ``Calculator`` with a higher degree of optimization to find which actually yields the most distance.
 
 ## Calculator
-The calculator tests the following parameters:
+The calculator optimizes following parameters:
 1. The angle at which the cap throw before the dive cap bounce is thrown
-2. The angle at which the final cap throw is thrown (so that Mario ends up diving in the direction of the target angle)
+2. The angle at which the final cap throw is thrown (so that Mario ends up diving in the direction of the entire jump)
 3. The joystick angle for the falling part of a homing cap throw (the part in which Mario's gravity returns to normal 24 frames after the cap throw begins)
 
 Generally, the calculator vectors as strongly as possible (90 degrees from initial velocity angle), unless Mario can accelerate forward, in which case it holds in the direction of the initial velocity angle.
