@@ -14,7 +14,7 @@ Now, install the absolute joystick mod. This mod, created by tetraxile, causes t
 
 #### (On Switch)
 
-Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/exefs_patches` on your Switch's SD card.
+Copy the folder `absolute-joystick` that came with Vector Calculator into the folder `sd:/atmosphere/contents/0100000000010000/exefs` on your Switch's SD card.
 
 #### (On Emulator)
 
