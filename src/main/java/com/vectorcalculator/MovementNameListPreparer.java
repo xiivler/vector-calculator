@@ -52,15 +52,13 @@ public class MovementNameListPreparer {
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt
 		//not crouch roll because it will be easier for people to just input the speed at the time of rolling
-		if (name.equals("Backflip") || name.equals("Long Jump")) {
+		if (name.equals("Backflip")) {
 			movementNames.add("Crouch");
 			movementFrames.add(1);
 		}
-		else if (name.equals("Crouch") && frames > 43) {
-			movementNames.add("Ground Pound Roll");
-			movementFrames.add(43);
-			movementNames.add("Roll Vector");
-			movementFrames.add(frames - 43);
+		else if (name.equals("Long Jump")) {
+			movementNames.add("Crouch");
+			movementFrames.add(p.framesCrouch);
 		}
 		else if (name.equals("Uncapture")) {
 			movementNames.add("Pre-Uncapture");

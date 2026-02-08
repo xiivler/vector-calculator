@@ -256,12 +256,19 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Crouch")) {
-			initialVerticalSpeed = 0;
-			gravity = 0;
+			if (p.framesRun > 0)
+				initialVerticalSpeed = -7;
+			else if (p.framesMoonwalk > 0)
+				initialVerticalSpeed = -3 * p.framesMoonwalk;
+			else {
+				initialVerticalSpeed = 0;
+				gravity = 0;
+			}
 			forwardAccel = 0;
 			vectorAccel = 0;
 			defaultSpeedCap = 3.5;
 			trueSpeedCap = 100;
+			canMoonwalk = true;
 			inputs1.add(Inputs.ZL);
 		}
 		
@@ -322,6 +329,7 @@ public class Movement {
 			moonGravity = .2;
 			inputs1.add(Inputs.ZL);
 			inputs2.add(Inputs.B);
+			canMoonwalk = true;
 		}
 		
 		//need to change rolls to falling to vector them, but falling may have different gravity

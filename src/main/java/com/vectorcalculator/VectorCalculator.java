@@ -94,7 +94,7 @@ public class VectorCalculator extends JPanel {
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
-		jump_button_frames("Frames of Holding A/B"), coyote_type("Coyote Time"), moonwalk_frames("Moonwalk Frames"), running_frames("Running Frames"), initial_speed("Initial Horizontal Speed"),
+		jump_button_frames("Frames of Holding A/B"), coyote_type("Coyote Time"), moonwalk_frames("Moonwalk Frames"), running_frames("Running Frames"), crouch_frames("Crouching Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
@@ -164,6 +164,8 @@ public class VectorCalculator extends JPanel {
 				if (p.coyoteType == CoyoteType.RUNNING)
 					params.add(Parameter.running_frames);
 			}
+			if (p.initialMovementName.equals("Long Jump"))
+				params.add(Parameter.crouch_frames);
 			params.add(Parameter.vector_direction);
 			params.add(null);
 
@@ -360,6 +362,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case running_frames:
 			value = p.framesRun;
+			break;
+		case crouch_frames:
+			value = p.framesCrouch;
 			break;
 		case initial_speed:
 			value = p.initialHorizontalSpeed;
@@ -617,7 +622,10 @@ public class VectorCalculator extends JPanel {
 			p.framesMoonwalk = clampInt(parseIntWithDefault(value, 0), 0, 5);
 			break;
 		case running_frames:
-			p.framesRun = clampInt(parseIntWithDefault(value, 0), 0, 6);
+			p.framesRun = clampInt(parseIntWithDefault(value, 0), 0, p.initialMovementName.equals("Long Jump") ? 5 : 6);
+			break;
+		case crouch_frames:
+			p.framesCrouch = clampInt(parseIntWithDefault(value, 1), 1, 4);
 			break;
 		case initial_speed:
 			if (p.chooseInitialHorizontalSpeed)
@@ -1055,6 +1063,16 @@ public class VectorCalculator extends JPanel {
 		if (!(p.canMoonwalk && oldCanMoonwalk)) {
 			p.framesMoonwalk = 0;
 			p.framesRun = 0;
+		}
+		if (p.initialMovementName.equals("Long Jump")) {
+			if (p.framesRun > 5)
+				p.framesRun = 5;
+		}
+		if (p.initialMovementName.equals("Long Jump") || p.initialMovementName.equals("Backflip") || p.initialMovementName.equals("Crouch Roll")) {
+			p.framesCrouch = 1;
+		}
+		else {
+			p.framesCrouch = 0;
 		}
 		p.chooseInitialHorizontalSpeed = initialMovement.variableInitialHorizontalSpeed();
 		if (p.chooseInitialHorizontalSpeed) {

@@ -253,6 +253,7 @@ public class Properties {
     CoyoteType coyoteType = CoyoteType.MOONWALK;
 	int framesMoonwalk = 5;
     int framesRun = 0; //frames of running coyote time (1st doesn't have any walking deceleration)
+    int framesCrouch = 1; //frames of crouching before a long jump (can be up to 4)
     boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
