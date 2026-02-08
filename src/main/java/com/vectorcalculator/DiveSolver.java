@@ -76,15 +76,11 @@ public class DiveSolver implements SolverInterface {
         singleThrowAllowed = true;
         mcctAllowed = true;
 
-        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) {
-            ttAllowed = p.tripleThrow;
-            if (ttAllowed == TripleThrow.YES) {
-                singleThrowAllowed = false;
-                mcctAllowed = false;
-            }
+        ttAllowed = p.tripleThrowDiveCB;
+        if (ttAllowed == TripleThrow.YES) {
+            singleThrowAllowed = false;
+            mcctAllowed = false;
         }
-        else
-            ttAllowed = TripleThrow.NO;
 
         boolean solveFirstDive = false;
         boolean solveSecondDive = false;

@@ -174,15 +174,11 @@ public class Solver implements SolverInterface {
         else if (p.midairPreset.equals("Simple Tech")) {
             cbDurationLimit = p.cbCapReturnFrame + 11;
         }
-        if (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech")) {
-            ttAllowed = p.tripleThrow;
-            if (ttAllowed == TripleThrow.YES) {
-                singleThrowAllowed = false;
-                mcctAllowed = false;
-            }
+        ttAllowed = p.tripleThrowDiveCB;
+        if (ttAllowed == TripleThrow.YES) {
+            singleThrowAllowed = false;
+            mcctAllowed = false;
         }
-        else
-            ttAllowed = TripleThrow.NO;
 
         dtAllowed = p.diveTurn;
 

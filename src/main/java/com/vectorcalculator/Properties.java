@@ -233,7 +233,7 @@ public class Properties {
     Mode mode = Mode.SOLVE;
 
     double x0 = 0, y0 = 0, z0 = 0;
-	double x1 = 0, y1 = 0, z1 = 4000;
+	double x1 = 0, y1 = 0, z1 = -4000;
 
     boolean solveForInitialAngle = false;
 	double initialAngle = 90;
@@ -267,8 +267,10 @@ public class Properties {
 
 	String midairPreset = "MCCT First";
     boolean canTripleThrow = true;
-    boolean canTestTripleThrow = false; //whether the option Test Both is shown
+    boolean canTripleThrowDiveCB = false;
+    boolean canTestTripleThrow = false; //whether dive CB triple throw can be tested for (misleading name because of earlier versions of the calculator)
     TripleThrow tripleThrow = TripleThrow.YES;
+    TripleThrow tripleThrowDiveCB = TripleThrow.NO;
     int firstCTIndex = 0;
     boolean turnarounds = true;
     double upwarp = 40;

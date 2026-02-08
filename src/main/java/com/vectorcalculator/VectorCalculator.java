@@ -54,7 +54,7 @@ import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
 	
-	public static final String VERSION = "2.1.3";
+	public static final String VERSION = "2.1.4";
 
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 453;
@@ -90,7 +90,7 @@ public class VectorCalculator extends JPanel {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		target_y_position("Target Y Position"),
-		midairs("Midairs"), triple_throw("Triple Throw"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
@@ -172,6 +172,8 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
+			if (p.canTripleThrowDiveCB)
+				params.add(Parameter.triple_throw_dive_cb);
 			params.add(Parameter.upwarp);
 			params.add(null);
 
@@ -188,6 +190,8 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.midairs);
 			if (p.canTripleThrow)
 				params.add(Parameter.triple_throw);
+			if (p.canTripleThrowDiveCB)
+				params.add(Parameter.triple_throw_dive_cb);
 			params.add(Parameter.upwarp);
 			params.add(null);
 
@@ -317,6 +321,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case triple_throw:
 			value = p.tripleThrow.displayName;
+			break;
+		case triple_throw_dive_cb:
+			value = p.tripleThrowDiveCB.displayName;
 			break;
 		case upwarp:
 			value = p.upwarp;
@@ -521,9 +528,9 @@ public class VectorCalculator extends JPanel {
 			calculateVector.setText(p.mode.name);
 			updateDurationType();
 			MainJMenuBar.updateCalculatorMenuItems();
-			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (p.midairPreset.equals("Spinless") || p.midairPreset.equals("Simple Tech"));
+			p.canTestTripleThrow = p.mode != Mode.CALCULATE && p.canTripleThrowDiveCB;
 			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
-				setProperty(Parameter.triple_throw, "No");
+				setProperty(Parameter.triple_throw_dive_cb, "No");
 			break;
 		case initial_coordinates:
 			double[] coords = new double[3];
@@ -649,17 +656,19 @@ public class VectorCalculator extends JPanel {
 		case midairs:
 			String name = value.toString();
 			boolean oldCanTripleThrow = p.canTripleThrow;
-			p.canTripleThrow = !(name.equals("Simple Tech Rainbow Spin First") || name.equals("Custom") || name.equals("None"));
-			p.canTestTripleThrow = p.mode != Mode.CALCULATE && (name.equals("Spinless") || name.equals("Simple Tech"));
+			p.canTripleThrow = name.equals("MCCT First") || name.equals("CB First");
+			p.canTripleThrowDiveCB = name.equals("Spinless") || name.equals("Simple Tech") || name.equals("CB First");
+			p.canTestTripleThrow = p.mode != Mode.CALCULATE && p.canTripleThrowDiveCB;
 			if ((!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow)) && !name.equals("Custom"))
 				setProperty(Parameter.triple_throw, "No");
-			if (!p.canTestTripleThrow && p.tripleThrow == TripleThrow.TEST)
-				setProperty(Parameter.triple_throw, "No");
+			if (!p.canTestTripleThrow && p.tripleThrowDiveCB == TripleThrow.TEST)
+				setProperty(Parameter.triple_throw_dive_cb, "No");
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
 			if ((name.equals("Custom") || name.equals("None")) && p.mode == Mode.SOLVE) {
 				Debug.println("Should switch");
 				setProperty(Parameter.triple_throw, "No"); //do this now so it doesn't change the tt to not be a tt when switching to custom preset
+				setProperty(Parameter.triple_throw_dive_cb, "No");
 				setProperty(Parameter.mode, Mode.SOLVE_DIVES.name);
 				
 			}
@@ -667,6 +676,9 @@ public class VectorCalculator extends JPanel {
 		case triple_throw:
 			TripleThrow oldTripleThrow = p.tripleThrow;
 			p.tripleThrow = TripleThrow.fromDisplayName(value.toString());
+			if (p.tripleThrow == TripleThrow.YES) {
+				setProperty(Parameter.triple_throw_dive_cb, "No");
+			}
 			if (oldTripleThrow != p.tripleThrow && !p.midairPreset.equals("Custom")) {
 				// int[][] oldMidairs = new int[p.midairs.length][p.midairs[0].length];
 				// int[][] newMidairs = new int[p.midairs.length][p.midairs[0].length];
@@ -686,6 +698,16 @@ public class VectorCalculator extends JPanel {
 				// 	addPreset(newMidairs);
 				// 	System.out.println(p.midairs[6][1]);
 				// }
+			}
+			break;
+		case triple_throw_dive_cb:
+			TripleThrow oldTripleThrowDiveCB = p.tripleThrowDiveCB;
+			p.tripleThrowDiveCB = TripleThrow.fromDisplayName(value.toString());
+			if (p.tripleThrowDiveCB != TripleThrow.NO) {
+				setProperty(Parameter.triple_throw, "No");
+			}
+			if (oldTripleThrowDiveCB != p.tripleThrowDiveCB && !p.midairPreset.equals("Custom")) {
+				addPreset(p.midairPreset, false);
 			}
 			break;
 		case gravity:
@@ -864,8 +886,10 @@ public class VectorCalculator extends JPanel {
 	}
 
 	static void updateMidairProperties() {
-		if (p.midairPreset.equals("Custom"))
+		if (p.midairPreset.equals("Custom")) {
 			p.tripleThrow = TripleThrow.NO;
+			p.tripleThrowDiveCB = TripleThrow.NO;
+		}
 		p.hct = false;
 		p.diveCapBounce = false;
 		p.firstCTIndex = -1;
@@ -879,6 +903,9 @@ public class VectorCalculator extends JPanel {
 			else if (p.midairs[i][0] == HMCCT)
 				p.hct = true;
 			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == TT) {
+				p.tripleThrowDiveCB = TripleThrow.YES;
+			}
+			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == HTT) {
 				p.tripleThrow = TripleThrow.YES;
 			}
 		}
@@ -979,37 +1006,26 @@ public class VectorCalculator extends JPanel {
 	}
 
 	public static int[][] getPreset(String name) {
-		if (p.tripleThrow == TripleThrow.NO) {
-			switch(name) {
-				case "Spinless":
-					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
-				case "Simple Tech":
-					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
-				case "Simple Tech Rainbow Spin First":
-					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
-				case "MCCT First":
+		switch(name) {
+			case "Spinless":
+				return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+			case "Simple Tech":
+				return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+			case "Simple Tech Rainbow Spin First":
+				return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+			case "MCCT First":
+				if (p.tripleThrow == TripleThrow.NO)
 					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
-				case "CB First":
-					return new int[][]{{MCCT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
-				case "None":
-				default:
-					return new int[0][0];
-			}
-		}
-		else {
-			switch(name) {
-				case "Spinless":
-					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
-				case "Simple Tech":
-					return new int[][]{{TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
-				case "MCCT First":
+				else
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
-				case "CB First":
+			case "CB First":
+				if (p.tripleThrow == TripleThrow.NO)
+					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
+				else
 					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
-				case "None":
-				default:
-					return new int[0][0];
-			}
+			case "None":
+			default:
+				return new int[0][0];
 		}
 	}
 
@@ -1530,6 +1546,8 @@ public class VectorCalculator extends JPanel {
 					case midairs:
 						return dropdown(midairPresetNames);
 					case triple_throw:
+						return dropdown(new String[]{"Yes", "No"});
+					case triple_throw_dive_cb:
 						if (p.canTestTripleThrow)
 							return dropdown(new String[]{"Yes", "No", "Test Both"});
 						else
