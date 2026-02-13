@@ -879,11 +879,11 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
-	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "Fake Throw"};
+	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Fake Throw"};
 	static String[] single_player_midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"};
-	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"}; // interpret 2P cap bounces based on context
+	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"}; // interpret 2P cap bounces based on context
 
-	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, FT = 8;
+	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8, FT = 9;
 
 	static void updateMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
