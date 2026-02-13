@@ -89,7 +89,7 @@ public class VectorCalculator extends JPanel {
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
-		target_y_position("Target Y Position"),
+		target_y_position("Target Y Position"), two_player("Two Player Mode"),
 		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
@@ -138,6 +138,9 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.target_coordinates);
 			else
 				params.add(Parameter.target_y_position);
+			params.add(null);
+
+			params.add(Parameter.two_player);
 			params.add(null);
 
 			params.add(Parameter.initial_movement_category);
@@ -315,6 +318,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case target_y_position:
 			value = p.y1;
+			break;
+		case two_player:
+			value = p.twoPlayerMode ? "Yes" : "No";
 			break;
 		case midairs:
 			value = p.midairPreset;
@@ -564,6 +570,10 @@ public class VectorCalculator extends JPanel {
 			break;
 		case target_angle:
 			p.targetAngle = parseDoubleWithDefault(value, 0);
+			break;
+		case two_player:
+			p.twoPlayerMode = value.toString().equals("Yes");
+			movementColumn.setCellEditor(new MyComboBoxEditor(p.twoPlayerMode ? two_player_midairMovementNames : single_player_midairMovementNames));
 			break;
 		case initial_movement_category:
 			String oldInitialMovementCategory = p.initialMovementCategory;
@@ -869,9 +879,11 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
-	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"};
+	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "Fake Throw"};
+	static String[] single_player_midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"};
+	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"}; // interpret 2P cap bounces based on context
 
-	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8;
+	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, FT = 8;
 
 	static void updateMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
@@ -943,6 +955,7 @@ public class VectorCalculator extends JPanel {
 	static CoordinateWindow target_CoordinateWindow = new CoordinateWindow("Target Coordinates");
 	static DefaultTableModel movementModel = new DefaultTableModel(0, 2);
 	static JTable movementTable;
+	static TableColumn movementColumn;
 
 	static JButton add;
 	static JButton remove;
@@ -1182,6 +1195,8 @@ public class VectorCalculator extends JPanel {
 		if (p.movementSelectedRow >= 0 && p.movementSelectedCol >= 0 && p.movementSelectedRow < movementTable.getRowCount() && p.movementSelectedCol < movementTable.getColumnCount()) {
 			movementTable.changeSelection(p.movementSelectedRow, p.movementSelectedCol, false, false);
 		}
+
+		movementColumn.setCellEditor(new MyComboBoxEditor(p.twoPlayerMode ? two_player_midairMovementNames : single_player_midairMovementNames));
 
 		loading = false;
 	}
@@ -1537,6 +1552,8 @@ public class VectorCalculator extends JPanel {
 						String[] options = p.initialAndTargetGiven ? new String[]{"Target Angle", "Target Coordinates"} :
 																	 new String[]{"Initial Angle", "Target Angle", "Target Coordinates"};
 						return dropdown(options);
+					case two_player:
+						return dropdown(new String[]{"Yes", "No"});
 					case duration_type:
 						return dropdown(new String[]{"Frames", "Vertical Displacement"});
 					case coyote_type:
@@ -1793,8 +1810,8 @@ public class VectorCalculator extends JPanel {
 		
 		JScrollPane movementScrollPane = new JScrollPane(movementTable);
 		
-		TableColumn movementColumn = movementTable.getColumnModel().getColumn(0);
-		movementColumn.setCellEditor(new MyComboBoxEditor(midairMovementNames));
+		movementColumn = movementTable.getColumnModel().getColumn(0);
+		movementColumn.setCellEditor(new MyComboBoxEditor(p.twoPlayerMode ? two_player_midairMovementNames : single_player_midairMovementNames));
 		
 		// Add selection listener to update menu when selection changes
 		movementTable.getSelectionModel().addListSelectionListener(e -> {

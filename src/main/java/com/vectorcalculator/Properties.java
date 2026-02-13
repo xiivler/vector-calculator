@@ -240,6 +240,8 @@ public class Properties {
 	double targetAngle = 90;
     CalculateUsing calculateUsing = CalculateUsing.TARGET_COORDINATES;
 
+    boolean twoPlayerMode = false;
+
     String initialMovementCategory = "Jump";
 	String initialMovementName = "Triple Jump";
 	boolean chooseDurationType = false;
