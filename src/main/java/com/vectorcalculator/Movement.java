@@ -9,8 +9,8 @@ public class Movement {
 	Properties p = Properties.p;
 	
 	public static final int MCCTU = 0, MCCTD = 1, MCCTL = 2, MCCTR = 3, CT = 4, DT = 5,
-							TT = 6, TTU = 7, TTD = 8, TTL = 9, TTR = 10;
-	public static final int CT_COUNT = 11; //number of possibilities
+							TT = 6, TTU = 7, TTD = 8, TTL = 9, TTR = 10, FT = 11;
+	public static final int CT_COUNT = 11; //number of possibilities (excluding fakethrow)
 	public static final double CT_DISP_F = 678;
 	public static final double CT_DISP_V = 70;
 	public static final double CT_DISP_S = 0;
@@ -81,6 +81,8 @@ public class Movement {
 	//int jumpFramesOffset = 0; //for captures that have more frames of jumping than are held
 	
 	int frameOffset = 0; //for movement where the vertical motion starts after the horizontal
+
+	int inputOffset = -1; //number of frames before the movement begins that the inputs begin (ignoring additional motion offset for Lunakit)
 	
 	//double minSpeedCap = 0; //triple jumps, for instance, require a speed of at least 14
 	double defaultSpeedCap = 14; //speed cap only if you aren't traveling faster than it
@@ -641,6 +643,12 @@ public class Movement {
 		else if (movementType.contains("Throw")) {
 			if (movementType.equals("Single Throw")) {
 				minFrames = 9;
+				inputs1.add(Inputs.Y);
+			}
+			else if (movementType.equals("Fake Throw")) {
+				minFrames = 11;
+				inputOffset = -2;
+				inputs1.add(Inputs.P2Y);
 				inputs1.add(Inputs.Y);
 			}
 			else {

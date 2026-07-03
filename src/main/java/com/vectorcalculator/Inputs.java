@@ -1,10 +1,10 @@
 package com.vectorcalculator;
 
 class Inputs {
-    public static final int NONE = 0, A = 1, B = 2, X = 3, Y = 4, ZL = 5, ZR = 6, M = 7, MU = 8, MD = 9, ML = 10, MR = 11, MUU = 12, MDD = 13, MLL = 14, MRR = 15;
-    public static final String[] displayInputs = {"", "A", "B", "X", "Y", "ZL", "ZR", "Shake", "Shake", "Shake", "Shake", "Shake", "Up shake", "Down shake", "Side shake", "Side shake"};
-    public static final String[] TSVInputs = {"", "a", "b", "x", "y", "zl", "zr", "m", "m-u", "m-d", "m-l", "m-r", "m-uu", "m-dd", "m-ll", "m-rr"};
-    public static final String[] nxTASInputs = {"NONE", "KEY_A", "KEY_B", "KEY_X", "KEY_Y", "KEY_ZL", "KEY_ZR", "KEY_L", "KEY_L;KEY_DUP", "KEY_L;KEY_DDOWN", "KEY_L;KEY_DLEFT", "KEY_L;KEY_DRIGHT", "KEY_DUP", "KEY_DDOWN", "KEY_DLEFT", "KEY_DRIGHT"};
+    public static final int NONE = 0, A = 1, B = 2, X = 3, Y = 4, ZL = 5, ZR = 6, M = 7, MU = 8, MD = 9, ML = 10, MR = 11, MUU = 12, MDD = 13, MLL = 14, MRR = 15, P2A = 16, P2B = 17, P2X = 18, P2Y = 19, P2ZL = 20, P2ZR = 21;
+    public static final String[] displayInputs = {"", "A", "B", "X", "Y", "ZL", "ZR", "Shake", "Shake", "Shake", "Shake", "Shake", "Up shake", "Down shake", "Side shake", "Side shake", "P2 A", "P2 B", "P2 X", "P2 Y", "P2 ZL", "P2 ZR"};
+    public static final String[] TSVInputs = {"", "a", "b", "x", "y", "zl", "zr", "m", "m-u", "m-d", "m-l", "m-r", "m-uu", "m-dd", "m-ll", "m-rr", "ca", "cb", "cx", "cy", "czl", "czr"};
+    public static final String[] nxTASInputs = {"NONE", "KEY_A", "KEY_B", "KEY_X", "KEY_Y", "KEY_ZL", "KEY_ZR", "KEY_L", "KEY_L;KEY_DUP", "KEY_L;KEY_DDOWN", "KEY_L;KEY_DLEFT", "KEY_L;KEY_DRIGHT", "KEY_DUP", "KEY_DDOWN", "KEY_DLEFT", "KEY_DRIGHT", "KEY_A", "KEY_B", "KEY_X", "KEY_Y", "KEY_ZL", "KEY_ZR"};
 
     int input1, input2;
     double r, theta;
@@ -81,5 +81,13 @@ class Inputs {
         else {
             return nxTASInputs[input1] + ";" + nxTASInputs[input2] + " " + joystickString + " 0;0";
         }
+    }
+
+    public static boolean isMotion(int input) {
+        return input >= M && input < P2A;
+    }
+
+    public static boolean isP2(int input) {
+        return input >= P2A;
     }
 }

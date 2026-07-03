@@ -207,6 +207,13 @@ public class Solver implements SolverInterface {
                 finalCapThrowIndex = i;
             }
         }
+
+        if (p.twoPlayerMode) {
+            singleThrowAllowed = false;
+            ttAllowed = TripleThrow.NO;
+            mcctAllowed = false;
+            throwOrRSAfterCB = false;
+        }
     }
 
     public boolean solve(int delta) {
@@ -483,6 +490,12 @@ public class Solver implements SolverInterface {
             for (int j = -delta; j <= delta; j++) {
                 int ctDuration = durations[diveCapBounceIndex - 2] + i;
                 int diveDuration = durations[diveCapBounceIndex - 1] + j;
+                if (p.twoPlayerMode) {
+                    ctTypes[ctDuration][diveDuration] = Movement.FT;
+                    edgeCBAngles[ctDuration][diveDuration] = VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE;
+                    diveTurns[ctDuration][diveDuration] = true;
+                    continue;
+                }
                 testDurations[diveCapBounceIndex - 2] = ctDuration;
                 testDurations[diveCapBounceIndex - 1] = diveDuration;
                 setDurations(testDurations);
@@ -871,8 +884,10 @@ public class Solver implements SolverInterface {
         }
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            maximizer.edgeCBMin = 6;
-            maximizer.edgeCBMax = 12;
+            if (!p.twoPlayerMode) {
+                maximizer.edgeCBMin = 6;
+                maximizer.edgeCBMax = 12;
+            }
         }
 
         if (!fullAccuracy) {
@@ -883,10 +898,14 @@ public class Solver implements SolverInterface {
         if (diveCapBounceIndex >= 0 && diveDecels != null && edgeCBAngles != null) {
             p.diveFirstFrameDecel = diveDecels[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
+            //Debug.println("It is " + p.diveCapBounceAngle + " at " + ctDuration + ", " + diveDuration);
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (p.twoPlayerMode) { //don't need to test if cap bounce is possible
+                maximizer.adjustToGivenAngle();
+            }
+            else if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;

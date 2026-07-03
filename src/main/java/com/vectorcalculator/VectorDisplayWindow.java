@@ -474,16 +474,17 @@ public class VectorDisplayWindow {
 				}
 				inputs.add(new Inputs(info[i][8], theta));
 				if (i < motion.movement.inputs1.size()) {
-					int offset = -1;
+					int offset = motion.movement.inputOffset;
 					int input1 = motion.movement.inputs1.get(i);
 					if (index == maximizer.variableCapThrow1Index) {
-						if (p.mode != Mode.CALCULATE) {
+						if (p.mode != Mode.CALCULATE && !p.twoPlayerMode) {
 							input1 = Movement.CT_INPUT[maximizer.ctType];
 							motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
 						}
 					}
-					if (input1 >= Inputs.M && shiftMotion) {
-						offset = -2;
+					//TODO account for different types of fakethrow
+					if (Inputs.isMotion(input1) && shiftMotion) {
+						offset--;
 					}
 					if (row + offset >= 0) {
 						if (inputs.get(row + offset).input1 == Inputs.NONE) {
@@ -495,10 +496,10 @@ public class VectorDisplayWindow {
 					}
 				}
 				if (i < motion.movement.inputs2.size()) {
-					int offset = -1;
+					int offset = motion.movement.inputOffset;
 					int input2 = motion.movement.inputs2.get(i);
-					if (input2 >= Inputs.M && shiftMotion) {
-						offset = -2;
+					if (Inputs.isMotion(input2) && shiftMotion) {
+						offset--;
 					}
 					if (row + offset >= 0) {
 						if (inputs.get(row + offset).input1 == Inputs.NONE) {

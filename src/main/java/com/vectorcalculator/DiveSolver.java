@@ -85,6 +85,10 @@ public class DiveSolver implements SolverInterface {
         boolean solveFirstDive = false;
         boolean solveSecondDive = false;
 
+        if (p.twoPlayerMode) {
+            p.diveCapBounceAngle = VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE;
+        }
+
         int[][] midairs = p.midairs;
 
         //find locations of movements in the presets
@@ -115,7 +119,7 @@ public class DiveSolver implements SolverInterface {
             else if (midairs[i][0] == VectorCalculator.HTT && solveSecondDive) //CBV first
                 singleThrowAllowed = false;
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
-        
+
         if (solveFirstDive) {
             int firstDiveDuration = midairs[firstDiveIndex][1];
 

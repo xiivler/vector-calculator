@@ -572,8 +572,21 @@ public class VectorCalculator extends JPanel {
 			p.targetAngle = parseDoubleWithDefault(value, 0);
 			break;
 		case two_player:
+			boolean oldTwoPlayerMode = p.twoPlayerMode;
 			p.twoPlayerMode = value.toString().equals("Yes");
 			movementColumn.setCellEditor(new MyComboBoxEditor(p.twoPlayerMode ? two_player_midairMovementNames : single_player_midairMovementNames));
+			if (oldTwoPlayerMode != p.twoPlayerMode) {
+				if (p.midairPreset.equals("Custom")) //reset Custom preset
+					addPreset(new int[0][0]);
+				else {
+					setProperty(Parameter.midairs, p.midairPreset);
+					addPreset(p.midairPreset, false);
+				}
+				if (p.twoPlayerMode) {
+					p.tripleThrow = TripleThrow.NO;
+					p.tripleThrowDiveCB = TripleThrow.NO;
+				}
+			}
 			break;
 		case initial_movement_category:
 			String oldInitialMovementCategory = p.initialMovementCategory;
@@ -652,7 +665,7 @@ public class VectorCalculator extends JPanel {
 			p.rightVector = value.toString().equals("Right");
 			break;
 		case dive_angle:
-			p.diveCapBounceAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, 41.2);
+			p.diveCapBounceAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE);
 			break;
 		case dive_angle_tolerance:
 			p.diveCapBounceTolerance = clampDouble(parseDoubleWithDefault(value, 0), 0, 1);
@@ -666,8 +679,8 @@ public class VectorCalculator extends JPanel {
 		case midairs:
 			String name = value.toString();
 			boolean oldCanTripleThrow = p.canTripleThrow;
-			p.canTripleThrow = name.equals("MCCT First") || name.equals("CB First");
-			p.canTripleThrowDiveCB = name.equals("Spinless") || name.equals("Simple Tech") || name.equals("CB First");
+			p.canTripleThrow = !p.twoPlayerMode && (name.equals("MCCT First") || name.equals("CB First"));
+			p.canTripleThrowDiveCB = !p.twoPlayerMode && (name.equals("Spinless") || name.equals("Simple Tech") || name.equals("CB First"));
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && p.canTripleThrowDiveCB;
 			if ((!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow)) && !name.equals("Custom"))
 				setProperty(Parameter.triple_throw, "No");
@@ -1021,18 +1034,31 @@ public class VectorCalculator extends JPanel {
 	public static int[][] getPreset(String name) {
 		switch(name) {
 			case "Spinless":
-				return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+				if (p.twoPlayerMode)
+					return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+				else
+					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 			case "Simple Tech":
-				return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+				if (p.twoPlayerMode)
+					return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+				else
+					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 			case "Simple Tech Rainbow Spin First":
-				return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+				if (p.twoPlayerMode)
+					return new int[][]{{RS, 32}, {FT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+				else
+					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
 			case "MCCT First":
-				if (p.tripleThrow == TripleThrow.NO)
+				if (p.twoPlayerMode)
+					return new int[][]{{FT, 30}, {RS, 32}, {FT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+				else if (p.tripleThrow == TripleThrow.NO)
 					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				else
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 			case "CB First":
-				if (p.tripleThrow == TripleThrow.NO)
+				if (p.twoPlayerMode)
+					return new int[][]{{FT, 28}, {DIVE, 26}, {CB, 36}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+				else if (p.tripleThrow == TripleThrow.NO)
 					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
 				else
 					return new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};

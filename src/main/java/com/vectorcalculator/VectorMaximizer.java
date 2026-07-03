@@ -19,6 +19,8 @@ public class VectorMaximizer {
 
 	public static final double FINAL_CT_ANGLE_REDUCTION_LIMIT = 5; //how many degrees you are willing to sacrifice off a perfect vector
 
+	public static final double MAX_DIVE_CAP_BOUNCE_ANGLE = 41.2;
+
 	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
 	SimpleVector[] vectors;
@@ -145,6 +147,9 @@ public class VectorMaximizer {
 		}
 
 		rightVector = p.rightVector;
+
+		if (p.twoPlayerMode)
+			ctType = Movement.FT;
 		
 		movementNames = listPreparer.movementNames;
 		movementFrames = listPreparer.movementFrames;
