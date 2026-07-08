@@ -105,7 +105,7 @@ public class VectorCalculator extends JPanel {
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
 		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP"),
-		upwarp("Maximum Upwarp");
+		solve_upwarp("Solve for Maximum Upwarp"), upwarp("Maximum Upwarp");
 
 		String name;
 
@@ -180,7 +180,15 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw_dive_cb);
 			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None"))
 				params.add(Parameter.reverse_bonk);
-			params.add(Parameter.upwarp);
+			if (p.reverseBonk) {
+				params.add(Parameter.solve_upwarp);
+				//if (!p.solveUpwarp) {
+					params.add(Parameter.upwarp);	
+				//}
+			}
+			else {
+				params.add(Parameter.upwarp);
+			}
 			params.add(null);
 
 			params.add(Parameter.gravity);
@@ -198,7 +206,15 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw);
 			if (p.canTripleThrowDiveCB)
 				params.add(Parameter.triple_throw_dive_cb);
-			params.add(Parameter.upwarp);
+			if (p.reverseBonk) {
+				params.add(Parameter.solve_upwarp);
+				//if (!p.solveUpwarp) {
+					params.add(Parameter.upwarp);	
+				//}
+			}
+			else {
+				params.add(Parameter.upwarp);
+			}
 			params.add(null);
 
 			if (p.mode == Mode.SOLVE) {
@@ -354,6 +370,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case upwarp:
 			value = p.upwarp;
+			break;
+		case solve_upwarp:
+			value = p.solveUpwarp ? "Yes" : "No";
 			break;
 		case gravity:
 			value = p.onMoon ? "Moon" : "Regular";
@@ -763,6 +782,14 @@ public class VectorCalculator extends JPanel {
 			if (oldReverseBonk != p.reverseBonk && !p.midairPreset.equals("Custom")) {
 				addPreset(p.midairPreset, false);
 				setProperty(Parameter.final_gp_frames, p.reverseBonk ? 25 : 1);
+				if (p.reverseBonk) {
+					setProperty(Parameter.solve_upwarp, "Yes");
+					setProperty(Parameter.upwarp, 40);
+				}
+				else {
+					setProperty(Parameter.solve_upwarp, "No");
+					setProperty(Parameter.upwarp, 40);
+				}
 			}
 			break;
 		case reverse_bonk_angle:
@@ -776,6 +803,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case upwarp:
 			p.upwarp = clampDouble(parseDoubleWithDefault(value, 40), 0, 40);
+			break;
+		case solve_upwarp:
+			p.solveUpwarp = value.toString().equals("Yes");
 			break;
 		case turnarounds:
 			p.turnarounds = value.toString().equals("Yes");
@@ -1639,6 +1669,8 @@ public class VectorCalculator extends JPanel {
 						else
 							return dropdown(new String[]{"Yes", "No"});
 					case reverse_bonk:
+						return dropdown(new String[]{"Yes", "No"});
+					case solve_upwarp:
 						return dropdown(new String[]{"Yes", "No"});
 					case gravity:
 						return dropdown(new String[]{"Regular", "Moon"});

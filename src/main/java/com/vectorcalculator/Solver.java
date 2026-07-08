@@ -56,6 +56,7 @@ public class Solver implements SolverInterface {
     double[] efficiencies;
     double[] final_y_heights; //the end y height of each motion
     double[] y_disps;
+    double[] rbMaxUpwarps;
 
     double[][] info;
     double firstFrameVelocityAngle;
@@ -527,6 +528,12 @@ public class Solver implements SolverInterface {
         //Debug.printArray(diveTurns);
         //Debug.printArray(diveDecels);
 
+        //generate upwarp values for reverse bonks
+        if (p.reverseBonk && p.solveUpwarp) {
+            rbMaxUpwarps = calcRBMaxUpwarps();
+            //Debug.println(Arrays.toString(rbMaxUpwarps));
+        }
+
         if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
             return false;
         }
@@ -726,6 +733,25 @@ public class Solver implements SolverInterface {
         }
     }
 
+    //calculates max upwarp given number of frames of reverse bonk
+    public double[] calcRBMaxUpwarps() {
+        double[] rbMaxUpwarps = new double[p.midairs[p.midairs.length - 1][1] + delta];
+        for (int i = 13; i < rbMaxUpwarps.length; i++) {
+            SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), i);
+            //System.out.println(reverseBonkMotion.calcFinalVerticalVelocity());
+            UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
+            rbMaxUpwarps[i] = um.maximize();
+        }
+        return rbMaxUpwarps;
+    }
+
+    public double getUpwarp(int frames) {
+        if (p.reverseBonk && p.solveUpwarp && rbMaxUpwarps != null) {
+            p.upwarp = rbMaxUpwarps[frames];
+        }
+        return p.getUpwarpMinusError();
+    }
+
     public DoubleIntArray test(int[] durations, int delta, int index, double y_pos) {
         if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
             return new DoubleIntArray(0, durations);
@@ -808,32 +834,32 @@ public class Solver implements SolverInterface {
             int test_delta = 0;
             int lastFrame = lastFrames[index];
             //Debug.println("Base Y Pos: " + base_y_pos);
-            if (base_y_pos + p.getUpwarpMinusError() > p.y1) {
+            if (base_y_pos + getUpwarp(durations[index]) > p.y1) {
                 // Debug.println();
                 // Debug.println(test_y_pos);
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos += y_vels[lastFrame + test_delta];
                     // Debug.println(test_y_pos);
-                    if (test_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) {
+                    if (test_y_pos + getUpwarp(durations[index] + test_delta) < p.y1 - ERROR) {
                         test_y_pos -= y_vels[lastFrame + test_delta];
                         break;
                     }
                 }
                 test_delta--;
             }
-            else if (base_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) {
+            else if (base_y_pos + getUpwarp(durations[index]) < p.y1 - ERROR) {
                 for (test_delta = 1; test_delta <= delta; test_delta++) {
                     test_y_pos -= y_vels[lastFrame - test_delta + 1];
-                    if (test_y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR) {
+                    if (test_y_pos + getUpwarp(durations[index] - test_delta) >= p.y1 - ERROR) {
                         break;
                     }
                 }
-                test_delta *= -1; //so we subtract the frames instead of adding them
-                if (test_y_pos + p.getUpwarpMinusError() < p.y1 - ERROR) { //not possible to be high enough so just return 0
+                if (test_y_pos + getUpwarp(durations[index] - test_delta) < p.y1 - ERROR) { //not possible to be high enough so just return 0
                     return new DoubleIntArray(0, durations);
                 }
+                test_delta *= -1; //so we subtract the frames instead of adding them
             }
-            if (test_y_pos + p.getUpwarpMinusError() > p.y1 + limit) { //almost certainly won't be optimal
+            if (test_y_pos + getUpwarp(durations[index] + test_delta) > p.y1 + limit) { //almost certainly won't be optimal
                 return new DoubleIntArray(0, durations);
             }
             // Debug.println();
@@ -877,6 +903,7 @@ public class Solver implements SolverInterface {
         int diveDuration = testDurations[diveCapBounceIndex - 1];
 
         setDurations(testDurations);
+        getUpwarp(testDurations[testDurations.length - 1]);
         maximizer = VectorCalculator.getMaximizer();
         if (maximizer == null) {
             return 0.0;
@@ -1010,7 +1037,7 @@ public class Solver implements SolverInterface {
                 return FALSE;
         }
         else if (motionIndex == reverseBonkIndex) {
-            if (y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR)
+            if (y_pos + getUpwarp(durations[durations.length - 1]) >= p.y1 - ERROR)
                 return y_pos;
             else
                 return FALSE;
@@ -1123,9 +1150,9 @@ public class Solver implements SolverInterface {
             return FALSE;
         if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT)
             return FALSE;
-        if (final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() < p.y1 - ERROR)
+        if (final_y_heights[final_y_heights.length - 1] + getUpwarp(testDurations[testDurations.length - 1]) < p.y1 - ERROR)
             return FALSE;
-        return (final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() - p.y1);
+        return (final_y_heights[final_y_heights.length - 1] + getUpwarp(testDurations[testDurations.length - 1]) - p.y1);
     }
 
     //sets Vector Calculator to be using the current durations

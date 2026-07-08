@@ -278,6 +278,7 @@ public class Properties {
     int finalGPFrames = 1;
     int firstCTIndex = 0;
     boolean turnarounds = true;
+    boolean solveUpwarp = false;
     double upwarp = 40;
 
     int durationSearchRange = 3;
