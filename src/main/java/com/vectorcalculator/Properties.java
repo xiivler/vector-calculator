@@ -275,6 +275,7 @@ public class Properties {
     TripleThrow tripleThrowDiveCB = TripleThrow.NO;
     boolean reverseBonk = false;
     double reverseBonkAngle = 30; //+ is to the left of final dive, - is to the right
+    int finalGPFrames = 1;
     int firstCTIndex = 0;
     boolean turnarounds = true;
     double upwarp = 40;

@@ -74,6 +74,7 @@ public class Solver implements SolverInterface {
     int secondDiveIndex = -1;
     int finalCapThrowIndex = -1;
     int diveCapBounceIndex = -1;
+    int reverseBonkIndex = -1;
 
     int iterations = 0;
     int innerCalls = 0;
@@ -202,10 +203,12 @@ public class Solver implements SolverInterface {
                 diveCapBounceIndex = i + 1;
                 firstDiveIndex = i;
             }
-            else if (i == preset.length - 1 && preset[i][0] == VectorCalculator.DIVE) {
+            else if (i == preset.length - (p.reverseBonk ? 2 : 1) && preset[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i + 1;
                 finalCapThrowIndex = i;
             }
+            else if (preset[i][0] == VectorCalculator.RB)
+                reverseBonkIndex = i + 1;
         }
 
         if (p.twoPlayerMode) {
@@ -353,7 +356,7 @@ public class Solver implements SolverInterface {
             else
                 maximizer_secondGPIndex = maximizer_finalCTIndex + 1;
             maximizer_secondDiveIndex = maximizer_secondGPIndex + 1;
-            boolean endHeightCorrect = final_y_heights[maximizer_secondDiveIndex] + p.getUpwarpMinusError() >= p.y1 - ERROR;
+            boolean endHeightCorrect = final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() >= p.y1 - ERROR;
             boolean secondGPHeightCorrect = p.groundTypeSecondGP == GroundType.NONE || final_y_heights[maximizer_secondGPIndex] >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT;
             if (endHeightCorrect && secondGPHeightCorrect) {
                 break;
@@ -602,6 +605,9 @@ public class Solver implements SolverInterface {
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
+        if (i == reverseBonkIndex && frames <= 14) {
+            return false;
+        }
         return true;
     }
 
@@ -745,6 +751,9 @@ public class Solver implements SolverInterface {
                 }
                 if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
                     continue;
+                }
+                if (index == reverseBonkIndex) {
+                    System.out.println("duration is " + testDuration);
                 }
                 if (!canSubtractFrame(index, testDuration + 1)) {
                     continue;
@@ -991,6 +1000,12 @@ public class Solver implements SolverInterface {
                 return FALSE;
         }
         else if (motionIndex == secondDiveIndex) {
+            if (p.reverseBonk || y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR)
+                return y_pos;
+            else
+                return FALSE;
+        }
+        else if (motionIndex == reverseBonkIndex) {
             if (y_pos + p.getUpwarpMinusError() >= p.y1 - ERROR)
                 return y_pos;
             else

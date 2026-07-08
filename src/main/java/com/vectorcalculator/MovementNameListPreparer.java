@@ -225,7 +225,11 @@ public class MovementNameListPreparer {
 						return "Cannot dive twice in immediate succession";
 					else {
 						movementNames.add("Ground Pound");
-						movementFrames.add(1);
+						if (i == midairs.length - (p.reverseBonk ? 2 : 1)) {
+							movementFrames.add(p.finalGPFrames);
+						}
+						else
+							movementFrames.add(1);
 					}
 				else if (name.equals("2P Midair Vault")) {
 					if (movementNames.contains("Cap Bounce") || movementNames.contains("2P Midair Vault"))

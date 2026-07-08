@@ -90,7 +90,8 @@ public class VectorCalculator extends JPanel {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		target_y_position("Target Y Position"), two_player("Two Player Mode"),
-		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), reverse_bonk("Reverse Bonk"), reverse_bonk_angle("Reverse Bonk Angle"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), reverse_bonk("Reverse Bonk"), reverse_bonk_angle("Reverse Bonk Angle"), final_gp_frames("Final GP Frames"),
+		gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
@@ -197,10 +198,6 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw);
 			if (p.canTripleThrowDiveCB)
 				params.add(Parameter.triple_throw_dive_cb);
-			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None")) {
-				params.add(Parameter.reverse_bonk);
-				params.add(Parameter.reverse_bonk_angle);
-			}
 			params.add(Parameter.upwarp);
 			params.add(null);
 
@@ -229,6 +226,15 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.hct_direction);
 					params.add(Parameter.hct_homing_frame);
 					params.add(Parameter.hct_cap_return_frame);
+				}
+			}
+
+			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None")) {
+				params.add(null);
+				params.add(Parameter.reverse_bonk);
+				if (p.reverseBonk) {
+					params.add(Parameter.reverse_bonk_angle);
+					params.add(Parameter.final_gp_frames);
 				}
 			}
 
@@ -342,6 +348,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case reverse_bonk_angle:
 			value = p.reverseBonkAngle;
+			break;
+		case final_gp_frames:
+			value = p.finalGPFrames;
 			break;
 		case upwarp:
 			value = p.upwarp;
@@ -753,10 +762,14 @@ public class VectorCalculator extends JPanel {
 			p.reverseBonk = value.toString().equals("Yes");
 			if (oldReverseBonk != p.reverseBonk && !p.midairPreset.equals("Custom")) {
 				addPreset(p.midairPreset, false);
+				setProperty(Parameter.final_gp_frames, p.reverseBonk ? 25 : 1);
 			}
 			break;
 		case reverse_bonk_angle:
 			p.reverseBonkAngle = clampDouble(parseDoubleWithDefault(value, 0), -60, 60);
+			break;
+		case final_gp_frames:
+			p.finalGPFrames = clampInt(parseIntWithDefault(value, 1), 1, 25);
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");

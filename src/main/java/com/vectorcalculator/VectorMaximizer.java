@@ -1463,11 +1463,11 @@ public class VectorMaximizer {
 		
 		//if there was a variable 2nd movement, we need to calculate a motion group 3 consisting of the ground pound and dive after it, and possibly reverse bonk
 		if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double dispMotionGroup3Forward = 0;
-			double dispMotionGroup3Sideways = 0;
+			//double dispMotionGroup3Forward = 0;
+			//double dispMotionGroup3Sideways = 0;
 			
 			Movement groundPound = new Movement("Ground Pound");
-			SimpleMotion gpMotion = groundPound.getMotion(1, false, false);
+			SimpleMotion gpMotion = groundPound.getMotion(movementFrames.get(motions.length - (p.reverseBonk ? 3 : 2)), false, false);
 			gpMotion.setInitialAngle(once_bestAngle2Adjusted);
 			motions[motions.length - (p.reverseBonk ? 3 : 2)] = gpMotion;
 			
@@ -1487,7 +1487,7 @@ public class VectorMaximizer {
 				SimpleMotion reverseBonkMotion = reverseBonk.getMotion(movementFrames.get(motions.length - 1), false, false);
 				reverseBonkMotion.setInitialAngle(once_bestAngle2Adjusted + Math.toRadians(p.reverseBonkAngle));
 				reverseBonkMotion.calcDispDispCoordsAngleSpeed();
-				dispMotionGroup3Forward += reverseBonkMotion.dispForward;
+				//dispMotionGroup3Forward += reverseBonkMotion.dispForward;
 				motions[motions.length - 1] = reverseBonkMotion;
 
 				once_bestDispZ += reverseBonkMotion.dispZ;
