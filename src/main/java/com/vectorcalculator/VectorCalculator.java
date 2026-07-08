@@ -90,7 +90,7 @@ public class VectorCalculator extends JPanel {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
 		target_y_position("Target Y Position"), two_player("Two Player Mode"),
-		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
+		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), reverse_bonk("Reverse Bonk"), reverse_bonk_angle("Reverse Bonk Angle"), gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
@@ -177,6 +177,8 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw);
 			if (p.canTripleThrowDiveCB)
 				params.add(Parameter.triple_throw_dive_cb);
+			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None"))
+				params.add(Parameter.reverse_bonk);
 			params.add(Parameter.upwarp);
 			params.add(null);
 
@@ -195,6 +197,10 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw);
 			if (p.canTripleThrowDiveCB)
 				params.add(Parameter.triple_throw_dive_cb);
+			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None")) {
+				params.add(Parameter.reverse_bonk);
+				params.add(Parameter.reverse_bonk_angle);
+			}
 			params.add(Parameter.upwarp);
 			params.add(null);
 
@@ -330,6 +336,12 @@ public class VectorCalculator extends JPanel {
 			break;
 		case triple_throw_dive_cb:
 			value = p.tripleThrowDiveCB.displayName;
+			break;
+		case reverse_bonk:
+			value = p.reverseBonk ? "Yes" : "No";
+			break;
+		case reverse_bonk_angle:
+			value = p.reverseBonkAngle;
 			break;
 		case upwarp:
 			value = p.upwarp;
@@ -586,6 +598,9 @@ public class VectorCalculator extends JPanel {
 					p.tripleThrow = TripleThrow.NO;
 					p.tripleThrowDiveCB = TripleThrow.NO;
 				}
+				else {
+					p.reverseBonk = false;
+				}
 			}
 			break;
 		case initial_movement_category:
@@ -732,6 +747,16 @@ public class VectorCalculator extends JPanel {
 			if (oldTripleThrowDiveCB != p.tripleThrowDiveCB && !p.midairPreset.equals("Custom")) {
 				addPreset(p.midairPreset, false);
 			}
+			break;
+		case reverse_bonk:
+			boolean oldReverseBonk = p.reverseBonk;
+			p.reverseBonk = value.toString().equals("Yes");
+			if (oldReverseBonk != p.reverseBonk && !p.midairPreset.equals("Custom")) {
+				addPreset(p.midairPreset, false);
+			}
+			break;
+		case reverse_bonk_angle:
+			p.reverseBonkAngle = clampDouble(parseDoubleWithDefault(value, 0), -60, 60);
 			break;
 		case gravity:
 			p.onMoon = value.toString().equals("Moon");
@@ -892,11 +917,11 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
-	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Fake Throw"};
+	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Fake Throw", "Reverse Bonk"};
 	static String[] single_player_midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"};
-	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault"}; // interpret 2P cap bounces based on context
+	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault, Reverse Bonk"};
 
-	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8, FT = 9;
+	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8, FT = 9, RB = 10;
 
 	static void updateMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
@@ -1035,29 +1060,34 @@ public class VectorCalculator extends JPanel {
 		switch(name) {
 			case "Spinless":
 				if (p.twoPlayerMode)
-					return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+					if (p.reverseBonk) return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}, {RB, 16}};
+					else return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 				else
 					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 			case "Simple Tech":
 				if (p.twoPlayerMode)
-					return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					if (p.reverseBonk) return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}, {RB, 16}};
+					else return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 				else
 					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 			case "Simple Tech Rainbow Spin First":
 				if (p.twoPlayerMode)
-					return new int[][]{{RS, 32}, {FT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+					if (p.reverseBonk) return new int[][]{{RS, 32}, {FT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}, {RB, 16}};
+					else return new int[][]{{RS, 32}, {FT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
 				else
 					return new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
 			case "MCCT First":
 				if (p.twoPlayerMode)
-					return new int[][]{{FT, 30}, {RS, 32}, {FT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+					if (p.reverseBonk) return new int[][]{{FT, 30}, {RS, 32}, {FT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}, {RB, 16}};
+					else return new int[][]{{FT, 30}, {RS, 32}, {FT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				else if (p.tripleThrow == TripleThrow.NO)
 					return new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 				else
 					return new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
 			case "CB First":
 				if (p.twoPlayerMode)
-					return new int[][]{{FT, 28}, {DIVE, 26}, {CB, 36}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+					if (p.reverseBonk) return new int[][]{{FT, 28}, {DIVE, 26}, {CB, 36}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}, {RB, 16}};
+					else return new int[][]{{FT, 28}, {DIVE, 26}, {CB, 36}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 				else if (p.tripleThrow == TripleThrow.NO)
 					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
 				else
@@ -1595,6 +1625,8 @@ public class VectorCalculator extends JPanel {
 							return dropdown(new String[]{"Yes", "No", "Test Both"});
 						else
 							return dropdown(new String[]{"Yes", "No"});
+					case reverse_bonk:
+						return dropdown(new String[]{"Yes", "No"});
 					case gravity:
 						return dropdown(new String[]{"Regular", "Moon"});
 					case turnarounds:

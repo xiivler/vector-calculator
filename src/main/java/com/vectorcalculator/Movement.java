@@ -73,7 +73,7 @@ public class Movement {
 	double initialVerticalSpeed = 0;
 	double gravity = 1.5;
 	double moonGravity = .4;
-	double vectorAccel = .3;
+	double sidewaysAccel = .3;
 	double forwardAccel = .5;
 	double backwardAccel = 1;
 	int framesAtMaxVerticalSpeed = 0;
@@ -107,9 +107,9 @@ public class Movement {
 	}
 	
 	//deprecated constructor
-	public Movement(double initialHorizontalSpeed, double vectorAccel) {
+	public Movement(double initialHorizontalSpeed, double sidewaysAccel) {
 		this.initialHorizontalSpeed = initialHorizontalSpeed;
-		this.vectorAccel = vectorAccel;
+		this.sidewaysAccel = sidewaysAccel;
 	}
 	
 	public Movement(String movementType, double initialHorizontalSpeed) {
@@ -140,7 +140,7 @@ public class Movement {
 			minRecommendedFrames = 0;
 			gravity = 0;
 			moonGravity = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			forwardAccel = 0;
 			backwardAccel = 0;
 			recommendedInitialHorizontalSpeed = 0;
@@ -211,7 +211,7 @@ public class Movement {
 
 		else if (movementType.equals("Moonwalk")) {
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			gravity = 3;
@@ -220,7 +220,7 @@ public class Movement {
 
 		else if (movementType.equals("Coyote Time")) {
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			initialVerticalSpeed = -7;
@@ -267,7 +267,7 @@ public class Movement {
 				gravity = 0;
 			}
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 3.5;
 			trueSpeedCap = 100;
 			canMoonwalk = true;
@@ -279,7 +279,7 @@ public class Movement {
 			initialHorizontalSpeed = 5; //could have option for starting backwards as well
 			recommendedInitialHorizontalSpeed = 0;
 			forwardAccel = .2;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 			gravity = 1;
@@ -308,7 +308,7 @@ public class Movement {
 			initialVerticalSpeed = 32;
 			initialHorizontalSpeed = 9;
 			recommendedInitialHorizontalSpeed = 0;
-			vectorAccel = .075;
+			sidewaysAccel = .075;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 			gravity = 1;
@@ -324,7 +324,7 @@ public class Movement {
 				initialHorizontalSpeed = 7.5;
 			initialVerticalSpeed = 12;
 			forwardAccel = .25;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 23;
 			trueSpeedCap = 23;
 			gravity = .48;
@@ -344,7 +344,7 @@ public class Movement {
 			framesAtInitialHorizontalSpeed = 43;
 			minFrames = 44;
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			moonGravity = 1;
 			defaultSpeedCap = 30;
 			trueSpeedCap = 30;
@@ -361,7 +361,7 @@ public class Movement {
 			framesAtInitialHorizontalSpeed = 57;
 			minFrames = 58;
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			moonGravity = 1;
 			defaultSpeedCap = 20;
 			trueSpeedCap = 100; //no true speed cap known, using 100 to prevent breaking anything
@@ -381,7 +381,7 @@ public class Movement {
 			framesAtInitialHorizontalSpeed = 56;
 			minFrames = 57;
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			moonGravity = 1;
 			defaultSpeedCap = 35;
 			trueSpeedCap = 100; //sometimes you can get faster than 35 on slopes, so set this high to avoid that being an issue
@@ -412,7 +412,7 @@ public class Movement {
 			}
 			forwardAccel = 0;
 			backwardAccel = .5;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			gravity = 2;
@@ -435,7 +435,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = -35;
 			recommendedInitialHorizontalSpeed = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			moonGravity = 1.5;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -451,7 +451,7 @@ public class Movement {
 				initialVerticalSpeed = -45;
 			recommendedInitialHorizontalSpeed = 0;
 			forwardAccel = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			moonGravity = 1.5;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -489,7 +489,7 @@ public class Movement {
 			trueSpeedCap = 8.6;
 			gravity = .95;
 			moonGravity = .3;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			inputs1.add(Inputs.B);
 		}
 
@@ -708,6 +708,17 @@ public class Movement {
 			initialVerticalSpeed = -7;
 			canMoonwalk = true;
 		}
+
+		else if (movementType.equals("Reverse Bonk")) {
+			displayName = "Reverse Bonk";
+			defaultSpeedCap = 2;
+			trueSpeedCap = 2;
+			gravity = .95;
+			initialVerticalSpeed = 12;
+			forwardAccel = 0;
+			backwardAccel = 0;
+			sidewaysAccel = 0;
+		}
 		
 		else if (movementType.equals("Pre-Uncapture")) {
 			displayName = "";
@@ -715,7 +726,7 @@ public class Movement {
 			initialHorizontalSpeed = 0;
 			gravity = 0;
 			moonGravity = 0;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
 		}
@@ -740,7 +751,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = 60;
 			forwardAccel = 1;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 		}
@@ -750,7 +761,7 @@ public class Movement {
 			displayName = "";
 			initialVerticalSpeed = 0;
 			forwardAccel = 1;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			gravity = .1;
 			moonGravity = .1;
 			defaultSpeedCap = 9;
@@ -763,7 +774,7 @@ public class Movement {
 			displayName = "";
 			initialVerticalSpeed = -1;
 			forwardAccel = 1;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			gravity = .1;
 			moonGravity = .1;
 			defaultSpeedCap = 9;
@@ -777,7 +788,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = 15;
 			recommendedInitialHorizontalSpeed = 9;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			defaultSpeedCap = 0;
 			gravity = 2;
 			moonGravity = 1.5;
@@ -792,7 +803,7 @@ public class Movement {
 			variableInitialHorizontalSpeed = false;
 			initialVerticalSpeed = 20;
 			framesAtMaxVerticalSpeed = 1;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			gravity = 1;
 			defaultSpeedCap = 15;
 			trueSpeedCap = 15;
@@ -813,7 +824,7 @@ public class Movement {
 			displayName = "";
 			initialVerticalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
-			vectorAccel = 0;
+			sidewaysAccel = 0;
 			gravity = 0;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -890,7 +901,7 @@ public class Movement {
 		if (movementType.equals("Coyote Time")) {
 			return new CoyoteTime(this, frames);
 		}
-		else if (vectorAccel == 0)
+		else if (sidewaysAccel == 0)
 			if (complex && movementType.equals("Dive"))
 				return new DiveTurn(this, rightVector, frames);
 			else

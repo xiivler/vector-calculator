@@ -33,7 +33,7 @@ public class SimpleVector extends SimpleMotion {
 		else
 			normalAngle = initialAngle + Math.PI / 2;
 			
-		this.baseSidewaysAccel = movement.vectorAccel;
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		this.holdingAngle = NORMAL_ANGLE;
 		//to account for the fact that sometimes the cap throw doesn't quite rotate right, and only loses thousandths of a unit
 		if (movement.movementType.equals("Dive Cap Bounce")) {
@@ -52,7 +52,7 @@ public class SimpleVector extends SimpleMotion {
 		super(movement, initialAngle, frames);
 		//this.initialAngle = initialAngle;
 		//this.initialForwardVelocity = movement.initialHorizontalSpeed;
-		this.baseSidewaysAccel = movement.vectorAccel;
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		//this.frames = frames;
 		this.rightVector = rightVector;
 		

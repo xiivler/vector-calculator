@@ -163,8 +163,9 @@ public class VectorMaximizer {
 		//determine where the cap throws / other movement types whose angles are variable are (if any), since they will partition the movement
 		for (int i = 0; i < movementNames.size(); i++) {
 			if (movementNames.get(i).equals("Dive")) {
+				boolean isFinalDive = (i == movementNames.size() - (p.reverseBonk ? 2 : 1));
 				if (i - 2 >= 0 && Movement.isMidairCapThrow(movementNames.get(i - 2))) {
-					if (i == movementNames.size() - 1) {
+					if (isFinalDive) {
 						hasVariableCapThrow2 = true;
 						variableMovement2Index = i - 2;
 						//motionGroup3Index = i - 1;
@@ -176,7 +177,7 @@ public class VectorMaximizer {
 					}
 				}
 				else if (i - 3 >= 0 && Movement.isMidairCapThrow(movementNames.get(i - 3)) && movementNames.get(i - 2).equals("Falling")) {
-					if (i == movementNames.size() - 1) {
+					if (isFinalDive) {
 						hasVariableCapThrow2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
@@ -188,13 +189,13 @@ public class VectorMaximizer {
 						motionGroup2Index = i - 1;
 					}
 				}
-				else if (i - 2 >= 0 && i == movementNames.size() - 1) {
-					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).vectorAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
+				else if (i - 2 >= 0 && isFinalDive) {
+					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).sidewaysAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).vectorAccel > 0 && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
+					else if (new Movement(movementNames.get(i - 2)).sidewaysAccel > 0 && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -939,7 +940,7 @@ public class VectorMaximizer {
 				preCapBounceDiveIndex = j;
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
-				if (p.diveTurn == TurnDuringDive.NO) {
+				if (p.diveTurn == TurnDuringDive.NO || (p.reverseBonk && j == movementNames.size() - 2)) {
 					((DiveTurn) motionGroup[i]).setHoldingAngle(0);
 				}
 			}
@@ -1032,6 +1033,9 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
+		if (Debug.debug)
+			return maximize_try();
+
 		try {
 			return maximize_try();
 		}
@@ -1457,24 +1461,40 @@ public class VectorMaximizer {
 			once_bestDispX = testDispX2;
 		}
 		
-		//if there was a variable 2nd movement, we need to calculate a motion group 3 consisting of the ground pound and dive after it
+		//if there was a variable 2nd movement, we need to calculate a motion group 3 consisting of the ground pound and dive after it, and possibly reverse bonk
 		if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double dispMotionGroup3 = 0;
+			double dispMotionGroup3Forward = 0;
+			double dispMotionGroup3Sideways = 0;
 			
 			Movement groundPound = new Movement("Ground Pound");
 			SimpleMotion gpMotion = groundPound.getMotion(1, false, false);
 			gpMotion.setInitialAngle(once_bestAngle2Adjusted);
-			motions[motions.length - 2] = gpMotion;
+			motions[motions.length - (p.reverseBonk ? 3 : 2)] = gpMotion;
 			
 			Movement dive = new Movement("Dive");
-			SimpleMotion diveMotion = dive.getMotion(movementFrames.get(motions.length - 1), false, false);
+			SimpleMotion diveMotion = dive.getMotion(movementFrames.get(motions.length - (p.reverseBonk ? 2 : 1)), false, false);
 			diveMotion.setInitialAngle(once_bestAngle2Adjusted);
-			motions[motions.length - 1] = diveMotion;
+			motions[motions.length - (p.reverseBonk ? 2 : 1)] = diveMotion;
+			diveMotion.calcDispDispCoordsAngleSpeed();
+
+			once_bestDispZ += diveMotion.dispZ;
+			once_bestDispX += diveMotion.dispX;
 			
-			dispMotionGroup3 = diveMotion.calcDispForward();
-			
-			once_bestDispZ += dispMotionGroup3 * Math.cos(once_bestAngle2Adjusted);
-			once_bestDispX += dispMotionGroup3 * Math.sin(once_bestAngle2Adjusted);
+			//dispMotionGroup3Forward = diveMotion.calcDispForward();
+
+			if (p.reverseBonk) {
+				Movement reverseBonk = new Movement("Reverse Bonk");
+				SimpleMotion reverseBonkMotion = reverseBonk.getMotion(movementFrames.get(motions.length - 1), false, false);
+				reverseBonkMotion.setInitialAngle(once_bestAngle2Adjusted + Math.toRadians(p.reverseBonkAngle));
+				reverseBonkMotion.calcDispDispCoordsAngleSpeed();
+				dispMotionGroup3Forward += reverseBonkMotion.dispForward;
+				motions[motions.length - 1] = reverseBonkMotion;
+
+				once_bestDispZ += reverseBonkMotion.dispZ;
+				once_bestDispX += reverseBonkMotion.dispX;
+			}
+			//once_bestDispZ += dispMotionGroup3Forward * Math.cos(once_bestAngle2Adjusted) + dispMotionGroup3Sideways * Math.cos(once_bestAngle2Adjusted + Math.PI / 2);
+			//once_bestDispX += dispMotionGroup3Forward * Math.sin(once_bestAngle2Adjusted) + dispMotionGroup3Sideways * Math.sin(once_bestAngle2Adjusted + Math.PI / 2);
 		}
 		
 		once_bestDisp = Math.sqrt(Math.pow(once_bestDispZ, 2) + Math.pow(once_bestDispX, 2));
@@ -1809,6 +1829,9 @@ public class VectorMaximizer {
 			}
 			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
 				motions[i].setInitialAngle(bestAngle2Adjusted);
+			}
+			else if (p.reverseBonk && i == motions.length - 1) {
+				motions[i].setInitialAngle(motions[i - 1].finalAngle + Math.toRadians(p.reverseBonkAngle));
 			}
 			else if (i > 0) {
 				motions[i].setInitialAngle(motions[i - 1].finalAngle);

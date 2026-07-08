@@ -273,6 +273,8 @@ public class Properties {
     boolean canTestTripleThrow = false; //whether dive CB triple throw can be tested for (misleading name because of earlier versions of the calculator)
     TripleThrow tripleThrow = TripleThrow.YES;
     TripleThrow tripleThrowDiveCB = TripleThrow.NO;
+    boolean reverseBonk = false;
+    double reverseBonkAngle = 30; //+ is to the left of final dive, - is to the right
     int firstCTIndex = 0;
     boolean turnarounds = true;
     double upwarp = 40;
@@ -378,7 +380,7 @@ public class Properties {
         return p.equals(p_saved);
     }
 
-    public static final double UPWARP_ERROR = 0.001; //this error should be greater than the one in the Solver so that it will not accidentally give too big of an upwarp
+    public final double UPWARP_ERROR = 0.001; //this error should be greater than the one in the Solver so that it will not accidentally give too big of an upwarp
 
     public double getUpwarpMinusError() {
         return Math.max(upwarp - UPWARP_ERROR, 0);
@@ -400,7 +402,7 @@ public class Properties {
             }
         }
         catch (IllegalAccessException ex) {
-            Debug.println("Illegal access to Properties");
+            Debug.println(ex);
         }
     }
 }

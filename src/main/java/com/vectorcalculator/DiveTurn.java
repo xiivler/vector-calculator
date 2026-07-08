@@ -35,7 +35,7 @@ public class DiveTurn extends SimpleMotion {
 	public DiveTurn(Movement movement, double initialAngle, double holdingAngle, boolean rightTurn, int frames) {
 		
 		super(movement, initialAngle, frames);
-		this.baseSidewaysAccel = movement.vectorAccel;
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		this.rightTurn = rightTurn;
 		this.holdingAngle = holdingAngle;
 

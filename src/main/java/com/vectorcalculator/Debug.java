@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Debug {
     
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public static void println(Object o) {
         if (debug) {
