@@ -1,6 +1,8 @@
 package com.vectorcalculator;
 
 import java.util.ArrayList;
+import java.util.Vector;
+
 import javax.swing.table.DefaultTableModel;
 
 public class MovementNameListPreparer {
@@ -26,6 +28,11 @@ public class MovementNameListPreparer {
 	}
 	
 	public String prepareList() {
+
+		//handle reverse bonk based on whether it is present
+		// if (p.midairPreset.equals("Custom")) {
+		// 	p.reverseBonk = false;
+		// }
 
 		//initial movement
 		//String name = genPropertiesModel.getValueAt(VectorCalculator.INITIAL_MOVEMENT_TYPE_ROW, 1).toString();
@@ -236,6 +243,14 @@ public class MovementNameListPreparer {
 						return "Cannot have two cap bounces in a jump";
 					else if (oldName.equals("Dive"))
 						return "Use cap bounce instead for 2P bounce after dive";
+				}
+				else if (name.equals("Reverse Bonk")) {
+					if (i < midairs.length - 1)
+						return "Reverse bonk must be final midair";
+					if (midairs[midairs.length - 2][0] != VectorCalculator.DIVE)
+						return "Reverse bonk only supported after dive";
+					//else
+					//	p.reverseBonk = true;
 				}
 				
 				movementNames.add(name);

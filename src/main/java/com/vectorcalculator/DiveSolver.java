@@ -112,7 +112,7 @@ public class DiveSolver implements SolverInterface {
                     }
                 }
             }
-            else if (i == midairs.length - 1 && midairs[i][0] == VectorCalculator.DIVE) {
+            else if (i == midairs.length - (p.reverseBonk ? 2 : 1) && midairs[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i;
                 solveSecondDive = true;
             }
@@ -177,7 +177,7 @@ public class DiveSolver implements SolverInterface {
             Debug.println(getFinalYPos(maximizer));
             while (getFinalYPos(maximizer) + p.getUpwarpMinusError() > p.y1 - Solver.ERROR) {
                 midairs[secondDiveIndex][1]++;
-                maximizer.movementFrames.set(maximizer.movementFrames.size() - 1, midairs[secondDiveIndex][1]);
+                maximizer.movementFrames.set(maximizer.movementFrames.size() - (p.reverseBonk ? 2 : 1), midairs[secondDiveIndex][1]);
             }
             while (getFinalYPos(maximizer) + p.getUpwarpMinusError() < p.y1 - Solver.ERROR) {
                 if (midairs[secondDiveIndex][1] < 14) {
@@ -192,7 +192,7 @@ public class DiveSolver implements SolverInterface {
                 else {
                     midairs[secondDiveIndex][1]--;
                 }
-                maximizer.movementFrames.set(maximizer.movementFrames.size() - 1, midairs[secondDiveIndex][1]);
+                maximizer.movementFrames.set(maximizer.movementFrames.size() - (p.reverseBonk ? 2 : 1), midairs[secondDiveIndex][1]);
             }
         }
 

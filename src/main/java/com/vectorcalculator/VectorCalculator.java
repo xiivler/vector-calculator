@@ -57,8 +57,8 @@ public class VectorCalculator extends JPanel {
 	public static final String VERSION = "2.1.4";
 
 	public static final int WINDOW_WIDTH = 550;
-	public static final int PROPERTIES_TABLE_HEIGHT = 453;
-	public static final int MIDAIR_PANEL_HEIGHT = 275;
+	public static final int PROPERTIES_TABLE_HEIGHT = 500;
+	public static final int MIDAIR_PANEL_HEIGHT = 277;
 
 	public static CalculateThread calculateThread = null;
 
@@ -962,7 +962,7 @@ public class VectorCalculator extends JPanel {
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Fake Throw", "Reverse Bonk"};
 	static String[] single_player_midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"};
-	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault, Reverse Bonk"};
+	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Reverse Bonk"};
 
 	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8, FT = 9, RB = 10;
 
@@ -985,6 +985,8 @@ public class VectorCalculator extends JPanel {
 		}
 		p.hct = false;
 		p.diveCapBounce = false;
+		boolean oldReverseBonk = p.reverseBonk;
+		p.reverseBonk = false;
 		p.firstCTIndex = -1;
 		for (int i = 0; i < p.midairs.length; i++) {
 			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
@@ -1001,6 +1003,17 @@ public class VectorCalculator extends JPanel {
 			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == HTT) {
 				p.tripleThrow = TripleThrow.YES;
 			}
+			else if (p.midairs[i][0] == RB) {
+				p.reverseBonk = true;
+				if (!oldReverseBonk) {
+					p.solveUpwarp = true;
+				}
+			}
+		}
+		if (!p.reverseBonk && oldReverseBonk) {
+			p.solveUpwarp = false;
+			if (p.midairs.length > 0 && !loading)
+				p.upwarp = 40;
 		}
 	}
 
