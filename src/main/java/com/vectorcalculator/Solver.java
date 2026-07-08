@@ -624,7 +624,11 @@ public class Solver implements SolverInterface {
             durations[i + 1] = preset[i][1];
             currentMotionLastFrame += preset[i][1];
             if (preset[i][0] == VectorCalculator.DIVE) {
-                currentMotionLastFrame++; //the ground pound adds a frame
+                if (i + 1 == secondDiveIndex) {
+                    currentMotionLastFrame += p.finalGPFrames; //add final ground pound frames
+                }
+                else
+                    currentMotionLastFrame++; //the ground pound adds a frame
             }
             lastFrames[i + 1] = currentMotionLastFrame;
         }
