@@ -355,8 +355,10 @@ public class VectorDisplayWindow {
 			}
 			if (motion.movement.movementType.equals("Dive") && firstDive) {
 				firstDive = false;
-				for (int i = 0; i < motion.frames - 1; i++) {
-					motion.movement.inputs1.add(Inputs.Y);
+				if (!p.twoPlayerMode) {
+					for (int i = 0; i < motion.frames - 1; i++) {
+						motion.movement.inputs1.add(Inputs.Y);
+					}
 				}
 			}
 			else if (motion.movement.movementType.equals("Homing Triple Throw") && motion.frames >= 24 && simpleMotions[index + 1].frames >= 6) { //home later
@@ -374,6 +376,30 @@ public class VectorDisplayWindow {
 					motion.movement.inputs1.add(Inputs.ZL);
 				}
 			}
+			else if (motion.movement.movementType.equals("Fake Throw")) {
+				boolean cbBefore = false;
+				for (int j = 0; j < index; j++) {
+					if (Movement.isCapBounce(simpleMotions[j].movement.movementType))
+						cbBefore = true;
+				}
+				if (cbBefore) {
+					ArrayList<Integer> inputs = new ArrayList<Integer>();
+					int duration = motion.frames;
+					if (simpleMotions[index + 1].movement.movementType.equals("Falling"))
+						duration += simpleMotions[index + 1].frames;
+					int framesWait = Math.max(2, 31 - duration); //make sure to press B early, earlier if the cap throw is very short
+					inputs.add(Inputs.P2B);
+					for (int i = 0; i < framesWait; i++) {
+						inputs.add(Inputs.NONE);
+					}
+					inputs.add(Inputs.Y);
+					motion.movement.inputs1 = inputs;
+					motion.movement.inputOffset = -2 - framesWait;
+				}
+				else {
+					motion.movement.inputs1.add(Inputs.P2Y);
+				}
+			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
 			info = motion.calcFrameByFrame();
@@ -381,6 +407,7 @@ public class VectorDisplayWindow {
 			//	Debug.println(Arrays.toString(ds));
 			int startRow = row;
 			double upwarpOffset = 0;
+
 			for (int i = 0; i < info.length; i++, row++) {
 				Object[] rowContents = new Object[8];
 				rowContents[0] = row;
@@ -414,7 +441,7 @@ public class VectorDisplayWindow {
 							rowContents[1] = "(Hit Ground)";
 						}
 					}
-					else if (p.groundTypeSecondGP == GroundType.GROUND && motion.movement.movementType.contains("Cap Bounce") || motion.movement.movementType.equals("2P Midair Vault")) {
+					else if (p.groundTypeSecondGP == GroundType.GROUND && Movement.isCapBounce(motion.movement.movementType)) {
 						if (y < p.groundHeightSecondGP) {
 							y = p.groundHeightSecondGP;
 							rowContents[1] = "(Hit Ground)";

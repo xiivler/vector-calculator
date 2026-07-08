@@ -11,10 +11,10 @@ public class UpwarpMaximizer {
 	double best = 0; //best possible upwarp
 	double best_d1 = 55; //distance the frame before the best possible upwarp
 
-	public static void main(String[] args) {
-		UpwarpMaximizer um = new UpwarpMaximizer(-1.7, 2, Math.PI / 6, Math.PI / 6 + Math.PI);
-		System.out.println(um.maximize());
-	}
+	// public static void main(String[] args) {
+	// 	UpwarpMaximizer um = new UpwarpMaximizer(-1.7, 2, Math.PI / 6, Math.PI / 6 + Math.PI);
+	// 	System.out.println(um.maximize());
+	// }
 
 	public UpwarpMaximizer(double vy1, double vf, double rot) {
 		this.vy1 = vy1;

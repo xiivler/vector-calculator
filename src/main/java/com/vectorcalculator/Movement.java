@@ -105,6 +105,10 @@ public class Movement {
 	public static boolean isMidairCapThrow(String str) {
 		return str.contains("Throw") && !str.contains("RCV");
 	}
+
+	public static boolean isCapBounce(String str) {
+		return str.contains("Cap Bounce") || str.contains("2P Midair Vault");
+	}
 	
 	//deprecated constructor
 	public Movement(double initialHorizontalSpeed, double sidewaysAccel) {
@@ -293,8 +297,13 @@ public class Movement {
 			else
 				initialVerticalSpeed = 32;
 			gravity = 1;
-			inputs1.add(Inputs.Y);
-			inputs1.add(Inputs.Y);
+			if (p.twoPlayerMode) {
+				inputs1.add(Inputs.P2B);
+			}
+			else {
+				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.Y);
+			}
 			if (movementType.equals("Rocket Flower Vault")) {
 				displayName = "RF Vault";
 				variableInitialHorizontalSpeed = false;
@@ -516,8 +525,13 @@ public class Movement {
 			trueSpeedCap = 16;
 			gravity = 1;
 			moonGravity = .6;
-			inputs1.add(Inputs.Y);
-			inputs1.add(Inputs.Y);
+			if (p.twoPlayerMode) {
+				inputs1.add(Inputs.P2B);
+			}
+			else {
+				inputs1.add(Inputs.Y);
+				inputs1.add(Inputs.Y);
+			}
 		}
 		
 		else if (movementType.equals("Ground Pound Cap Bounce")) {
@@ -565,7 +579,7 @@ public class Movement {
 			else
 				initialVerticalSpeed = 26;
 			gravity = 1;
-			inputs1.add(Inputs.B);
+			inputs1.add(Inputs.P2B);
 		}
 		
 		else if (movementType.contains("RCV")) {

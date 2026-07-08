@@ -222,7 +222,7 @@ public class MovementNameListPreparer {
 			}
 			else {
 				if (name.equals("Cap Bounce")) {
-					if (movementNames.contains("Cap Bounce") || movementNames.contains("2P Midair Vault"))
+					if (movementNames.contains("Cap Bounce") || movementNames.contains("Dive Cap Bounce") || movementNames.contains("2P Midair Vault"))
 						return "Cannot have two cap bounces in a jump";
 					if (oldName.equals("Dive"))
 						name = "Dive Cap Bounce";
@@ -239,7 +239,7 @@ public class MovementNameListPreparer {
 							movementFrames.add(1);
 					}
 				else if (name.equals("2P Midair Vault")) {
-					if (movementNames.contains("Cap Bounce") || movementNames.contains("2P Midair Vault"))
+					if (movementNames.contains("Cap Bounce") || movementNames.contains("Dive Cap Bounce") || movementNames.contains("2P Midair Vault"))
 						return "Cannot have two cap bounces in a jump";
 					else if (oldName.equals("Dive"))
 						return "Use cap bounce instead for 2P bounce after dive";

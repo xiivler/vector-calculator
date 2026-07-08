@@ -942,10 +942,7 @@ public class Solver implements SolverInterface {
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            if (p.twoPlayerMode) { //don't need to test if cap bounce is possible
-                maximizer.adjustToGivenAngle();
-            }
-            else if (maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
