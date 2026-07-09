@@ -8,19 +8,15 @@ class Inputs {
 
     int input1, input2;
     double r, theta;
-
-    public Inputs(int input1, int input2, double r, double theta) {
-        this.input1 = input1;
-        this.input2 = input2;
-        this.r = r;
-        this.theta = theta;
-    }
+    double P2_r, P2_theta;
 
     public Inputs() {
         this.input1 = Inputs.NONE;
         this.input2 = Inputs.NONE;
         this.r = 0;
         this.theta = SimpleMotion.NO_ANGLE;
+        this.P2_r = 0;
+        this.P2_theta = SimpleMotion.NO_ANGLE;
     }
 
     public Inputs(double r, double theta) {
@@ -28,6 +24,8 @@ class Inputs {
         this.input2 = Inputs.NONE;
         this.r = r;
         this.theta = theta;
+        this.P2_r = 0;
+        this.P2_theta = SimpleMotion.NO_ANGLE;
     }
 
     @Override
@@ -36,32 +34,58 @@ class Inputs {
             return false;
         }
         Inputs i = (Inputs) o;
-        if (input1 == i.input1 && input2 == i.input2 && r == i.r && theta == i.theta) {
+        if (input1 == i.input1 && input2 == i.input2 && r == i.r && theta == i.theta && P2_r == i.P2_r && P2_theta == i.P2_theta) {
             return true;
         }
         return false;
     }
 
-    public String toTSV() {
-        String joystickString = "";
+    public String joystickToTSV(boolean P2) {
+        double r = P2 ? P2_r : this.r;
+        double theta = P2 ? P2_theta : this.theta;
         if (theta != SimpleMotion.NO_ANGLE) {
             if (r == 1) {
 				if (Math.round(theta) * 10000 == Math.round(theta * 10000)) { //check if equal with 4 decimal places
-					joystickString = String.format("ls(%d)", Math.round(theta));
+					return String.format((P2 ? "c" : "") + "ls(%d)", Math.round(theta));
 				}
 				else {
-					joystickString = String.format("ls(%.4f)", theta);
+					return String.format((P2 ? "c" : "") + "ls(%.4f)", theta);
 				}
 			}
 			else {
 				if (Math.round(theta) * 10000 == Math.round(theta * 10000)) {
-					joystickString = String.format("ls(%.2f; %d)", r, Math.round(theta));
+					return String.format((P2 ? "c" : "") + "ls(%.2f; %d)", r, Math.round(theta));
 				}
 				else {
-					joystickString = String.format("ls(%.2f; %.4f)", r, theta);
+					return String.format((P2 ? "c" : "") + "ls(%.2f; %.4f)", r, theta);
 				}
 			}
         }
+        return "";
+    }
+
+    public String toTSV() {
+        String joystickString = joystickToTSV(false);
+        if (P2_theta != SimpleMotion.NO_ANGLE)
+            joystickString += "\t" + joystickToTSV(true);
+        // if (theta != SimpleMotion.NO_ANGLE) {
+        //     if (r == 1) {
+		// 		if (Math.round(theta) * 10000 == Math.round(theta * 10000)) { //check if equal with 4 decimal places
+		// 			joystickString = String.format("ls(%d)", Math.round(theta));
+		// 		}
+		// 		else {
+		// 			joystickString = String.format("ls(%.4f)", theta);
+		// 		}
+		// 	}
+		// 	else {
+		// 		if (Math.round(theta) * 10000 == Math.round(theta * 10000)) {
+		// 			joystickString = String.format("ls(%.2f; %d)", r, Math.round(theta));
+		// 		}
+		// 		else {
+		// 			joystickString = String.format("ls(%.2f; %.4f)", r, theta);
+		// 		}
+		// 	}
+        // }
         return TSVInputs[input1] + "\t" + TSVInputs[input2] + "\t" + joystickString;
     }
 

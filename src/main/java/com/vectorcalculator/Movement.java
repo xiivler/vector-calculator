@@ -49,6 +49,8 @@ public class Movement {
 												{TT_DISP_F, TTR_DISP_V, TTR_DISP_S}};
 	//public static boolean onMoon = false;
 
+	public static final double CAPPY_SPEED = 35; //how fast Cappy moves in 2P
+
 	//no downthrow or fakethrow because these are equivalent to others
 	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};
 	

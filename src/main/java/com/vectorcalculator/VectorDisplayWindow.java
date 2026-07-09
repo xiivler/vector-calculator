@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -302,6 +303,7 @@ public class VectorDisplayWindow {
 		frame.setTitle("Calculations: " + VectorCalculator.projectName);
 
 		boolean madeJump = false;
+		int finalCapThrowFrame = -1;
 
 		VectorDisplayWindow.maximizer = maximizer;
 		VectorDisplayWindow.simpleMotions = maximizer.getMotions();
@@ -399,6 +401,49 @@ public class VectorDisplayWindow {
 				else {
 					motion.movement.inputs1.add(Inputs.P2Y);
 				}
+			}
+			else if (index == maximizer.variableMovement2Index && maximizer.hasVariableCapThrow2) {
+				finalCapThrowFrame = row;
+			}
+			else if (motion.movement.movementType.equals("Reverse Bonk")) {
+				double[] cappyPos = maximizer.getFinalCapThrowPosition();
+				double[] marioPos = {simpleMotions[index - 1].dispX, simpleMotions[index - 1].dispY, simpleMotions[index - 1].dispZ};
+
+				double reverseBonkDistance = 120; //how far cappy should be from Mario
+
+				double reverseBonkAngle = simpleMotions[index].initialAngle;
+
+				double[] cappyTarget = {marioPos[0] + reverseBonkDistance * Math.sin(reverseBonkAngle + Math.PI), marioPos[1], marioPos[2] + reverseBonkDistance * Math.cos(reverseBonkAngle + Math.PI)}; //where cappy needs to move to
+				
+				double direction = Math.atan2(cappyTarget[0] - cappyPos[0], cappyTarget[2] - cappyPos[2]); //angle cappy needs to move in
+				double cappyJoystickTheta = reduceAngle(direction - cameraAngle + Math.PI / 2);
+				
+				double hDistance = Math.hypot(cappyTarget[0] - cappyPos[0], cappyTarget[2] - cappyPos[2]); //distance cappy needs to cover
+				double trueFrames = hDistance / Movement.CAPPY_SPEED;
+				int frames = (int) Math.ceil(trueFrames);
+				double cappyJoystickRadius = trueFrames / frames;
+
+				int startFrame = finalCapThrowFrame + 19; //assumes motion throw
+
+				for (int i = 0; i < frames; i++) {
+					inputs.get(startFrame + i).P2_r = cappyJoystickRadius;
+					inputs.get(startFrame + i).P2_theta = cappyJoystickTheta;
+				}
+
+				int cappyGPFrames = 24;
+				Inputs GPFrameInputs = inputs.get(row - cappyGPFrames);
+				if (GPFrameInputs.input1 == Inputs.NONE)
+					GPFrameInputs.input1 = Inputs.P2ZL;
+				else
+					GPFrameInputs.input2 = Inputs.P2ZL;
+
+				System.out.println("Cappy Position: " + Arrays.toString(cappyPos));
+				System.out.println("Mario Position: " + Arrays.toString(marioPos));
+				System.out.println("Cappy Target: " + Arrays.toString(cappyTarget));
+				System.out.println("Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
+				System.out.println("Horizontal Distance: " + hDistance);
+				System.out.println("Movement Frames: " + frames);
+				System.out.println("GP Frame: " + (row - cappyGPFrames));
 			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);

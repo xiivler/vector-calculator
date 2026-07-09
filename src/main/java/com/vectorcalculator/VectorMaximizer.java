@@ -1885,6 +1885,13 @@ public class VectorMaximizer {
 		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
 	}
 
+	public double[] getFinalCapThrowPosition() {
+		if (hasVariableCapThrow2)
+			return ((ComplexVector) motions[variableMovement2Index]).getCappyPosition(Movement.MCCTU);
+		else
+			return null;
+	}
+
 	public void calcYDisps() { //calculates Y disps of every motion
 		calcMotionGroup(0, movementNames.size(), p.initialHorizontalSpeed, p.framesJump);
 		for (int i = 0; i < motions.length; i++) {
