@@ -438,8 +438,7 @@ public class VectorDisplayWindow {
 					inputs.get(startFrame + i).P2_theta = cappyJoystickTheta;
 				}
 
-				int cappyGPFrames = 28; //how many frames it takes for cappy to GP
-				int cappyGPRow = row - cappyGPFrames;
+				int cappyGPRow = row - Movement.CAPPY_GP_FRAMES;
 				Inputs GPFrameInputs = inputs.get(cappyGPRow);
 				if (GPFrameInputs.input1 == Inputs.NONE)
 					GPFrameInputs.input1 = Inputs.P2ZL;
