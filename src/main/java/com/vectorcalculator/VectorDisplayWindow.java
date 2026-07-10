@@ -399,7 +399,9 @@ public class VectorDisplayWindow {
 					motion.movement.inputOffset = -2 - framesWait;
 				}
 				else {
-					motion.movement.inputs1.add(Inputs.P2Y);
+					motion.movement.inputs1.add(Inputs.P2Y); //this button press returns cappy ASAP
+					inputs.get(row - 1).P2_r = 1;
+					inputs.get(row - 1).P2_theta = reduceAngle(targetAngleAbsolute - cameraAngle + Math.PI / 2);
 				}
 			}
 			else if (index == maximizer.variableMovement2Index && maximizer.hasVariableCapThrow2) {
@@ -423,6 +425,11 @@ public class VectorDisplayWindow {
 				int frames = (int) Math.ceil(trueFrames);
 				double cappyJoystickRadius = trueFrames / frames;
 
+				int framesJump = 0; //how many frames cappy should attempt to jump
+				if (cappyPos[1] < cappyTarget[1]) {
+					framesJump = (int) Math.ceil((cappyTarget[1] - cappyPos[1]) / Movement.CAPPY_JUMP_V_SPEED);
+				}
+
 				int startFrame = finalCapThrowFrame + Movement.CT_FRAMES_UNTIL_FULLY_THROWN[p.fctType] - 1; //assumes motion throw
 				System.out.println(p.fctType);
 
@@ -432,11 +439,27 @@ public class VectorDisplayWindow {
 				}
 
 				int cappyGPFrames = 28; //how many frames it takes for cappy to GP
-				Inputs GPFrameInputs = inputs.get(row - cappyGPFrames);
+				int cappyGPRow = row - cappyGPFrames;
+				Inputs GPFrameInputs = inputs.get(cappyGPRow);
 				if (GPFrameInputs.input1 == Inputs.NONE)
 					GPFrameInputs.input1 = Inputs.P2ZL;
 				else
 					GPFrameInputs.input2 = Inputs.P2ZL;
+
+				if (inputs.get(cappyGPRow - 1).P2_theta == SimpleMotion.NO_ANGLE && framesJump > 0) { //cappy can jump to get closer to target height
+					if (GPFrameInputs.input2 == Inputs.NONE)
+						GPFrameInputs.input2 = Inputs.P2B;
+					int curRow = cappyGPRow - 1;
+					int framesJumpAchieved = 0;
+					while (inputs.get(curRow).P2_theta == SimpleMotion.NO_ANGLE && framesJumpAchieved < framesJump) {
+						if (inputs.get(curRow).input1 == Inputs.NONE)
+							inputs.get(curRow).input1 = Inputs.P2B;
+						else
+							inputs.get(curRow).input2 = Inputs.P2B;
+						framesJumpAchieved++;
+						curRow--;
+					}
+				}
 
 				System.out.println("Cappy Position: " + Arrays.toString(cappyPos));
 				System.out.println("Mario Position: " + Arrays.toString(marioPos));
@@ -555,7 +578,6 @@ public class VectorDisplayWindow {
 							motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
 						}
 					}
-					//TODO account for different types of fakethrow
 					if (Inputs.isMotion(input1) && shiftMotion) {
 						offset--;
 					}
