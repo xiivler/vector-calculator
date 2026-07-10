@@ -266,6 +266,9 @@ public class Properties {
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
     TurnDuringDive diveTurn = TurnDuringDive.YES;
     int cbCapReturnFrame = 25;
+    double vectorAngle = 90; //how sharply to vector the first cap throw
+
+    boolean trySimplifyFirstThrowVector = true;
 
 	String midairPreset = "MCCT First";
     boolean canTripleThrow = true;

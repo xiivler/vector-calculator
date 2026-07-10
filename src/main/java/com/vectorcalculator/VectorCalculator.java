@@ -97,7 +97,7 @@ public class VectorCalculator extends JPanel {
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
 		jump_button_frames("Frames of Holding A/B"), coyote_type("Coyote Time"), moonwalk_frames("Moonwalk Frames"), running_frames("Running Frames"), crouch_frames("Crouching Frames"), initial_speed("Initial Horizontal Speed"),
 		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
-		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"),
+		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"), first_cap_throw_vector_angle("First Cap Throw Vector Angle"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
 		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"),
@@ -231,6 +231,7 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.dive_angle);
 					params.add(Parameter.dive_angle_tolerance);
 					params.add(Parameter.dive_deceleration);
+					params.add(Parameter.first_cap_throw_vector_angle);
 				}
 				params.add(Parameter.dive_turn);
 				params.add(Parameter.cb_cap_return_frame);
@@ -249,7 +250,8 @@ public class VectorCalculator extends JPanel {
 			}
 
 			params.add(null);
-			params.add(Parameter.custom_final_cap_throw_angle);
+			if (p.turnarounds)
+				params.add(Parameter.custom_final_cap_throw_angle);
 			if (p.customFCTAngle) {
 				params.add(Parameter.final_cap_throw_angle);
 			}
@@ -441,6 +443,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case dive_deceleration:
 			value = round(p.diveFirstFrameDecel, 3);
+			break;
+		case first_cap_throw_vector_angle:
+			value = round(p.vectorAngle, 3);
 			break;
 		case dive_turn:
 			value = p.diveTurn.displayName;
@@ -734,6 +739,9 @@ public class VectorCalculator extends JPanel {
 			else if (decel <= 0.05 && decel != 0) decel = 0;
 			p.diveFirstFrameDecel = decel;
 			break;
+		case first_cap_throw_vector_angle:
+			p.vectorAngle = clampDouble(parseDoubleWithDefault(value, 90), 0, 90);
+			break;
 		case midairs:
 			String name = value.toString();
 			boolean oldCanTripleThrow = p.canTripleThrow;
@@ -824,6 +832,10 @@ public class VectorCalculator extends JPanel {
 			break;
 		case turnarounds:
 			p.turnarounds = value.toString().equals("Yes");
+			if (!p.turnarounds) {
+				p.fctAngle = 0;
+				p.customFCTAngle = false;
+			}
 			break;
 		case zero_axis:
 			p.xAxisZeroDegrees = value.toString().equals("X");
@@ -1391,7 +1403,7 @@ public class VectorCalculator extends JPanel {
 					maximizer = solver.getMaximizer();
 					if (maximizer != null) {
 						if (p.firstCTIndex >= 0) {
-							if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
+							if (Movement.isTT(maximizer.ctType))
 								p.midairs[p.firstCTIndex][0] = VectorCalculator.TT;
 							else if (maximizer.ctType == Movement.CT)
 								p.midairs[p.firstCTIndex][0] = VectorCalculator.CT;

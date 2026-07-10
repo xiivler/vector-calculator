@@ -51,12 +51,16 @@ public class Movement {
 	//public static boolean onMoon = false;
 
 	public static final double CAPPY_SPEED = 35; //how fast Cappy moves in 2P
+	public static final double CAPPY_FAST_SPEED = 64; //Cappy's fast 2P speed (after triple throw)
 	public static final double CAPPY_JUMP_V_SPEED = 18; //how fast Cappy moves in a 2P Cappy jump
 	public static final int CAPPY_GP_FRAMES = 28; //how many frames it takes for Cappy to start moving downward after pressing ZL/ZR
 
 	//no downthrow or fakethrow because these are equivalent to others
 	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};
 	
+	public static boolean isTT(int ctType) {
+		return (ctType == TT || ctType == TTU || ctType == TTD || ctType == TTL || ctType == TTR);
+	}
 	//boolean variableSpeed = true;
 	
 	//int variableSpeedRow = -1;

@@ -421,7 +421,8 @@ public class VectorDisplayWindow {
 				double cappyJoystickTheta = reduceAngle(direction - cameraAngle + Math.PI / 2);
 				
 				double hDistance = Math.hypot(cappyTarget[0] - cappyPos[0], cappyTarget[2] - cappyPos[2]); //distance cappy needs to cover
-				double trueFrames = hDistance / Movement.CAPPY_SPEED;
+				double cappySpeed = Movement.isTT(p.fctType) ? Movement.CAPPY_FAST_SPEED : Movement.CAPPY_SPEED;
+				double trueFrames = hDistance / cappySpeed;
 				int frames = (int) Math.ceil(trueFrames);
 				double cappyJoystickRadius = trueFrames / frames;
 

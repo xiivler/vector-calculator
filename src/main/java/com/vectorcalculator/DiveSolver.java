@@ -245,7 +245,8 @@ public class DiveSolver implements SolverInterface {
             return testCT(.1, 1, false);
     }
 
-    public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
+    //public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
+    public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn) {
         maximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
@@ -259,7 +260,8 @@ public class DiveSolver implements SolverInterface {
             maximizer.edgeCBMax = 12;
         }
         maximizer.maximize_HCT_limit = Math.toRadians(8);
-        maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
+        //maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
+        maximizer.vectorAngleIncrement = vectorAngleIncrement;
         p.diveFirstFrameDecel = 0;
         maximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         bestDisp = maximizer.maximize();

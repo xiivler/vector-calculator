@@ -127,7 +127,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                         if (maximizer.ctType == Movement.FT) {
                             p.midairs[p.firstCTIndex][0] = VectorCalculator.FT;
                         }
-                        if (maximizer.ctType == Movement.TT || maximizer.ctType == Movement.TTU || maximizer.ctType == Movement.TTD || maximizer.ctType == Movement.TTL || maximizer.ctType == Movement.TTR)
+                        if (Movement.isTT(maximizer.ctType))
                             p.midairs[p.firstCTIndex][0] = VectorCalculator.TT;
                         else if (maximizer.ctType == Movement.CT)
                             p.midairs[p.firstCTIndex][0] = VectorCalculator.CT;
