@@ -248,10 +248,10 @@ public class VectorCalculator extends JPanel {
 			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None")) {
 				params.add(null);
 				params.add(Parameter.reverse_bonk);
-				if (p.reverseBonk) {
-					params.add(Parameter.reverse_bonk_angle);
-					params.add(Parameter.final_gp_frames);
-				}
+			}
+			if (p.reverseBonk) {
+				params.add(Parameter.reverse_bonk_angle);
+				params.add(Parameter.final_gp_frames);
 			}
 
 			params.add(null);
@@ -1008,6 +1008,12 @@ public class VectorCalculator extends JPanel {
 				if (!oldReverseBonk) {
 					p.solveUpwarp = true;
 				}
+			}
+			else if (p.midairs[i][0] == DIVE && i >= p.midairs.length - 2 && i > 0) {
+				if (i == p.midairs.length - 2 && p.midairs[i + 1][0] != RB) p.fctType = Movement.MCCTU; //default it to this
+				else if (p.midairs[i - 1][0] == TT) p.fctType = Movement.TTU;
+				else if (p.midairs[i - 1][0] == MCCT) p.fctType = Movement.MCCTU;
+				else if (p.midairs[i - 1][0] == CT) p.fctType = Movement.CT;
 			}
 		}
 		if (!p.reverseBonk && oldReverseBonk) {

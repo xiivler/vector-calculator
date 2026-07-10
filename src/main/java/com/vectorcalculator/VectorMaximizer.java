@@ -1887,7 +1887,7 @@ public class VectorMaximizer {
 
 	public double[] getFinalCapThrowPosition() {
 		if (hasVariableCapThrow2)
-			return ((ComplexVector) motions[variableMovement2Index]).getCappyPosition(Movement.MCCTU);
+			return ((ComplexVector) motions[variableMovement2Index]).getCappyPosition(p.fctType);
 		else
 			return null;
 	}

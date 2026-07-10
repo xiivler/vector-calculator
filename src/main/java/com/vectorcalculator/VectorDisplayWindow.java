@@ -423,14 +423,15 @@ public class VectorDisplayWindow {
 				int frames = (int) Math.ceil(trueFrames);
 				double cappyJoystickRadius = trueFrames / frames;
 
-				int startFrame = finalCapThrowFrame + 19; //assumes motion throw
+				int startFrame = finalCapThrowFrame + Movement.CT_FRAMES_UNTIL_FULLY_THROWN[p.fctType] - 1; //assumes motion throw
+				System.out.println(p.fctType);
 
 				for (int i = 0; i < frames; i++) {
 					inputs.get(startFrame + i).P2_r = cappyJoystickRadius;
 					inputs.get(startFrame + i).P2_theta = cappyJoystickTheta;
 				}
 
-				int cappyGPFrames = 24;
+				int cappyGPFrames = 28; //how many frames it takes for cappy to GP
 				Inputs GPFrameInputs = inputs.get(row - cappyGPFrames);
 				if (GPFrameInputs.input1 == Inputs.NONE)
 					GPFrameInputs.input1 = Inputs.P2ZL;

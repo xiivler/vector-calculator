@@ -54,10 +54,10 @@ class Inputs {
 			}
 			else {
 				if (Math.round(theta) * 10000 == Math.round(theta * 10000)) {
-					return String.format((P2 ? "c" : "") + "ls(%.2f; %d)", r, Math.round(theta));
+					return String.format((P2 ? "cls(%.4f; %d)" : "ls(%.2f; %d)"), r, Math.round(theta));
 				}
 				else {
-					return String.format((P2 ? "c" : "") + "ls(%.2f; %.4f)", r, theta);
+					return String.format((P2 ? "cls(%.4f; %.4f)" : "ls(%.2f; %.4f)"), r, theta);
 				}
 			}
         }

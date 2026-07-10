@@ -34,6 +34,7 @@ public class Movement {
 	public static final double TTR_DISP_V = 70;
 	public static final double TTR_DISP_S = 10.641;
 	public static final int[] CT_FRAMES = {8, 8, 8, 8, 9, 8, 3, 3, 3, 3, 3};
+	public static final int[] CT_FRAMES_UNTIL_FULLY_THROWN = {29, 29, 29, 29, 30, 29, 16, 16, 16, 16, 16};
 	public static final int[] CT_INPUT = {Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR, Inputs.Y, Inputs.Y, Inputs.Y, Inputs.MU, Inputs.MD, Inputs.ML, Inputs.MR};
 	public static final String[] CT_NAMES = {"Down MCCT", "Up MCCT", "Left MCCT", "Right MCCT", "Single Throw", "Button DT", "Button TT", "Down TT", "Up TT", "Left TT", "Right TT"};
 	public static final double[][] CT_DISPS = 	{{CT_DISP_F, MCCTU_DISP_V, MCCTU_DISP_S},

@@ -277,6 +277,7 @@ public class Properties {
     double reverseBonkAngle = 30; //+ is to the left of final dive, - is to the right
     int finalGPFrames = 1;
     int firstCTIndex = 0;
+    int fctType = Movement.MCCTU;
     boolean turnarounds = true;
     boolean solveUpwarp = false;
     double upwarp = 40;
