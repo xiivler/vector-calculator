@@ -34,7 +34,9 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Solve for Initial Angle** *(only for RCVs in `Solve` mode)*: Whether Vector Calculator should solve for the optimal initial angle
 
-* **Initial Movement Category**: The category of the initial movement (ex. `Jump`, `Roll`, or `RCV`)
+* **Two Player Mode**: Whether the jump is in two player mode
+
+* **Initial Movement**: The category of the initial movement (ex. `Jump`, `Roll`, or `RCV`)
     * `Optimal Distance Motion` finds the optimal initial motion type for the jump (either a triple jump, MCCT RCV, or sideflip)
     * `None` means that no initial movement is calculated, and the first midair is treated as the beginning of the jump (ex. this could be used for a jump that starts with a dive)
 
@@ -58,13 +60,21 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 * **Running Frames** *(for some movement types)*: How many frames of running coyote before jumping (maximum 6 frames). Speedloss during these frames is calculated.
 
+* **Crouching Frames** *(for long jumps only)*: How many frames of crouching coyote time are experienced after any moonwalk/running frames (maximum 4 frames).
+
 * **Initial Horizontal Speed** *(configurable for some movement types)*: Mario's horizontal speed when the initial movement begins
 
 * **Vector Direction**: Whether the initial movement is vectored left or right
 
 * **Midairs**: What type of midair movements (ex. cap throws, dives, cap bounces) the jump has. Setting this to `Custom` allows you to specify any combination of midairs, but the `Solve` mode does not currently support custom midairs.
 
-* **Triple Throw**: For Spinless and Simple Tech midairs, this preset determines whether the throw before the cap bounce is or is not a triple throw. Use `Test Both` if you want the Solver to test with and without triple throw to figure out which is best. For `MCCT First` and `CB First` midairs, this parameter specifies whether the homing throw is a MCCT or triple throw.
+* **Triple Throw Before Dive CB** *(some midair presets)*: Whether the cap throw before the cap bounce is a triple throw. Use `Test Both` if you want the Solver to test with and without triple throw to figure out which is best.
+
+* **Homing Triple Throw** *(some midair presets)* Whether the homing throw is a triple throw.
+
+* **Reverse Bonk** *(2P mode only)* Whether the jump ends in a reverse bonk.
+
+* **Solve for Maximum Upwarp** *(With reverse bonk only)* Whether to calculate the biggest possible upwarp based on the reverse bonk angle, or to let the user specify the maximum upwarp.
 
 * **Maximum Upwarp**: The biggest upwarp Vector Calculator will allow. Just like in the game, the speed on the frame of the upwarp is also taken into consideration, so Mario moving up 15 units on a frame where his vertical velocity is -16 is a 31 unit upwarp. The default value of 40 is generally good, but if you are finishing a height jump at an angle or trying to upwarp before the +2 vertical velocity frame of the dive, this value may need to be reduced. **Set this parameter to 0 for bonk or overshoot jumps.**
 
@@ -80,7 +90,7 @@ Vector Calculator has several properties that can be configured by the user. Som
 
 ### Midair Properties
 
-* **Mode**, **Midairs**, **Triple Throw**, and **Maximum Upwarp** are also present in this properties tab for convenience.
+* **Mode**, **Midairs**, **Triple Throw Before Dive CB**, **Homing Triple Throw**, **Reverse Bonk**, **Solve for Maximum Upwarp**, and **Maximum Upwarp** are also present in this properties tab for convenience.
 
 * **Duration Search Range**: For the Solve mode, this parameter represents how many frames the program searches in each direction to find the best durations for each part of the movement once it has found a rough optimization of the jump. Set this to a lower value if the calculation is taking too long. (For RCVs, the program limits the range to 3 even if the user enters a higher range value.)
 
@@ -105,6 +115,14 @@ Vector Calculator has several properties that can be configured by the user. Som
         * **Homing Direction**: The direction Cappy is homed in
         * **Frames Before Home**: The number of frames before Cappy is homed
         * **HCT Cap Return Frame**: The frame that Cappy returns to Mario's head
+
+* **Custom Final Cap Throw Angle**: Set to `Yes` to have Mario throw Cappy at the optimal angle for the final cap throw. If this angle does not work because Cappy homes into an object or Cappy is too far away to be able to reverse bonk, set to `No`.
+
+* **Final Cap Throw Angle** *(only if custom final cap throw angle)*: How far Cappy is thrown to the side relative to the final dive angle.
+
+* **Reverse Bonk Angle** *(only with reverse bonk)*: How many degrees Mario reverse bonks at relative to the final dive angle. A positive reverse bonk angle is to the left if the `Vector Direction` is `Left`, and to the right if the `Vector Direction` is `Right`. A negative reverse bonk angle is in the opposite direction.
+
+* **Final GP Frames** *(only with reverse bonk)*: How many frames the final ground pound lasts before the final dive.
 
 * **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`. A higher `Duration Search Range` is recommended for jumps over ground or liquid.
     * **Type**: Whether there is ground, lava, or poison underneath the jump.
