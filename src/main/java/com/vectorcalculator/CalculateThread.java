@@ -21,7 +21,6 @@ class CalculateThread extends SwingWorker<Boolean, String> {
         try {
             if (p.reverseBonk && p.solveUpwarp) {
                 SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), p.midairs[p.midairs.length - 1][1]);
-                //Debug.println(reverseBonkMotion.calcFinalVerticalVelocity());
                 UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
                 p.upwarp = um.maximize();
             }

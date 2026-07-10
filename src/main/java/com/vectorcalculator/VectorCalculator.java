@@ -101,6 +101,7 @@ public class VectorCalculator extends JPanel {
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
 		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"),
+		custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
@@ -226,9 +227,11 @@ public class VectorCalculator extends JPanel {
 
 			if (p.diveCapBounce) {
 				params.add(null);
-				params.add(Parameter.dive_angle);
-				params.add(Parameter.dive_angle_tolerance);
-				params.add(Parameter.dive_deceleration);
+				if (!p.twoPlayerMode) {
+					params.add(Parameter.dive_angle);
+					params.add(Parameter.dive_angle_tolerance);
+					params.add(Parameter.dive_deceleration);
+				}
 				params.add(Parameter.dive_turn);
 				params.add(Parameter.cb_cap_return_frame);
 			}
@@ -245,8 +248,13 @@ public class VectorCalculator extends JPanel {
 				}
 			}
 
+			params.add(null);
+			params.add(Parameter.custom_final_cap_throw_angle);
+			if (p.customFCTAngle) {
+				params.add(Parameter.final_cap_throw_angle);
+			}
+
 			if (p.twoPlayerMode && !p.midairPreset.equals("Custom") && !p.midairPreset.equals("None")) {
-				params.add(null);
 				params.add(Parameter.reverse_bonk);
 			}
 			if (p.reverseBonk) {
@@ -461,6 +469,12 @@ public class VectorCalculator extends JPanel {
 		case hct_cap_return_frame:
 			value = p.hctCapReturnFrame;
 			break;
+		case custom_final_cap_throw_angle:
+			value = p.customFCTAngle ? "Yes" : "No";
+			break;
+		case final_cap_throw_angle:
+			value = p.fctAngle;
+			break;
 		case ground_mode:
 			value = p.groundMode.name;
 			break;
@@ -625,6 +639,7 @@ public class VectorCalculator extends JPanel {
 				if (p.twoPlayerMode) {
 					p.tripleThrow = TripleThrow.NO;
 					p.tripleThrowDiveCB = TripleThrow.NO;
+					p.diveFirstFrameDecel = 0;
 				}
 				else {
 					p.reverseBonk = false;
@@ -857,6 +872,15 @@ public class VectorCalculator extends JPanel {
 		case hct_cap_return_frame:
 			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 23, Integer.MAX_VALUE);
 			updateHCTDuration();
+			break;
+		case custom_final_cap_throw_angle:
+			p.customFCTAngle = value.toString().equals("Yes");
+			if (!p.customFCTAngle) {
+				p.fctAngle = 0;
+			}
+			break;
+		case final_cap_throw_angle:
+			p.fctAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE);
 			break;
 		case ground_mode:
 			GroundMode oldGroundMode = p.groundMode;
@@ -1714,6 +1738,8 @@ public class VectorCalculator extends JPanel {
 							return dropdown(new String[]{"Yes", "No", "Test Both"});
 						else
 							return dropdown(new String[]{"Yes", "No"});
+					case custom_final_cap_throw_angle:
+						return dropdown(new String[]{"Yes", "No"});
 					case ground_mode:
 						return dropdown(new String[]{"None", "Uniform", "Varied"});
 					case ground_type:

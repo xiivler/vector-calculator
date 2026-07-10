@@ -466,7 +466,7 @@ public class VectorDisplayWindow {
 				System.out.println("Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
 				System.out.println("Horizontal Distance: " + hDistance);
 				System.out.println("Movement Frames: " + frames);
-				System.out.println("GP Frame: " + (row - cappyGPFrames));
+				System.out.println("GP Frame: " + (row - Movement.CAPPY_GP_FRAMES));
 			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);

@@ -274,10 +274,12 @@ public class Properties {
     TripleThrow tripleThrow = TripleThrow.YES;
     TripleThrow tripleThrowDiveCB = TripleThrow.NO;
     boolean reverseBonk = false;
-    double reverseBonkAngle = 30; //+ is to the left of final dive, - is to the right
+    double reverseBonkAngle = 30; //positive number is left if initial vector direction is left, right if initial vector direction is right; negative values also accepted
     int finalGPFrames = 1;
     int firstCTIndex = 0;
     int fctType = Movement.MCCTU;
+    boolean customFCTAngle = false;
+    double fctAngle = 0;
     boolean turnarounds = true;
     boolean solveUpwarp = false;
     double upwarp = 40;

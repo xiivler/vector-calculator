@@ -738,7 +738,6 @@ public class Solver implements SolverInterface {
         double[] rbMaxUpwarps = new double[p.midairs[p.midairs.length - 1][1] + delta];
         for (int i = 13; i < rbMaxUpwarps.length; i++) {
             SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), i);
-            //System.out.println(reverseBonkMotion.calcFinalVerticalVelocity());
             UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
             rbMaxUpwarps[i] = um.maximize();
         }
