@@ -376,7 +376,7 @@ public class VectorMaximizer {
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
 	//vectorAngle is how sharply the jump is vectored (in radians)
 	private boolean setCapThrowHoldingAngles(ComplexVector motion, double diveAngle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
-		if (angleDiff == OPTIMAL_ANGLE_DIFF || (p.trySimplifyFirstThrowVector || vectorAngle <=75 && canSetOptimalCapThrowHoldingAngles(frames, diveAngle, diveAngle + angleDiff, vectorAngle))) {
+		if (angleDiff == OPTIMAL_ANGLE_DIFF || ((p.trySimplifyFirstThrowVector || vectorAngle <=75) && canSetOptimalCapThrowHoldingAngles(frames, diveAngle, diveAngle + angleDiff, vectorAngle))) {
 			setOptimalCapThrowHoldingAngles(motion, diveAngle, angleDiff, vectorAngle, frames);
 			return true;
 		}
