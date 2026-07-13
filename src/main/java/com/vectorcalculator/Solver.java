@@ -947,7 +947,7 @@ public class Solver implements SolverInterface {
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
         }
-        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null) {
+        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode) {
             p.vectorAngle = vectorAngles[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
             //Debug.println("It is " + p.diveCapBounceAngle + " at " + ctDuration + ", " + diveDuration);

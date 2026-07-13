@@ -645,6 +645,7 @@ public class VectorCalculator extends JPanel {
 					p.tripleThrow = TripleThrow.NO;
 					p.tripleThrowDiveCB = TripleThrow.NO;
 					p.diveFirstFrameDecel = 0;
+					p.vectorAngle = 90;
 				}
 				else {
 					p.reverseBonk = false;
