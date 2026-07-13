@@ -1788,7 +1788,7 @@ public class VectorMaximizer {
 		//Debug.println("Target CB Frame: " + targetCBFrame);
 		//DiveTurn dive = (DiveTurn) motions[preCapBounceDiveIndex];
 		//ComplexVector capThrow = (ComplexVector) motions[variableCapThrow1Index];
-		for (vectorAngle = 90; vectorAngle >= 60; vectorAngle -= vectorAngleIncrement) {
+		for (vectorAngle = 90; vectorAngle >= 50; vectorAngle -= vectorAngleIncrement) {
 		//for (firstFrameDecel = 0; firstFrameDecel <= .5; firstFrameDecel += firstFrameDecelIncrement) {
 			// if (firstFrameDecel > 0 && firstFrameDecel / .5 <= .1) { //can't hold back this shallow
 			// 	continue;

@@ -150,6 +150,7 @@ public class Solver implements SolverInterface {
 
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
+        p.vectorAngle = 90;
 
         if (p.solveForInitialAngle) {
             p.initialAngle = p.targetAngle;
@@ -507,10 +508,10 @@ public class Solver implements SolverInterface {
                 testDurations[diveCapBounceIndex - 1] = diveDuration;
                 setDurations(testDurations);
                 boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
-                if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 2, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 10, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                     //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                     //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
-                    System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
+                    //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
                     ctTypes[ctDuration][diveDuration] = ctType;
                     //diveDecels[ctDuration][diveDuration] = diveDecel;
                     vectorAngles[ctDuration][diveDuration] = vectorAngle;
@@ -700,20 +701,24 @@ public class Solver implements SolverInterface {
 
     public int testCT(int throwType, double edgeCBAngleIncrement, double vectorAngleIncrement, boolean zeroAngleTolerance, boolean diveTurn) {
     //public int testCT(int throwType, double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean zeroAngleTolerance, boolean diveTurn) {
-        double userTolerance = p.diveCapBounceTolerance;
-        VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
+        p.vectorAngle = 90;
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
             p.diveCapBounceAngle = 18;
         }
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            ballparkMaximizer.edgeCBMin = 6;
             p.diveCapBounceAngle = 9;
+        }
+        double userTolerance = p.diveCapBounceTolerance;
+        VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
+        if (!diveTurn) {
+            VectorCalculator.setProperty(Parameter.dive_turn, "No");
+            ballparkMaximizer.edgeCBMin = 6;
             ballparkMaximizer.edgeCBMax = 12;
         }
-        ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
         //ballparkMaximizer.maxRCVNudges = 5;
+        ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
         ballparkMaximizer.vectorAngleIncrement = vectorAngleIncrement;
         p.diveFirstFrameDecel = 0;
         if (zeroAngleTolerance && userTolerance < .1)
@@ -951,6 +956,8 @@ public class Solver implements SolverInterface {
         if (fullAccuracy) {
             if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
+                // maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
+                // maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
             }
