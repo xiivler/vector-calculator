@@ -14,7 +14,7 @@ public class VectorMaximizer {
 	public static final double FAST_TURNAROUND_ACCEL = Math.toRadians(2.5);
 	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(137); //only needs to be 135, but extra .5 degrees for safety
 
-	public static final double TURN_COUNTERROTATION = Math.toRadians(.4); //really should be .3 but this produces inaccurate results
+	public static final double TURN_COUNTERROTATION = Math.toRadians(.35); //really should be .3 but this produces inaccurate results
 	public static final double TRUE_TURN_COUNTERROTATION = Math.toRadians(.3);
 
 	public static final double FINAL_CT_ANGLE_REDUCTION_LIMIT = 5; //how many degrees you are willing to sacrifice off a perfect vector
@@ -373,16 +373,16 @@ public class VectorMaximizer {
 	
 	public static final double OPTIMAL_ANGLE_DIFF = Double.MAX_VALUE;
 
+	//angle is the angle of the dive
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
-	//vectorAngle is how sharply the jump is vectored (in radians)
-	private boolean setCapThrowHoldingAngles(ComplexVector motion, double diveAngle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
-		if (angleDiff == OPTIMAL_ANGLE_DIFF || ((p.trySimplifyFirstThrowVector || vectorAngle <=75) && canSetOptimalCapThrowHoldingAngles(frames, diveAngle, diveAngle + angleDiff, vectorAngle))) {
-			setOptimalCapThrowHoldingAngles(motion, diveAngle, angleDiff, vectorAngle, frames);
-			return true;
+	private boolean setCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
+		if ((angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalCapThrowHoldingAngles(frames, angle, angle + angleDiff, vectorAngle)) {
+			return setOptimalCapThrowHoldingAngles(motion, angle, angleDiff, vectorAngle, frames, fallingFrames);
 		}
 		
 		double angleDiffDeg = Math.toDegrees(angleDiff);
-		double throwAngle = diveAngle + angleDiff;
+		double throwAngle = angle + angleDiff;
+		double diveAngle = angle;
 		double maxRotation = 0;
 		double rotationalVelocity = 0;
 		boolean standardTurnaround = false;
@@ -449,21 +449,28 @@ public class VectorMaximizer {
 					Debug.println("Total rotation: " + Math.toDegrees(totalRotation));
 					Debug.println("Overshoot: " + Math.toDegrees(overshoot));
 					//how much counterrotation there should be on the first frame of acceleration
-					double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
+					//double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
 					int firstAdditionalRotationFrame = frames - turnaroundFrames - additionalRotationFrames;
-					holdingAngles[1] = vectorAngle - Math.toRadians(1.5); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
+					double currentRotation = throwAngle + Math.toRadians(0.3);
+					holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
+					boolean holdTargetRotation = false;
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
+						currentRotation += Math.toRadians(0.3);
+						if (currentRotation > holdingAngles[i] - Math.toRadians(1)) //getting too close
+							holdTargetRotation = true;
+						if (holdTargetRotation)
+							holdingAngles[i] = throwAngle + totalRotation;
 					}
-					if (p.spreadOutOvershoot)
-						holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
-					else
-						holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1];
-					Debug.println(holdingAngles[firstAdditionalRotationFrame]);
+					// if (p.spreadOutOvershoot)
+					// 	holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
+					// else
+					holdingAngles[firstAdditionalRotationFrame] = holdTargetRotation ? throwAngle + totalRotation : holdingAngles[1];
+					//Debug.println(holdingAngles[firstAdditionalRotationFrame]);
 					for (int i = firstAdditionalRotationFrame + 1; i < frames - turnaroundFrames; i++) {
-						holdingAngles[i] = holdingAngles[i - 1];
+						holdingAngles[i] = holdTargetRotation ? throwAngle + totalRotation : holdingAngles[1];
 					}
-					if (!p.spreadOutOvershoot) { //counterrotate enough to mitigate all the overshoot in one frame
+					if (!holdTargetRotation) { //counterrotate enough to mitigate all the overshoot in one frame
 						holdingAngles[frames - turnaroundFrames - 1] = holdingAngles[frames - turnaroundFrames - 2] - overshoot;
 					}
 					// System.out.println("Total rotation: " + Math.toDegrees(totalRotation));
@@ -520,25 +527,25 @@ public class VectorMaximizer {
 		else if (angleDiff == 0) { //edge cap bounce angle is 0 and we can use pre-determined holding angles to vector efficiently
 			if (frames < 7) {
 				for (int i = 1; i < frames; i++) {
-					holdingAngles[i] = diveAngle;
+					holdingAngles[i] = angle;
 				}
 			}
 			else if (frames == 7) {
 				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
 				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE; //.6
 				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE; //.9
-				holdingAngles[4] = diveAngle - Math.toRadians(.5); //1.5
-				holdingAngles[5] = diveAngle - Math.toRadians(.5); //.9
-				holdingAngles[6] = diveAngle - Math.toRadians(.5); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
+				holdingAngles[4] = angle - Math.toRadians(.5); //1.5
+				holdingAngles[5] = angle - Math.toRadians(.5); //.9
+				holdingAngles[6] = angle - Math.toRadians(.5); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
 			}
 			else if (frames == 8) {
 				holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
 				holdingAngles[2] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.3 //really should be .3 but this makes it slightly inaccurate
 				holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION; //.6
 				holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - TURN_COUNTERROTATION - TRUE_TURN_COUNTERROTATION; //.6
-				holdingAngles[5] = diveAngle - Math.toRadians(.5); //1.5
-				holdingAngles[6] = diveAngle - Math.toRadians(.5); //.9
-				holdingAngles[7] = diveAngle - Math.toRadians(.5); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
+				holdingAngles[5] = angle - Math.toRadians(.5); //1.5
+				holdingAngles[6] = angle - Math.toRadians(.5); //.9
+				holdingAngles[7] = angle - Math.toRadians(.5); //0 //this needs to be greater than 1 away so that we don't experience the deceleration
 			}
 			else if (frames <= 14 /* && p.turnarounds */) {
 				if (frames == 9) {
@@ -547,9 +554,9 @@ public class VectorMaximizer {
 					holdingAngles[3] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.3
 					holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
 					holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.6
-					holdingAngles[6] = diveAngle - Math.toRadians(.5); //1.5
-					holdingAngles[7] = diveAngle - Math.toRadians(.5); //.9
-					holdingAngles[8] = diveAngle - Math.toRadians(.5); //0
+					holdingAngles[6] = angle - Math.toRadians(.5); //1.5
+					holdingAngles[7] = angle - Math.toRadians(.5); //.9
+					holdingAngles[8] = angle - Math.toRadians(.5); //0
 				}
 				else if (frames == 10) {
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
@@ -558,9 +565,9 @@ public class VectorMaximizer {
 					holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 3 * TURN_COUNTERROTATION; //.3
 					holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
 					holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.3
-					holdingAngles[7] = diveAngle - Math.toRadians(.5); //1.5
-					holdingAngles[8] = diveAngle - Math.toRadians(.5); //.9
-					holdingAngles[9] = diveAngle - Math.toRadians(.5); //0
+					holdingAngles[7] = angle - Math.toRadians(.5); //1.5
+					holdingAngles[8] = angle - Math.toRadians(.5); //.9
+					holdingAngles[9] = angle - Math.toRadians(.5); //0
 				}
 				else if (frames == 11) {
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
@@ -569,10 +576,10 @@ public class VectorMaximizer {
 					holdingAngles[4] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION; //.6
 					holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION - TRUE_TURN_COUNTERROTATION; //.6
 					holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 2 * TURN_COUNTERROTATION - TRUE_TURN_COUNTERROTATION; //.9
-					holdingAngles[7] = diveAngle;
-					holdingAngles[8] = diveAngle;
-					holdingAngles[9] = diveAngle;
-					holdingAngles[10] = diveAngle;
+					holdingAngles[7] = angle;
+					holdingAngles[8] = angle;
+					holdingAngles[9] = angle;
+					holdingAngles[10] = angle;
 				}
 				else if (frames == 12) {
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
@@ -582,10 +589,10 @@ public class VectorMaximizer {
 					holdingAngles[5] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.3
 					holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.6
 					holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 4 * TURN_COUNTERROTATION; //.9
-					holdingAngles[8] = diveAngle;
-					holdingAngles[9] = diveAngle;
-					holdingAngles[10] = diveAngle;
-					holdingAngles[11] = diveAngle;
+					holdingAngles[8] = angle;
+					holdingAngles[9] = angle;
+					holdingAngles[10] = angle;
+					holdingAngles[11] = angle;
 				}
 				else if (frames == 13) {
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
@@ -596,10 +603,10 @@ public class VectorMaximizer {
 					holdingAngles[6] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.3
 					holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION; //.6
 					holdingAngles[8] = SimpleMotion.NORMAL_ANGLE - 5 * TURN_COUNTERROTATION - TRUE_TURN_COUNTERROTATION; //.6
-					holdingAngles[9] = diveAngle;
-					holdingAngles[10] = diveAngle;
-					holdingAngles[11] = diveAngle;
-					holdingAngles[12] = diveAngle;
+					holdingAngles[9] = angle;
+					holdingAngles[10] = angle;
+					holdingAngles[11] = angle;
+					holdingAngles[12] = angle;
 				}
 				else if (frames == 14) {
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE; //.3
@@ -611,10 +618,10 @@ public class VectorMaximizer {
 					holdingAngles[7] = SimpleMotion.NORMAL_ANGLE - 6 * TURN_COUNTERROTATION; //.3
 					holdingAngles[8] = SimpleMotion.NORMAL_ANGLE - 7 * TURN_COUNTERROTATION; //.3
 					holdingAngles[9] = SimpleMotion.NORMAL_ANGLE - 7 * TURN_COUNTERROTATION; //.6
-					holdingAngles[10] = diveAngle;
-					holdingAngles[11] = diveAngle;
-					holdingAngles[12] = diveAngle;
-					holdingAngles[13] = diveAngle;
+					holdingAngles[10] = angle;
+					holdingAngles[11] = angle;
+					holdingAngles[12] = angle;
+					holdingAngles[13] = angle;
 				}
 			}
 			else {
@@ -623,7 +630,7 @@ public class VectorMaximizer {
 				for (int i = 1; i <= lastNormalAngleFrame; i++)
 					holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 				for (int i = lastNormalAngleFrame + 1; i < frames; i++)
-					holdingAngles[i] = diveAngle;
+					holdingAngles[i] = angle;
 			}
 			motion.setHoldingAngles(holdingAngles);
 			return true;
@@ -680,10 +687,8 @@ public class VectorMaximizer {
 		double ang_deg = Math.toDegrees(vectorAngle - diveAngle);
 
 		int turnaroundFrames;
-		if (ang_deg <= 25 + FINAL_CT_ANGLE_REDUCTION_LIMIT)
-			turnaroundFrames = 1;
-		else if (ang_deg <= 25 + 22.5 + FINAL_CT_ANGLE_REDUCTION_LIMIT)
-			turnaroundFrames = 2;
+		if (ang_deg <= 25 + 22.5 + FINAL_CT_ANGLE_REDUCTION_LIMIT)
+			return false;
 		else if (ang_deg <= 25 + 22.5 + 20 + FINAL_CT_ANGLE_REDUCTION_LIMIT)
 			turnaroundFrames = 3;
 		else
@@ -715,21 +720,16 @@ public class VectorMaximizer {
 	//OR if turning around for x frames is almost enough, just vector more weakly to start with
 	//angle is dive angle
 	//it seems that turnaroundFrames is always 3
-	private void setOptimalCapThrowHoldingAngles(ComplexVector motion, double diveAngle, double angleDiff, double vectorAngle, int frames) {
+	private boolean setOptimalCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
 		double[] holdingAngles = new double[frames];
 		if (p.turnarounds) {
-			double initialHoldingAngle = angleDiff == OPTIMAL_ANGLE_DIFF ? SimpleMotion.NORMAL_ANGLE : diveAngle + angleDiff;
-			double ang_deg = Math.toDegrees(vectorAngle - diveAngle);
-			//System.out.println("Final Cap Throw Dive Angle: " + ang_deg);
-			int turnaroundFrames;
-			double difference; //difference between exact turnaround and how much Mario needs to turn around
-			if (ang_deg <= 25 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
-				turnaroundFrames = 1;
-				difference = ang_deg - 25;
-			}
-			else if (ang_deg <= 25 + 22.5 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
-				turnaroundFrames = 2;
-				difference = ang_deg - 25 - 22.5;
+			double initialHoldingAngle = angleDiff == OPTIMAL_ANGLE_DIFF ? SimpleMotion.NORMAL_ANGLE : angle + angleDiff;
+			double ang_deg = Math.toDegrees(vectorAngle - angle);
+			Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
+			int turnaroundFrames = 0;
+			double difference = 0; //difference between exact turnaround and how much Mario needs to turn around
+			if (ang_deg <= 25 + 22.5 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
+				return false;
 			}
 			else if (ang_deg <= 25 + 22.5 + 20 + FINAL_CT_ANGLE_REDUCTION_LIMIT) {
 				turnaroundFrames = 3;
@@ -739,7 +739,7 @@ public class VectorMaximizer {
 				turnaroundFrames = 4;
 				difference = ang_deg - 25 - 22.5 - 20 - 17.5;
 			}
-			if (difference > 0) {
+			if (difference > 0 || (turnaroundFrames == 1 && difference < -0.001)) {
 				if (angleDiff == OPTIMAL_ANGLE_DIFF)
 					initialHoldingAngle -= Math.toRadians(difference);
 				vectorAngle -= Math.toRadians(difference);
@@ -772,6 +772,7 @@ public class VectorMaximizer {
 				holdingAngles[i] = angle;
 			motion.setHoldingAngles(holdingAngles);
 		}
+		return true;
 	}
 
 	private void setFinalFallingHoldingAngles(ComplexVector motion, double neededRotation, double initialHoldingAngle, int frames) {
