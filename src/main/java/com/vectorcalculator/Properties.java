@@ -268,7 +268,7 @@ public class Properties {
     int cbCapReturnFrame = 25;
     double vectorAngle = 90; //how sharply to vector the first cap throw
 
-    boolean trySimplifyFirstThrowVector = true;
+    boolean trySimplifyFirstThrowVector = false;
 
 	String midairPreset = "MCCT First";
     boolean canTripleThrow = true;

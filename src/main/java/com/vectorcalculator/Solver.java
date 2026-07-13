@@ -510,6 +510,7 @@ public class Solver implements SolverInterface {
                 if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 2, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                     //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                     //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
+                    System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
                     ctTypes[ctDuration][diveDuration] = ctType;
                     //diveDecels[ctDuration][diveDuration] = diveDecel;
                     vectorAngles[ctDuration][diveDuration] = vectorAngle;
@@ -725,7 +726,7 @@ public class Solver implements SolverInterface {
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
         // if (ctType > -1) {
-        //     Debug.println("CT Type: " + ctType + " " + preset[0][1] + " " + preset[1][1]);
+        //     System.out.println("CT Type: " + ctType + " " + preset[0][1] + " " + preset[1][1]);
         // }
         return ctType;
     }
