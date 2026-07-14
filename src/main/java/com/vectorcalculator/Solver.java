@@ -95,6 +95,8 @@ public class Solver implements SolverInterface {
 
     boolean success = false;
 
+    boolean userMaximizeRS;
+
     ArrayList<DoubleIntArray> bestResults;
 
     public String getError() {
@@ -151,6 +153,8 @@ public class Solver implements SolverInterface {
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
         p.vectorAngle = 90;
+        userMaximizeRS = p.maximizeRS;
+        p.maximizeRS = false;
 
         if (p.solveForInitialAngle) {
             p.initialAngle = p.targetAngle;
@@ -554,6 +558,7 @@ public class Solver implements SolverInterface {
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
         bestDurations = test(durations, delta, 0, p.y0).intArray;
+        p.maximizeRS = userMaximizeRS; //now test with RS optimization for full accuracy
         bestDisp = test(bestDurations, true, false);
         //Debug.println(test(best.intArray));
 

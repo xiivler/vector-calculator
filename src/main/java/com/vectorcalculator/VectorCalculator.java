@@ -56,6 +56,8 @@ public class VectorCalculator extends JPanel {
 	
 	public static final String VERSION = "2.2.0";
 
+	public static boolean DEBUG_VALUE = true;
+
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 500;
 	public static final int MIDAIR_PANEL_HEIGHT = 300;
@@ -100,13 +102,14 @@ public class VectorCalculator extends JPanel {
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"), first_cap_throw_vector_angle("First Cap Throw Vector Angle"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"),
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"), hyperoptimize_rainbow_spin("Hyperoptimize Rainbow Spin"),
 		custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
 		ground_type_secondGP("Type Under Second GP"), ground_height_secondGP("Height Under Second GP"),
-		solve_upwarp("Solve for Maximum Upwarp"), upwarp("Maximum Upwarp");
+		solve_upwarp("Solve for Maximum Upwarp"), upwarp("Maximum Upwarp"),
+		debug_value("Debug Value");
 
 		String name;
 
@@ -197,6 +200,10 @@ public class VectorCalculator extends JPanel {
 			params.add(Parameter.camera);
 			if (p.cameraType == CameraType.CUSTOM)
 				params.add(Parameter.custom_camera_angle);
+
+			if (DEBUG_VALUE) {
+				params.add(Parameter.debug_value);
+			}
 		}
 		else if (p.currentTab == MIDAIR_TAB) {
 			params.add(Parameter.mode);
@@ -247,6 +254,11 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.hct_homing_frame);
 					params.add(Parameter.hct_cap_return_frame);
 				}
+			}
+
+			if (p.rainbowSpin) {
+				params.add(null);
+				params.add(Parameter.hyperoptimize_rainbow_spin);
 			}
 
 			params.add(null);
@@ -474,6 +486,9 @@ public class VectorCalculator extends JPanel {
 		case hct_cap_return_frame:
 			value = p.hctCapReturnFrame;
 			break;
+		case hyperoptimize_rainbow_spin:
+			value = p.maximizeRS ? "Yes" : "No";
+			break;
 		case custom_final_cap_throw_angle:
 			value = p.customFCTAngle ? "Yes" : "No";
 			break;
@@ -506,6 +521,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case ground_height_secondGP:
 			value = p.groundHeightSecondGP;
+			break;
+		case debug_value:
+			value = p.debugValue;
 			break;
 		default:
 			return "";
@@ -886,6 +904,9 @@ public class VectorCalculator extends JPanel {
 			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 23, Integer.MAX_VALUE);
 			updateHCTDuration();
 			break;
+		case hyperoptimize_rainbow_spin:
+			p.maximizeRS = value.toString().equals("Yes");
+			break;
 		case custom_final_cap_throw_angle:
 			p.customFCTAngle = value.toString().equals("Yes");
 			if (!p.customFCTAngle) {
@@ -928,6 +949,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case ground_height_secondGP:
 			p.groundHeightSecondGP = parseDoubleWithDefault(value, 0);
+			break;
+		case debug_value:
+			p.debugValue = parseDoubleWithDefault(value, 0);
 			break;
 		}
 		setPropertiesRow(param); //refresh this row
@@ -1022,6 +1046,7 @@ public class VectorCalculator extends JPanel {
 		}
 		p.hct = false;
 		p.diveCapBounce = false;
+		p.rainbowSpin = false;
 		boolean oldReverseBonk = p.reverseBonk;
 		p.reverseBonk = false;
 		p.firstCTIndex = -1;
@@ -1039,6 +1064,9 @@ public class VectorCalculator extends JPanel {
 			}
 			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == HTT) {
 				p.tripleThrow = TripleThrow.YES;
+			}
+			else if (p.midairs[i][0] == RS) {
+				p.rainbowSpin = true;
 			}
 			else if (p.midairs[i][0] == RB) {
 				p.reverseBonk = true;
@@ -1745,6 +1773,8 @@ public class VectorCalculator extends JPanel {
 					case hct_direction:
 						return dropdown(new String[]{"Up", "Down", "Left", "Right"});
 					case hct_neutral:
+						return dropdown(new String[]{"Yes", "No"});
+					case hyperoptimize_rainbow_spin:
 						return dropdown(new String[]{"Yes", "No"});
 					case dive_turn:
 						if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES)

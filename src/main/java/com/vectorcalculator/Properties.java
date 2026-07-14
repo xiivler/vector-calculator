@@ -230,6 +230,8 @@ public class Properties {
 
     String version = VectorCalculator.VERSION;
 
+    double debugValue = 0; //value that can be configured for testing
+
     Mode mode = Mode.SOLVE;
 
     double x0 = 0, y0 = 0, z0 = 0;
@@ -320,6 +322,9 @@ public class Properties {
     HctDirection hctDirection = HctDirection.DOWN;
     int hctHomingFrame = 19;
     int hctCapReturnFrame = 36;
+
+    boolean rainbowSpin = false;
+    boolean maximizeRS = true;
 
     boolean initialAndTargetGiven = false;
     boolean initialAngleGiven = false;
