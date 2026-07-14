@@ -1737,6 +1737,7 @@ public class VectorMaximizer {
 			ct.calcDispY();
 			if (hasVariableCapThrow1Falling) {
 				SimpleVector falling = (SimpleVector) motions[variableCapThrow1Index + 1];
+				falling.setInitialForwardVelocity(ct.calcFinalSpeed());
 				falling.setInitialAngle(ct.finalAngle);
 				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
 				//Debug.println("CT final angle: " + Math.toDegrees(ct.finalAngle));

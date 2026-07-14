@@ -950,19 +950,17 @@ public class Solver implements SolverInterface {
         if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode) {
             p.vectorAngle = vectorAngles[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
+            //these will get internalized by the maximizer in the next call
             //Debug.println("It is " + p.diveCapBounceAngle + " at " + ctDuration + ", " + diveDuration);
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
-            maximizer.vectorAngleIncrement = 2;
+            // if (p.vectorAngle == 66 && ctDuration == 30 && diveDuration == 25) {
+            //     System.out.println(maximizer.motionGroup1FinalAngle);
+            // }
+            maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
             if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
-                if (p.vectorAngle != 90) { //try again to conform the cap bounce better
-                    maximizer.vectorAngleMax = Math.min(maximizer.vectorAngle + 3, 90); //only check vector angles near the correct one this second time
-                    maximizer.vectorAngleIncrement = 1;
-                    maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
-                    maximizer.recalculateDisps(true);
-                }
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
             }

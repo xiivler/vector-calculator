@@ -413,5 +413,9 @@ public class SimpleVector extends SimpleMotion {
 		optimalForwardAccel = b;
 	}
 
+	public void setInitialForwardVelocity(double initialForwardVelocity) {
+		this.initialForwardVelocity = initialForwardVelocity;
+	}
+
 }
 
