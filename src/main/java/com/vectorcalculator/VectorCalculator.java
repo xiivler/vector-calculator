@@ -54,7 +54,7 @@ import com.vectorcalculator.Properties.CalculateUsing;
 
 public class VectorCalculator extends JPanel {
 	
-	public static final String VERSION = "2.1.4";
+	public static final String VERSION = "2.2.0";
 
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 500;
@@ -1375,7 +1375,7 @@ public class VectorCalculator extends JPanel {
 		}
 
 		if (!defaults && !pl.version.equals(VERSION)) {
-			JOptionPane.showMessageDialog(VectorCalculator.f, "This file was created in a different version of Vector Calculator. It may not behave as expected.", "File Version", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(VectorCalculator.f, "This file was created in a different version of Vector Calculator (v" + pl.version + "). It may not behave as expected.", "File Version", JOptionPane.INFORMATION_MESSAGE);
 		}
 		
 		loadProperties(pl, false);
