@@ -102,7 +102,8 @@ public class VectorMaximizer {
 	double variableAngle2Adjusted;
 	double variableHCTHoldingAngle;
 
-	boolean rsHoldBack;
+	boolean rsYank;
+	int imYankFrames;
 	
 	double rcTrueInitialAngleDiff;
 	double rcFinalAngleDiff;
@@ -904,6 +905,18 @@ public class VectorMaximizer {
 		Debug.println(); 
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
+
+	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, int yankFrames) {
+		motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, true);
+		double[] holdingAngles = new double[movementFrames.get(movementIndex)];
+		for (int a = 0; a < holdingAngles.length - yankFrames; a++) {
+			holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+		}
+		for (int a = holdingAngles.length - yankFrames; a < holdingAngles.length; a++) {
+			holdingAngles[a] = Math.PI;
+		}
+		((ComplexVector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
+	}
 	
 	private SimpleMotion[] calcMotionGroup(int startIndex, int endIndex, double initialVelocity, int framesJump) {
 		SimpleMotion[] motionGroup = new SimpleMotion[endIndex - startIndex];
@@ -932,23 +945,20 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			if (movementNames.get(startIndex).equals("Triple Jump") && true) {
-				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
-				double[] holdingAngles = new double[movementFrames.get(startIndex)];
-				int framesCountervector = (int) p.debugValue;
-				// for (int a = 0; a < 5; a++) {
-				// 	holdingAngles[a] = SimpleMotion.NO_ANGLE;
+			if (startIndex == listPreparer.initialMovementIndex && initialMovement.sidewaysAccel > 0 && imYankFrames > 0) {
+				setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
+				// motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
+				// double[] holdingAngles = new double[movementFrames.get(startIndex)];
+				// for (int a = 0; a < holdingAngles.length - imYankFrames; a++) {
+				// 	holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
 				// }
-				for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
-					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-				}
-				for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
-					holdingAngles[a] = Math.PI;
-				}
-				((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
+				// for (int a = holdingAngles.length - imYankFrames; a < holdingAngles.length; a++) {
+				// 	holdingAngles[a] = Math.PI;
+				// }
+				// ((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
 			}
 			else
-			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
 			if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
@@ -962,23 +972,15 @@ public class VectorMaximizer {
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
 			else
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
-			if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
+			if (j == listPreparer.initialMovementIndex && currentMovement.sidewaysAccel > 0 && imYankFrames > 0) {
+				setYankHoldingAngles(motionGroup, currentMovement, i, j, imYankFrames);
+			}
+			else if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
 			}
-			// else if (movementNames.get(j).equals("Rainbow Spin") && simpleTech) {
-			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-			// 	Debug.println("Simple tech!");
-			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(rainbowSpinHoldingAngles);
-			// }
-			else if (movementNames.get(j).equals("Rainbow Spin") && rsHoldBack) {
-				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-				double[] holdingAngles = new double[movementFrames.get(j)];
-				for (int a = 0; a < holdingAngles.length - 1; a++) {
-					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-				}
-				holdingAngles[holdingAngles.length - 1] = Math.PI;
-				((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
+			else if (movementNames.get(j).equals("Rainbow Spin") && rsYank) {
+				setYankHoldingAngles(motionGroup, currentMovement, i, j, 1);
 			}
 			// else if (movementNames.get(j).equals("Dive Cap Bounce")) {
 			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
@@ -1104,26 +1106,29 @@ public class VectorMaximizer {
 	}
 
 	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
-	public static final int MAX_TRY = 0, MAX_RS = 1, MAX_HCT = 2, MAX_VA1 = 3;
+	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_HCT = 3, MAX_VA1 = 4;
 	public double maximize(int optID) {
 		switch (optID) {
 			case MAX_TRY:
 				return maximize_try();
+			case MAX_IM:
+				if (p.maximizeYank) //TODO: check to make sure movement is correct
+					return maximize_InitialMovement();
+				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
-				if (hasRainbowSpin && p.maximizeRS)
+				if (hasRainbowSpin && p.maximizeYank)
 					return maximize_RS();
-				else
-					return maximize(optID + 1);
+				else break;
 			case MAX_HCT: //hct falling optimization
 				if (hasVariableHCTFallVector)
 					return binarySearch(-Math.PI / 2, Math.PI / 2, MAX_HCT, maximize_HCT_limit)[0];
-				else
-					return maximize(optID + 1);
+				else break;
 			case MAX_VA1: //first cap throw angle optimization, and also finds second cap throw/last movement optimization via findVariableAngle2()
 				return maximize_variableAngle1();
 			default:
 				return maximize_variableAngle1();
 		}
+		return maximize(optID + 1);
 	}
 
 	//this function finds the correct/optimal RCV if applicable
@@ -1350,16 +1355,31 @@ public class VectorMaximizer {
 		return displacements;
 	}
 
+	public static final int MAX_IM_YANK_FRAMES = 8;
+
+	private double maximize_InitialMovement() {
+		imYankFrames = 0;
+		double bestDisp = maximize(MAX_IM + 1);
+		for (imYankFrames = 1; imYankFrames <= MAX_IM_YANK_FRAMES; imYankFrames++) { //keep trying to yank for more frames until the result is worse
+			double curDisp = maximize(MAX_IM + 1);
+			if (curDisp < bestDisp)
+				break;
+			bestDisp = curDisp;
+		}
+		imYankFrames--;
+		return maximize(MAX_IM + 1);
+	}
+
 	private double maximize_RS() {
-			rsHoldBack = false;
-			double bestNoHoldBack = maximize(MAX_RS + 1);
-			rsHoldBack = true;
-			double bestHoldBack = maximize(MAX_RS + 1);
-			if (bestHoldBack < bestNoHoldBack) {
-				rsHoldBack = false;
+			rsYank = false;
+			double bestNoYank = maximize(MAX_RS + 1);
+			rsYank = true;
+			double bestYank = maximize(MAX_RS + 1);
+			if (bestYank < bestNoYank) {
+				rsYank = false;
 				maximize(MAX_RS + 1);
 			}
-			return Math.max(bestHoldBack, bestNoHoldBack);
+			return Math.max(bestYank, bestNoYank);
 	}
 
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech

@@ -95,7 +95,7 @@ public class Solver implements SolverInterface {
 
     boolean success = false;
 
-    boolean userMaximizeRS;
+    boolean userMaximizeYank;
 
     ArrayList<DoubleIntArray> bestResults;
 
@@ -153,8 +153,8 @@ public class Solver implements SolverInterface {
         p.diveFirstFrameDecel = 0;
         p.diveCapBounceAngle = 18;
         p.vectorAngle = 90;
-        userMaximizeRS = p.maximizeRS;
-        p.maximizeRS = false;
+        userMaximizeYank = p.maximizeYank;
+        p.maximizeYank = false;
 
         if (p.solveForInitialAngle) {
             p.initialAngle = p.targetAngle;
@@ -282,6 +282,7 @@ public class Solver implements SolverInterface {
 
         Debug.println("Got Maximzer");
 
+        //TODO: use new logic for this that is not dependent on there being a cap throw right after
         int maximizer_initialMovementIndex = -1;
         for (int i = 1; i < presetMaximizer.movementNames.size(); i++) {
             if (Movement.isMidairCapThrow(presetMaximizer.movementNames.get(i)) || presetMaximizer.movementNames.get(i).equals("Rainbow Spin")) { //the first movement is right before the first cap throw or rainbow spin
@@ -558,7 +559,7 @@ public class Solver implements SolverInterface {
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
         bestDurations = test(durations, delta, 0, p.y0).intArray;
-        p.maximizeRS = userMaximizeRS; //now test with RS optimization for full accuracy
+        p.maximizeYank = userMaximizeYank; //now test with RS optimization for full accuracy
         bestDisp = test(bestDurations, true, false);
         //Debug.println(test(best.intArray));
 

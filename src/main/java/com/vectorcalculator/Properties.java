@@ -324,7 +324,7 @@ public class Properties {
     int hctCapReturnFrame = 36;
 
     boolean rainbowSpin = false;
-    boolean maximizeRS = true;
+    boolean maximizeYank = true;
 
     boolean initialAndTargetGiven = false;
     boolean initialAngleGiven = false;

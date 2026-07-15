@@ -21,6 +21,8 @@ public class MovementNameListPreparer {
 	int lastInitialMovementFrame = 0;
 	
 	String invalidMessage = "";
+
+	int initialMovementIndex = 0; //index of final piece of initial movement
 	
 	public MovementNameListPreparer() {
 		//this.genPropertiesModel = VectorCalculator.genPropertiesModel;
@@ -51,10 +53,12 @@ public class MovementNameListPreparer {
 		if (p.canMoonwalk && p.framesMoonwalk > 0) {
 			movementNames.add("Moonwalk");
 			movementFrames.add(p.framesMoonwalk);
+			initialMovementIndex++;
 		}
 		else if (p.canMoonwalk && p.framesRun > 0) {
 			movementNames.add("Coyote Time");
 			movementFrames.add(p.framesRun);
+			initialMovementIndex++;
 		}
 		
 		//prepending movements if there are ones to prepend to the actual named movememnt
@@ -62,18 +66,22 @@ public class MovementNameListPreparer {
 		if (name.equals("Backflip")) {
 			movementNames.add("Crouch");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Long Jump")) {
 			movementNames.add("Crouch");
 			movementFrames.add(p.framesCrouch);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Uncapture")) {
 			movementNames.add("Pre-Uncapture");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		else if (name.contains("Pole/Fork")) {
 			movementNames.add("Pole/Fork Pre-Flick");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		
 		int flowerFrames = 40;
@@ -86,36 +94,42 @@ public class MovementNameListPreparer {
 			movementFrames.add(43);
 			movementNames.add("Roll Vector");
 			movementFrames.add(frames - 43);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Crouch Roll") && frames > 57) {
 			movementNames.add("Crouch Roll");
 			movementFrames.add(57);
 			movementNames.add("Roll Vector");
 			movementFrames.add(frames - 57);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Roll Boost") && frames > 56) {
 			movementNames.add("Roll Boost");
 			movementFrames.add(56);
 			movementNames.add("Roll Vector");
 			movementFrames.add(frames - 56);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Ground Pound Roll (No Vector)") && frames > 43) {
 			movementNames.add("Ground Pound Roll (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Crouch Roll (No Vector)") && frames > 57) {
 			movementNames.add("Crouch Roll (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Roll Boost (No Vector)") && frames > 56) {
 			movementNames.add("Roll Boost (No Vector)");
 			movementFrames.add(frames - 1);
 			movementNames.add("Roll Vector");
 			movementFrames.add(1);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Flower Bounce") && frames > flowerFrames) {
 			movementNames.add("Flower Bounce");
@@ -126,10 +140,12 @@ public class MovementNameListPreparer {
 				movementFrames.add(80);
 				movementNames.add("Flower Bounce Part 3");
 				movementFrames.add(frames - 80);
+				initialMovementIndex += 2;
 			}
 			else {
 				movementNames.add("Flower Bounce Part 2");
 				movementFrames.add(frames);
+				initialMovementIndex++;
 			}
 		}
 		else if (name.equals("Swinging Jump") && frames > 11) {
@@ -137,12 +153,14 @@ public class MovementNameListPreparer {
 			movementFrames.add(11);
 			movementNames.add("Swinging Jump Vector");
 			movementFrames.add(frames - 11);
+			initialMovementIndex++;
 		}
 		else if (name.equals("Flip Forward") && frames > VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed) { //could standardize this for all motion that behaves like this, add the motion name + " Vector"
 			movementNames.add("Flip Forward");
 			movementFrames.add(VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
 			movementNames.add("Flip Forward Vector");
 			movementFrames.add(frames - VectorCalculator.initialMovement.framesAtInitialHorizontalSpeed);
+			initialMovementIndex++;
 		}
 		else if (name.contains("RCV")) {
 			if (p.initialAndTargetGiven) {
@@ -157,11 +175,12 @@ public class MovementNameListPreparer {
 					return "Cannot calculate RCV with angle difference greater than 65°";
 				}
 			}
-			movementNames.add(name);
 			int rcFrames = (new Movement(name)).minFrames;
+			movementNames.add(name);
 			movementFrames.add(rcFrames);
 			movementNames.add("Falling");
 			movementFrames.add(frames - rcFrames);
+			initialMovementIndex++;
 		}
 		else {
 			movementNames.add(name);
@@ -258,6 +277,7 @@ public class MovementNameListPreparer {
 			}
 			oldName = name;
 		}
+		System.out.println("Initial movement index: " + initialMovementIndex);
 		return "";
 	}
 	

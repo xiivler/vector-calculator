@@ -102,7 +102,7 @@ public class VectorCalculator extends JPanel {
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"), first_cap_throw_vector_angle("First Cap Throw Vector Angle"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
-		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"), hyperoptimize_rainbow_spin("Hyperoptimize Rainbow Spin"),
+		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"), test_yanks("Test Yanks"),
 		custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
@@ -258,7 +258,7 @@ public class VectorCalculator extends JPanel {
 
 			if (p.rainbowSpin) {
 				params.add(null);
-				params.add(Parameter.hyperoptimize_rainbow_spin);
+				params.add(Parameter.test_yanks);
 			}
 
 			params.add(null);
@@ -486,8 +486,8 @@ public class VectorCalculator extends JPanel {
 		case hct_cap_return_frame:
 			value = p.hctCapReturnFrame;
 			break;
-		case hyperoptimize_rainbow_spin:
-			value = p.maximizeRS ? "Yes" : "No";
+		case test_yanks:
+			value = p.maximizeYank ? "Yes" : "No";
 			break;
 		case custom_final_cap_throw_angle:
 			value = p.customFCTAngle ? "Yes" : "No";
@@ -904,8 +904,8 @@ public class VectorCalculator extends JPanel {
 			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 23, Integer.MAX_VALUE);
 			updateHCTDuration();
 			break;
-		case hyperoptimize_rainbow_spin:
-			p.maximizeRS = value.toString().equals("Yes");
+		case test_yanks:
+			p.maximizeYank = value.toString().equals("Yes");
 			break;
 		case custom_final_cap_throw_angle:
 			p.customFCTAngle = value.toString().equals("Yes");
@@ -1774,7 +1774,7 @@ public class VectorCalculator extends JPanel {
 						return dropdown(new String[]{"Up", "Down", "Left", "Right"});
 					case hct_neutral:
 						return dropdown(new String[]{"Yes", "No"});
-					case hyperoptimize_rainbow_spin:
+					case test_yanks:
 						return dropdown(new String[]{"Yes", "No"});
 					case dive_turn:
 						if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES)
