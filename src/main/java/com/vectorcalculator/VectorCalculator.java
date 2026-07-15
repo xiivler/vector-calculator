@@ -235,10 +235,10 @@ public class VectorCalculator extends JPanel {
 			if (p.diveCapBounce) {
 				params.add(null);
 				if (!p.twoPlayerMode) {
+					params.add(Parameter.first_cap_throw_vector_angle);
 					params.add(Parameter.dive_angle);
 					params.add(Parameter.dive_angle_tolerance);
 					params.add(Parameter.dive_deceleration);
-					params.add(Parameter.first_cap_throw_vector_angle);
 				}
 				params.add(Parameter.dive_turn);
 				params.add(Parameter.cb_cap_return_frame);

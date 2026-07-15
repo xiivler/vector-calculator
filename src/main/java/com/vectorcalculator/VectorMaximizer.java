@@ -232,16 +232,9 @@ public class VectorMaximizer {
 		return !error.equals("");
 	}
 
-	public double maximize(int optID) {
-		if (optID == 0) {
-			return maximize_variableAngle1();
-		}
-		else return maximize_variableAngle1();
-	}
-
 	//applies the binary serach value based on what is being optimized
 	public void applyBinarySearchValue(double value, int optID) {
-		if (optID == 0) {
+		if (optID == MAX_HCT) {
 			if (value < 0) {
 				switchHCTFallVectorDir = true;
 				variableHCTHoldingAngle = -value;
@@ -254,8 +247,7 @@ public class VectorMaximizer {
 	}
 
 	//performs a modified binary search assuming ascending numbers
-	//optID is the optimization to perform
-	//0 = optimize HCT falling vector
+	//optID is the optimization being performed
 	//limit is the smallest increment; when reached it stops the search
 	public double[] binarySearch(double low, double high, int optID, double limit) {
 		double quarter = (high - low) / 4;
@@ -263,7 +255,7 @@ public class VectorMaximizer {
 		applyBinarySearchValue(med, optID);
 		double lowMed;
 		double highMed;
-		double medDisp = maximize(optID);
+		double medDisp = maximize(optID + 1);
 		double lowMedDisp;
 		double highMedDisp;
 
@@ -272,9 +264,9 @@ public class VectorMaximizer {
 			highMed = med + quarter;
 			Debug.println("BS vals: " + lowMed + ", " + highMed);
 			applyBinarySearchValue(lowMed, optID);
-			lowMedDisp = maximize(optID);
+			lowMedDisp = maximize(optID + 1);
 			applyBinarySearchValue(highMed, optID);
-			highMedDisp = maximize(optID);
+			highMedDisp = maximize(optID + 1);
 			Debug.println(lowMedDisp + ", " + highMedDisp);
 			if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
 				low = low;
@@ -298,7 +290,7 @@ public class VectorMaximizer {
 		}
 		double bestValue = med;
 		applyBinarySearchValue(bestValue, optID);
-		double bestDisp = maximize(optID);
+		double bestDisp = maximize(optID + 1);
 		return new double[]{bestDisp, bestValue};
 	}
 	
@@ -940,22 +932,22 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			// if (movementNames.get(startIndex).equals("Triple Jump") && true) {
-			// 	motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
-			// 	double[] holdingAngles = new double[movementFrames.get(startIndex)];
-			// 	int framesCountervector = (int) Math.abs(p.debugValue) + 1;
-			// 	// for (int a = 0; a < 5; a++) {
-			// 	// 	holdingAngles[a] = SimpleMotion.NO_ANGLE;
-			// 	// }
-			// 	for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
-			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-			// 	}
-			// 	for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
-			// 		holdingAngles[a] = p.debugValue * Math.PI * 2;
-			// 	}
-			// 	((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
-			// }
-			// else
+			if (movementNames.get(startIndex).equals("Triple Jump") && true) {
+				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
+				double[] holdingAngles = new double[movementFrames.get(startIndex)];
+				int framesCountervector = (int) p.debugValue;
+				// for (int a = 0; a < 5; a++) {
+				// 	holdingAngles[a] = SimpleMotion.NO_ANGLE;
+				// }
+				for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
+					holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+				}
+				for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
+					holdingAngles[a] = Math.PI;
+				}
+				((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
+			}
+			else
 			motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
@@ -1098,10 +1090,10 @@ public class VectorMaximizer {
 	
 	public double maximize() {
 		if (Debug.debug)
-			return maximize_try();
+			return maximize(MAX_TRY);
 
 		try {
-			return maximize_try();
+			return maximize(MAX_TRY);
 		}
 		catch (Exception ex) {
 			bestDisp = 0;
@@ -1111,12 +1103,30 @@ public class VectorMaximizer {
 		}
 	}
 
-	//the actual maximization function
-	//calls more maximization functions for each step
+	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
+	public static final int MAX_TRY = 0, MAX_RS = 1, MAX_HCT = 2, MAX_VA1 = 3;
+	public double maximize(int optID) {
+		switch (optID) {
+			case MAX_TRY:
+				return maximize_try();
+			case MAX_RS: //holding back on last rainbow spin frame
+				if (hasRainbowSpin && p.maximizeRS)
+					return maximize_RS();
+				else
+					return maximize(optID + 1);
+			case MAX_HCT: //hct falling optimization
+				if (hasVariableHCTFallVector)
+					return binarySearch(-Math.PI / 2, Math.PI / 2, MAX_HCT, maximize_HCT_limit)[0];
+				else
+					return maximize(optID + 1);
+			case MAX_VA1: //first cap throw angle optimization, and also finds second cap throw/last movement optimization via findVariableAngle2()
+				return maximize_variableAngle1();
+			default:
+				return maximize_variableAngle1();
+		}
+	}
+
 	//this function finds the correct/optimal RCV if applicable
-	//then calls maximize_RS (rainbow spin hold back on last frame)
-	//then calls maximize_HCT (hct falling vectoring)
-	//which calls maximize_variableAngle1 (first cap throw angle)
 	public double maximize_try() {
 		long startTime = System.currentTimeMillis();
 		
@@ -1153,7 +1163,7 @@ public class VectorMaximizer {
 
 		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
 		if (only_maximize_variableAngle2) {
-			maximize_variableAngle1();
+			maximize(MAX_VA1);
 		}
 		else if (hasVariableRollCancel) {
 			if (movementNames.get(0).equals("Optimal Distance RCV")) {
@@ -1174,7 +1184,7 @@ public class VectorMaximizer {
 					movementFrames.set(1, totalFrames - rc.minFrames);
 					rcFinalAngleDiff = calcRCFinalAngleDiff(movementNames.get(0), p.initialHorizontalSpeed, movementFrames.get(1));
 
-					maximize_RS();
+					maximize(MAX_TRY + 1);
 
 					if (once_bestDisp > bestDisp) {
 						bestRCName = Movement.RC_TYPES[i];
@@ -1202,7 +1212,7 @@ public class VectorMaximizer {
 			//on the first iteration just maximize it and see how far off we are
 			//then keep nudging it slightly
 			for (int i = 1; i <= maxRCVNudges; i++) {
-				maximize_RS();
+				maximize(MAX_TRY + 1);
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
 					unadjustedTargetAngle += Math.PI;
@@ -1233,7 +1243,7 @@ public class VectorMaximizer {
 					break;
 				}
 
-				maximize_RS();
+				maximize(MAX_TRY + 1);
 
 				unadjustedTargetAngle = Math.atan(once_bestDispX / once_bestDispZ);
 				if (unadjustedTargetAngle < 0)
@@ -1251,7 +1261,7 @@ public class VectorMaximizer {
 			}
 		}
 		else {
-			maximize_RS();
+			maximize(MAX_TRY + 1);
 		}
 
 		bestDispZ = once_bestDispZ;
@@ -1341,34 +1351,24 @@ public class VectorMaximizer {
 	}
 
 	private double maximize_RS() {
-		if (hasRainbowSpin && p.maximizeRS) {
 			rsHoldBack = false;
-			double bestNoHoldBack = maximize_HCT();
+			double bestNoHoldBack = maximize(MAX_RS + 1);
 			rsHoldBack = true;
-			double bestHoldBack = maximize_HCT();
+			double bestHoldBack = maximize(MAX_RS + 1);
 			if (bestHoldBack < bestNoHoldBack) {
 				rsHoldBack = false;
-				maximize_HCT();
+				maximize(MAX_RS + 1);
 			}
 			return Math.max(bestHoldBack, bestNoHoldBack);
-		}
-		else {
-			return maximize_HCT();
-		}
 	}
 
 	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
-	private double maximize_HCT() {
-		if (hasVariableHCTFallVector) {
-			//Debug.println(maximize_HCT_limit);
-			double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, maximize_HCT_limit);
-			//Debug.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
-			return results[0];
-		}
-		else {
-			return maximize_variableAngle1();
-		}
-	}
+	// private double maximize_HCT() {
+	// 		//Debug.println(maximize_HCT_limit);
+	// 		double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, maximize_HCT_limit);
+	// 		//Debug.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
+	// 		return results[0];
+	// }
 
 	//one iteration of maximization of variable angles 1 and 2 if they exist
 	private double maximize_variableAngle1() {
