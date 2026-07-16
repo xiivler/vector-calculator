@@ -160,7 +160,6 @@ public class Solver implements SolverInterface {
         p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         p.vectorAngle = 90;
         userMaximizeYank = p.maximizeYank;
-        p.maximizeYank = false;
 
         if (p.solveForInitialAngle) {
             p.initialAngle = p.targetAngle;
@@ -245,6 +244,8 @@ public class Solver implements SolverInterface {
         VectorCalculator.addPreset(p.midairPreset, false);
         
         setup();
+
+        p.maximizeYank = false;
 
         //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
 
