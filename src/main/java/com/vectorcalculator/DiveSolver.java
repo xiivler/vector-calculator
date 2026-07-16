@@ -66,6 +66,8 @@ public class DiveSolver implements SolverInterface {
             return false;
         }
 
+        p.vectorAngle = 90;
+
         boolean oldDurationFrames = p.durationFrames;
 
         if (!p.durationFrames) {
@@ -87,6 +89,9 @@ public class DiveSolver implements SolverInterface {
 
         if (p.twoPlayerMode) {
             p.diveCapBounceAngle = VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE;
+        }
+        else {
+            p.diveCapBounceAngle = Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         }
 
         int[][] midairs = p.midairs;
@@ -232,14 +237,14 @@ public class DiveSolver implements SolverInterface {
         }
 
         if (p.diveTurn == TurnDuringDive.TEST) {
-            int testDiveTurn = testCT(.02, .1, true);
+            int testDiveTurn = testCT(.02, 1, true);
             if (testDiveTurn != -1)
                 return testDiveTurn;
             else
                 return testCT(.1, 1, false);
         }
         else if (p.diveTurn == TurnDuringDive.YES) {
-            return testCT(.02, .1, true);
+            return testCT(.02, 1, true);
         }
         else
             return testCT(.1, 1, false);
@@ -247,6 +252,8 @@ public class DiveSolver implements SolverInterface {
 
     //public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
     public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn) {
+        p.vectorAngle = 90;
+        p.diveFirstFrameDecel = 0;
         maximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
@@ -257,12 +264,11 @@ public class DiveSolver implements SolverInterface {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
             maximizer.edgeCBMin = 0;
             p.diveCapBounceAngle = 0;
-            maximizer.edgeCBMax = 12;
+            maximizer.edgeCBMax = Solver.EDGE_CB_MAX_NO_DIVE_TURN;
         }
-        maximizer.maximize_HCT_limit = Math.toRadians(8);
+        maximizer.maximize_HCT_limit = Solver.MAXIMIZE_HCT_LIMIT;
         //maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         maximizer.vectorAngleIncrement = vectorAngleIncrement;
-        p.diveFirstFrameDecel = 0;
         maximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         bestDisp = maximizer.maximize();
         int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);

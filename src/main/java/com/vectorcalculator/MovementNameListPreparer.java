@@ -277,7 +277,7 @@ public class MovementNameListPreparer {
 			}
 			oldName = name;
 		}
-		System.out.println("Initial movement index: " + initialMovementIndex);
+		//System.out.println("Initial movement index: " + initialMovementIndex);
 		return "";
 	}
 	

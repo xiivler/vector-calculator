@@ -1574,7 +1574,8 @@ public class VectorCalculator extends JPanel {
 					solver.bestDurations[i] = p.midairs[i - 1][1];
 				}
 			}
-			solver.test(solver.bestDurations, true, solver.hasRCV);
+			p.maximizeYank = solver.userMaximizeYank; //now test with RS optimization for full accuracy
+			solver.test(solver.bestDurations, true, true, solver.hasRCV);
 		}
 		else
 			solverInterface.solve(40);

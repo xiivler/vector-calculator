@@ -907,13 +907,25 @@ public class VectorMaximizer {
 	}
 
 	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, int yankFrames) {
+		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
+		int firstMaxForwardSpeedFrame = (int) Math.ceil(forwardAccelFrames);
+		if ((firstMaxForwardSpeedFrame == 0 && yankFrames == 0) || movement.sidewaysAccel == 0) { //TODO: maybe you can still do something if sideways accel is 0
+			motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, false);
+			return;
+		}
 		motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, true);
 		double[] holdingAngles = new double[movementFrames.get(movementIndex)];
-		for (int a = 0; a < holdingAngles.length - yankFrames; a++) {
+		for (int a = 0; a < firstMaxForwardSpeedFrame; a++) {
+			holdingAngles[a] = 0;
+		}
+		if (forwardAccelFrames != firstMaxForwardSpeedFrame) {
+			holdingAngles[firstMaxForwardSpeedFrame - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+		}
+		for (int a = firstMaxForwardSpeedFrame; a < holdingAngles.length - yankFrames; a++) {
 			holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
 		}
 		for (int a = holdingAngles.length - yankFrames; a < holdingAngles.length; a++) {
-			holdingAngles[a] = Math.PI;
+			holdingAngles[a] = SimpleMotion.BACK_ANGLE;
 		}
 		((ComplexVector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 	}
@@ -945,18 +957,8 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			if (startIndex == listPreparer.initialMovementIndex && initialMovement.sidewaysAccel > 0 && imYankFrames > 0) {
+			if (startIndex == listPreparer.initialMovementIndex)
 				setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
-				// motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
-				// double[] holdingAngles = new double[movementFrames.get(startIndex)];
-				// for (int a = 0; a < holdingAngles.length - imYankFrames; a++) {
-				// 	holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-				// }
-				// for (int a = holdingAngles.length - imYankFrames; a < holdingAngles.length; a++) {
-				// 	holdingAngles[a] = Math.PI;
-				// }
-				// ((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
-			}
 			else
 				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			motionGroup[0].setInitialAngle(Math.PI / 2);
@@ -972,7 +974,7 @@ public class VectorMaximizer {
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
 			else
 				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
-			if (j == listPreparer.initialMovementIndex && currentMovement.sidewaysAccel > 0 && imYankFrames > 0) {
+			if (j == listPreparer.initialMovementIndex) {
 				setYankHoldingAngles(motionGroup, currentMovement, i, j, imYankFrames);
 			}
 			else if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
@@ -1112,8 +1114,8 @@ public class VectorMaximizer {
 			case MAX_TRY:
 				return maximize_try();
 			case MAX_IM:
-				if (p.maximizeYank) //TODO: check to make sure movement is correct
-					return maximize_InitialMovement();
+				if (p.maximizeYank && (new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel != 0))
+					return maximize_initialMovement();
 				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
 				if (hasRainbowSpin && p.maximizeYank)
@@ -1357,12 +1359,12 @@ public class VectorMaximizer {
 
 	public static final int MAX_IM_YANK_FRAMES = 8;
 
-	private double maximize_InitialMovement() {
+	private double maximize_initialMovement() {
 		imYankFrames = 0;
 		double bestDisp = maximize(MAX_IM + 1);
 		for (imYankFrames = 1; imYankFrames <= MAX_IM_YANK_FRAMES; imYankFrames++) { //keep trying to yank for more frames until the result is worse
 			double curDisp = maximize(MAX_IM + 1);
-			if (curDisp < bestDisp)
+			if (curDisp <= bestDisp)
 				break;
 			bestDisp = curDisp;
 		}

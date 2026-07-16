@@ -13,6 +13,12 @@ public class Solver implements SolverInterface {
 
     String error = "";
 
+    static final double DEFAULT_EDGE_CB_ANGLE_DIVE_TURN = 18;
+    static final double DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN = 9;
+    static final double EDGE_CB_MIN_NO_DIVE_TURN = 6;
+    static final double EDGE_CB_MAX_NO_DIVE_TURN = 12;
+    static final double MAXIMIZE_HCT_LIMIT = Math.toRadians(8);
+
     int seconds = 0;
     long lastAlertTime = 0;
     //static final double limit = 20; 
@@ -151,7 +157,7 @@ public class Solver implements SolverInterface {
         }
 
         p.diveFirstFrameDecel = 0;
-        p.diveCapBounceAngle = 18;
+        p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         p.vectorAngle = 90;
         userMaximizeYank = p.maximizeYank;
         p.maximizeYank = false;
@@ -559,8 +565,8 @@ public class Solver implements SolverInterface {
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
         bestDurations = test(durations, delta, 0, p.y0).intArray;
-        p.maximizeYank = userMaximizeYank; //now test with RS optimization for full accuracy
-        bestDisp = test(bestDurations, true, false);
+        p.maximizeYank = userMaximizeYank; //now test with RS optimization for full accuracy, be careful to also include this in CalculateThread.restest()
+        bestDisp = test(bestDurations, true, false, false);
         //Debug.println(test(best.intArray));
 
         Debug.println("Best Results " + 0 + ": " + bestDisp);
@@ -575,7 +581,7 @@ public class Solver implements SolverInterface {
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
             testDurations = bestResults.get(i).intArray;
-            double testDisp = test(testDurations, true, false);
+            double testDisp = test(testDurations, true, false, false);
             if (testDisp > bestDisp) {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
@@ -583,7 +589,7 @@ public class Solver implements SolverInterface {
             Debug.println("Best Results " + i + ": " + testDisp);
             Debug.println(Arrays.toString(testDurations));
         }
-        test(bestDurations, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
+        test(bestDurations, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
@@ -710,21 +716,21 @@ public class Solver implements SolverInterface {
         p.vectorAngle = 90;
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
-            p.diveCapBounceAngle = 18;
+            p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         }
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            p.diveCapBounceAngle = 9;
+            p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN;
         }
         double userTolerance = p.diveCapBounceTolerance;
         VectorMaximizer ballparkMaximizer = VectorCalculator.getMaximizer();
         if (!diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            ballparkMaximizer.edgeCBMin = 6;
-            ballparkMaximizer.edgeCBMax = 12;
+            ballparkMaximizer.edgeCBMin = EDGE_CB_MIN_NO_DIVE_TURN;
+            ballparkMaximizer.edgeCBMax = EDGE_CB_MAX_NO_DIVE_TURN;
         }
         //ballparkMaximizer.maxRCVNudges = 5;
-        ballparkMaximizer.maximize_HCT_limit = Math.toRadians(8);
+        ballparkMaximizer.maximize_HCT_limit = MAXIMIZE_HCT_LIMIT;
         ballparkMaximizer.vectorAngleIncrement = vectorAngleIncrement;
         p.diveFirstFrameDecel = 0;
         if (zeroAngleTolerance && userTolerance < .1)
@@ -886,7 +892,7 @@ public class Solver implements SolverInterface {
             int[] testDurations = durations.clone();
             testDurations[index] = durations[index] + test_delta;
 
-            DoubleIntArray result = new DoubleIntArray(test(testDurations, false, false), testDurations);
+            DoubleIntArray result = new DoubleIntArray(test(testDurations, false, false, false), testDurations);
             //Debug.println(Arrays.toString(testDurations) + ", " + test_y_pos + ", " + result.d);
             double currentBest = bestResults.get(0).d;
             if (result.d > 0) {
@@ -909,7 +915,7 @@ public class Solver implements SolverInterface {
         }
     }
 
-    public double test(int[] testDurations, boolean fullAccuracy, boolean adjustInitialAngle) {
+    public double test(int[] testDurations, boolean fullAccuracy, boolean resetDiveAndVectorAngles, boolean adjustInitialAngle) {
         if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
             return 0;
         }
@@ -943,21 +949,25 @@ public class Solver implements SolverInterface {
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
             if (!p.twoPlayerMode) {
-                maximizer.edgeCBMin = 6;
-                maximizer.edgeCBMax = 12;
+                maximizer.edgeCBMin = EDGE_CB_MIN_NO_DIVE_TURN;
+                maximizer.edgeCBMax = EDGE_CB_MAX_NO_DIVE_TURN;
             }
         }
 
         if (!fullAccuracy) {
-            maximizer.maximize_HCT_limit = Math.toRadians(8);
+            maximizer.maximize_HCT_limit = MAXIMIZE_HCT_LIMIT;
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
         }
-        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode) {
+        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode && !resetDiveAndVectorAngles) {
             p.vectorAngle = vectorAngles[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
             //these will get internalized by the maximizer in the next call
             //Debug.println("It is " + p.diveCapBounceAngle + " at " + ctDuration + ", " + diveDuration);
+        }
+        else {
+            p.vectorAngle = 90;
+            p.diveCapBounceAngle = diveTurn ? DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN;
         }
         double disp = maximizer.maximize();
         if (fullAccuracy) {
@@ -981,7 +991,7 @@ public class Solver implements SolverInterface {
                 p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
                 Debug.println(firstFrameVelocityAngle);
             }
-            return test(testDurations, fullAccuracy, false);
+            return test(testDurations, fullAccuracy, false, false);
         }
         return disp;
     }

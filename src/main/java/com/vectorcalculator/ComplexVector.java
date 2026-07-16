@@ -30,14 +30,15 @@ public class ComplexVector extends SimpleVector {
 	}
 	
 	public double calcDispSideways() {
-		if (optimalForwardAccel)
-			vectorFrames = Math.max(frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0), 0);
-		else
-			vectorFrames = frames;
+		// if (optimalForwardAccel)
+		// 	vectorFrames = Math.max(frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0), 0);
+		// else
+		// 	vectorFrames = frames;
 		
 		dispSideways = 0;
 		sidewaysVelocity = 0;
-		for (int i = frames - vectorFrames; i < frames; i++)
+		//for (int i = frames - vectorFrames; i < frames; i++)
+		for (int i = 0; i < frames; i++)
 			stepSideways(i);
 		finalSidewaysVelocity = sidewaysVelocity;
 		
@@ -111,30 +112,30 @@ public class ComplexVector extends SimpleVector {
 
 		int i = 0;
 		//when holding forwards
-		if (optimalForwardAccel)
-			while (i < frames - vectorFrames) {
-				//Debug.println("step: " + Math.toDegrees(rotation));
-				oldRotation = rotation;
-				if (rotation > initialAngle) {
-					rotationVelocity -= rotationalAccel;
-					if (rotationVelocity < -maxRotationalSpeed)
-						rotationVelocity = -rotationalSpeedAfterMax;
-				}
-				else {
-					rotationVelocity += rotationalAccel;
-					if (rotationVelocity > maxRotationalSpeed)
-						rotationVelocity = rotationalSpeedAfterMax;
-				}
+		// if (optimalForwardAccel)
+		// 	while (i < frames - vectorFrames) {
+		// 		//Debug.println("step: " + Math.toDegrees(rotation));
+		// 		oldRotation = rotation;
+		// 		if (rotation > initialAngle) {
+		// 			rotationVelocity -= rotationalAccel;
+		// 			if (rotationVelocity < -maxRotationalSpeed)
+		// 				rotationVelocity = -rotationalSpeedAfterMax;
+		// 		}
+		// 		else {
+		// 			rotationVelocity += rotationalAccel;
+		// 			if (rotationVelocity > maxRotationalSpeed)
+		// 				rotationVelocity = rotationalSpeedAfterMax;
+		// 		}
 						
-				rotation += rotationVelocity;
-				if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
-					rotation = initialAngle;
-					rotationVelocity = 0;
-					i = frames - vectorFrames;
-					break;
-				}
-				i++;
-			}
+		// 		rotation += rotationVelocity;
+		// 		if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
+		// 			rotation = initialAngle;
+		// 			rotationVelocity = 0;
+		// 			i = frames - vectorFrames;
+		// 			break;
+		// 		}
+		// 		i++;
+		// 	}
 		
 		while (i < frames) {
 			//Debug.println("step: " + Math.toDegrees(rotation));
@@ -201,13 +202,13 @@ public class ComplexVector extends SimpleVector {
 			double zVelocity;
 			double xVelocity;
 			double yVelocity = movement.initialVerticalSpeed;
-			int nonVectorFrames = frames - vectorFrames;
+			//int nonVectorFrames = frames - vectorFrames;
 			
 			double[] holdingAnglesAdjusted = new double[frames];
 			for (int i = 0; i < frames; i++)
-				if (i < nonVectorFrames)
-					holdingAnglesAdjusted[i] = initialAngle;
-				else if (holdingAngles[i] == NO_ANGLE)
+				//if (i < nonVectorFrames)
+				//	holdingAnglesAdjusted[i] = initialAngle;
+				if (holdingAngles[i] == NO_ANGLE)
 					holdingAnglesAdjusted[i] = NO_ANGLE;
 				else if (rightVector)
 					holdingAnglesAdjusted[i] = initialAngle - holdingAngles[i];
@@ -317,13 +318,13 @@ public class ComplexVector extends SimpleVector {
 		double zVelocity;
 		double xVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
-		int nonVectorFrames = frames - vectorFrames;
+		//int nonVectorFrames = frames - vectorFrames;
 		
 		double[] holdingAnglesAdjusted = new double[frames];
 		for (int i = 0; i <= throwFrame; i++)
-			if (i < nonVectorFrames)
-				holdingAnglesAdjusted[i] = initialAngle;
-			else if (holdingAngles[i] == NO_ANGLE)
+			//if (i < nonVectorFrames)
+			//	holdingAnglesAdjusted[i] = initialAngle;
+			if (holdingAngles[i] == NO_ANGLE)
 				holdingAnglesAdjusted[i] = NO_ANGLE;
 			else if (rightVector)
 				holdingAnglesAdjusted[i] = initialAngle - holdingAngles[i];
@@ -332,7 +333,7 @@ public class ComplexVector extends SimpleVector {
 		
 		for (int i = 0; i <= throwFrame; i++) {	
 			//apply forward/backward accel
-			if (i >= nonVectorFrames) {
+			//if (i >= nonVectorFrames) {
 				if (holdingAngles[i] != NO_ANGLE) {
 					double accelValue;
 					if (holdingAngles[i] <= NORMAL_ANGLE && holdingAngles[i] >= -NORMAL_ANGLE) {
@@ -346,13 +347,14 @@ public class ComplexVector extends SimpleVector {
 					}
 					forwardVelocity += accelValue * Math.cos(holdingAngles[i]);
 				}
-			}
-			else
-				forwardVelocity += baseForwardAccel;
+			//}
+			//else
+			//	forwardVelocity += baseForwardAccel;
 			if (forwardVelocity > forwardVelocityCap)
 				forwardVelocity = forwardVelocityCap;
 			//apply sideways accel
-			if (i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
+			//if (i >= nonVectorFrames && holdingAngles[i] != NO_ANGLE) {
+			if (holdingAngles[i] != NO_ANGLE) {
 				if (holdingMinRadius[i]) {
 					sidewaysVelocity += MIN_RADIUS * baseSidewaysAccel * Math.sin(holdingAngles[i]);
 				}
