@@ -83,14 +83,16 @@ public class ComplexNonvector extends SimpleMotion {
 					forwardAccel *= MIN_RADIUS;
 					sidewaysAccel *= MIN_RADIUS;
 				}
-				forwardVelocity += forwardAccel * Math.cos(velocityAngle) - sidewaysAccel * Math.sin(velocityAngle);
-				sidewaysVelocity += forwardAccel * Math.sin(velocityAngle) + sidewaysAccel * Math.cos(velocityAngle); //is it -forwardAccel * sin?
-				//forwardVelocity += forwardAccel;
-				//sidewaysVelocity += sidewaysAccel;
+
+				forwardVelocity += forwardAccel * Math.cos(velocityAngle);
+				sidewaysVelocity += forwardAccel * Math.sin(velocityAngle); //is it -forwardAccel * sin?
 
 				double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
 				forwardVelocity *= normalizer;
 				sidewaysVelocity *= normalizer;
+
+				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
+				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
 				
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 
@@ -168,10 +170,6 @@ public class ComplexNonvector extends SimpleMotion {
 			double[][] info = new double[frames][9];
 			for (int i = 0; i < frames; i++) {	
 				if (holdingAngles[i] != NO_ANGLE) {
-					double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
-					forwardVelocity *= normalizer;
-					sidewaysVelocity *= normalizer;
-					
 					double forwardAccel;
 					double sidewaysAccel;
 					double holdingAngleAdjusted = holdingAngles[i] - velocityAngle;
@@ -186,10 +184,16 @@ public class ComplexNonvector extends SimpleMotion {
 						forwardAccel *= MIN_RADIUS;
 						sidewaysAccel *= MIN_RADIUS;
 					}
-					forwardVelocity += forwardAccel * Math.cos(velocityAngle) - sidewaysAccel * Math.sin(velocityAngle);
-					sidewaysVelocity += forwardAccel * Math.sin(velocityAngle) + sidewaysAccel * Math.cos(velocityAngle); //is it -forwardAccel * sin?
-					//forwardVelocity += forwardAccel;
-					//sidewaysVelocity += sidewaysAccel;
+
+					forwardVelocity += forwardAccel * Math.cos(velocityAngle);
+					sidewaysVelocity += forwardAccel * Math.sin(velocityAngle); //is it -forwardAccel * sin?
+
+					double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
+					forwardVelocity *= normalizer;
+					sidewaysVelocity *= normalizer;
+
+					forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
+					sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
 					
 					velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 	
