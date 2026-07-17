@@ -27,7 +27,7 @@ public class ComplexNonvector extends SimpleMotion {
 	public ComplexNonvector(Movement movement, boolean rightTurn, int frames) {
 		super(movement, frames);
 		this.rightTurn = rightTurn;
-		this.baseSidewaysAccel = movement.forwardAccel; //TODO: use sideways accel for this
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		if (rightTurn)
 			normalAngle = initialAngle - Math.PI / 2;
 		else
@@ -39,7 +39,7 @@ public class ComplexNonvector extends SimpleMotion {
 		this.holdingAngles = holdingAngles;
 		this.holdingMinRadius = new boolean[holdingAngles.length];
 		this.rightTurn = rightTurn;
-		this.baseSidewaysAccel = movement.forwardAccel;
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		if (rightTurn)
 			normalAngle = initialAngle - Math.PI / 2;
 		else
@@ -51,7 +51,7 @@ public class ComplexNonvector extends SimpleMotion {
 		this.holdingAngles = holdingAngles;
 		this.holdingMinRadius = new boolean[holdingAngles.length];
 		this.rightTurn = rightTurn;
-		this.baseSidewaysAccel = movement.forwardAccel;
+		this.baseSidewaysAccel = movement.sidewaysAccel;
 		if (rightTurn)
 			normalAngle = initialAngle - Math.PI / 2;
 		else
@@ -85,7 +85,7 @@ public class ComplexNonvector extends SimpleMotion {
 				}
 
 				forwardVelocity += forwardAccel * Math.cos(velocityAngle);
-				sidewaysVelocity += forwardAccel * Math.sin(velocityAngle); //is it -forwardAccel * sin?
+				sidewaysVelocity += forwardAccel * Math.sin(velocityAngle);
 
 				double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
 				forwardVelocity *= normalizer;

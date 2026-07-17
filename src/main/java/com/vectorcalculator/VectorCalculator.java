@@ -146,6 +146,7 @@ public class VectorCalculator extends JPanel {
 			params.add(null);
 
 			params.add(Parameter.two_player);
+			params.add(Parameter.gravity);
 			params.add(null);
 
 			params.add(Parameter.initial_movement_category);
@@ -194,8 +195,10 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.upwarp);
 			}
 			params.add(null);
+			
+			params.add(Parameter.test_yanks);
+			params.add(null);
 
-			params.add(Parameter.gravity);
 			params.add(Parameter.zero_axis);
 			params.add(Parameter.camera);
 			if (p.cameraType == CameraType.CUSTOM)
@@ -255,9 +258,6 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.hct_cap_return_frame);
 				}
 			}
-
-			params.add(null);
-			params.add(Parameter.test_yanks);
 
 			params.add(null);
 			if (p.turnarounds)

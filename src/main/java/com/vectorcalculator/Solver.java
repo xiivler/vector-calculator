@@ -289,14 +289,7 @@ public class Solver implements SolverInterface {
 
         Debug.println("Got Maximzer");
 
-        //TODO: use new logic for this that is not dependent on there being a cap throw right after
-        int maximizer_initialMovementIndex = -1;
-        for (int i = 1; i < presetMaximizer.movementNames.size(); i++) {
-            if (Movement.isMidairCapThrow(presetMaximizer.movementNames.get(i)) || presetMaximizer.movementNames.get(i).equals("Rainbow Spin")) { //the first movement is right before the first cap throw or rainbow spin
-                maximizer_initialMovementIndex = i - 1;
-                break;
-            }
-        }
+        int maximizer_initialMovementIndex = presetMaximizer.listPreparer.initialMovementIndex;
         int maximizer_firstGPIndex;
         if (presetMaximizer.hasVariableCapThrow1Falling)
             maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 2;

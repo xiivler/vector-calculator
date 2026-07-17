@@ -194,12 +194,12 @@ public class VectorMaximizer {
 					}
 				}
 				else if (i - 2 >= 0 && isFinalDive) {
-					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).sidewaysAccel > 0) && !movementNames.get(i - 3).contains("RCV")) {
+					if (i - 3 >= 0 && movementNames.get(i - 2).equals("Falling") && (new Movement(movementNames.get(i - 3)).canVector) && !movementNames.get(i - 3).contains("RCV")) {
 						hasVariableOtherMovement2 = true;
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).sidewaysAccel > 0 && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
+					else if (new Movement(movementNames.get(i - 2)).canVector && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -912,7 +912,7 @@ public class VectorMaximizer {
 	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, double yankFrames) {
 		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
 		int firstMaxForwardSpeedFrame = (int) Math.ceil(forwardAccelFrames);
-		if ((firstMaxForwardSpeedFrame == 0 && yankFrames == 0)) { //TODO: maybe you can still do something if sideways accel is 0
+		if ((firstMaxForwardSpeedFrame == 0 && yankFrames == 0)) {
 			motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, false);
 			return;
 		}
@@ -921,7 +921,7 @@ public class VectorMaximizer {
 		int fullYankFrames = (int) yankFrames;
 		int allYankFrames = (int) Math.ceil(yankFrames);
 		double partialYank = yankFrames - fullYankFrames;
-		if (movement.sidewaysAccel > 0) {
+		if (movement.canVector) {
 			for (int a = 0; a < firstMaxForwardSpeedFrame; a++) {
 				holdingAngles[a] = 0;
 			}
@@ -961,7 +961,7 @@ public class VectorMaximizer {
 			if (!fullSpeed) {
 				holdingAngles[holdingAngles.length - 1] = normalAngle; //this is a heuristic, it seems to be a good angle to hold to balance changing angle with building speed
 			}
-			else {
+			else if (fullYankFrames > 0) {
 				holdingAngles[holdingAngles.length - fullYankFrames - 1] = Math.PI / 3; //another heuristic, seems to work well for long jumps
 				holdingAngles[holdingAngles.length - fullYankFrames] = Math.PI / 3;
 			}
@@ -1152,7 +1152,7 @@ public class VectorMaximizer {
 			case MAX_TRY:
 				return maximize_try();
 			case MAX_IM:
-				if (p.maximizeYank && ((new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel != 0) || movementNames.get(listPreparer.initialMovementIndex).equals("Long Jump"))) //TODO: better condition
+				if (p.maximizeYank && ((new Movement(movementNames.get(listPreparer.initialMovementIndex)).canVector) || movementNames.get(listPreparer.initialMovementIndex).equals("Long Jump"))) //TODO: better condition
 					return maximize_initialMovement();
 				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
@@ -1401,7 +1401,7 @@ public class VectorMaximizer {
 
 	private double maximize_initialMovement() {
 		imYankFrames = 0;
-		if (new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel == 0) { //use binary search in this case (ex. long jump)
+		if (!(new Movement(movementNames.get(listPreparer.initialMovementIndex)).canVector)) { //use binary search in this case (ex. long jump)
 			binarySearch(0, MAX_IM_YANK_FRAMES_NONVECTOR, MAX_IM, MAX_IM_NONVECTOR_LIMIT);
 		}
 		else {

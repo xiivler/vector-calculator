@@ -77,6 +77,7 @@ public class Movement {
 	boolean hasRotationalAccel = true;
 
 	boolean canMoonwalk = false;
+	boolean canVector = true;
 	
 	double initialHorizontalSpeed = 0;
 	double initialVerticalSpeed = 0;
@@ -154,6 +155,7 @@ public class Movement {
 			gravity = 0;
 			moonGravity = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			forwardAccel = 0;
 			backwardAccel = 0;
 			recommendedInitialHorizontalSpeed = 0;
@@ -225,6 +227,7 @@ public class Movement {
 		else if (movementType.equals("Moonwalk")) {
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			gravity = 3;
@@ -234,6 +237,7 @@ public class Movement {
 		else if (movementType.equals("Coyote Time")) {
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			initialVerticalSpeed = -7;
@@ -281,6 +285,7 @@ public class Movement {
 			}
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = 3.5;
 			trueSpeedCap = 100;
 			canMoonwalk = true;
@@ -292,7 +297,9 @@ public class Movement {
 			initialHorizontalSpeed = 5; //could have option for starting backwards as well
 			recommendedInitialHorizontalSpeed = 0;
 			forwardAccel = .2;
-			sidewaysAccel = 0;
+			sidewaysAccel = .2;
+			backwardAccel = .2;
+			canVector = false;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 			gravity = 1;
@@ -326,7 +333,9 @@ public class Movement {
 			initialVerticalSpeed = 32;
 			initialHorizontalSpeed = 9;
 			recommendedInitialHorizontalSpeed = 0;
+			forwardAccel = .25;
 			sidewaysAccel = .075;
+			backwardAccel = .5;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 			gravity = 1;
@@ -342,7 +351,9 @@ public class Movement {
 				initialHorizontalSpeed = 7.5;
 			initialVerticalSpeed = 12;
 			forwardAccel = .25;
-			sidewaysAccel = 0;
+			sidewaysAccel = .25;
+			backwardAccel = .5;
+			canVector = false;
 			defaultSpeedCap = 23;
 			trueSpeedCap = 23;
 			gravity = .48;
@@ -363,6 +374,7 @@ public class Movement {
 			minFrames = 44;
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			moonGravity = 1;
 			defaultSpeedCap = 30;
 			trueSpeedCap = 30;
@@ -380,6 +392,7 @@ public class Movement {
 			minFrames = 58;
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			moonGravity = 1;
 			defaultSpeedCap = 20;
 			trueSpeedCap = 100; //no true speed cap known, using 100 to prevent breaking anything
@@ -400,6 +413,7 @@ public class Movement {
 			minFrames = 57;
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			moonGravity = 1;
 			defaultSpeedCap = 35;
 			trueSpeedCap = 100; //sometimes you can get faster than 35 on slopes, so set this high to avoid that being an issue
@@ -430,7 +444,8 @@ public class Movement {
 			}
 			forwardAccel = 0;
 			backwardAccel = .5;
-			sidewaysAccel = 0;
+			sidewaysAccel = 0.125;
+			canVector = false;
 			defaultSpeedCap = initialHorizontalSpeed;
 			trueSpeedCap = initialHorizontalSpeed;
 			gravity = 2;
@@ -454,6 +469,7 @@ public class Movement {
 				initialVerticalSpeed = -35;
 			recommendedInitialHorizontalSpeed = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			moonGravity = 1.5;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -470,6 +486,7 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 0;
 			forwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			moonGravity = 1.5;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -508,6 +525,7 @@ public class Movement {
 			gravity = .95;
 			moonGravity = .3;
 			sidewaysAccel = 0;
+			canVector = false;
 			inputs1.add(Inputs.B);
 		}
 
@@ -741,6 +759,7 @@ public class Movement {
 			forwardAccel = 0;
 			backwardAccel = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 		}
 		
 		else if (movementType.equals("Pre-Uncapture")) {
@@ -750,6 +769,7 @@ public class Movement {
 			gravity = 0;
 			moonGravity = 0;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
 		}
@@ -775,6 +795,7 @@ public class Movement {
 				initialVerticalSpeed = 60;
 			forwardAccel = 1;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = 9;
 			trueSpeedCap = 9;
 		}
@@ -785,6 +806,7 @@ public class Movement {
 			initialVerticalSpeed = 0;
 			forwardAccel = 1;
 			sidewaysAccel = 0;
+			canVector = false;
 			gravity = .1;
 			moonGravity = .1;
 			defaultSpeedCap = 9;
@@ -798,6 +820,7 @@ public class Movement {
 			initialVerticalSpeed = -1;
 			forwardAccel = 1;
 			sidewaysAccel = 0;
+			canVector = false;
 			gravity = .1;
 			moonGravity = .1;
 			defaultSpeedCap = 9;
@@ -812,6 +835,7 @@ public class Movement {
 				initialVerticalSpeed = 15;
 			recommendedInitialHorizontalSpeed = 9;
 			sidewaysAccel = 0;
+			canVector = false;
 			defaultSpeedCap = 0;
 			gravity = 2;
 			moonGravity = 1.5;
@@ -827,6 +851,7 @@ public class Movement {
 			initialVerticalSpeed = 20;
 			framesAtMaxVerticalSpeed = 1;
 			sidewaysAccel = 0;
+			canVector = false;
 			gravity = 1;
 			defaultSpeedCap = 15;
 			trueSpeedCap = 15;
@@ -848,6 +873,7 @@ public class Movement {
 			initialVerticalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
 			sidewaysAccel = 0;
+			canVector = false;
 			gravity = 0;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
@@ -924,7 +950,7 @@ public class Movement {
 		if (movementType.equals("Coyote Time")) {
 			return new CoyoteTime(this, frames);
 		}
-		else if (sidewaysAccel == 0)
+		else if (!canVector)
 			if (complex && movementType.equals("Dive"))
 				return new DiveTurn(this, rightVector, frames);
 			else if (complex)
