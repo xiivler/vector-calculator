@@ -927,6 +927,8 @@ public class Movement {
 		else if (sidewaysAccel == 0)
 			if (complex && movementType.equals("Dive"))
 				return new DiveTurn(this, rightVector, frames);
+			else if (complex)
+				return new ComplexNonvector(this, rightVector, frames);
 			else
 				return new SimpleMotion(this, frames);
 		else if (complex)

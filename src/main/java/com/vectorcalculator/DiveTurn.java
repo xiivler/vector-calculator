@@ -63,16 +63,16 @@ public class DiveTurn extends SimpleMotion {
 		double velocityAngle = 0;
 
 		for (int i = 0; i < frames; i++) {
+			if (firstFrameDecel == 0 && i > 0 && i <= frames - endDecelFrames) {
+				forwardVelocity *= normalizer;
+				sidewaysVelocity *= normalizer;
+			}
 			if (i == 0 && firstFrameDecel > 0) {
 				forwardVelocity -= firstFrameDecel;
 			}
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
-				if (firstFrameDecel == 0) {
-					forwardVelocity *= normalizer;
-					sidewaysVelocity *= normalizer;
-				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {
@@ -159,6 +159,10 @@ public class DiveTurn extends SimpleMotion {
 
 		double[][] info = new double[frames][9];
 		for (int i = 0; i < frames; i++) {
+			if (firstFrameDecel == 0 && i > 0 && i <= frames - endDecelFrames) {
+				forwardVelocity *= normalizer;
+				sidewaysVelocity *= normalizer;
+			}
 			if (i == 0 && firstFrameDecel > 0) {
 				forwardVelocity -= firstFrameDecel;
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
@@ -166,10 +170,6 @@ public class DiveTurn extends SimpleMotion {
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
-				if (firstFrameDecel == 0) {
-					forwardVelocity *= normalizer;
-					sidewaysVelocity *= normalizer;
-				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {
@@ -261,6 +261,10 @@ public class DiveTurn extends SimpleMotion {
 		double velocityAngle = 0;
 
 		for (int i = 0; i < frames; i++) {
+			if (firstFrameDecel == 0 && i > 0 && i <= frames - endDecelFrames) {
+				forwardVelocity *= normalizer;
+				sidewaysVelocity *= normalizer;
+			}
 			if (i == 0 && firstFrameDecel > 0) {
 				forwardVelocity -= firstFrameDecel;
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
@@ -268,10 +272,6 @@ public class DiveTurn extends SimpleMotion {
 			else if (i < frames - endDecelFrames) {
 				forwardVelocity -= sidewaysAccel * Math.sin(velocityAngle);
 				sidewaysVelocity += sidewaysAccel * Math.cos(velocityAngle);
-				if (firstFrameDecel == 0) {
-					forwardVelocity *= normalizer;
-					sidewaysVelocity *= normalizer;
-				}
 				velocityAngle = Math.atan(sidewaysVelocity / forwardVelocity);
 			}
 			else if (i == frames - endDecelFrames) {

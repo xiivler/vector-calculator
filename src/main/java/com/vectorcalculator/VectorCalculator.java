@@ -256,10 +256,8 @@ public class VectorCalculator extends JPanel {
 				}
 			}
 
-			if (p.rainbowSpin) {
-				params.add(null);
-				params.add(Parameter.test_yanks);
-			}
+			params.add(null);
+			params.add(Parameter.test_yanks);
 
 			params.add(null);
 			if (p.turnarounds)

@@ -103,7 +103,7 @@ public class VectorMaximizer {
 	double variableHCTHoldingAngle;
 
 	boolean rsYank;
-	int imYankFrames;
+	double imYankFrames;
 	
 	double rcTrueInitialAngleDiff;
 	double rcFinalAngleDiff;
@@ -244,6 +244,9 @@ public class VectorMaximizer {
 				switchHCTFallVectorDir = false;
 				variableHCTHoldingAngle = value;
 			}
+		}
+		else if (optID == MAX_IM) {
+			imYankFrames = value;
 		}
 	}
 
@@ -906,28 +909,51 @@ public class VectorMaximizer {
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 
-	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, int yankFrames) {
+	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, double yankFrames) {
 		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
 		int firstMaxForwardSpeedFrame = (int) Math.ceil(forwardAccelFrames);
-		if ((firstMaxForwardSpeedFrame == 0 && yankFrames == 0) || movement.sidewaysAccel == 0) { //TODO: maybe you can still do something if sideways accel is 0
+		if ((firstMaxForwardSpeedFrame == 0 && yankFrames == 0)) { //TODO: maybe you can still do something if sideways accel is 0
 			motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, false);
 			return;
 		}
 		motionGroup[motionIndex] = movement.getMotion(movementFrames.get(movementIndex), currentVectorRight, true);
 		double[] holdingAngles = new double[movementFrames.get(movementIndex)];
-		for (int a = 0; a < firstMaxForwardSpeedFrame; a++) {
-			holdingAngles[a] = 0;
+		int fullYankFrames = (int) yankFrames;
+		int allYankFrames = (int) Math.ceil(yankFrames);
+		double partialYank = yankFrames - fullYankFrames;
+		if (movement.sidewaysAccel > 0) {
+			for (int a = 0; a < firstMaxForwardSpeedFrame; a++) {
+				holdingAngles[a] = 0;
+			}
+			if (forwardAccelFrames != firstMaxForwardSpeedFrame) {
+				holdingAngles[firstMaxForwardSpeedFrame - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+			}
+			for (int a = firstMaxForwardSpeedFrame; a < holdingAngles.length - allYankFrames; a++) {
+				holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
+			}
+			if (allYankFrames > fullYankFrames) {
+				holdingAngles[holdingAngles.length - allYankFrames] = SimpleMotion.NORMAL_ANGLE + (partialYank * Math.PI / 2);
+			}
+			for (int a = holdingAngles.length - fullYankFrames; a < holdingAngles.length; a++) {
+				holdingAngles[a] = SimpleMotion.BACK_ANGLE;
+			}
+			((ComplexVector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 		}
-		if (forwardAccelFrames != firstMaxForwardSpeedFrame) {
-			holdingAngles[firstMaxForwardSpeedFrame - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+		else {
+			for (int a = 0; a < holdingAngles.length - allYankFrames; a++) {
+				holdingAngles[a] = 0;
+			}
+			if (allYankFrames > fullYankFrames) {
+				holdingAngles[holdingAngles.length - allYankFrames] = partialYank * Math.PI / 2;
+			}
+			double normalAngle = SimpleMotion.NORMAL_ANGLE;
+			double deltaVelocityAngle = Math.atan(movement.forwardAccel / Math.max(movement.defaultSpeedCap, movement.initialHorizontalSpeed));
+			for (int a = holdingAngles.length - fullYankFrames; a < holdingAngles.length; a++) {
+				holdingAngles[a] = normalAngle;
+				normalAngle += deltaVelocityAngle;
+			}
+			((ComplexNonvector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 		}
-		for (int a = firstMaxForwardSpeedFrame; a < holdingAngles.length - yankFrames; a++) {
-			holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-		}
-		for (int a = holdingAngles.length - yankFrames; a < holdingAngles.length; a++) {
-			holdingAngles[a] = SimpleMotion.BACK_ANGLE;
-		}
-		((ComplexVector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 	}
 	
 	private SimpleMotion[] calcMotionGroup(int startIndex, int endIndex, double initialVelocity, int framesJump) {
@@ -1095,7 +1121,6 @@ public class VectorMaximizer {
 	public double maximize() {
 		if (Debug.debug)
 			return maximize(MAX_TRY);
-
 		try {
 			return maximize(MAX_TRY);
 		}
@@ -1114,7 +1139,7 @@ public class VectorMaximizer {
 			case MAX_TRY:
 				return maximize_try();
 			case MAX_IM:
-				if (p.maximizeYank && (new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel != 0))
+				if (p.maximizeYank && ((new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel != 0) || movementNames.get(listPreparer.initialMovementIndex).equals("Long Jump"))) //TODO: better condition
 					return maximize_initialMovement();
 				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
@@ -1358,17 +1383,25 @@ public class VectorMaximizer {
 	}
 
 	public static final int MAX_IM_YANK_FRAMES = 8;
+	public static final int MAX_IM_YANK_FRAMES_NONVECTOR = 32;
+	public static final double MAX_IM_NONVECTOR_LIMIT = 1;
 
 	private double maximize_initialMovement() {
 		imYankFrames = 0;
-		double bestDisp = maximize(MAX_IM + 1);
-		for (imYankFrames = 1; imYankFrames <= MAX_IM_YANK_FRAMES; imYankFrames++) { //keep trying to yank for more frames until the result is worse
-			double curDisp = maximize(MAX_IM + 1);
-			if (curDisp <= bestDisp)
-				break;
-			bestDisp = curDisp;
+		if (new Movement(movementNames.get(listPreparer.initialMovementIndex)).sidewaysAccel == 0) { //use binary search in this case (ex. long jump)
+			binarySearch(0, MAX_IM_YANK_FRAMES_NONVECTOR, MAX_IM, MAX_IM_NONVECTOR_LIMIT);
 		}
-		imYankFrames--;
+		else {
+			double bestDisp = maximize(MAX_IM + 1);
+			for (imYankFrames = 1; imYankFrames <= MAX_IM_YANK_FRAMES; imYankFrames++) { //keep trying to yank for more frames until the result is worse
+				double curDisp = maximize(MAX_IM + 1);
+				//System.out.println(curDisp);
+				if (curDisp <= bestDisp)
+					break;
+				bestDisp = curDisp;
+			}
+			imYankFrames--;
+		}
 		return maximize(MAX_IM + 1);
 	}
 
