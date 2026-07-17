@@ -946,9 +946,9 @@ public class VectorMaximizer {
 			if (allYankFrames > fullYankFrames) {
 				holdingAngles[holdingAngles.length - allYankFrames] = partialYank * Math.PI / 2;
 			}
-			double normalAngle = SimpleMotion.NORMAL_ANGLE - Math.toRadians(p.debugValue);
+			double normalAngle = SimpleMotion.NORMAL_ANGLE;
 			double deltaVelocityAngle = Math.atan(movement.forwardAccel / Math.max(movement.defaultSpeedCap, movement.initialHorizontalSpeed));
-			boolean fullSpeed = (movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel < holdingAngles.length - fullYankFrames;
+			boolean fullSpeed = (movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel <= holdingAngles.length - allYankFrames;
 			for (int a = holdingAngles.length - fullYankFrames; a < holdingAngles.length; a++) {
 				if (fullSpeed) {
 					holdingAngles[a] = normalAngle;
@@ -960,6 +960,10 @@ public class VectorMaximizer {
 			}
 			if (!fullSpeed) {
 				holdingAngles[holdingAngles.length - 1] = normalAngle; //this is a heuristic, it seems to be a good angle to hold to balance changing angle with building speed
+			}
+			else {
+				holdingAngles[holdingAngles.length - fullYankFrames - 1] = Math.PI / 3; //another heuristic, seems to work well for long jumps
+				holdingAngles[holdingAngles.length - fullYankFrames] = Math.PI / 3;
 			}
 			((ComplexNonvector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 		}
