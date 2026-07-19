@@ -83,6 +83,7 @@ public class Solver implements SolverInterface {
     int secondDiveIndex = -1;
     int finalCapThrowIndex = -1;
     int diveCapBounceIndex = -1;
+    int midairVaultIndex = -1;
     int reverseBonkIndex = -1;
 
     int iterations = 0;
@@ -146,7 +147,7 @@ public class Solver implements SolverInterface {
     }
 
     public void setup() {
-        if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
+        if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE || p.midairVault) {
             limit = 20;
             if (p.groundTypeSecondGP != GroundType.NONE) {
                 limit = 35;
@@ -216,6 +217,9 @@ public class Solver implements SolverInterface {
                 diveCapBounceIndex = i + 1;
                 firstDiveIndex = i;
             }
+            else if (preset[i][0] == VectorCalculator.P2CB) {
+                midairVaultIndex = i + 1;
+            }
             else if (i == preset.length - (p.reverseBonk ? 2 : 1) && preset[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i + 1;
                 finalCapThrowIndex = i;
@@ -258,9 +262,14 @@ public class Solver implements SolverInterface {
 
         Debug.println("Reached Preset Maximization");
 
-        preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
-        preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
-        preset[finalCapThrowIndex - 1][1] = tooManyFrames;
+        if (diveCapBounceIndex > 0)
+            preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
+        if (midairVaultIndex > 0)
+            preset[midairVaultIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
+        if (secondDiveIndex > 0)
+            preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
+        if (finalCapThrowIndex > 0)
+            preset[finalCapThrowIndex - 1][1] = tooManyFrames;
         if (p.groundTypeCB != GroundType.NONE && cbvFirst) {
             if (p.tripleThrow == TripleThrow.YES)
                 preset[homingTTIndex - 1][1] += 2;
@@ -290,14 +299,16 @@ public class Solver implements SolverInterface {
         Debug.println("Got Maximzer");
 
         int maximizer_initialMovementIndex = presetMaximizer.listPreparer.initialMovementIndex;
-        int maximizer_firstGPIndex;
-        if (presetMaximizer.hasVariableCapThrow1Falling)
-            maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 2;
-        else
-            maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 1;
+        int maximizer_firstGPIndex = -1;
+        if (presetMaximizer.hasVariableCapThrow1) {
+            if (presetMaximizer.hasVariableCapThrow1Falling)
+                maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 2;
+            else
+                maximizer_firstGPIndex = presetMaximizer.variableCapThrow1Index + 1;
+        }
         int maximizer_firstDiveIndex = -1;
         int maximizer_capBounceIndex = -1;
-        if (presetMaximizer.movementNames.get(maximizer_firstGPIndex + 1).equals("Dive")) {
+        if (maximizer_firstGPIndex >= 0 && presetMaximizer.movementNames.get(maximizer_firstGPIndex + 1).equals("Dive")) {
             maximizer_firstDiveIndex = maximizer_firstGPIndex + 1; //different than later firstDiveIndex (do note)
             maximizer_capBounceIndex = maximizer_firstDiveIndex + 1;
         }
@@ -489,50 +500,53 @@ public class Solver implements SolverInterface {
 
         //test cap throw and dive combinations that will be used using the ballpark durations
 
-        VectorCalculator.setProgressText("Solver: Testing Dive Durations");
-        
         int[] testDurations = durations.clone();
-        int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
-        int maxDiveDuration = durations[diveCapBounceIndex - 1] + delta;
-        ctTypes = new int[maxCTDuration + 1][maxDiveDuration + 1];
-        //diveDecels = new double[maxCTDuration + 1][maxDiveDuration + 1];
-        vectorAngles = new double[maxCTDuration + 1][maxDiveDuration + 1];
-        edgeCBAngles = new double[maxCTDuration + 1][maxDiveDuration + 1];
-        diveTurns = new boolean[maxCTDuration + 1][maxDiveDuration + 1];
-        for (int i = -delta; i <= delta; i++) {
-            for (int j = -delta; j <= delta; j++) {
-                int ctDuration = durations[diveCapBounceIndex - 2] + i;
-                int diveDuration = durations[diveCapBounceIndex - 1] + j;
-                if (p.twoPlayerMode) {
-                    ctTypes[ctDuration][diveDuration] = Movement.FT;
-                    edgeCBAngles[ctDuration][diveDuration] = VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE;
-                    diveTurns[ctDuration][diveDuration] = true;
-                    continue;
-                }
-                testDurations[diveCapBounceIndex - 2] = ctDuration;
-                testDurations[diveCapBounceIndex - 1] = diveDuration;
-                setDurations(testDurations);
-                boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
-                if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 10, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
-                    //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
-                    //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
-                    //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
-                    ctTypes[ctDuration][diveDuration] = ctType;
-                    //diveDecels[ctDuration][diveDuration] = diveDecel;
-                    vectorAngles[ctDuration][diveDuration] = vectorAngle;
-                    edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
-                    diveTurns[ctDuration][diveDuration] = true;
-                }
-                else if (testNoDiveTurn && testCT(-1, .1, 90, true, false) >= 0) { //now test without turning the dive (don't with RCVs because these can never be optimal for them)
-                    ctTypes[ctDuration][diveDuration] = ctType;
-                    //diveDecels[ctDuration][diveDuration] = diveDecel;
-                    vectorAngles[ctDuration][diveDuration] = vectorAngle;
-                    edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
-                    diveTurns[ctDuration][diveDuration] = false;
-                    //Debug.println("Wahoo");
-                }
-                else {
-                    ctTypes[ctDuration][diveDuration] = -1;
+
+        if (diveCapBounceIndex >= 2) {
+            VectorCalculator.setProgressText("Solver: Testing Dive Durations");
+            
+            int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
+            int maxDiveDuration = durations[diveCapBounceIndex - 1] + delta;
+            ctTypes = new int[maxCTDuration + 1][maxDiveDuration + 1];
+            //diveDecels = new double[maxCTDuration + 1][maxDiveDuration + 1];
+            vectorAngles = new double[maxCTDuration + 1][maxDiveDuration + 1];
+            edgeCBAngles = new double[maxCTDuration + 1][maxDiveDuration + 1];
+            diveTurns = new boolean[maxCTDuration + 1][maxDiveDuration + 1];
+            for (int i = -delta; i <= delta; i++) {
+                for (int j = -delta; j <= delta; j++) {
+                    int ctDuration = durations[diveCapBounceIndex - 2] + i;
+                    int diveDuration = durations[diveCapBounceIndex - 1] + j;
+                    if (p.twoPlayerMode) {
+                        ctTypes[ctDuration][diveDuration] = Movement.FT;
+                        edgeCBAngles[ctDuration][diveDuration] = VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE;
+                        diveTurns[ctDuration][diveDuration] = true;
+                        continue;
+                    }
+                    testDurations[diveCapBounceIndex - 2] = ctDuration;
+                    testDurations[diveCapBounceIndex - 1] = diveDuration;
+                    setDurations(testDurations);
+                    boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
+                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 10, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                        //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
+                        //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
+                        //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
+                        ctTypes[ctDuration][diveDuration] = ctType;
+                        //diveDecels[ctDuration][diveDuration] = diveDecel;
+                        vectorAngles[ctDuration][diveDuration] = vectorAngle;
+                        edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
+                        diveTurns[ctDuration][diveDuration] = true;
+                    }
+                    else if (testNoDiveTurn && testCT(-1, .1, 90, true, false) >= 0) { //now test without turning the dive (don't with RCVs because these can never be optimal for them)
+                        ctTypes[ctDuration][diveDuration] = ctType;
+                        //diveDecels[ctDuration][diveDuration] = diveDecel;
+                        vectorAngles[ctDuration][diveDuration] = vectorAngle;
+                        edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
+                        diveTurns[ctDuration][diveDuration] = false;
+                        //Debug.println("Wahoo");
+                    }
+                    else {
+                        ctTypes[ctDuration][diveDuration] = -1;
+                    }
                 }
             }
         }
@@ -797,7 +811,7 @@ public class Solver implements SolverInterface {
                 if (index == 0 && testDuration > initialDurationLimit) {
                     continue;
                 }
-                if (index == diveCapBounceIndex && testDuration > cbDurationLimit) {
+                if ((index == diveCapBounceIndex || index == midairVaultIndex) && testDuration > cbDurationLimit) {
                     continue;
                 }
                 if (index == reverseBonkIndex) {
@@ -917,8 +931,13 @@ public class Solver implements SolverInterface {
         iterations++;
         boolean possible = true;
 
-        int ctDuration = testDurations[diveCapBounceIndex - 2];
-        int diveDuration = testDurations[diveCapBounceIndex - 1];
+        int ctDuration = 0;
+        int diveDuration = 0;
+
+        if (diveCapBounceIndex >= 2) {
+            ctDuration = testDurations[diveCapBounceIndex - 2];
+            diveDuration = testDurations[diveCapBounceIndex - 1];
+        }
 
         setDurations(testDurations);
         getUpwarp(testDurations[testDurations.length - 1]);
@@ -1010,7 +1029,7 @@ public class Solver implements SolverInterface {
             return y_pos;
         }
         else if (motionIndex == rainbowSpinIndex) {
-            if (rainbowSpinIndex < diveCapBounceIndex) { //rainbow spin first
+            if (rainbowSpinIndex < Math.max(diveCapBounceIndex, midairVaultIndex)) { //rainbow spin first
                 if (p.groundTypeFirstGP == GroundType.NONE)
                     return y_pos;
                 else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
@@ -1039,7 +1058,7 @@ public class Solver implements SolverInterface {
             else
                 return FALSE;
         }
-        else if (motionIndex == diveCapBounceIndex) {
+        else if (motionIndex == diveCapBounceIndex || motionIndex == midairVaultIndex) {
             if (p.groundTypeSecondGP == GroundType.NONE)
                 return y_pos;
             else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
@@ -1092,14 +1111,16 @@ public class Solver implements SolverInterface {
         }
 
         int maximizer_hmcctIndex = maximizer.variableHCTFallIndex;
-        int maximizer_firstGPIndex;
-        if (maximizer.hasVariableCapThrow1Falling)
-            maximizer_firstGPIndex = maximizer.variableCapThrow1Index + 2;
-        else
-            maximizer_firstGPIndex = maximizer.variableCapThrow1Index + 1;
+        int maximizer_firstGPIndex = -1;
+        if (maximizer.hasVariableCapThrow1) {
+            if (maximizer.hasVariableCapThrow1Falling)
+                maximizer_firstGPIndex = maximizer.variableCapThrow1Index + 2;
+            else
+                maximizer_firstGPIndex = maximizer.variableCapThrow1Index + 1;
+        }
         int maximizer_firstDiveIndex = -1;
         int maximizer_capBounceIndex = -1;
-        if (maximizer.movementNames.get(maximizer_firstGPIndex + 1).equals("Dive")) {
+        if (maximizer_firstGPIndex >= 0 && maximizer.movementNames.get(maximizer_firstGPIndex + 1).equals("Dive")) {
             maximizer_firstDiveIndex = maximizer_firstGPIndex + 1; //different than later firstDiveIndex (do note)
             maximizer_capBounceIndex = maximizer_firstDiveIndex + 1;
         }
@@ -1109,7 +1130,7 @@ public class Solver implements SolverInterface {
         else
             maximizer_secondGPIndex = maximizer.variableMovement2Index + 1;
         int maximizer_rainbowSpinIndex = maximizer.rainbowSpinIndex;
-        boolean rainbowSpinFirst = (rainbowSpinIndex < diveCapBounceIndex);
+        boolean rainbowSpinFirst = (rainbowSpinIndex < Math.max(diveCapBounceIndex, midairVaultIndex));
 
         double[] penultimate_y_heights = new double[final_y_heights.length]; //calculate penultimate heights
         for (int i = 0; i < final_y_heights.length; i++) {

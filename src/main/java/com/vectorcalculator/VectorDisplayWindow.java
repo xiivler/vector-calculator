@@ -461,13 +461,13 @@ public class VectorDisplayWindow {
 					}
 				}
 
-				System.out.println("Cappy Position: " + Arrays.toString(cappyPos));
-				System.out.println("Mario Position: " + Arrays.toString(marioPos));
-				System.out.println("Cappy Target: " + Arrays.toString(cappyTarget));
-				System.out.println("Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
-				System.out.println("Horizontal Distance: " + hDistance);
-				System.out.println("Movement Frames: " + frames);
-				System.out.println("GP Frame: " + (row - Movement.CAPPY_GP_FRAMES));
+				// System.out.println("Cappy Position: " + Arrays.toString(cappyPos));
+				// System.out.println("Mario Position: " + Arrays.toString(marioPos));
+				// System.out.println("Cappy Target: " + Arrays.toString(cappyTarget));
+				// System.out.println("Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
+				// System.out.println("Horizontal Distance: " + hDistance);
+				// System.out.println("Movement Frames: " + frames);
+				// System.out.println("GP Frame: " + (row - Movement.CAPPY_GP_FRAMES));
 			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);

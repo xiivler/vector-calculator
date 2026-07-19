@@ -278,6 +278,7 @@ public class Properties {
     boolean canTestTripleThrow = false; //whether dive CB triple throw can be tested for (misleading name because of earlier versions of the calculator)
     TripleThrow tripleThrow = TripleThrow.YES;
     TripleThrow tripleThrowDiveCB = TripleThrow.NO;
+    boolean midairVault = false;
     boolean reverseBonk = false;
     double reverseBonkAngle = 30; //positive number is left if initial vector direction is left, right if initial vector direction is right; negative values also accepted
     int finalGPFrames = 1;
