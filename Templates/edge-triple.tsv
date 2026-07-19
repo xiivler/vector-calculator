@@ -12,6 +12,7 @@ $camera_angle = 90			// choose whatever you want
 $initial_angle_joystick = -1 * $initial_angle						
 $rc_angle = $initial_angle_joystick + $vector_direction * 90						
 						
+$motion_offset = -1			//set to 0 for practice mod			
 1	r					
 1	m-uu					
 1			ls(-$camera_angle)			
@@ -32,4 +33,5 @@ $rc_angle = $initial_angle_joystick + $vector_direction * 90
 23		y	ls($initial_angle_joystick)			// change the duration of this frame as needed
 1	a	y	ls($initial_angle_joystick)			// change the duration of this frame to change double jump height
 30		[# + $frames_y] y	[# + 1] ls($initial_angle_joystick)			// change the duration of this frame as needed
+$motion_offset = 0						
 7	[6] | b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				

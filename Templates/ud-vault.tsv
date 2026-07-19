@@ -5,6 +5,7 @@
 $initial_joystick_angle = 19.3446			// input value from Vector Calculator	
 $camera_angle = 0			// choose whatever you want	
 				
+$motion_offset = -1			//set to 0 for practice mod	
 1	r			
 1	m-uu			
 1				ls(-$camera_angle)
@@ -22,4 +23,5 @@ $camera_angle = 0			// choose whatever you want
 7				
 52	zl			
 2	zl	[4] y		
+$motion_offset = 0				
 //	Paste the script from Vector Calculator to overwrite this row once the vault is as close to the edge as possible			

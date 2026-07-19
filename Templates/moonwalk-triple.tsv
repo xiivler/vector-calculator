@@ -16,6 +16,7 @@ $rc_angle = $moonwalk_rotation + $vector_direction * 15
 $turnaround_angle = $moonwalk_rotation - $vector_direction * 125						
 $counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle						
 						
+$motion_offset = -1			//set to 0 for practice mod			
 1	r					
 1	m-uu					
 1			ls(-$camera_angle)			
@@ -39,4 +40,5 @@ $counter_turnaround_angle = $initial_angle_joystick * 2 - $turnaround_angle
 1		y	ls(.11; $counter_turnaround_angle)			
 1	a	y				// change the duration of this frame to change double jump height
 29		[# + $frames_y] y				// change the duration of this frame as needed
+$motion_offset = 0						
 6	[5] | b	// Paste the script from Vector Calculator to overwrite this row once the double jump lands as far from the edge as possible and the triple jump is on the last possible frame				
