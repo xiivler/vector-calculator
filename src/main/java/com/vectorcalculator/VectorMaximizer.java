@@ -59,6 +59,7 @@ public class VectorMaximizer {
 	boolean hasRainbowSpin = false;
 	boolean simpleTech = false;
 	boolean hasDiveCapBounce = true;
+	boolean hasCapBounce = true;
 
 	boolean only_maximize_variableAngle2 = false;
 	
@@ -69,6 +70,7 @@ public class VectorMaximizer {
 	int rainbowSpinFrames;
 	int preCapBounceDiveIndex = Integer.MIN_VALUE;
 	int rainbowSpinIndex = Integer.MIN_VALUE;
+	int cbIndex = Integer.MIN_VALUE;
 
 	int maxRCVNudges = 20;
 	int maxRCVFineNudges = 10;
@@ -102,8 +104,9 @@ public class VectorMaximizer {
 	double variableAngle2Adjusted;
 	double variableHCTHoldingAngle;
 
-	boolean rsYank;
+	double rsYankFrames;
 	double imYankFrames;
+	double cbYankFrames;
 	
 	double rcTrueInitialAngleDiff;
 	double rcFinalAngleDiff;
@@ -215,10 +218,12 @@ public class VectorMaximizer {
 				rainbowSpinIndex = i;
 				rainbowSpinFrames = movementFrames.get(i);
 			}
-			// else if (movementNames.get(i).equals("Dive Cap Bounce")) {
-			// 	hasDiveCapBounce = true;
-			// 	preCapBounceDiveIndex = i - 1;
-			// }
+			else if (Movement.isCapBounce(movementNames.get(i))) {
+				hasCapBounce = true;
+				cbIndex = i;
+				if (movementNames.get(i).equals("Dive Cap Bounce"))
+					hasDiveCapBounce = true;
+			}
 		}
 		
 		motions = new SimpleMotion[movementNames.size()];
@@ -231,71 +236,6 @@ public class VectorMaximizer {
 
 	public boolean hasError() {
 		return !error.equals("");
-	}
-
-	//applies the binary serach value based on what is being optimized
-	public void applyBinarySearchValue(double value, int optID) {
-		if (optID == MAX_HCT) {
-			if (value < 0) {
-				switchHCTFallVectorDir = true;
-				variableHCTHoldingAngle = -value;
-			}
-			else {
-				switchHCTFallVectorDir = false;
-				variableHCTHoldingAngle = value;
-			}
-		}
-		else if (optID == MAX_IM) {
-			imYankFrames = value;
-		}
-	}
-
-	//performs a modified binary search assuming ascending numbers
-	//optID is the optimization being performed
-	//limit is the smallest increment; when reached it stops the search
-	public double[] binarySearch(double low, double high, int optID, double limit) {
-		double quarter = (high - low) / 4;
-		double med = (high + low) / 2;
-		applyBinarySearchValue(med, optID);
-		double lowMed;
-		double highMed;
-		double medDisp = maximize(optID + 1);
-		double lowMedDisp;
-		double highMedDisp;
-
-		while (quarter > limit) {
-			lowMed = med - quarter;
-			highMed = med + quarter;
-			Debug.println("BS vals: " + lowMed + ", " + highMed);
-			applyBinarySearchValue(lowMed, optID);
-			lowMedDisp = maximize(optID + 1);
-			applyBinarySearchValue(highMed, optID);
-			highMedDisp = maximize(optID + 1);
-			Debug.println(lowMedDisp + ", " + highMedDisp);
-			if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
-				low = low;
-				med = lowMed;
-				high = med;
-				medDisp = lowMedDisp;
-			}
-			else if (highMedDisp > medDisp && highMedDisp > lowMedDisp) { //maximum is in the right half
-				low = med;
-				med = highMed;
-				high = high;
-				medDisp = highMedDisp;
-			}
-			else { //maximum is in the middle half
-				low = lowMed;
-				med = med;
-				high = highMed;
-				medDisp = medDisp;
-			}
-			quarter /= 2;
-		}
-		double bestValue = med;
-		applyBinarySearchValue(bestValue, optID);
-		double bestDisp = maximize(optID + 1);
-		return new double[]{bestDisp, bestValue};
 	}
 	
 	private int booleanToPlusMinus(boolean b) {
@@ -1020,21 +960,12 @@ public class VectorMaximizer {
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
 				((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
 			}
-			else if (movementNames.get(j).equals("Rainbow Spin") && rsYank) {
-				setYankHoldingAngles(motionGroup, currentMovement, i, j, 1);
+			else if (movementNames.get(j).equals("Rainbow Spin") && rsYankFrames > 0) {
+				setYankHoldingAngles(motionGroup, currentMovement, i, j, rsYankFrames);
 			}
-			// else if (movementNames.get(j).equals("Dive Cap Bounce")) {
-			// 	motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-			// 	double[] holdingAngles = new double[movementFrames.get(j)];
-			// 	int framesCountervector = 1;
-			// 	for (int a = 0; a < holdingAngles.length - framesCountervector; a++) {
-			// 		holdingAngles[a] = SimpleMotion.NORMAL_ANGLE;
-			// 	}
-			// 	for (int a = holdingAngles.length - framesCountervector; a < holdingAngles.length; a++) {
-			// 		holdingAngles[a] = Math.toRadians(p.debugValue);
-			// 	}
-			// 	((ComplexVector) motionGroup[i]).setHoldingAngles(holdingAngles);
-			// }
+			else if (Movement.isCapBounce(movementNames.get(j)) && cbYankFrames > 0) {
+				setYankHoldingAngles(motionGroup, currentMovement, i, j, cbYankFrames);
+			}
 			else if (movementNames.get(j).equals("Dive")) {
 				preCapBounceDiveIndex = j;
 				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
@@ -1145,19 +1076,35 @@ public class VectorMaximizer {
 		}
 	}
 
+	public static final int MAX_IM_YANK_FRAMES = 8;
+	public static final int MAX_IM_YANK_FRAMES_NONVECTOR = 32;
+	public static final double MAX_IM_NONVECTOR_LIMIT = 1;
+	
 	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
-	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_HCT = 3, MAX_VA1 = 4;
+	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_CB = 3, MAX_HCT = 4, MAX_VA1 = 5;
 	public double maximize(int optID) {
 		switch (optID) {
 			case MAX_TRY:
 				return maximize_try();
 			case MAX_IM:
-				if (p.maximizeYank && ((new Movement(movementNames.get(listPreparer.initialMovementIndex)).canVector) || movementNames.get(listPreparer.initialMovementIndex).equals("Long Jump"))) //TODO: better condition
-					return maximize_initialMovement();
+				imYankFrames = 0;
+				if (p.maximizeYank) {
+					Movement initialMovement = new Movement(movementNames.get(listPreparer.initialMovementIndex));
+					if (initialMovement.canVector)
+						return linearSearch(0, MAX_IM_YANK_FRAMES, MAX_IM)[0];
+					else if (initialMovement.sidewaysAccel > 0)
+						return binarySearch(0, MAX_IM_YANK_FRAMES_NONVECTOR, MAX_IM, MAX_IM_NONVECTOR_LIMIT)[0];
+				}
 				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
+				rsYankFrames = 0;
 				if (hasRainbowSpin && p.maximizeYank)
-					return maximize_RS();
+					return linearSearch(0, 1, MAX_RS)[0];
+				else break;
+			case MAX_CB: //holding back on last cap bounce frame(s)
+				cbYankFrames = 0;
+				if (hasCapBounce && p.maximizeYank && movementFrames.get(cbIndex) >= 50) //only test for long cbs
+					return linearSearch(0, MAX_IM_YANK_FRAMES, MAX_CB)[0];
 				else break;
 			case MAX_HCT: //hct falling optimization
 				if (hasVariableHCTFallVector)
@@ -1169,6 +1116,97 @@ public class VectorMaximizer {
 				return maximize_variableAngle1();
 		}
 		return maximize(optID + 1);
+	}
+
+	//applies the serach value based on what is being optimized
+	public void applySearchValue(double value, int optID) {
+		switch (optID) {
+			case MAX_HCT:
+				if (value < 0) {
+					switchHCTFallVectorDir = true;
+					variableHCTHoldingAngle = -value;
+				}
+				else {
+					switchHCTFallVectorDir = false;
+					variableHCTHoldingAngle = value;
+				}
+				break;
+			case MAX_IM:
+				imYankFrames = value;
+				break;
+			case MAX_RS:
+				rsYankFrames = value;
+				break;
+			case MAX_CB:
+				cbYankFrames = value;
+				break;
+		}
+	}
+
+	//performs a modified binary search assuming ascending numbers
+	//optID is the optimization being performed
+	//limit is the smallest increment; when reached it stops the search
+	public double[] binarySearch(double low, double high, int optID, double limit) {
+		double quarter = (high - low) / 4;
+		double med = (high + low) / 2;
+		applySearchValue(med, optID);
+		double lowMed;
+		double highMed;
+		double medDisp = maximize(optID + 1);
+		double lowMedDisp;
+		double highMedDisp;
+
+		while (quarter > limit) {
+			lowMed = med - quarter;
+			highMed = med + quarter;
+			Debug.println("BS vals: " + lowMed + ", " + highMed);
+			applySearchValue(lowMed, optID);
+			lowMedDisp = maximize(optID + 1);
+			applySearchValue(highMed, optID);
+			highMedDisp = maximize(optID + 1);
+			Debug.println(lowMedDisp + ", " + highMedDisp);
+			if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
+				low = low;
+				med = lowMed;
+				high = med;
+				medDisp = lowMedDisp;
+			}
+			else if (highMedDisp > medDisp && highMedDisp > lowMedDisp) { //maximum is in the right half
+				low = med;
+				med = highMed;
+				high = high;
+				medDisp = highMedDisp;
+			}
+			else { //maximum is in the middle half
+				low = lowMed;
+				med = med;
+				high = highMed;
+				medDisp = medDisp;
+			}
+			quarter /= 2;
+		}
+		double bestValue = med;
+		applySearchValue(bestValue, optID);
+		double bestDisp = maximize(optID + 1);
+		return new double[]{bestDisp, bestValue};
+	}
+
+	private double[] linearSearch(int low, int high, int optID) {
+		int value = low;
+		applySearchValue(value, optID);
+		double bestDisp = maximize(optID + 1);
+		for (value = low + 1; value <= high; value++) { //keep trying to yank for more frames until the result is worse
+			applySearchValue(value, optID);
+			double curDisp = maximize(optID + 1);
+			if (curDisp <= bestDisp)
+				break;
+			bestDisp = curDisp;
+			if (value == high)
+				return new double[]{bestDisp, value};
+		}
+		value--;
+		applySearchValue(value, optID);
+		return new double[]{maximize(optID + 1), value};
 	}
 
 	//this function finds the correct/optimal RCV if applicable
@@ -1359,7 +1397,7 @@ public class VectorMaximizer {
 		variableCapThrowVector.calcFinalAngle();
 		Movement variableCapThrowFalling = new Movement("Falling", variableCapThrowVector.calcFinalSpeed());
 		SimpleMotion variableCapThrowFallingVector;
-		double holdingAngle = booleanToPlusMinus(vectorRight) * (variableCapThrowVector.finalAngle - variableAngleAdjusted);
+		double holdingAngle = (vectorRight ? 1 : -1) * (variableCapThrowVector.finalAngle - variableAngleAdjusted);
 		if (rotateDuringFall || (holdingAngle < 0))
 			variableCapThrowFallingVector = variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, true);
 		else
@@ -1394,49 +1432,6 @@ public class VectorMaximizer {
 		displacements[1] = variableCapThrowFallingVector.dispX;
 		return displacements;
 	}
-
-	public static final int MAX_IM_YANK_FRAMES = 8;
-	public static final int MAX_IM_YANK_FRAMES_NONVECTOR = 32;
-	public static final double MAX_IM_NONVECTOR_LIMIT = 1;
-
-	private double maximize_initialMovement() {
-		imYankFrames = 0;
-		if (!(new Movement(movementNames.get(listPreparer.initialMovementIndex)).canVector)) { //use binary search in this case (ex. long jump)
-			binarySearch(0, MAX_IM_YANK_FRAMES_NONVECTOR, MAX_IM, MAX_IM_NONVECTOR_LIMIT);
-		}
-		else {
-			double bestDisp = maximize(MAX_IM + 1);
-			for (imYankFrames = 1; imYankFrames <= MAX_IM_YANK_FRAMES; imYankFrames++) { //keep trying to yank for more frames until the result is worse
-				double curDisp = maximize(MAX_IM + 1);
-				//System.out.println(curDisp);
-				if (curDisp <= bestDisp)
-					break;
-				bestDisp = curDisp;
-			}
-			imYankFrames--;
-		}
-		return maximize(MAX_IM + 1);
-	}
-
-	private double maximize_RS() {
-			rsYank = false;
-			double bestNoYank = maximize(MAX_RS + 1);
-			rsYank = true;
-			double bestYank = maximize(MAX_RS + 1);
-			if (bestYank < bestNoYank) {
-				rsYank = false;
-				maximize(MAX_RS + 1);
-			}
-			return Math.max(bestYank, bestNoYank);
-	}
-
-	//runs maximize_variableAngle1() to find optimal variable angles 1 and 2 for different choices of holding angle for a HCT fall vector OR for a simple tech
-	// private double maximize_HCT() {
-	// 		//Debug.println(maximize_HCT_limit);
-	// 		double[] results = binarySearch(-Math.PI / 2, Math.PI / 2, 0, maximize_HCT_limit);
-	// 		//Debug.println("Best HCT fall hold: " + Math.toDegrees(results[1]));
-	// 		return results[0];
-	// }
 
 	//one iteration of maximization of variable angles 1 and 2 if they exist
 	private double maximize_variableAngle1() {
@@ -1665,7 +1660,7 @@ public class VectorMaximizer {
 		//adjust the angles so we can see how much displacement has occurred
 		double motionGroup2AdjustedAngle;
 		//System.out.println("Motion Group 1 Final Angle: " + Math.toDegrees(motionGroup1FinalAngle));
-		variableAngle1Adjusted = motionGroup1FinalAngle + booleanToPlusMinus(motionGroup2VectorRight) * variableAngle1;
+		variableAngle1Adjusted = motionGroup1FinalAngle + (motionGroup2VectorRight ? 1 : -1) * variableAngle1;
 		motionGroup2AdjustedAngle = variableAngle1Adjusted + motionGroup2Angle;
 		
 		//System.out.println("Motion group 2 adjusted angle: " + Math.toDegrees(motionGroup2AdjustedAngle));
@@ -1764,7 +1759,7 @@ public class VectorMaximizer {
 			double variableMovement2DispZ = variableMovement2Vector.dispZ;
 			double variableMovement2DispX = variableMovement2Vector.dispX;
 			
-			variableAngle2Adjusted = initialAngle - booleanToPlusMinus(currentVectorRight) * variableAngle2; //the absolute direction we're throwing in/trying to go in
+			variableAngle2Adjusted = initialAngle - (currentVectorRight ? 1 : -1) * variableAngle2; //the absolute direction we're throwing in/trying to go in
 
 			if (hasVariableMovement2Falling) {
 				double[] fallingDisplacements = calcFallingDisplacements(variableMovement2Vector, variableMovement2Index, variableAngle2Adjusted, !currentVectorRight, rotateDuringFall);
@@ -1822,11 +1817,11 @@ public class VectorMaximizer {
 				SimpleVector falling = (SimpleVector) motions[variableCapThrow1Index + 1];
 				falling.setInitialForwardVelocity(ct.calcFinalSpeed());
 				falling.setInitialAngle(ct.finalAngle);
-				//bestAngle1Adjusted = ct.finalAngle + booleanToPlusMinus(motionGroup2VectorRight) * bestAngle1;
+				//bestAngle1Adjusted = ct.finalAngle + (motionGroup2VectorRight ? 1 : -1) * bestAngle1;
 				//Debug.println("CT final angle: " + Math.toDegrees(ct.finalAngle));
 				//Debug.println("Holding angle: " + Math.toDegrees(Math.abs(ct.finalAngle - bestAngle1Adjusted)));
-				//falling.setHoldingAngle(booleanToPlusMinus(!ct.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
-				falling.setHoldingAngle(booleanToPlusMinus(falling.rightVector) * (ct.finalAngle - bestAngle1Adjusted));
+				//falling.setHoldingAngle((ct.rightVector) ? -1 : 1) * (ct.finalAngle - bestAngle1Adjusted));
+				falling.setHoldingAngle((falling.rightVector ? 1 : -1) * (ct.finalAngle - bestAngle1Adjusted));
 				//falling.setHoldingAngle(Math.abs(ct.finalAngle - bestAngle1Adjusted));
 				falling.setInitialCoordinates(ct.x0 + ct.dispX, ct.y0 + ct.dispY, ct.z0 + ct.dispZ);
 				falling.calcDispDispCoordsAngleSpeed();

@@ -56,7 +56,7 @@ public class VectorCalculator extends JPanel {
 	
 	public static final String VERSION = "2.2.0";
 
-	public static boolean DEBUG_VALUE = true;
+	public static boolean DEBUG_VALUE = false;
 
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 500;
@@ -1017,7 +1017,7 @@ public class VectorCalculator extends JPanel {
 		{"None"}};
 	static String[] initialMovementDefaults = {"Triple Jump", "Rocket Flower Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Falling", "Optimal Distance Motion", "None"};
 	
-	static String[] midairPresetNames = {"Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
+	static String[] midairPresetNames = {"Spinless (No Final Cap Throw)", "Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
 	static String[] midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Fake Throw", "Reverse Bonk"};
 	static String[] single_player_midairMovementNames = {"Motion Cap Throw", "Single Throw", "Triple Throw", "Homing Motion Cap Throw", "Homing Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce"};
@@ -1183,6 +1183,11 @@ public class VectorCalculator extends JPanel {
 
 	public static int[][] getPreset(String name) {
 		switch(name) {
+			case "Spinless (No Final Cap Throw)":
+				if (p.twoPlayerMode)
+					return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {DIVE, 25}};
+				else
+					return new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {DIVE, 25}};
 			case "Spinless":
 				if (p.twoPlayerMode)
 					if (p.reverseBonk) return new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}, {RB, 16}};
