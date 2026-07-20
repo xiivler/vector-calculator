@@ -261,6 +261,9 @@ public class Properties {
     boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;
+    boolean chooseInitialRotation = true;
+    boolean customInitialRotation = false;
+    double initialRotation = 0;
 
     boolean diveCapBounce = true;
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle

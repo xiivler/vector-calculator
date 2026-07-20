@@ -98,7 +98,7 @@ public class VectorCalculator extends JPanel {
 		duration_type("Duration Type"), initial_frames("Frames"), initial_displacement("Vertical Displacement"),
 		vault_cap_return_frame("Vault Cap Return Frame"), duration_search_range("Duration Search Range"),
 		jump_button_frames("Frames of Holding A/B"), coyote_type("Coyote Time"), moonwalk_frames("Moonwalk Frames"), running_frames("Running Frames"), crouch_frames("Crouching Frames"), initial_speed("Initial Horizontal Speed"),
-		vector_direction("Vector Direction"), dive_angle("Edge Cap Bounce Angle"),
+		vector_direction("Vector Direction"), custom_initial_rotation("Custom Initial Facing Angle"), initial_rotation("Facing Angle (Relative)"), dive_angle("Edge Cap Bounce Angle"),
 		dive_angle_tolerance("Edge Cap Bounce Angle Tolerance"), dive_deceleration("First Dive Deceleration"), first_cap_throw_vector_angle("First Cap Throw Vector Angle"),
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
@@ -176,6 +176,11 @@ public class VectorCalculator extends JPanel {
 			if (p.initialMovementName.equals("Long Jump"))
 				params.add(Parameter.crouch_frames);
 			params.add(Parameter.vector_direction);
+			if (p.chooseInitialRotation) {
+				params.add(Parameter.custom_initial_rotation);
+				if (p.customInitialRotation)
+					params.add(Parameter.initial_rotation);
+			}
 			params.add(null);
 
 			params.add(Parameter.midairs);
@@ -454,6 +459,12 @@ public class VectorCalculator extends JPanel {
 			break;
 		case vector_direction:
 			value = p.rightVector ? "Right" : "Left";
+			break;
+		case custom_initial_rotation:
+			value = p.customInitialRotation ? "Yes" : "No";
+			break;
+		case initial_rotation:
+			value = p.initialRotation;
 			break;
 		case dive_angle:
 			value = round(p.diveCapBounceAngle, 3);
@@ -754,6 +765,17 @@ public class VectorCalculator extends JPanel {
 			break;
 		case vector_direction:
 			p.rightVector = value.toString().equals("Right");
+			break;
+		case custom_initial_rotation:
+			//boolean oldCustomInitialRotation = p.customInitialRotation;
+			p.customInitialRotation = value.toString().equals("Yes");
+			if (!p.customInitialRotation) {
+				if (initialMovement != null)
+					p.initialRotation = initialMovement.defaultRotation;
+			}
+			break;
+		case initial_rotation:
+			p.initialRotation = parseDoubleWithDefault(value, 0);
 			break;
 		case dive_angle:
 			p.diveCapBounceAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE);
@@ -1351,6 +1373,11 @@ public class VectorCalculator extends JPanel {
 		else {
 			updateCalculateUsing();
 		}
+		p.chooseInitialRotation = initialMovement.chooseInitialRotation;
+		if (!p.chooseInitialRotation) {
+			p.customInitialRotation = false;
+			p.initialRotation = initialMovement.defaultRotation;
+		}
 		
 		updateDurationType();
 		refreshPropertiesRows(getRowParams(), true);
@@ -1789,6 +1816,8 @@ public class VectorCalculator extends JPanel {
 						return dropdown(new String[]{"Moonwalk", "Running", "None"});
 					case vector_direction:
 						return dropdown(new String[]{"Left", "Right"});
+					case custom_initial_rotation:
+						return dropdown(new String[]{"Yes", "No"});
 					case midairs:
 						return dropdown(midairPresetNames);
 					case triple_throw:

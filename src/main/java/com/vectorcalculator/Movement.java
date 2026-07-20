@@ -100,6 +100,9 @@ public class Movement {
 	double recommendedInitialHorizontalSpeed = Double.MAX_VALUE; //only used for some movement types to suggest what the initial speed should be if it is less than their true speed cap
 	double fallSpeedCap = -35;
 
+	double defaultRotation = 0; //by default, what the initial rotation is relative to the movement
+	boolean chooseInitialRotation = true;
+
 	public static final double MIN_GP_HEIGHT = 40;
 	
 	String movementType;
@@ -118,6 +121,19 @@ public class Movement {
 
 	public static boolean isCapBounce(String str) {
 		return str.contains("Cap Bounce") || str.contains("2P Midair Vault");
+	}
+
+	private void calcVerticalVelocity(double initialHorizontalSpeed, double verticalVelMin, double verticalVelMax, double forwardVelMin, double forwardVelMax) {
+		if (!p.customInitialRotation)
+			p.initialRotation = 0;
+		initialHorizontalSpeed = Math.min(initialHorizontalSpeed, trueSpeedCap);
+		double initialForwardSpeed = initialHorizontalSpeed * Math.cos(Math.toRadians(p.initialRotation));
+		if (initialForwardSpeed <= forwardVelMin)
+			initialVerticalSpeed = verticalVelMin;
+		else if (initialForwardSpeed >= forwardVelMax)
+			initialVerticalSpeed = verticalVelMax;
+		else
+			initialVerticalSpeed = verticalVelMin + (initialForwardSpeed - forwardVelMin) * (verticalVelMax - verticalVelMin) / (forwardVelMax - forwardVelMin);
 	}
 	
 	//deprecated constructor
@@ -163,43 +179,32 @@ public class Movement {
 			//trueSpeedCap = 0;
 		}
 
-		if (movementType.equals("Optimal Distance Motion")) {
+		else if (movementType.equals("Optimal Distance Motion")) {
 			initialHorizontalSpeed = 29.94;
 			recommendedInitialHorizontalSpeed = 29.94;
 			trueSpeedCap = 100;
 		}
-		if (movementType.equals("Single Jump")) {
-			if (initialHorizontalSpeed <= 3)
-				initialVerticalSpeed = 17;
-			else if (initialHorizontalSpeed >= 14)
-				initialVerticalSpeed = 19.5;
-			else
-				initialVerticalSpeed = 17 + 5 * (initialHorizontalSpeed - 3) / 22;
+		
+		else if (movementType.equals("Single Jump")) {
+			calcVerticalVelocity(initialHorizontalSpeed, 17, 19.5, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
 			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
-		
+
 		else if (movementType.equals("Double Jump")) {
-			if (initialHorizontalSpeed <= 3)
-				initialVerticalSpeed = 19.5;
-			else if (initialHorizontalSpeed >= 14)
-				initialVerticalSpeed = 21;
-			else
-				initialVerticalSpeed = 19.5 + 3 * (initialHorizontalSpeed - 3) / 22;
+			calcVerticalVelocity(initialHorizontalSpeed, 19.5, 21, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
 			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
-		
+
 		else if (movementType.equals("Triple Jump")) {
-			if (initialHorizontalSpeed <= 14)
-				initialHorizontalSpeed = 14;
-			initialVerticalSpeed = 25;
+			calcVerticalVelocity(initialHorizontalSpeed, 19.5, 25, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			gravity = 1;
 			moonGravity = .3;
@@ -208,6 +213,7 @@ public class Movement {
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
+		
 		else if (movementType.equals("Rocket Flower Jump")) {
 			variableInitialHorizontalSpeed = false;
 			initialHorizontalSpeed = 38;
