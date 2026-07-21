@@ -216,59 +216,67 @@ public class SimpleVector extends SimpleMotion {
 
 		double angVel = prevAngVel;
 		double rotation = prevRotation;
+		boolean rotateCW = true;
 
-		double holdingAngleAdjusted = initialAngle + (rightVector ? -holdingAngle : holdingAngle);
-		double prevHoldingAngleAdjusted = initialAngle + (rightVector ? -prevHoldingAngle : prevHoldingAngle);
-		while (holdingAngleAdjusted < initialAngle - Math.PI)
-			holdingAngleAdjusted += Math.PI * 2;
-		while (holdingAngleAdjusted > initialAngle - Math.PI)
-			holdingAngleAdjusted -= Math.PI * 2;
-		while (prevHoldingAngleAdjusted < holdingAngleAdjusted - Math.PI)
-			prevHoldingAngleAdjusted += Math.PI * 2;
-		while (prevHoldingAngleAdjusted > holdingAngleAdjusted - Math.PI)
-			prevHoldingAngleAdjusted -= Math.PI * 2;
-		double joystickRotationDelta = prevHoldingAngleAdjusted - holdingAngleAdjusted;
-		boolean rotateCW = holdingAngle < prevRotation; //rotate CW if we are holding to the right, CCW if we are holding to the left
-		if (prevHoldingAngle != SimpleMotion.NO_ANGLE) { //we can continue rotating CW if we keep shifting the joystick CW, or vice versa for CCW
-			if (prevRotateCW && joystickRotationDelta >= Math.toRadians(3))
-				rotateCW = true;
-			else if (!prevRotateCW && joystickRotationDelta >= Math.toRadians(3))
-				rotateCW = false;
-		}
-		double holdingDiff = Math.abs(holdingAngleAdjusted - initialAngle);
-		if (holdingDiff >= Math.toRadians(135)) { //fast turnaround
-			angVel = Math.toRadians(25);
-		}
-		else {
-			if (joystickRotationDelta > 0 && rotateCW) //apply counterrotation
-				angVel -= joystickRotationDelta;
-			else if (joystickRotationDelta < 0 && !rotateCW)
-				angVel += joystickRotationDelta;
-			if (angVel < 0)
-				angVel = 0;
-
-			if (holdingDiff < 1) { //slow down because angle is close
-				angVel = prevAngVel - Math.toRadians(0.6);
-				if (angVel < 0)
-					angVel = 0;
+		if (holdingAngle != SimpleMotion.NO_ANGLE) {
+			double holdingAngleAdjusted = initialAngle + (rightVector ? -holdingAngle : holdingAngle);
+			double prevHoldingAngleAdjusted = initialAngle + (rightVector ? -prevHoldingAngle : prevHoldingAngle);
+			while (holdingAngleAdjusted < initialAngle - Math.PI)
+				holdingAngleAdjusted += Math.PI * 2;
+			while (holdingAngleAdjusted > initialAngle - Math.PI)
+				holdingAngleAdjusted -= Math.PI * 2;
+			while (prevHoldingAngleAdjusted < holdingAngleAdjusted - Math.PI)
+				prevHoldingAngleAdjusted += Math.PI * 2;
+			while (prevHoldingAngleAdjusted > holdingAngleAdjusted - Math.PI)
+				prevHoldingAngleAdjusted -= Math.PI * 2;
+			double joystickRotationDelta = prevHoldingAngleAdjusted - holdingAngleAdjusted;
+			rotateCW = holdingAngle < prevRotation; //rotate CW if we are holding to the right, CCW if we are holding to the left
+			if (prevHoldingAngle != SimpleMotion.NO_ANGLE) { //we can continue rotating CW if we keep shifting the joystick CW, or vice versa for CCW
+				if (prevRotateCW && joystickRotationDelta >= Math.toRadians(3))
+					rotateCW = true;
+				else if (!prevRotateCW && joystickRotationDelta >= Math.toRadians(3))
+					rotateCW = false;
 			}
-			else if ((!Movement.isMidairCapThrow(movement.movementType) && angVel >= maxAngVel) || angVel > maxAngVel) { //cap throws don't quite reach max ang vel, so they don't get this slowdown
-				angVel = prevAngVel - Math.toRadians(2.5);
+			double holdingDiff = Math.abs(holdingAngleAdjusted - initialAngle);
+			if (holdingDiff >= Math.toRadians(135)) { //fast turnaround
+				angVel = Math.toRadians(25);
 			}
 			else {
-				angVel = Math.min(prevAngVel + angularAccel, maxAngVel);
+				if (joystickRotationDelta > 0 && rotateCW) //apply counterrotation
+					angVel -= joystickRotationDelta;
+				else if (joystickRotationDelta < 0 && !rotateCW)
+					angVel += joystickRotationDelta;
+				if (angVel < 0)
+					angVel = 0;
+
+				if (holdingDiff < 1) { //slow down because angle is close
+					angVel = prevAngVel - Math.toRadians(0.6);
+					if (angVel < 0)
+						angVel = 0;
+				}
+				else if ((!Movement.isMidairCapThrow(movement.movementType) && angVel >= maxAngVel) || angVel > maxAngVel) { //cap throws don't quite reach max ang vel, so they don't get this slowdown
+					angVel = prevAngVel - Math.toRadians(2.5);
+				}
+				else {
+					angVel = Math.min(prevAngVel + angularAccel, maxAngVel);
+				}
+			}
+
+			rotation = prevRotation + (rotateCW ? -1 : 1) * angVel; //apply angular velocity CW or CCW
+			while (rotation < holdingAngleAdjusted - Math.PI)
+				rotation += Math.PI * 2;
+			while (rotation > holdingAngleAdjusted - Math.PI)
+				rotation -= Math.PI * 2;
+
+			if ((prevRotation <= holdingAngleAdjusted && holdingAngleAdjusted <= rotation) || (rotation <= holdingAngleAdjusted && holdingAngleAdjusted <= prevRotation)) { //stop rotating because the holding angle was achieved
+				rotation = holdingAngleAdjusted;
+				angVel = 0;
 			}
 		}
-
-		rotation = prevRotation + (rotateCW ? -1 : 1) * angVel; //apply angular velocity CW or CCW
-		while (rotation < holdingAngleAdjusted - Math.PI)
-			rotation += Math.PI * 2;
-		while (rotation > holdingAngleAdjusted - Math.PI)
-			rotation -= Math.PI * 2;
-
-		if ((prevRotation <= holdingAngleAdjusted && holdingAngleAdjusted <= rotation) || (rotation <= holdingAngleAdjusted && holdingAngleAdjusted <= prevRotation)) { //stop rotating because the holding angle was achieved
-			rotation = holdingAngleAdjusted;
-			angVel = 0;
+		else { //if holding no angle, angular velocity still decreases, but just isn't applied
+			angVel = prevAngVel - Math.toRadians(0.6);
+			if (angVel < 0)
+				angVel = 0;
 		}
 		
 		return new RotationStep(rotation, angVel, holdingAngle, rotateCW);
