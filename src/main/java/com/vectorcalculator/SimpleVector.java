@@ -252,11 +252,11 @@ public class SimpleVector extends SimpleMotion {
 				if (angVel < 0)
 					angVel = 0;
 			}
-			else if (angVel >= maxAngVel) {
+			else if ((!Movement.isMidairCapThrow(movement.movementType) && angVel >= maxAngVel) || angVel > maxAngVel) { //cap throws don't quite reach max ang vel, so they don't get this slowdown
 				angVel = prevAngVel - Math.toRadians(2.5);
 			}
 			else {
-				angVel = prevAngVel + angularAccel;
+				angVel = Math.min(prevAngVel + angularAccel, maxAngVel);
 			}
 		}
 
