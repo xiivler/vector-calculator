@@ -9,8 +9,8 @@ public class SimpleMotion {
 	public static final double BACK_ANGLE = Math.PI;
 	public static final double NO_ANGLE = -Double.MAX_VALUE;
 	
-	double rotationalAccel;
-	double maxRotationalSpeed;
+	double angularAccel;
+	double maxAngVel;
 	double rotationalSpeedAfterMax;
 	
 	Movement movement;
@@ -49,9 +49,8 @@ public class SimpleMotion {
 	double x0 = 0;
 	
 	public SimpleMotion(Movement movement, int frames) {
-		this.rotationalAccel = movement.rotationalAccel;
-		this.maxRotationalSpeed = movement.maxRotationalSpeed;
-		this.rotationalSpeedAfterMax = movement.rotationalSpeedAfterMax;
+		this.angularAccel = movement.angularAccel;
+		this.maxAngVel = movement.maxAngVel;
 		this.movement = movement;
 		this.initialForwardVelocity = movement.initialHorizontalSpeed;
 		this.frames = frames;
@@ -211,7 +210,7 @@ public class SimpleMotion {
 		}
 	}
 	
-	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, , column 7: holding radius, column 8: holding angle
+	//column 0-2: (X, Y, Z), column 3-5: (X-vel, Y-vel, Z-vel), column 6: horizontal speed, column 7: holding radius, column 8: holding angle, column 9: rotation
 	public double[][] calcFrameByFrame() {
 		//maybe shouldn't use the disps for this
 		dispX = x0;
@@ -228,7 +227,7 @@ public class SimpleMotion {
 		double zVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
-		double[][] info = new double[frames][9];
+		double[][] info = new double[frames][10];
 		for (int i = 0; i < frames; i++) {
 			if (forwardVelocity < forwardVelocityCap || (movement.movementType.equals("Moonwalk") && i > 0) ){
 				info[i][7] = initialAngle;
@@ -269,6 +268,7 @@ public class SimpleMotion {
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
 			info[i][6] = forwardVelocity;
+			info[i][9] = initialRotation;
 		}	
 		return info;
 	}

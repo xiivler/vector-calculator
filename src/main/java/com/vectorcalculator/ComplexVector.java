@@ -108,7 +108,7 @@ public class ComplexVector extends SimpleVector {
 		double rotation = initialRotation;
 		double oldRotation;
 		double adjustedHoldingAngle;
-		double rotationVelocity = 0;
+		double angularVelocity = 0;
 
 		int i = 0;
 		//when holding forwards
@@ -117,20 +117,20 @@ public class ComplexVector extends SimpleVector {
 		// 		//Debug.println("step: " + Math.toDegrees(rotation));
 		// 		oldRotation = rotation;
 		// 		if (rotation > initialAngle) {
-		// 			rotationVelocity -= rotationalAccel;
-		// 			if (rotationVelocity < -maxRotationalSpeed)
-		// 				rotationVelocity = -rotationalSpeedAfterMax;
+		// 			angularVelocity -= angularAccel;
+		// 			if (angularVelocity < -maxAngVel)
+		// 				angularVelocity = -rotationalSpeedAfterMax;
 		// 		}
 		// 		else {
-		// 			rotationVelocity += rotationalAccel;
-		// 			if (rotationVelocity > maxRotationalSpeed)
-		// 				rotationVelocity = rotationalSpeedAfterMax;
+		// 			angularVelocity += angularAccel;
+		// 			if (angularVelocity > maxAngVel)
+		// 				angularVelocity = rotationalSpeedAfterMax;
 		// 		}
 						
-		// 		rotation += rotationVelocity;
+		// 		rotation += angularVelocity;
 		// 		if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
 		// 			rotation = initialAngle;
-		// 			rotationVelocity = 0;
+		// 			angularVelocity = 0;
 		// 			i = frames - vectorFrames;
 		// 			break;
 		// 		}
@@ -149,24 +149,24 @@ public class ComplexVector extends SimpleVector {
 				adjustedHoldingAngle = initialAngle + holdingAngles[i];
 			
 			if (rotation > adjustedHoldingAngle) {
-				if (rotationVelocity > 0)
-					rotationVelocity = 0;
-				rotationVelocity -= rotationalAccel;
-				if (rotationVelocity < -maxRotationalSpeed)
-					rotationVelocity = -rotationalSpeedAfterMax;
+				if (angularVelocity > 0)
+					angularVelocity = 0;
+				angularVelocity -= angularAccel;
+				if (angularVelocity < -maxAngVel)
+					angularVelocity = -rotationalSpeedAfterMax;
 			}
 			else {
-				if (rotationVelocity < 0)
-					rotationVelocity = 0;
-				rotationVelocity += rotationalAccel;
-				if (rotationVelocity > maxRotationalSpeed)
-					rotationVelocity = rotationalSpeedAfterMax;
+				if (angularVelocity < 0)
+					angularVelocity = 0;
+				angularVelocity += angularAccel;
+				if (angularVelocity > maxAngVel)
+					angularVelocity = rotationalSpeedAfterMax;
 			}
-			rotation += rotationVelocity;
+			rotation += angularVelocity;
 			
 			if ((oldRotation <= adjustedHoldingAngle && adjustedHoldingAngle <= rotation) || (rotation <= adjustedHoldingAngle && adjustedHoldingAngle <= oldRotation)) {
 				rotation = adjustedHoldingAngle;
-				rotationVelocity = 0;
+				angularVelocity = 0;
 			}
 			i++;
 		}

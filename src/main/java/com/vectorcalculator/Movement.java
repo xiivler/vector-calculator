@@ -71,9 +71,8 @@ public class Movement {
 	int minRecommendedFrames = 1;
 	int maxFrames = Integer.MAX_VALUE;
 
-	double rotationalAccel = Math.toRadians(.3);
-	double maxRotationalSpeed = Math.toRadians(6);
-	double rotationalSpeedAfterMax = Math.toRadians(3.5);
+	double angularAccel = Math.toRadians(.3);
+	double maxAngVel = Math.toRadians(6);
 	boolean hasRotationalAccel = true;
 
 	boolean canMoonwalk = false;
@@ -249,6 +248,7 @@ public class Movement {
 			initialVerticalSpeed = -7;
 			gravity = 0;
 			moonGravity = 0;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Cap Return Jump") || movementType.equals("Rocket Flower Cap Return Jump")) {
@@ -278,6 +278,7 @@ public class Movement {
 			initialHorizontalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Crouch")) {
@@ -296,6 +297,7 @@ public class Movement {
 			trueSpeedCap = 100;
 			canMoonwalk = true;
 			inputs1.add(Inputs.ZL);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Backflip")) {
@@ -311,6 +313,8 @@ public class Movement {
 			gravity = 1;
 			moonGravity = .45;
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
+			defaultRotation = 180; //probably will get ignored
 		}
 	
 		else if (movementType.equals("Vault") || movementType.equals("Rocket Flower Vault")) {
@@ -347,6 +351,7 @@ public class Movement {
 			gravity = 1;
 			moonGravity = .45;
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Long Jump")) {
@@ -367,6 +372,7 @@ public class Movement {
 			inputs1.add(Inputs.ZL);
 			inputs2.add(Inputs.B);
 			canMoonwalk = true;
+			chooseInitialRotation = false;
 		}
 		
 		//need to change rolls to falling to vector them, but falling may have different gravity
@@ -386,6 +392,7 @@ public class Movement {
 			trueSpeedCap = 30;
 			//frameOffset = 1;
 			inputs1.add(Inputs.Y);
+			chooseInitialRotation = false;
 		}
 		
 		//5% speed decay from the frame of crouching, which can be separated
@@ -407,6 +414,7 @@ public class Movement {
 			frameOffset = 1;
 			inputs1.add(Inputs.ZL);
 			inputs2.add(Inputs.Y);
+			chooseInitialRotation = false;
 		}
 		
 		//technically there are 4 varieties, at speeds 20, 23, and 26
@@ -428,6 +436,7 @@ public class Movement {
 			frameOffset = 1;
 			inputs1.add(Inputs.ZL);
 			inputs2.add(Inputs.M);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Roll Vector")) {
@@ -436,6 +445,7 @@ public class Movement {
 			trueSpeedCap = 30;
 			recommendedInitialHorizontalSpeed = 29;
 			moonGravity = 1;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Dive")) {
@@ -457,6 +467,7 @@ public class Movement {
 			gravity = 2;
 			moonGravity = .8;
 			inputs1.add(Inputs.Y);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Spin Jump")) {
@@ -515,6 +526,7 @@ public class Movement {
 			gravity = .95;
 			moonGravity = .3;
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Flip Forward")) {
@@ -533,6 +545,7 @@ public class Movement {
 			sidewaysAccel = 0;
 			canVector = false;
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
 		}
 
 		else if (movementType.equals("Flip Forward Vector")) {
@@ -543,6 +556,7 @@ public class Movement {
 			trueSpeedCap = 8.6;
 			gravity = .95;
 			moonGravity = .3;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Cap Bounce")) {
@@ -577,6 +591,7 @@ public class Movement {
 			variableInitialHorizontalSpeed = false;
 			inputs1.add(Inputs.Y);
 			inputs1.add(Inputs.Y);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Large NPC Bounce")) {
@@ -604,6 +619,7 @@ public class Movement {
 			initialVerticalSpeed = 35;
 			initialHorizontalSpeed = 0;
 			variableInitialHorizontalSpeed = false;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("2P Midair Vault")) {
@@ -618,14 +634,15 @@ public class Movement {
 		else if (movementType.contains("RCV")) {
 			trueSpeedCap = 100;
 			recommendedInitialHorizontalSpeed = 29.94;
-			rotationalAccel = Math.toRadians(1.3);
+			chooseInitialRotation = false;
+			angularAccel = Math.toRadians(1.3);
 			if (p.onMoon) {
 				initialVerticalSpeed = -1;
 			}
 			else {
 				initialVerticalSpeed = -1.5;
 			}
-			maxRotationalSpeed = Math.toRadians(1.3 * 5);
+			maxAngVel = Math.toRadians(1.3 * 5);
 			if (movementType.equals("Motion Cap Throw RCV")) {
 				displayName = "MCCTRCV";
 				minFrames = 19;
@@ -778,6 +795,7 @@ public class Movement {
 			canVector = false;
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Uncapture")) {
@@ -786,6 +804,7 @@ public class Movement {
 			//one frame of 0 motion beforehand
 			initialHorizontalSpeed = p.initialHorizontalSpeed;
 			inputs1.add(Inputs.ZL);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Bouncy Object Bounce")) {
@@ -863,6 +882,7 @@ public class Movement {
 			trueSpeedCap = 15;
 			inputs1.add(Inputs.NONE);
 			inputs1.add(Inputs.B);
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Swinging Jump Vector")) {
@@ -872,6 +892,7 @@ public class Movement {
 			gravity = 1;
 			defaultSpeedCap = 15;
 			trueSpeedCap = 15;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Pole/Fork Pre-Flick")) {
@@ -884,6 +905,7 @@ public class Movement {
 			defaultSpeedCap = 0;
 			trueSpeedCap = 0;
 			inputs1.add(Inputs.M);
+			chooseInitialRotation = false;
 		}
 		
 		//could do custom angles in the future
@@ -894,6 +916,7 @@ public class Movement {
 			initialVerticalSpeed = 39.385849;
 			defaultSpeedCap = 39.385849;
 			trueSpeedCap = 39.385849;
+			chooseInitialRotation = false;
 
 		}
 		
@@ -904,6 +927,7 @@ public class Movement {
 			initialVerticalSpeed = 43.324432;
 			defaultSpeedCap = 43.324432;
 			trueSpeedCap = 43.324432;
+			chooseInitialRotation = false;
 		}
 		
 		else if (movementType.equals("Motion Vertical Pole/Fork Flick")) {
@@ -913,6 +937,7 @@ public class Movement {
 			initialVerticalSpeed = 61.27;
 			defaultSpeedCap = 8;
 			trueSpeedCap = 8;
+			chooseInitialRotation = false;
 		}
 		
 		this.initialHorizontalSpeed = Math.min(initialHorizontalSpeed, trueSpeedCap);

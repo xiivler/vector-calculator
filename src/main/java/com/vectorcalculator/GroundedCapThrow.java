@@ -101,10 +101,10 @@ public class GroundedCapThrow extends SimpleMotion {
 
 		//see how much we can rotate during the hook
 		while (turningFrames < postHookFrames && angleChange < finalAngleDiff) {
-			if (rotationalSpeed < maxRotationalSpeed) {
-				rotationalSpeed += rotationalAccel;
+			if (rotationalSpeed < maxAngVel) {
+				rotationalSpeed += angularAccel;
 			}
-			if (rotationalSpeed == maxRotationalSpeed) {
+			if (rotationalSpeed == maxAngVel) {
 				framesAtMaxRotationalSpeed++;
 				friction = FRICTION_COEFFICIENT * framesAtMaxRotationalSpeed * framesAtMaxRotationalSpeed;
 			}
@@ -190,14 +190,14 @@ public class GroundedCapThrow extends SimpleMotion {
 				currentVelocity = WALKING_SPEED;
 			}
 			//use small rotational accel if there's a big enough overshoot; this only gives you like .1 units so maybe just disable this logic
-			double potentialOvershootReduction = (rotationalAccel - SMALL_ROTATIONAL_ACCEL) * overshootSpreadFrames;
+			double potentialOvershootReduction = (angularAccel - SMALL_ROTATIONAL_ACCEL) * overshootSpreadFrames;
 			if (remainingOvershoot >= potentialOvershootReduction && spreadOutOvershoot && spreadOutOvershootExtreme) {
 				rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
 				remainingOvershoot -= potentialOvershootReduction;
 				holdingAngles[firstTurnFrame] = capThrowAngle + Math.PI / 6; //anything <45 degrees from cap throw angle will do
 			}
 			else {
-				rotationalSpeed = rotationalAccel;
+				rotationalSpeed = angularAccel;
 				holdingAngles[firstTurnFrame] = capThrowAngle + NORMAL_ANGLE;
 			}
 			velocityAngles[firstTurnFrame] = capThrowAngle + rotationalSpeed; //we hook, and begin accelerating immediately
@@ -223,7 +223,7 @@ public class GroundedCapThrow extends SimpleMotion {
 					else {
 						holdingAngles[i] = holdingAngles[i - 1];
 					}
-					rotationalSpeed += rotationalAccel;
+					rotationalSpeed += angularAccel;
 				}
 				else {
 					int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
@@ -232,26 +232,26 @@ public class GroundedCapThrow extends SimpleMotion {
 						remainingOvershoot += biggestFriction;
 					}
 					//Debug.println(Math.toDegrees(remainingOvershoot));
-					double overshootRotationalSpeedReduction = Math.min(remainingOvershoot / overshootSpreadFrames, rotationalAccel);
+					double overshootRotationalSpeedReduction = Math.min(remainingOvershoot / overshootSpreadFrames, angularAccel);
 					//Debug.println(Math.toDegrees(overshootRotationalSpeedReduction));
 					double oldRotationalSpeed = rotationalSpeed;
-					rotationalSpeed += rotationalAccel - overshootRotationalSpeedReduction;
+					rotationalSpeed += angularAccel - overshootRotationalSpeedReduction;
 					//Debug.println(Math.toDegrees(rotationalSpeed));
 					remainingOvershoot -= overshootRotationalSpeedReduction * overshootSpreadFrames;
 					//if we accidentally took too much off of a frame that was 6.5 deg/fr before
 					if (turningFrames > 5 && !hasUndershot) {
 						//int biggestFrictionFrame = turningFrames - ROTATIONAL_ACCEL_FRAMES;
 						//double biggestFriction = FRICTION_COEFFICIENT * biggestFrictionFrame * biggestFrictionFrame;
-						double undershoot = Math.max(maxRotationalSpeed - (rotationalSpeed + rotationalAccel * overshootSpreadFrames), 0);
+						double undershoot = Math.max(maxAngVel - (rotationalSpeed + angularAccel * overshootSpreadFrames), 0);
 						//Debug.println("Undershoot: " + Math.toDegrees(undershoot));
 						rotationalSpeed += undershoot / (overshootSpreadFrames + 1);
 						hasUndershot = true;
 					}
 					double trueRotationalAccel = rotationalSpeed - oldRotationalSpeed;
-					holdingAngles[i] = holdingAngles[i - 1] - (rotationalAccel - trueRotationalAccel); //counterrotate by how much less you want to accelerate
+					holdingAngles[i] = holdingAngles[i - 1] - (angularAccel - trueRotationalAccel); //counterrotate by how much less you want to accelerate
 				}
-				if (rotationalSpeed >= maxRotationalSpeed - friction) { //including friction
-					rotationalSpeed = maxRotationalSpeed - friction;
+				if (rotationalSpeed >= maxAngVel - friction) { //including friction
+					rotationalSpeed = maxAngVel - friction;
 					framesAtMaxRotationalSpeed++;
 					friction = FRICTION_COEFFICIENT * (framesAtMaxRotationalSpeed + 1) * (framesAtMaxRotationalSpeed + 1);
 				}
@@ -260,8 +260,8 @@ public class GroundedCapThrow extends SimpleMotion {
 					if (rotationalSpeed < SMALL_ROTATIONAL_ACCEL) {
 						rotationalSpeed = SMALL_ROTATIONAL_ACCEL;
 					}
-					else if (rotationalSpeed < rotationalAccel) {
-						rotationalSpeed = rotationalAccel;
+					else if (rotationalSpeed < angularAccel) {
+						rotationalSpeed = angularAccel;
 					}
 				}
 				velocityAngles[i] = velocityAngles[i - 1] + rotationalSpeed;
@@ -285,15 +285,15 @@ public class GroundedCapThrow extends SimpleMotion {
 			return;
 		}
 		if (i == 0) {
-			velocityAngles[0] = Math.min(holdingAngle, maxRotationalSpeed);
+			velocityAngles[0] = Math.min(holdingAngle, maxAngVel);
 		}
-		else { //rotate by the angle you're holding relative to the current velocity, but limit to maxRotationalSpeed
+		else { //rotate by the angle you're holding relative to the current velocity, but limit to maxAngVel
 			double relativeAngle = holdingAngle - velocityAngles[i - 1];
 			if (relativeAngle < 0) {
-				velocityAngles[i] = velocityAngles[i - 1] - Math.min(-relativeAngle, maxRotationalSpeed);
+				velocityAngles[i] = velocityAngles[i - 1] - Math.min(-relativeAngle, maxAngVel);
 			}
 			else {
-				velocityAngles[i] = velocityAngles[i - 1] + Math.min(relativeAngle, maxRotationalSpeed);
+				velocityAngles[i] = velocityAngles[i - 1] + Math.min(relativeAngle, maxAngVel);
 			}
 		}
 	}

@@ -273,11 +273,16 @@ public class VectorMaximizer {
 	}
 	
 	
-	private double calcFinalRotation(SimpleMotion[] motionGroup) {
+	private double calcFinalRotation(SimpleMotion[] motionGroup, boolean hasInitialMovement) {
 		if (motionGroup.length == 0)
-			return Math.PI/2;
+			return Math.PI / 2;
 		else {
-			motionGroup[0].setInitialRotation(motionGroup[0].initialAngle);
+			if (hasInitialMovement) {
+				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle + (p.chooseInitialRotation ? p.initialRotation : motionGroup[0].movement.defaultRotation));
+			}
+			else {
+				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle);
+			}
 			for (int i = 1; i < motionGroup.length; i++)
 				motionGroup[i].setInitialRotation(motionGroup[i-1].calcFinalRotation());
 			
@@ -320,25 +325,25 @@ public class VectorMaximizer {
 		double throwAngle = angle + angleDiff;
 		double diveAngle = angle;
 		double maxRotation = 0;
-		double rotationalVelocity = 0;
+		double angularVelocity = 0;
 		boolean standardTurnaround = false;
 		for (int i = 0; i < frames - 2; i++) {
-			rotationalVelocity += .3;
-			if (rotationalVelocity >= 6) {
-				rotationalVelocity = 6;
+			angularVelocity += .3;
+			if (angularVelocity >= 6) {
+				angularVelocity = 6;
 			}
-			maxRotation += rotationalVelocity;
+			maxRotation += angularVelocity;
 			//Debug.println("Max rotation: " + maxRotation);
 			if (maxRotation + angleDiffDeg > 24.999) { //if we can get to the dive angle with at least 1f of fast turnaround
 				standardTurnaround = true;
 			}
 		}
-		rotationalVelocity += .3;
-		if (rotationalVelocity >= 6) {
-			rotationalVelocity = 6;
+		angularVelocity += .3;
+		if (angularVelocity >= 6) {
+			angularVelocity = 6;
 		}
 
-		double trueMaxRotation = maxRotation + rotationalVelocity; //maximum rotation without a turnaround
+		double trueMaxRotation = maxRotation + angularVelocity; //maximum rotation without a turnaround
 		double[] holdingAngles = new double[frames];
 		holdingAngles[0] = throwAngle;
 		//we need at least 6 frames to apply the non-standard turnaround
@@ -357,7 +362,7 @@ public class VectorMaximizer {
 				}
 				else {
 					int turnaroundFrames = 1;
-					double minRotation = motion.rotationalAccel * (frames - 2); //first frame sets the cap throw angle, last frame (or two) is a fast turnaround
+					double minRotation = motion.angularAccel * (frames - 2); //first frame sets the cap throw angle, last frame (or two) is a fast turnaround
 					Debug.println("Min Rotation: " + Math.toDegrees(minRotation));
 					double unneededRotation = 0;
 					//Debug.println(fallingFrames);
@@ -368,15 +373,15 @@ public class VectorMaximizer {
 					if (additionalRotation < 0) {
 						turnaroundFrames = 2;
 						additionalRotation += FAST_TURNAROUND_VELOCITY - Math.toRadians(2.5) + Math.toRadians(.3); //add .3 because the minimum rotation is now .3 less
-						minRotation = motion.rotationalAccel * (frames - 3);
+						minRotation = motion.angularAccel * (frames - 3);
 					}
 					Debug.println("Additional rotation: " + Math.toDegrees(additionalRotation));
 					double rotationSum = 0;
-					rotationalVelocity = 0;
+					angularVelocity = 0;
 					int additionalRotationFrames = 0;
 					while (rotationSum < additionalRotation) {
-						rotationalVelocity += motion.rotationalAccel;
-						rotationSum += rotationalVelocity;
+						angularVelocity += motion.angularAccel;
+						rotationSum += angularVelocity;
 						additionalRotationFrames++;
 					}
 					double totalRotation = minRotation + additionalRotation;
@@ -438,7 +443,7 @@ public class VectorMaximizer {
 				}
 			}
 			else { //we need to fast turnaround both directions to get to the dive angle
-				rotationalVelocity = 0;
+				angularVelocity = 0;
 				double rotation = 0;
 				holdingAngles[1] = vectorAngle;
 				for (int i = 1; i < frames - 4; i++) {
@@ -580,14 +585,14 @@ public class VectorMaximizer {
 			}
 			double firstVelocity = 0; //velocity on the frame we've gotten back to the initial throw angle and are moving toward the dive bounce angle
 			while (true) {
-				rotationalVelocity = firstVelocity;
+				angularVelocity = firstVelocity;
 				double rotation = 0;
 				for (int i = 0; i < remainingFrames; i++) {
-					rotationalVelocity += .3;
-					if (rotationalVelocity >= 6) {
-						rotationalVelocity = 6;
+					angularVelocity += .3;
+					if (angularVelocity >= 6) {
+						angularVelocity = 6;
 					}
-					rotation += rotationalVelocity;
+					rotation += angularVelocity;
 				}
 				if (remainingFrames < 0 || rotation < angleDiffDeg) {
 					vectorFrames -= 1; //we overdid it
@@ -631,17 +636,17 @@ public class VectorMaximizer {
 			turnaroundFrames = 4;
 
 		double maxRotation = 0;
-		double rotationalVelocity = 0;
+		double angularVelocity = 0;
 		for (int i = 0; i < frames - 1 - turnaroundFrames; i++) {
-			rotationalVelocity += .3;
-			if (rotationalVelocity >= 6) {
-				rotationalVelocity = 6;
+			angularVelocity += .3;
+			if (angularVelocity >= 6) {
+				angularVelocity = 6;
 			}
-			maxRotation += rotationalVelocity;
+			maxRotation += angularVelocity;
 		}
-		rotationalVelocity += .3;
-		if (rotationalVelocity >= 6) {
-			rotationalVelocity = 6;
+		angularVelocity += .3;
+		if (angularVelocity >= 6) {
+			angularVelocity = 6;
 		}
 		// System.out.println("Max Rotation: " + maxRotation);
 		// System.out.println("Vector angle: " + Math.toDegrees(vectorAngle));
@@ -720,7 +725,7 @@ public class VectorMaximizer {
 		}
 		//holdingAngles[0] = 
 		double ang_deg = Math.toDegrees(neededRotation);
-		double rotationalVelocity = 0;
+		double angularVelocity = 0;
 		int turnaroundFrames = 0;
 		//double rotation = 0;
 		for (int remainingFrames = frames; remainingFrames >= 0; remainingFrames--) {
@@ -734,8 +739,8 @@ public class VectorMaximizer {
 				turnaroundFrames = 2;
 			}
 			else {
-				rotationalVelocity += .3; //fix if really long?
-				ang_deg -= rotationalVelocity;
+				angularVelocity += .3; //fix if really long?
+				ang_deg -= angularVelocity;
 			}
 		}
 		Debug.println("Turanround Frames: " + turnaroundFrames);
@@ -804,11 +809,11 @@ public class VectorMaximizer {
 		if (i < rotations.length && i > 1 && rotations[i] != turnaroundRotation + angle) { //we overshoot on this frame if we don't adjust the holding angle
 			double previousVelocity = rotations[i - 1] - rotations[i - 2];
 			double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
-			if (neededVelocity < angleCalculator.rotationalAccel) { //we can't rotate this small, so overshoot by .3 degrees (the rotational acceleration)
-				neededVelocity += angleCalculator.rotationalAccel;
+			if (neededVelocity < angleCalculator.angularAccel) { //we can't rotate this small, so overshoot by .3 degrees (the rotational acceleration)
+				neededVelocity += angleCalculator.angularAccel;
 				overshot = true;
 			}
-			holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.rotationalAccel - neededVelocity);
+			holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.angularAccel - neededVelocity);
 			rotations[i] = rotations[i - 1] + neededVelocity;
 			i++;
 		}
@@ -1491,7 +1496,7 @@ public class VectorMaximizer {
 			motionGroup2Angle = angle - Math.PI / 2;
 			motionGroup2FinalAngle = motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2;
 				
-			motionGroup2FinalRotation = calcFinalRotation(motionGroup2);
+			motionGroup2FinalRotation = calcFinalRotation(motionGroup2, false);
 			// Debug.println("MG2 Angle: " + Math.toDegrees(motionGroup2Angle));
 			// Debug.println("MG2 final angle: " + Math.toDegrees(motionGroup2FinalAngle));
 			// Debug.println("MG2 final rotation: " + Math.toDegrees(motionGroup2FinalRotation));
@@ -1598,7 +1603,7 @@ public class VectorMaximizer {
 		}
 		//if we didn't have variableCapThrow1 but we do have a second variable movement (i.e. before the final dive)
 		else if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1);
+			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
 			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
 			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
 			once_bestAngle2 = variableAngle2;
