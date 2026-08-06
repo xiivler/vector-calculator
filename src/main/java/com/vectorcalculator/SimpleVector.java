@@ -140,6 +140,7 @@ public class SimpleVector extends SimpleMotion {
 		return finalSpeed;
 	}
 	
+	//TODO update this
 	public double[] calcRelativeRotations() { //calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
 		double relativeInitialRotation;
 		if (rightVector) {
@@ -221,13 +222,15 @@ public class SimpleVector extends SimpleMotion {
 		if (holdingAngle != SimpleMotion.NO_ANGLE) {
 			double holdingAngleAdjusted = initialAngle + (rightVector ? -holdingAngle : holdingAngle);
 			double prevHoldingAngleAdjusted = initialAngle + (rightVector ? -prevHoldingAngle : prevHoldingAngle);
+			if (prevHoldingAngle == SimpleMotion.NO_ANGLE) //previous holding angle is Mario's previous rotation if joystick was neutral (or in the first step)
+				prevHoldingAngleAdjusted = prevRotation;
 			while (holdingAngleAdjusted < initialAngle - Math.PI)
 				holdingAngleAdjusted += Math.PI * 2;
-			while (holdingAngleAdjusted > initialAngle - Math.PI)
+			while (holdingAngleAdjusted > initialAngle + Math.PI)
 				holdingAngleAdjusted -= Math.PI * 2;
 			while (prevHoldingAngleAdjusted < holdingAngleAdjusted - Math.PI)
 				prevHoldingAngleAdjusted += Math.PI * 2;
-			while (prevHoldingAngleAdjusted > holdingAngleAdjusted - Math.PI)
+			while (prevHoldingAngleAdjusted > holdingAngleAdjusted + Math.PI)
 				prevHoldingAngleAdjusted -= Math.PI * 2;
 			double joystickRotationDelta = prevHoldingAngleAdjusted - holdingAngleAdjusted;
 			rotateCW = holdingAngle < prevRotation; //rotate CW if we are holding to the right, CCW if we are holding to the left
@@ -265,7 +268,7 @@ public class SimpleVector extends SimpleMotion {
 			rotation = prevRotation + (rotateCW ? -1 : 1) * angVel; //apply angular velocity CW or CCW
 			while (rotation < holdingAngleAdjusted - Math.PI)
 				rotation += Math.PI * 2;
-			while (rotation > holdingAngleAdjusted - Math.PI)
+			while (rotation > holdingAngleAdjusted + Math.PI)
 				rotation -= Math.PI * 2;
 
 			if ((prevRotation <= holdingAngleAdjusted && holdingAngleAdjusted <= rotation) || (rotation <= holdingAngleAdjusted && holdingAngleAdjusted <= prevRotation)) { //stop rotating because the holding angle was achieved
@@ -312,10 +315,13 @@ public class SimpleVector extends SimpleMotion {
 				// 	break;
 				// }
 
+		//System.out.println("Initiating CFTR");
+
 		double rotation = initialRotation;
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, true);
 		
 		for (int i = 0; i < frames; i++) {
+			//System.out.println("CFTR Step " + i);
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
@@ -324,12 +330,12 @@ public class SimpleVector extends SimpleMotion {
 			double prevRotation = prevRotationStep.rotation;
 			while (rotation < targetRotation - Math.PI)
 				rotation += Math.PI * 2;
-			while (rotation > targetRotation - Math.PI)
-				rotation += Math.PI * 2;
+			while (rotation > targetRotation + Math.PI)
+				rotation -= Math.PI * 2;
 			while (prevRotation < targetRotation - Math.PI)
 				rotation += Math.PI * 2;
-			while (prevRotation > targetRotation - Math.PI)
-				rotation += Math.PI * 2;
+			while (prevRotation > targetRotation + Math.PI)
+				rotation -= Math.PI * 2;
 
 			if ((prevRotation <= targetRotation && targetRotation <= rotation) || (rotation <= targetRotation && targetRotation <= prevRotation)) {
 				finalRotation = rotation;
@@ -495,4 +501,3 @@ public class SimpleVector extends SimpleMotion {
 	}
 
 }
-
