@@ -69,7 +69,7 @@ public class VectorDisplayWindow {
 	static final int TSV_TAS = 1;
 	static final int TSV_TAS_2 = 2;
 	
-	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)", "Value"};
+	static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Joystick (R; θ)", "Position (X, Y, Z)", "Velocity (Vx, Vy, Vz)", "Hor. Speed (V; θ)", "Facing Angle", "Value"};
 	//static String[] dataColumnTitles = {"Frame", "Movement Type", "Input(s)", "Hold Angle", "X", "Y", "Z", "Vx", "Vy", "Vz", "Horizontal Speed"};
 	
 	static JFrame frame;
@@ -144,11 +144,12 @@ public class VectorDisplayWindow {
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(200);
 		dataTable.getColumnModel().getColumn(2).setPreferredWidth(160);
-		dataTable.getColumnModel().getColumn(3).setPreferredWidth(240);
+		dataTable.getColumnModel().getColumn(3).setPreferredWidth(200);
 		dataTable.getColumnModel().getColumn(4).setPreferredWidth(400);
 		dataTable.getColumnModel().getColumn(5).setPreferredWidth(360);
-		dataTable.getColumnModel().getColumn(6).setPreferredWidth(240);
-		dataTable.getColumnModel().getColumn(7).setPreferredWidth(160);
+		dataTable.getColumnModel().getColumn(6).setPreferredWidth(260);
+		dataTable.getColumnModel().getColumn(7).setPreferredWidth(170);
+		dataTable.getColumnModel().getColumn(8).setPreferredWidth(100);
 		
 		JScrollPane dataScrollPane = new JScrollPane(dataTable);
 
@@ -209,7 +210,7 @@ public class VectorDisplayWindow {
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
-		frame.setSize(1160, 700);
+		frame.setSize(1250, 700);
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowOpened(java.awt.event.WindowEvent e) {
 				MainJMenuBar.updateCalculatorMenuItems();
@@ -333,7 +334,7 @@ public class VectorDisplayWindow {
 		
 		clearDataTable();
 		
-		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(p.x0, p.y0, p.z0), toVelocityVector(v0 * Math.sin(initialAngleAbsolute), 0, v0 * Math.cos(initialAngleAbsolute)), toPolarCoordinates(v0, reduceAngle(initialAngle))});
+		dataTableModel.addRow(new Object[] {0, "", "", "", toCoordinates(p.x0, p.y0, p.z0), toVelocityVector(v0 * Math.sin(initialAngleAbsolute), 0, v0 * Math.cos(initialAngleAbsolute)), toPolarCoordinates(v0, reduceAngle(initialAngle)), String.format("%.3f", reduceAngle(maximizer.initialRotation))});
 		
 		double x = p.x0;
 		double y = p.y0;
@@ -478,7 +479,7 @@ public class VectorDisplayWindow {
 			double upwarpOffset = 0;
 
 			for (int i = 0; i < info.length; i++, row++) {
-				Object[] rowContents = new Object[8];
+				Object[] rowContents = new Object[9];
 				rowContents[0] = row;
 				rowContents[1] = "";
 				rowContents[2] = "";
@@ -555,10 +556,11 @@ public class VectorDisplayWindow {
 				else {
 					rowContents[6] = toPolarCoordinates(info[i][6], velocityAngle);
 				}
+				rowContents[7] = String.format("%.3f", reduceAngle(info[i][9]));
 				if (info[i][4] < 0) { //how efficient the jump is
 					double speedInTargetDirection = info[i][6] * Math.cos(Math.atan2(info[i][3], info[i][5]) - targetAngleAbsolute);
 					double value = -1 / ((info[i][4] / speedInTargetDirection) - 1);
-					rowContents[7] = String.format("%.3f", value);
+					rowContents[8] = String.format("%.3f", value);
 				}
 				
 				dataTableModel.addRow(rowContents);

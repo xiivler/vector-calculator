@@ -157,7 +157,7 @@ public class DiveTurn extends SimpleMotion {
 
 		double deltaVelocityAngle = Math.atan(sidewaysAccel / (initialForwardVelocity - firstFrameDecel));
 
-		double[][] info = new double[frames][9];
+		double[][] info = new double[frames][10];
 		for (int i = 0; i < frames; i++) {
 			if (firstFrameDecel == 0 && i > 0 && i <= frames - endDecelFrames) {
 				forwardVelocity *= normalizer;
@@ -230,6 +230,7 @@ public class DiveTurn extends SimpleMotion {
 				info[i][7] = info[i - 1][7];
 				info[i][8] = 1;
 			}
+			info[i][9] = Math.atan2(xVelocity, zVelocity);
 		}	
 		return info;
 	}

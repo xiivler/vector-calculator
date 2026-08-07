@@ -374,7 +374,8 @@ public class GroundedCapThrow extends SimpleMotion {
 		double zVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
-		double[][] info = new double[frames][9];
+		double[][] info = new double[frames][10];
+		double initialHoldingAngle = goRight ? initialAngle - holdingAngles[0] : initialAngle + holdingAngles[0];
 		for (int i = 0; i < frames; i++) {
 			double currentVelocityAngle;
 			double currentHoldingAngle;
@@ -416,6 +417,10 @@ public class GroundedCapThrow extends SimpleMotion {
 			else {
 				info[i][8] = 1;
 			}
+			if (i >= PRE_HOOK_FRAMES)
+				info[i][9] = velocityAngles[i];
+			else
+				info[i][9] = velocityAngles[i] + initialHoldingAngle;
 		}	
 		return info;
 	}

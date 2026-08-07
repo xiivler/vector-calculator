@@ -202,6 +202,7 @@ public class ComplexVector extends SimpleVector {
 			double zVelocity;
 			double xVelocity;
 			double yVelocity = movement.initialVerticalSpeed;
+			RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
 			//int nonVectorFrames = frames - vectorFrames;
 			
 			double[] holdingAnglesAdjusted = new double[frames];
@@ -215,7 +216,7 @@ public class ComplexVector extends SimpleVector {
 				else
 					holdingAnglesAdjusted[i] = initialAngle + holdingAngles[i];
 			
-			double[][] info = new double[frames][9];
+			double[][] info = new double[frames][10];
 			for (int i = 0; i < frames; i++) {	
 				//apply forward/backward accel
 				if (holdingAngles[i] != NO_ANGLE) {
@@ -275,6 +276,10 @@ public class ComplexVector extends SimpleVector {
 				else {
 					info[i][8] = 1;
 				}
+				RotationStep prevRotationStep = rotationStep;
+				System.out.println("Frame " + (i + 1));
+				rotationStep = calcRotationStep(holdingAngles[i], prevRotationStep);
+				info[i][9] = rotationStep.rotation;
 			}	
 			return info;
 		}

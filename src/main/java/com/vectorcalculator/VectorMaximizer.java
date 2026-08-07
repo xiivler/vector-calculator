@@ -42,6 +42,8 @@ public class VectorMaximizer {
 	double initialAngle;
 	double targetAngle;
 	double angleAdjustment = 0;
+
+	double initialRotation = 0;
 	
 	boolean rightVector;
 	boolean currentVectorRight;
@@ -130,6 +132,7 @@ public class VectorMaximizer {
 
 	String error = "";
 
+	SimpleMotion[] motionGroup1 = null;
 	SimpleMotion[] motionGroup2 = null;
 	
 	ArrayList<String> movementNames;
@@ -278,7 +281,8 @@ public class VectorMaximizer {
 			return Math.PI / 2;
 		else {
 			if (hasInitialMovement) {
-				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle + (p.chooseInitialRotation ? p.initialRotation : motionGroup[0].movement.defaultRotation));
+				initialRotation = motionGroup[0].initialAngle + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motionGroup[0].movement.defaultRotation);
+				motionGroup[0].setInitialRotation(initialRotation);
 			}
 			else {
 				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle);
@@ -945,6 +949,15 @@ public class VectorMaximizer {
 				setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
 			else
 				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+			if (startIndex == listPreparer.initialMovementIndex) {
+				System.out.println("Whoa");
+				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
+				double[] holdingAngles = new double[]{0, 90, 89.7, 89.4, 89, 89, 89, 90, 90, 89.9, 90, 70};
+				for (int i = 0; i < holdingAngles.length; i++) {
+					holdingAngles[i] = Math.toRadians(holdingAngles[i]);
+				}
+				((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
+			}
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
 			if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
@@ -1387,6 +1400,12 @@ public class VectorMaximizer {
 				motions[i].movement.initialVerticalSpeed = motions[i - 1].calcFinalVerticalVelocity();
 		}
 
+		//calculate rotations properly
+		if (motionGroup1 != null)
+			calcFinalRotation(motionGroup1, true);
+		if (motionGroup2 != null)
+			calcFinalRotation(motionGroup2, false);
+
 		//rotating motions to the right angle
 		//adjustToGivenAngle();
 		
@@ -1443,7 +1462,7 @@ public class VectorMaximizer {
 		currentVectorRight = rightVector;
 
 		//calculate the total displacement of all the movement before the first cap throw whose angle can be variable
-		SimpleMotion[] motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), p.initialHorizontalSpeed, p.framesJump);
+		motionGroup1 = calcMotionGroup(0, Math.min(variableCapThrow1Index, variableMovement2Index), p.initialHorizontalSpeed, p.framesJump);
 		sumXDisps(motionGroup1);
 		sumYDisps(motionGroup1);
 		dispZMotionGroup1 = dispZ;
@@ -2033,8 +2052,10 @@ public class VectorMaximizer {
 			}
 			targetAngle = unadjustedTargetAngle + angleAdjustment;
 		}
+		initialRotation += angleAdjustment;
 		for (int i = 0; i < motions.length; i++) {
 			motions[i].adjustInitialAngle(angleAdjustment);
+			motions[i].adjustInitialRotation(angleAdjustment);
 		}
 		if (initialAngle < 0)
 			initialAngle += 2 * Math.PI;

@@ -1,6 +1,6 @@
 package com.vectorcalculator;
 
-//calculates the behavior of vectorable movement if the joystick angle is consistent
+//calculates the behavior of walking coyote time
 public class CoyoteTime extends SimpleMotion {
 	
 	public CoyoteTime(Movement movement, int frames) {
@@ -60,7 +60,7 @@ public class CoyoteTime extends SimpleMotion {
 		double forwardVelocity = initialForwardVelocity;
 		double zVelocity;
 		double xVelocity;
-		double[][] info = new double[frames][9];
+		double[][] info = new double[frames][10];
 		for (int i = 0; i < frames; i++) {
 			info[i][7] = initialAngle;
 			info[i][8] = 1;
@@ -81,6 +81,7 @@ public class CoyoteTime extends SimpleMotion {
 				if (forwardVelocity < 14)
 					forwardVelocity = 14;
 			}
+			info[i][9] = Math.atan2(xVelocity, zVelocity);
 		}	
 		return info;
 	}

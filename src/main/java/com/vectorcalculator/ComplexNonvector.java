@@ -127,7 +127,7 @@ public class ComplexNonvector extends SimpleMotion {
 	
 	public double calcFinalRotation() {
 		if (movement.movementType.equals("Backflip"))
-			return initialAngle;
+			return initialRotation; //TODO muight be wrong
 		calcFinalAngle();
 		finalRotation = finalAngle;
 		return finalRotation;
@@ -167,7 +167,7 @@ public class ComplexNonvector extends SimpleMotion {
 				else
 					holdingAnglesAdjusted[i] = initialAngle + holdingAngles[i];
 			
-			double[][] info = new double[frames][9];
+			double[][] info = new double[frames][10];
 			for (int i = 0; i < frames; i++) {	
 				if (holdingAngles[i] != NO_ANGLE) {
 					double forwardAccel;
@@ -233,6 +233,10 @@ public class ComplexNonvector extends SimpleMotion {
 				else {
 					info[i][8] = 1;
 				}
+				if (movement.movementType.equals("Backflip"))
+					info[i][9] = initialRotation;
+				else
+					info[i][9] = Math.atan2(xVelocity, zVelocity);
 			}	
 			return info;
 		}

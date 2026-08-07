@@ -299,4 +299,8 @@ public class SimpleMotion {
 		initialAngle += amount;
 	}
 
+	public void adjustInitialRotation(double amount) {
+		initialRotation += amount;
+	}
+
 }
