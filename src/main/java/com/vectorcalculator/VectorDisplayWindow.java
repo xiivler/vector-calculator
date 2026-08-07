@@ -433,7 +433,7 @@ public class VectorDisplayWindow {
 				}
 
 				int startFrame = finalCapThrowFrame + Movement.CT_FRAMES_UNTIL_FULLY_THROWN[p.fctType] - 1; //assumes motion throw
-				System.out.println(p.fctType);
+				//System.out.println(p.fctType);
 
 				for (int i = 0; i < frames; i++) {
 					inputs.get(startFrame + i).P2_r = cappyJoystickRadius;

@@ -815,7 +815,7 @@ public class Solver implements SolverInterface {
                     continue;
                 }
                 if (index == reverseBonkIndex) {
-                    System.out.println("duration is " + testDuration);
+                    //System.out.println("duration is " + testDuration);
                 }
                 if (!canSubtractFrame(index, testDuration + 1)) {
                     continue;

@@ -36,9 +36,9 @@ public class SimpleVector extends SimpleMotion {
 		this.baseSidewaysAccel = movement.sidewaysAccel;
 		this.holdingAngle = NORMAL_ANGLE;
 		//to account for the fact that sometimes the cap throw doesn't quite rotate right, and only loses thousandths of a unit
-		if (movement.movementType.equals("Dive Cap Bounce")) {
-			this.holdingAngle -= Math.toRadians(.5);
-		}
+		// if (movement.movementType.equals("Dive Cap Bounce")) {
+		// 	this.holdingAngle -= Math.toRadians(.5);
+		// }
 		vectorFrames = frames - Math.max((int) Math.ceil((defaultSpeedCap - initialForwardVelocity) / forwardAccel), 0);
 		if (movement.movementType.equals("Sideflip"))
 			sidewaysVelocityCap = Double.MAX_VALUE;
@@ -154,12 +154,12 @@ public class SimpleVector extends SimpleMotion {
 		double rotation = prevRotation;
 		RotationDirection rotationDirection = RotationDirection.NONE;
 
-		if (holdingAngle != SimpleMotion.NO_ANGLE) {
+		if (holdingAngle != NO_ANGLE) {
 			double holdingAngleAdjusted = initialAngle + (rightVector ? -holdingAngle : holdingAngle);
 			double prevHoldingAngleAdjusted = initialAngle + (rightVector ? -prevHoldingAngle : prevHoldingAngle);
-			Debug.println("Holding " + Math.toDegrees(holdingAngleAdjusted));
-			Debug.println("Prev Rotation " + Math.toDegrees(prevRotation));
-			if (prevHoldingAngle == SimpleMotion.NO_ANGLE) //previous holding angle is Mario's previous rotation if joystick was neutral (or in the first step)
+			//System.out.println("Holding " + Math.toDegrees(holdingAngleAdjusted));
+			//System.out.println("Prev Rotation " + Math.toDegrees(prevRotation));
+			if (prevHoldingAngle == NO_ANGLE) //previous holding angle is Mario's previous rotation if joystick was neutral (or in the first step)
 				prevHoldingAngleAdjusted = prevRotation;
 			while (holdingAngleAdjusted < prevRotation - Math.PI)
 				holdingAngleAdjusted += Math.PI * 2;
@@ -240,7 +240,7 @@ public class SimpleVector extends SimpleMotion {
 	//does not currently account for fast turnarounds, returns -1 if no frames to rotation can be calculated
 	// public double calcFramesToRotation(double targetRotation) {
 	// 	double rotation = initialRotation;
-	// 	RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+	// 	RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
 	// 	for (int i = 0; i < frames; i++) {
 	// 		//System.out.println("CFTR Step " + i);
@@ -272,12 +272,13 @@ public class SimpleVector extends SimpleMotion {
 
 	//calculates number of frames until Mario's rotation is maximized
 	public int calcFramesToFullRotation() {
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
 		for (int i = 0; i < frames; i++) {
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
+			//System.out.println(Math.toDegrees(rotationStep.rotation) + ", " + Math.toDegrees(normalAngle));
 			if (rotationStep.rotation == normalAngle)
 				return i + 1;
 		}
@@ -286,7 +287,7 @@ public class SimpleVector extends SimpleMotion {
 	}
 	
 	public double calcFinalRotation() {
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
 		for (int i = 0; i < frames; i++) {
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
@@ -303,7 +304,7 @@ public class SimpleVector extends SimpleMotion {
 	public double[] calcRelativeRotations() {
 		double[] relativeRotations = new double[frames];
 
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 			
 		for (int i = 0; i < frames; i++) {
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
@@ -337,7 +338,7 @@ public class SimpleVector extends SimpleMotion {
 		double zVelocity;
 		double yVelocity = movement.initialVerticalSpeed;
 		double xVelocity;
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 
 		int nonVectorFrames = frames - vectorFrames;
 		

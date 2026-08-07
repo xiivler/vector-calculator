@@ -1,5 +1,7 @@
 package com.vectorcalculator;
 
+import java.util.Arrays;
+
 //calculates the motion for a vector where the joystick angles vary from frame to frame
 public class ComplexVector extends SimpleVector {
 	
@@ -105,9 +107,13 @@ public class ComplexVector extends SimpleVector {
 	
 	//does not currently account for fast turnarounds
 	public double calcFinalRotation() {
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		//System.out.println(movement.movementType + " " + frames);
+		//System.out.println(Arrays.toString(holdingAngles));
+
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
 		for (int i = 0; i < frames; i++) {
+			//System.out.println(i);
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(holdingAngles[i], prevRotationStep);
 		}
@@ -121,7 +127,7 @@ public class ComplexVector extends SimpleVector {
 	public double[] calcRelativeRotations() {
 		double[] relativeRotations = new double[frames];
 
-		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 			
 		for (int i = 0; i < frames; i++) {
 			RotationStep prevRotationStep = rotationStep;
@@ -159,7 +165,7 @@ public class ComplexVector extends SimpleVector {
 			double zVelocity;
 			double xVelocity;
 			double yVelocity = movement.initialVerticalSpeed;
-			RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+			RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 			//int nonVectorFrames = frames - vectorFrames;
 			
 			double[] holdingAnglesAdjusted = new double[frames];

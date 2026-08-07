@@ -281,11 +281,9 @@ public class VectorMaximizer {
 				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle);
 			}
 			for (int i = 1; i < motionGroup.length; i++) {
-				if (motionGroup[i] == null) {
-					System.out.println("Null: " + i);
-				}
 				double prevRotation = motionGroup[i - 1].calcFinalRotation();
 				if (Movement.isMidairCapThrow(motionGroup[i].movement.movementType)) {
+					//System.out.println(i + " holding angle " + motionGroup[i].holdingAngle);
 					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + (((SimpleVector) motionGroup[i]).rightVector ? -1 : 1) * motionGroup[i].holdingAngle);
 				}
 				else {
@@ -314,9 +312,10 @@ public class VectorMaximizer {
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
 	//vectorAngle is how many degrees to the side are being held in order to vector the cap throw
 	private boolean setCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
-		if ((angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle)) {
+		if ((angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle))
 			return setOptimalHoldingAngles(motion, angle, angleDiff, vectorAngle, frames);
-		}
+		else if (angleDiff == OPTIMAL_ANGLE_DIFF)
+			angleDiff = Math.toRadians(diveCapBounceAngle);
 		
 		double angleDiffDeg = Math.toDegrees(angleDiff);
 		double throwAngle = angle + angleDiff;
@@ -821,6 +820,8 @@ public class VectorMaximizer {
 
 		int framesToFullRotation = angleCalculator.calcFramesToFullRotation();
 
+		//System.out.println("Frames to Full Rotation: " + framesToFullRotation);
+
 		if (framesToFullRotation < 0)
 			canUseOptimal = false;
 		if (framesToFullRotation + turnaroundFrames > frames)
@@ -989,7 +990,7 @@ public class VectorMaximizer {
 			else
 				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
 			if (startIndex == listPreparer.initialMovementIndex) {
-				System.out.println("Whoa");
+				//System.out.println("Whoa");
 				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
 				double[] holdingAngles = new double[]{0, 90, 89.7, 89.4, 89, 89, 89, 90, 90, 89.9, 90, 70};
 				for (int i = 0; i < holdingAngles.length; i++) {
@@ -1579,7 +1580,7 @@ public class VectorMaximizer {
 			double lowMedDisp;
 			double highMed;
 			double highMedDisp;
-			double radius = (high + low) / 4;;
+			double radius = (high + low) / 4;
 
 			//skips this step
 			if (only_maximize_variableAngle2) {
