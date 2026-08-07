@@ -105,73 +105,15 @@ public class ComplexVector extends SimpleVector {
 	
 	//does not currently account for fast turnarounds
 	public double calcFinalRotation() {
-		double rotation = initialRotation;
-		double oldRotation;
-		double adjustedHoldingAngle;
-		double angularVelocity = 0;
-
-		int i = 0;
-		//when holding forwards
-		// if (optimalForwardAccel)
-		// 	while (i < frames - vectorFrames) {
-		// 		//Debug.println("step: " + Math.toDegrees(rotation));
-		// 		oldRotation = rotation;
-		// 		if (rotation > initialAngle) {
-		// 			angularVelocity -= angularAccel;
-		// 			if (angularVelocity < -maxAngVel)
-		// 				angularVelocity = -rotationalSpeedAfterMax;
-		// 		}
-		// 		else {
-		// 			angularVelocity += angularAccel;
-		// 			if (angularVelocity > maxAngVel)
-		// 				angularVelocity = rotationalSpeedAfterMax;
-		// 		}
-						
-		// 		rotation += angularVelocity;
-		// 		if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
-		// 			rotation = initialAngle;
-		// 			angularVelocity = 0;
-		// 			i = frames - vectorFrames;
-		// 			break;
-		// 		}
-		// 		i++;
-		// 	}
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
 		
-		while (i < frames) {
-			//Debug.println("step: " + Math.toDegrees(rotation));
-			oldRotation = rotation;
-			
-			if (holdingAngles[i] == NO_ANGLE)
-				adjustedHoldingAngle = rotation;
-			else if (rightVector)
-				adjustedHoldingAngle = initialAngle - holdingAngles[i];
-			else
-				adjustedHoldingAngle = initialAngle + holdingAngles[i];
-			
-			if (rotation > adjustedHoldingAngle) {
-				if (angularVelocity > 0)
-					angularVelocity = 0;
-				angularVelocity -= angularAccel;
-				if (angularVelocity < -maxAngVel)
-					angularVelocity = -rotationalSpeedAfterMax;
-			}
-			else {
-				if (angularVelocity < 0)
-					angularVelocity = 0;
-				angularVelocity += angularAccel;
-				if (angularVelocity > maxAngVel)
-					angularVelocity = rotationalSpeedAfterMax;
-			}
-			rotation += angularVelocity;
-			
-			if ((oldRotation <= adjustedHoldingAngle && adjustedHoldingAngle <= rotation) || (rotation <= adjustedHoldingAngle && adjustedHoldingAngle <= oldRotation)) {
-				rotation = adjustedHoldingAngle;
-				angularVelocity = 0;
-			}
-			i++;
+		for (int i = 0; i < frames; i++) {
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(holdingAngles[i], prevRotationStep);
 		}
-		
-		finalRotation = rotation;
+
+		finalRotation = rotationStep.rotation;
+
 		return finalRotation;
 	}
 	
@@ -277,7 +219,7 @@ public class ComplexVector extends SimpleVector {
 					info[i][8] = 1;
 				}
 				RotationStep prevRotationStep = rotationStep;
-				System.out.println("Frame " + (i + 1));
+				//System.out.println("Frame " + (i + 1));
 				rotationStep = calcRotationStep(holdingAngles[i], prevRotationStep);
 				info[i][9] = rotationStep.rotation;
 			}	
@@ -285,11 +227,15 @@ public class ComplexVector extends SimpleVector {
 		}
 	
 	public void setHoldingAngles(double angles[]) {
+		if (angles.length > 0)
+			holdingAngle = angles[0];
 		holdingAngles = angles;
 		holdingMinRadius = new boolean[holdingAngles.length];
 	}
 
 	public void setHolding(double angles[], boolean radii[]) {
+		if (angles.length > 0)
+			holdingAngle = angles[0];
 		holdingAngles = angles;
 		holdingMinRadius = radii;
 	}

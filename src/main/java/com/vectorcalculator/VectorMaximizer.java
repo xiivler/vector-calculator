@@ -287,19 +287,15 @@ public class VectorMaximizer {
 			else {
 				motionGroup[0].setInitialRotation(motionGroup[0].initialAngle);
 			}
-			for (int i = 1; i < motionGroup.length; i++)
-				motionGroup[i].setInitialRotation(motionGroup[i-1].calcFinalRotation());
-			
-			/*
-			Debug.println("Rotation steps:");
-			motionGroup[motionGroup.length - 1].calcFinalRotation();
-			for (int i = 0; i < motionGroup.length; i++) {
-				Debug.println(motionGroup[i].movement.movementType); 
-				if (motionGroup[i].getClass().getSimpleName().contains("Vector"))
-					Debug.println(((SimpleVector) motionGroup[i]).rightVector); 
-				Debug.println(Math.toDegrees(motionGroup[i].finalRotation));
+			for (int i = 1; i < motionGroup.length; i++) {
+				double prevRotation = motionGroup[i - 1].calcFinalRotation();
+				if (Movement.isMidairCapThrow(motionGroup[i].movement.movementType)) {
+					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + (((SimpleVector) motionGroup[i]).rightVector ? -1 : 1) * motionGroup[i].holdingAngle);
+				}
+				else {
+					motionGroup[i].setInitialRotation(prevRotation);
+				}
 			}
-			*/
 			
 			return motionGroup[motionGroup.length - 1].calcFinalRotation();
 		}
@@ -1081,7 +1077,7 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
-		if (Debug.debug)
+		if (true || Debug.debug)
 			return maximize(MAX_TRY);
 		try {
 			return maximize(MAX_TRY);
@@ -1401,10 +1397,8 @@ public class VectorMaximizer {
 		}
 
 		//calculate rotations properly
-		if (motionGroup1 != null)
-			calcFinalRotation(motionGroup1, true);
-		if (motionGroup2 != null)
-			calcFinalRotation(motionGroup2, false);
+		calcFinalRotation(motions, true);
+
 
 		//rotating motions to the right angle
 		//adjustToGivenAngle();

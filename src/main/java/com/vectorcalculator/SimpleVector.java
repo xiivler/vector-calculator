@@ -224,8 +224,8 @@ public class SimpleVector extends SimpleMotion {
 		if (holdingAngle != SimpleMotion.NO_ANGLE) {
 			double holdingAngleAdjusted = initialAngle + (rightVector ? -holdingAngle : holdingAngle);
 			double prevHoldingAngleAdjusted = initialAngle + (rightVector ? -prevHoldingAngle : prevHoldingAngle);
-			System.out.println("Holding " + Math.toDegrees(holdingAngleAdjusted));
-			System.out.println("Prev Rotation " + Math.toDegrees(prevRotation));
+			Debug.println("Holding " + Math.toDegrees(holdingAngleAdjusted));
+			Debug.println("Prev Rotation " + Math.toDegrees(prevRotation));
 			if (prevHoldingAngle == SimpleMotion.NO_ANGLE) //previous holding angle is Mario's previous rotation if joystick was neutral (or in the first step)
 				prevHoldingAngleAdjusted = prevRotation;
 			while (holdingAngleAdjusted < prevRotation - Math.PI)
@@ -244,20 +244,20 @@ public class SimpleVector extends SimpleMotion {
 			else if (prevRotationDirection == RotationDirection.CCW && joystickRotationDelta >= Math.toRadians(3))
 				rotationDirection = RotationDirection.CCW;
 			double holdingDiff = Math.abs(holdingAngleAdjusted - prevRotation);
-			System.out.println("Holding Diff: " + Math.toDegrees(holdingDiff));
+			Debug.println("Holding Diff: " + Math.toDegrees(holdingDiff));
 			if (holdingDiff >= Math.toRadians(135)) { //fast turnaround
 				angVel = Math.toRadians(25);
 			}
 			else {
-				System.out.println("Joystick Delta: " + Math.toDegrees(joystickRotationDelta));
-				System.out.println("Rotation Direction: " + rotationDirection);
+				Debug.println("Joystick Delta: " + Math.toDegrees(joystickRotationDelta));
+				Debug.println("Rotation Direction: " + rotationDirection);
 				if (joystickRotationDelta > 0 && prevRotationDirection == RotationDirection.CW) //apply counterrotation
 					angVel -= joystickRotationDelta;
 				else if (joystickRotationDelta < 0 && prevRotationDirection == RotationDirection.CCW)
 					angVel += joystickRotationDelta;
 				if (angVel < 0)
 					angVel = 0;
-				System.out.println("Ang Vel After Counterrotation: " + Math.toDegrees(angVel));
+				Debug.println("Ang Vel After Counterrotation: " + Math.toDegrees(angVel));
 
 				if (holdingDiff < Math.toRadians(1)) { //slow down because angle is close
 					angVel -= Math.toRadians(0.6);
@@ -271,7 +271,7 @@ public class SimpleVector extends SimpleMotion {
 					angVel = Math.min(angVel + angularAccel, maxAngVel);
 				}
 			}
-			System.out.println("Ang Vel: " + Math.toDegrees(angVel));
+			Debug.println("Ang Vel: " + Math.toDegrees(angVel));
 
 			rotation = prevRotation + (rotationDirection == RotationDirection.CW ? -1 : 1) * angVel; //apply angular velocity CW or CCW
 			while (rotation < prevRotation - Math.PI)
@@ -299,43 +299,13 @@ public class SimpleVector extends SimpleMotion {
 				angVel = 0;
 		}
 
-		System.out.println();
+		//System.out.println();
 		
 		return new RotationStep(rotation, angVel, holdingAngle, rotationDirection);
 	}
 
 	//does not currently account for fast turnarounds, returns -1 if no frames to rotation can be calculated
 	public double calcFramesToRotation(double targetRotation) {
-		//double rotation = initialRotation;
-		//double oldRotation;
-		//double angularVelocity = 0;
-
-		//when holding forwards
-		//int i = 0;
-		//if (optimalForwardAccel)
-			//while (i < frames - vectorFrames) {
-				// oldRotation = rotation;
-				// if (rotation > initialAngle) {
-				// 	angularVelocity -= angularAccel;
-				// 	if (angularVelocity < -maxAngVel)
-				// 		angularVelocity = -rotationalSpeedAfterMax;
-				// }
-				// else {
-				// 	angularVelocity += angularAccel;
-				// 	if (angularVelocity > maxAngVel)
-				// 		angularVelocity = rotationalSpeedAfterMax;
-				// }
-						
-				// rotation += angularVelocity;
-				// if ((oldRotation <= initialAngle && initialAngle <= rotation) || (rotation <= initialAngle && initialAngle <= oldRotation)) {
-				// 	rotation = initialAngle;
-				// 	angularVelocity = 0;
-				// 	i = frames - vectorFrames;
-				// 	break;
-				// }
-
-		//System.out.println("Initiating CFTR");
-
 		double rotation = initialRotation;
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
 		
@@ -356,12 +326,11 @@ public class SimpleVector extends SimpleMotion {
 			while (prevRotation > targetRotation + Math.PI)
 				rotation -= Math.PI * 2;
 
-			if ((prevRotation <= targetRotation && targetRotation <= rotation) || (rotation <= targetRotation && targetRotation <= prevRotation)) {
-				finalRotation = rotation;
-				if (rotation == targetRotation)
-					return i + 1;
-				else
+			if (rotation == targetRotation) {
+				if (Math.abs(rotation - prevRotation) < rotationStep.angVel) //if not the entire rotation is needed
 					return i + .5;
+				else
+					return i + 1;
 			}
 		}
 
@@ -369,12 +338,16 @@ public class SimpleVector extends SimpleMotion {
 	}
 	
 	public double calcFinalRotation() {
-		double adjustedHoldingAngle;
-		if (rightVector)
-			adjustedHoldingAngle = initialAngle - holdingAngle;
-		else
-			adjustedHoldingAngle = initialAngle + holdingAngle;
-		calcFramesToRotation(adjustedHoldingAngle);
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		
+		for (int i = 0; i < frames; i++) {
+			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
+		}
+
+		finalRotation = rotationStep.rotation;
+
 		return finalRotation;
 	}
 	
@@ -467,7 +440,7 @@ public class SimpleVector extends SimpleMotion {
 			}
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
 			RotationStep prevRotationStep = rotationStep;
-			System.out.println("Frame " + (i + 1));
+			//System.out.println("Frame " + (i + 1));
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
 			info[i][9] = rotationStep.rotation;
 		}	
