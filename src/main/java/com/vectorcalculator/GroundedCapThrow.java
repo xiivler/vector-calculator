@@ -418,11 +418,15 @@ public class GroundedCapThrow extends SimpleMotion {
 				info[i][8] = 1;
 			}
 			if (i >= PRE_HOOK_FRAMES)
-				info[i][9] = velocityAngles[i];
+				info[i][9] = currentVelocityAngle;
 			else
-				info[i][9] = velocityAngles[i] + initialHoldingAngle;
+				info[i][9] = currentVelocityAngle + (goRight ? -capThrowAngle : capThrowAngle);
 		}	
 		return info;
+	}
+
+	public double calcFinalRotation() {
+		return finalAngle;
 	}
 
 	public double calcFinalVerticalVelocity() {

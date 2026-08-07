@@ -274,7 +274,10 @@ public class VectorMaximizer {
 			return Math.PI / 2;
 		else {
 			if (hasInitialMovement) {
-				initialRotation = motionGroup[0].initialAngle + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motionGroup[0].movement.defaultRotation);
+				if (hasVariableRollCancel)
+					initialRotation = Math.toRadians(p.initialAngle);
+				else
+					initialRotation = motionGroup[0].initialAngle + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motionGroup[0].movement.defaultRotation);
 				motionGroup[0].setInitialRotation(initialRotation);
 			}
 			else {
@@ -286,6 +289,8 @@ public class VectorMaximizer {
 					//System.out.println(i + " holding angle " + motionGroup[i].holdingAngle);
 					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + (((SimpleVector) motionGroup[i]).rightVector ? -1 : 1) * motionGroup[i].holdingAngle);
 				}
+				else if (motionGroup[i].movement.movementType.equals("Reverse Bonk"))
+					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + Math.PI);
 				else {
 					motionGroup[i].setInitialRotation(prevRotation);
 				}
@@ -985,19 +990,12 @@ public class VectorMaximizer {
 		else {
 			nextIndex = 1;
 			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
+			if (startIndex == 0 && movementNames.get(1).equals("Backflip"))
+				initialMovement.defaultRotation = Math.PI;
 			if (startIndex == listPreparer.initialMovementIndex)
 				setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
 			else
 				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
-			if (startIndex == listPreparer.initialMovementIndex) {
-				//System.out.println("Whoa");
-				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, true);
-				double[] holdingAngles = new double[]{0, 90, 89.7, 89.4, 89, 89, 89, 90, 90, 89.9, 90, 70};
-				for (int i = 0; i < holdingAngles.length; i++) {
-					holdingAngles[i] = Math.toRadians(holdingAngles[i]);
-				}
-				((ComplexVector) motionGroup[0]).setHoldingAngles(holdingAngles);
-			}
 			motionGroup[0].setInitialAngle(Math.PI / 2);
 			motionGroup[0].calcDispDispCoordsAngleSpeed();
 			if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
@@ -1121,7 +1119,7 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
-		if (Debug.debug)
+		if (true || Debug.debug)
 			return maximize(MAX_TRY);
 		try {
 			return maximize(MAX_TRY);
@@ -1652,11 +1650,13 @@ public class VectorMaximizer {
 			//recalculate variable cap throw or movement 2 for the best angle 1
 			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
 				double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted + motionGroup2FinalAngle;
-				//SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
-				//for (int i = 0; i < variableMovement2Index; i++)
-				//	motionGroups1and2[i] = motions[i];
-				//double motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
 				double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+				if (hasVariableOtherMovement2) { //use more accurate calculation
+					SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+					for (int i = 0; i < variableMovement2Index; i++)
+						motionGroups1and2[i] = motions[i];
+					motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+				}
 				Debug.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
 				Debug.println("Adjusted mg2 final angle: " + Math.toDegrees(motionGroup2AdjustedFinalAngle));
 				findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, bestDispZ1, bestDispX1); //will make bestDispZ2 and bestDispX2 wrong
@@ -1756,11 +1756,13 @@ public class VectorMaximizer {
 			double motionGroup2AdjustedFinalAngle = variableAngle1Adjusted + motionGroup2FinalAngle;
 			
 			//need to know the final rotation so that we can get the right rotation before a final dive if we're rotating, say, a cap bounce
-			// SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
-			// for (int i = 0; i < variableMovement2Index; i++)
-			// 	motionGroups1and2[i] = motions[i];
-			// double motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
 			double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+			if (hasVariableOtherMovement2) { //use more accurate calculation
+				SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+				for (int i = 0; i < variableMovement2Index; i++)
+					motionGroups1and2[i] = motions[i];
+				motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+			}
 			
 			//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
 			//Debug.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));

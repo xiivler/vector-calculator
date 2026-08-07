@@ -672,12 +672,6 @@ public class VectorCalculator extends JPanel {
 			p.twoPlayerMode = value.toString().equals("Yes");
 			movementColumn.setCellEditor(new MyComboBoxEditor(p.twoPlayerMode ? two_player_midairMovementNames : single_player_midairMovementNames));
 			if (oldTwoPlayerMode != p.twoPlayerMode) {
-				if (p.midairPreset.equals("Custom")) //reset Custom preset
-					addPreset(new int[0][0]);
-				else {
-					setProperty(Parameter.midairs, p.midairPreset);
-					addPreset(p.midairPreset, false);
-				}
 				if (p.twoPlayerMode) {
 					p.tripleThrow = TripleThrow.NO;
 					p.tripleThrowDiveCB = TripleThrow.NO;
@@ -687,6 +681,12 @@ public class VectorCalculator extends JPanel {
 				else {
 					p.reverseBonk = false;
 					p.midairVault = false;
+				}
+				if (p.midairPreset.equals("Custom")) //reset Custom preset
+					addPreset(new int[0][0]);
+				else {
+					setProperty(Parameter.midairs, p.midairPreset);
+					addPreset(p.midairPreset, false);
 				}
 			}
 			break;

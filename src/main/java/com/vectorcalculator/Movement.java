@@ -314,7 +314,7 @@ public class Movement {
 			moonGravity = .45;
 			inputs1.add(Inputs.B);
 			chooseInitialRotation = false;
-			defaultRotation = 180; //probably will get ignored
+			defaultRotation = Math.PI; //actually enforced within VectorMaximizer because the crouch occurs first
 		}
 	
 		else if (movementType.equals("Vault") || movementType.equals("Rocket Flower Vault")) {
