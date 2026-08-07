@@ -775,7 +775,13 @@ public class VectorCalculator extends JPanel {
 			}
 			break;
 		case initial_rotation:
-			p.initialRotation = parseDoubleWithDefault(value, 0);
+			p.initialRotation = clampDouble(parseDoubleWithDefault(value, 0), -180, 180);
+			if (p.initialMovementName.equals("Triple Jump")) {
+				if (p.initialRotation < 135 && p.initialRotation > 45)
+					p.initialRotation = 45;
+				else if (p.initialRotation > -135 && p.initialRotation < -45)
+					p.initialRotation = -45;
+			}
 			break;
 		case dive_angle:
 			p.diveCapBounceAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE);

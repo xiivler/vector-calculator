@@ -140,73 +140,6 @@ public class SimpleVector extends SimpleMotion {
 		return finalSpeed;
 	}
 	
-	//TODO update this
-	public double[] calcRelativeRotations() { //calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
-		double relativeInitialRotation;
-		if (rightVector) {
-			relativeInitialRotation = initialAngle - initialRotation;
-		}
-		else {
-			relativeInitialRotation = initialRotation - initialAngle;
-		}
-		double rotation = relativeInitialRotation;
-		double[] rotations = new double[frames];
-		double angularVelocity = 0;
-
-		int i = 0;
-		//when holding forwards, rotate until facing the forward direction
-		if (optimalForwardAccel) {
-			while (i < frames - vectorFrames) {
-				if (rotation > 0) {
-					angularVelocity -= angularAccel;
-					if (angularVelocity < -maxAngVel)
-						angularVelocity = -rotationalSpeedAfterMax;
-				}
-				else if (rotation < 0) {
-					angularVelocity += angularAccel;
-					if (angularVelocity > maxAngVel)
-						angularVelocity = rotationalSpeedAfterMax;
-				}
-						
-				rotation += angularVelocity;
-
-				if ((rotations[i - 1] <= 0 && 0 <= rotation) || (rotation <= 0 && 0 <= rotations[i - 1])) {
-					rotation = 0;
-					angularVelocity = 0;
-				}
-				rotations[i] = rotation;
-				i++;
-			}
-		}
-		
-		//now keep rotating until we reach the angle that we're holding
-		if (holdingAngle != NO_ANGLE) {
-			while (i < frames) {
-				if (angularVelocity < 0) {
-					angularVelocity = 0;
-				}
-				angularVelocity += angularAccel;
-				if (angularVelocity > maxAngVel) {
-					angularVelocity = rotationalSpeedAfterMax;
-				}
-				rotation += angularVelocity;
-
-				if (rotation > holdingAngle) {
-					rotation = holdingAngle;
-				}
-				rotations[i] = rotation;
-				i++;
-			}
-		}
-		else {
-			while (i < frames) {
-				rotations[i] = rotations[i - 1];
-			}
-		}
-
-		return rotations;
-	}
-
 	public static final double ROTATION_ERROR = 0.001;
 
 	//calculates one frame of horizontal rotation based on the previous and the current holding angle
@@ -305,33 +238,48 @@ public class SimpleVector extends SimpleMotion {
 	}
 
 	//does not currently account for fast turnarounds, returns -1 if no frames to rotation can be calculated
-	public double calcFramesToRotation(double targetRotation) {
-		double rotation = initialRotation;
+	// public double calcFramesToRotation(double targetRotation) {
+	// 	double rotation = initialRotation;
+	// 	RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+		
+	// 	for (int i = 0; i < frames; i++) {
+	// 		//System.out.println("CFTR Step " + i);
+	// 		double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+	// 		RotationStep prevRotationStep = rotationStep;
+	// 		rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
+
+	// 		rotation = rotationStep.rotation;
+	// 		double prevRotation = prevRotationStep.rotation;
+	// 		while (rotation < targetRotation - Math.PI)
+	// 			rotation += Math.PI * 2;
+	// 		while (rotation > targetRotation + Math.PI)
+	// 			rotation -= Math.PI * 2;
+	// 		while (prevRotation < targetRotation - Math.PI)
+	// 			rotation += Math.PI * 2;
+	// 		while (prevRotation > targetRotation + Math.PI)
+	// 			rotation -= Math.PI * 2;
+
+	// 		if (rotation == targetRotation) {
+	// 			if (Math.abs(rotation - prevRotation) < rotationStep.angVel) //if not the entire rotation is needed
+	// 				return i + .5;
+	// 			else
+	// 				return i + 1;
+	// 		}
+	// 	}
+
+	// 	return -1;
+	// }
+
+	//calculates number of frames until Mario's rotation is maximized
+	public int calcFramesToFullRotation() {
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
 		
 		for (int i = 0; i < frames; i++) {
-			//System.out.println("CFTR Step " + i);
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
-
-			rotation = rotationStep.rotation;
-			double prevRotation = prevRotationStep.rotation;
-			while (rotation < targetRotation - Math.PI)
-				rotation += Math.PI * 2;
-			while (rotation > targetRotation + Math.PI)
-				rotation -= Math.PI * 2;
-			while (prevRotation < targetRotation - Math.PI)
-				rotation += Math.PI * 2;
-			while (prevRotation > targetRotation + Math.PI)
-				rotation -= Math.PI * 2;
-
-			if (rotation == targetRotation) {
-				if (Math.abs(rotation - prevRotation) < rotationStep.angVel) //if not the entire rotation is needed
-					return i + .5;
-				else
-					return i + 1;
-			}
+			if (rotationStep.rotation == normalAngle)
+				return i + 1;
 		}
 
 		return -1;
@@ -349,6 +297,22 @@ public class SimpleVector extends SimpleMotion {
 		finalRotation = rotationStep.rotation;
 
 		return finalRotation;
+	}
+
+	//calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
+	public double[] calcRelativeRotations() {
+		double[] relativeRotations = new double[frames];
+
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+			
+		for (int i = 0; i < frames; i++) {
+			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
+			relativeRotations[i] = rightVector ? (initialAngle - rotationStep.rotation) : (rotationStep.rotation - initialAngle);
+		}
+
+		return relativeRotations;
 	}
 	
 	//must run calcDisp() first to calculate acceleration values and vectorFrames

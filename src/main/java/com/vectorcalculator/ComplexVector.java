@@ -116,6 +116,21 @@ public class ComplexVector extends SimpleVector {
 
 		return finalRotation;
 	}
+
+	//calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
+	public double[] calcRelativeRotations() {
+		double[] relativeRotations = new double[frames];
+
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, SimpleMotion.NO_ANGLE, RotationDirection.NONE);
+			
+		for (int i = 0; i < frames; i++) {
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(holdingAngles[i], prevRotationStep);
+			relativeRotations[i] = rightVector ? (initialAngle - rotationStep.rotation) : (rotationStep.rotation - initialAngle);
+		}
+
+		return relativeRotations;
+	}
 	
 	public double calcFinalSpeed() {
 		finalSpeed = Math.sqrt(Math.pow(finalForwardVelocity, 2) + Math.pow(finalSidewaysVelocity, 2));
