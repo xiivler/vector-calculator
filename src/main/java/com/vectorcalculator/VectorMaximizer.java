@@ -205,7 +205,7 @@ public class VectorMaximizer {
 						hasVariableMovement2Falling = true;
 						variableMovement2Index = i - 3;
 					}
-					else if (new Movement(movementNames.get(i - 2)).canVector && !(i - 3 >= 0 && movementNames.get(i - 3).contains("RCV"))) {
+					else if (new Movement(movementNames.get(i - 2)).canVector) {
 						hasVariableOtherMovement2 = true;
 						variableMovement2Index = i - 2;
 					}
@@ -964,98 +964,90 @@ public class VectorMaximizer {
 	}
 	
 	private SimpleMotion[] calcMotionGroup(int startIndex, int endIndex, double initialVelocity, int framesJump) {
-		SimpleMotion[] motionGroup = new SimpleMotion[endIndex - startIndex];
-		if (motionGroup.length == 0)
-			return motionGroup;
-		
-		//calculate the trajectory of the inital movement
+        SimpleMotion[] motionGroup = new SimpleMotion[endIndex - startIndex];
+        if (motionGroup.length == 0)
+            return motionGroup;
+        
+        //calculate the trajectory of the inital movement
 
-		//case for roll cancel vectors (note it assumes at least 1 falling frame afterward)
-		int nextIndex;
-		//if we're the first motion group and there's a variable roll cancel
-		if (hasVariableRollCancel && startIndex == 0) {
-			nextIndex = 2;
-			Movement rc = new Movement(movementNames.get(0), initialVelocity);
-			GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, rcTrueInitialAngleDiff, rcFinalAngleDiff, !currentVectorRight);
-			//GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, RcvTool.calcRCFinalAngleDiff(rc.movementType, initialVelocity, movementFrames.get(startIndex + 1)), !currentVectorRight);
-			rcMotion.calcDispDispCoordsAngleSpeed();
-			Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
-			rcv.initialVerticalSpeed = -7;
-			SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, currentVectorRight, movementFrames.get(startIndex + 1));
-			rcvMotion.calcDispDispCoordsAngleSpeed();
-			motionGroup[0] = rcMotion;
-			motionGroup[1] = rcvMotion;
-			currentVectorRight = !currentVectorRight;
-		}
-		else {
-			nextIndex = 1;
-			Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
-			if (startIndex == 0 && movementNames.get(1).equals("Backflip"))
-				initialMovement.defaultRotation = Math.PI;
-			if (startIndex == listPreparer.initialMovementIndex)
-				setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
-			else
-				motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
-			motionGroup[0].setInitialAngle(Math.PI / 2);
-			motionGroup[0].calcDispDispCoordsAngleSpeed();
-			if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
-				currentVectorRight = !currentVectorRight;
-		}
+        //case for roll cancel vectors (note it assumes at least 1 falling frame afterward)
+        //if we're the first motion group and there's a variable roll cancel
+        if (hasVariableRollCancel && startIndex == 0) {
+            Movement rc = new Movement(movementNames.get(0), initialVelocity);
+            GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, rcTrueInitialAngleDiff, rcFinalAngleDiff, !currentVectorRight);
+            rcMotion.calcDispDispCoordsAngleSpeed();
+            motionGroup[0] = rcMotion;
+        }
+        else {
+            Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
+            if (startIndex == 0 && movementNames.get(1).equals("Backflip"))
+                initialMovement.defaultRotation = Math.PI;
+            if (startIndex == listPreparer.initialMovementIndex)
+                setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
+            else
+                motionGroup[0] = initialMovement.getMotion(movementFrames.get(startIndex), currentVectorRight, false);
+            motionGroup[0].setInitialAngle(Math.PI / 2);
+            motionGroup[0].calcDispDispCoordsAngleSpeed();
+            if (!(motionGroup[0].getClass().getSimpleName().equals("SimpleMotion") || motionGroup[0].getClass().getSimpleName().equals("CoyoteTime")) || movementNames.get(startIndex).equals("Ground Pound"))
+                currentVectorRight = !currentVectorRight;
+        }
 
-		for (int i = nextIndex; i < motionGroup.length; i++) {
-			int j = i + startIndex;
-			Movement currentMovement;
-			if (movementNames.get(j - 1).equals("Moonwalk") || movementNames.get(j - 1).equals("Coyote Time"))
-				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
-			else
-				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
-			if (j == listPreparer.initialMovementIndex) {
-				setYankHoldingAngles(motionGroup, currentMovement, i, j, imYankFrames);
-			}
-			else if (movementNames.get(j).equals("Homing Motion Cap Throw")) {			
-				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-				((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
-			}
-			else if (movementNames.get(j).equals("Rainbow Spin") && rsYankFrames > 0) {
-				setYankHoldingAngles(motionGroup, currentMovement, i, j, rsYankFrames);
-			}
-			else if (Movement.isCapBounce(movementNames.get(j)) && cbYankFrames > 0) {
-				setYankHoldingAngles(motionGroup, currentMovement, i, j, cbYankFrames);
-			}
-			else if (movementNames.get(j).equals("Dive")) {
-				preCapBounceDiveIndex = j;
-				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
-				((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
-				if (p.diveTurn == TurnDuringDive.NO || (p.reverseBonk && j == movementNames.size() - 2)) {
-					((DiveTurn) motionGroup[i]).setHoldingAngle(0);
-				}
-			}
-			else
-				motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
-			if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall	
-				((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
-				// Debug.println("Testing: " + variableHCTHoldingAngle);
-				if (movementFrames.get(j) <= 3) {
-					((SimpleVector) motionGroup[i]).optimalForwardAccel = false; //may need to not hold straight ahead in the falling frames even though under max speed
-				}
-				if (!switchHCTFallVectorDir) {
-					currentVectorRight = !currentVectorRight;
-				}
-				Debug.println("HCT Optimize Branch Activated!");
-			}
-			motionGroup[i].setInitialAngle(motionGroup[i - 1].finalAngle);
-			//System.out.println("Previous angle: " + Math.toDegrees(motionGroup[i - 1].finalAngle));
-			//System.out.println("It was a: " + movementNames.get(j - 1));
-			//System.out.println("It is a: " + movementNames.get(j));
-			motionGroup[i].calcDispDispCoordsAngleSpeed();
-			//System.out.println(motionGroup[i].dispX);
-			//System.out.println(motionGroup[i].dispZ);
-			//if the movement is falling, switch the vector only if j is the index of the hct AND we are hct second
-			//if the movement is an HCT, do not switch the vector if HCT second
-			if (!(movementNames.get(j).equals("Falling") || motionGroup[i].getClass().getSimpleName().equals("SimpleMotion")))
-				if (!(!switchHCTFallVectorDir && j == variableHCTFallIndex - 1))
-					currentVectorRight = !currentVectorRight;
-		}
+        for (int i = 1; i < motionGroup.length; i++) {
+            int j = i + startIndex;
+            Movement currentMovement;
+            if (movementNames.get(j - 1).equals("Moonwalk") || movementNames.get(j - 1).equals("Coyote Time"))
+                currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
+            else
+                currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
+            if (j == listPreparer.initialMovementIndex) {
+                 setYankHoldingAngles(motionGroup, currentMovement, i, j, imYankFrames);
+            }
+            else if (movementNames.get(j).equals("Homing Motion Cap Throw")) {          
+                motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+                ((ComplexVector) motionGroup[i]).setHoldingAngles(generateHomingMotionThrowHoldingAngles());
+            }
+            else if (movementNames.get(j).equals("Rainbow Spin") && rsYankFrames > 0) {
+                setYankHoldingAngles(motionGroup, currentMovement, i, j, rsYankFrames);
+            }
+            else if (Movement.isCapBounce(movementNames.get(j)) && cbYankFrames > 0) {
+                setYankHoldingAngles(motionGroup, currentMovement, i, j, cbYankFrames);
+            }
+            else if (movementNames.get(j).equals("Dive")) {
+                preCapBounceDiveIndex = j;
+                motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+                ((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
+                if (p.diveTurn == TurnDuringDive.NO || (p.reverseBonk && j == movementNames.size() - 2)) {
+                    ((DiveTurn) motionGroup[i]).setHoldingAngle(0);
+                }
+            }
+            else
+                motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
+            if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall  
+                ((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
+                // Debug.println("Testing: " + variableHCTHoldingAngle);
+                if (movementFrames.get(j) <= 3) {
+                    ((SimpleVector) motionGroup[i]).optimalForwardAccel = false; //may need to not hold straight ahead in the falling frames even though under max speed
+                }
+                if (!switchHCTFallVectorDir) {
+                    currentVectorRight = !currentVectorRight;
+                }
+                Debug.println("HCT Optimize Branch Activated!");
+            }
+            motionGroup[i].setInitialAngle(motionGroup[i - 1].finalAngle);
+            motionGroup[i].calcDispDispCoordsAngleSpeed();
+            //System.out.println("Previous angle: " + Math.toDegrees(motionGroup[i - 1].finalAngle));
+            //System.out.println("It was a: " + movementNames.get(j - 1));
+            //System.out.println("It is a: " + movementNames.get(j));
+            //System.out.println(motionGroup[i].dispX);
+            //System.out.println(motionGroup[i].dispZ);
+            //if the movement is falling, switch the vector only if j is the index of the hct AND we are hct second OR the falling is part of an RCV/the initial movement
+            //if the movement is an HCT, do not switch the vector if HCT second
+            if (j == listPreparer.initialMovementIndex && movementNames.get(j).equals("Falling"))
+                currentVectorRight = !currentVectorRight;
+            else if (!(movementNames.get(j).equals("Falling") || motionGroup[i].getClass().getSimpleName().equals("SimpleMotion")))
+                if (!(!switchHCTFallVectorDir && j == variableHCTFallIndex - 1))
+                    currentVectorRight = !currentVectorRight;
+        }
 		
 		for (SimpleMotion m : motionGroup)
 			Debug.println(m.dispZ + ", " + m.dispX);
@@ -1119,7 +1111,7 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
-		if (true || Debug.debug)
+		if (Debug.debug)
 			return maximize(MAX_TRY);
 		try {
 			return maximize(MAX_TRY);

@@ -17,7 +17,6 @@ public class GroundedCapThrow extends SimpleMotion {
 	double trueInitialAngle;
 
 	double capThrowAngle; //could just use holdingAngle for this
-	double finalAngle; //how much we want to rotate by
 	int postHookFrames;
 
 	int turningFrames; //number of frames the player turns after the hook (up to all of them)
