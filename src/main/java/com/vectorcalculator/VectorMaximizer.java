@@ -692,8 +692,18 @@ public class VectorMaximizer {
 					initialHoldingAngle -= Math.toRadians(difference);
 				vectorAngle -= Math.toRadians(difference);
 			}
-			holdingAngles[0] = initialHoldingAngle;
-			for (int i = 1; i < frames - turnaroundFrames; i++) {
+
+			Movement movement = motion.movement;
+			double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
+			int totalForwardAccelFrames = (int) Math.ceil(forwardAccelFrames);
+
+			int firstVectorAngleFrame = Math.max(totalForwardAccelFrames, 1);
+
+			if (totalForwardAccelFrames == 0)
+				holdingAngles[0] = initialHoldingAngle;
+			for (int i = 0; i < totalForwardAccelFrames; i++)
+				holdingAngles[i] = 0;
+			for (int i = firstVectorAngleFrame; i < frames - turnaroundFrames; i++) {
 				holdingAngles[i] = vectorAngle;
 			}
 			Debug.println("Turnaround Frames: " + turnaroundFrames);
@@ -729,59 +739,78 @@ public class VectorMaximizer {
 		return true;
 	}
 
-	private void setFinalFallingHoldingAngles(ComplexVector motion, double neededRotation, double initialHoldingAngle, int frames) {
-		Debug.println("Needed Rotation: " + Math.toDegrees(neededRotation));
-		Debug.println("Initial Holding Angle: " + Math.toDegrees(initialHoldingAngle));
-		double[] holdingAngles = new double[frames];
-		for (int i = 0; i < holdingAngles.length; i++) {
-			holdingAngles[i] = initialHoldingAngle;
-		}
-		//holdingAngles[0] = 
-		double ang_deg = Math.toDegrees(neededRotation);
-		double angularVelocity = 0;
-		int turnaroundFrames = 0;
-		//double rotation = 0;
-		for (int remainingFrames = frames; remainingFrames >= 0; remainingFrames--) {
-			if (ang_deg > 67.5 && remainingFrames == 4) {
-			 	turnaroundFrames = 4;
-			}
-			if (ang_deg > 47.5 && remainingFrames == 3) {
-				turnaroundFrames = 3;
-			}
-			else if (remainingFrames == 2) {
-				turnaroundFrames = 2;
-			}
-			else {
-				angularVelocity += .3; //fix if really long?
-				ang_deg -= angularVelocity;
-			}
-		}
-		Debug.println("Turanround Frames: " + turnaroundFrames);
-		holdingAngles[frames - turnaroundFrames] = initialHoldingAngle - Math.toRadians(ang_deg) + Math.PI * 136/180.0;
-		if (turnaroundFrames > 1)
-			holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle + Math.PI * 2/180.0;
-		if (turnaroundFrames > 2)
-			holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle - Math.PI * 5/180.0;
-		if (turnaroundFrames > 3)
-			holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle - Math.PI * 9/180.0;
-		holdingAngles[frames - 1] = initialHoldingAngle;
-		boolean[] holdingMinRadius = new boolean[frames];
-		holdingMinRadius[frames - turnaroundFrames] = true;
-		motion.setHolding(holdingAngles, holdingMinRadius);
+	// private void setFinalFallingHoldingAngles(ComplexVector motion, double neededRotation, double initialHoldingAngle, int frames) {
+	// 	Debug.println("Needed Rotation: " + Math.toDegrees(neededRotation));
+	// 	Debug.println("Initial Holding Angle: " + Math.toDegrees(initialHoldingAngle));
+	// 	double[] holdingAngles = new double[frames];
+	// 	for (int i = 0; i < holdingAngles.length; i++) {
+	// 		holdingAngles[i] = initialHoldingAngle;
+	// 	}
+	// 	//holdingAngles[0] = 
+	// 	double ang_deg = Math.toDegrees(neededRotation);
+	// 	double angularVelocity = 0;
+	// 	int turnaroundFrames = 0;
+	// 	//double rotation = 0;
+	// 	for (int remainingFrames = frames; remainingFrames >= 0; remainingFrames--) {
+	// 		if (ang_deg > 67.5 && remainingFrames == 4) {
+	// 		 	turnaroundFrames = 4;
+	// 		}
+	// 		if (ang_deg > 47.5 && remainingFrames == 3) {
+	// 			turnaroundFrames = 3;
+	// 		}
+	// 		else if (remainingFrames == 2) {
+	// 			turnaroundFrames = 2;
+	// 		}
+	// 		else {
+	// 			angularVelocity += .3; //fix if really long?
+	// 			ang_deg -= angularVelocity;
+	// 		}
+	// 	}
+	// 	Debug.println("Turanround Frames: " + turnaroundFrames);
+	// 	holdingAngles[frames - turnaroundFrames] = initialHoldingAngle - Math.toRadians(ang_deg) + Math.PI * 136/180.0;
+	// 	if (turnaroundFrames > 1)
+	// 		holdingAngles[frames - turnaroundFrames + 1] = initialHoldingAngle + Math.PI * 2/180.0;
+	// 	if (turnaroundFrames > 2)
+	// 		holdingAngles[frames - turnaroundFrames + 2] = initialHoldingAngle - Math.PI * 5/180.0;
+	// 	if (turnaroundFrames > 3)
+	// 		holdingAngles[frames - turnaroundFrames + 3] = initialHoldingAngle - Math.PI * 9/180.0;
+	// 	holdingAngles[frames - 1] = initialHoldingAngle;
+	// 	boolean[] holdingMinRadius = new boolean[frames];
+	// 	holdingMinRadius[frames - turnaroundFrames] = true;
+	// 	motion.setHolding(holdingAngles, holdingMinRadius);
 
-	}
+	// }
 	
-	private void setOtherMovementHoldingAngles(ComplexVector motion, SimpleMotion[] motionGroup, int index, double angle, double initialAngle, double initialRotation, boolean rightVector) {
+	private void setOtherMovementHoldingAngles(ComplexVector motion, int index, double angle, double initialAngle, double initialRotation, boolean rightVector) {
 		Movement movement;
 		SimpleVector angleCalculator;
 		int frames = movementFrames.get(index);
 
-		//first check if we can just use the optimal version
-		double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
+		if (index == 0) {
+			movement = new Movement(movementNames.get(index), p.initialHorizontalSpeed);
+			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
+			angleCalculator.setInitialAngle(Math.PI / 2);
+			angleCalculator.setInitialRotation(Math.PI / 2 + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motion.movement.defaultRotation));
+		}
+		else {
+			movement = new Movement(movementNames.get(index), motions[index - 1].finalSpeed);
+			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
+			angleCalculator.setInitialAngle(initialAngle);
+			angleCalculator.setInitialRotation(initialRotation);
+		}
 
+		System.out.println("Initial Angle: " + Math.toDegrees(initialAngle));
+		System.out.println("Initial Rotation: " + Math.toDegrees(initialRotation));
+		System.out.println("Target Rotation: " + Math.toDegrees(initialAngle + (rightVector ? -angle : angle)));
+
+		//first check if we can just use the optimal version
 		boolean canUseOptimal = true;
 
+		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
+		int totalForwardAccelFrames = (int) Math.ceil(forwardAccelFrames);
+
 		int turnaroundFrames = 0;
+		double ang_deg = Math.toDegrees(SimpleMotion.NORMAL_ANGLE - angle);
 		if (ang_deg <= 25)
 			canUseOptimal = false;
 		else if (ang_deg <= 25 + 22.5)
@@ -796,21 +825,6 @@ public class VectorMaximizer {
 			canUseOptimal = false;
 
 		//System.out.println("Turnaround Frames: " + turnaroundFrames);
-
-		if (motionGroup.length > 0) {
-			movement = new Movement(movementNames.get(index), motionGroup[motionGroup.length - 1].finalSpeed);
-			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
-			angleCalculator.setInitialAngle(initialAngle);
-			//Debug.println("Initial Angle: " + Math.toDegrees(initialAngle));
-			angleCalculator.setInitialRotation(initialRotation);
-			//Debug.println("Initial Rotation: " + Math.toDegrees(initialRotation));
-		}
-		else {
-			movement = new Movement(movementNames.get(index), p.initialHorizontalSpeed);
-			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
-			angleCalculator.setInitialAngle(Math.PI / 2);
-			angleCalculator.setInitialRotation(Math.PI / 2 + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motionGroup[0].movement.defaultRotation));
-		}
 		
 		double[] rotations = angleCalculator.calcRelativeRotations();
 		double[] holdingAngles = new double[frames];
@@ -818,7 +832,7 @@ public class VectorMaximizer {
 
 		for (int z = 0; z < frames; z++) {
 			if (Debug.debug) {
-				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z] + initialAngle));
 			}
 		}
 		Debug.println();
@@ -850,6 +864,10 @@ public class VectorMaximizer {
 		turnaroundFrames = fastTurnaroundFrames[listIndex];
 		int firstTurnaroundFrame = frames - turnaroundFrames;
 		int i = 0;
+		while (i < totalForwardAccelFrames) {
+			holdingAngles[i] = 0;
+			i++;
+		}
 		while (i < rotations.length && rotations[i] < turnaroundRotation + angle) {
 			holdingAngles[i] = angleCalculator.holdingAngle; //NORMAL_ANGLE unless dive cap bounce where it's slightly less to account for error
 			i++;
@@ -1450,24 +1468,16 @@ public class VectorMaximizer {
 		Movement variableCapThrowFalling = new Movement("Falling", variableCapThrowVector.calcFinalSpeed());
 		SimpleMotion variableCapThrowFallingVector;
 		double holdingAngle = (vectorRight ? 1 : -1) * (variableCapThrowVector.finalAngle - variableAngleAdjusted);
-		if (rotateDuringFall || (holdingAngle < 0))
-			variableCapThrowFallingVector = variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, true);
-		else
-			variableCapThrowFallingVector = variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, false);
+		variableCapThrowFallingVector = variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, rotateDuringFall || (holdingAngle < 0));
 		//SimpleVector variableCapThrowFallingVector = (SimpleVector) variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, false);
 		motions[variableCapThrowIndex + 1] = variableCapThrowFallingVector;
 		if (rotateDuringFall) {
 			ComplexVector variableCapThrowFallingVectorC = (ComplexVector) variableCapThrowFallingVector;
 			variableCapThrowFallingVectorC.setOptimalForwardAccel(false); //not trying to be optimal, simply trying to end up in the right direction
 			variableCapThrowFallingVectorC.setInitialAngle(variableCapThrowVector.finalAngle);
-			double ctFinalRotation;
-			if (variableCapThrowVector.rightVector) {
-				ctFinalRotation = variableCapThrowVector.initialAngle - SimpleMotion.NORMAL_ANGLE;
-			}
-			else {
-				ctFinalRotation = -variableCapThrowVector.initialAngle + SimpleMotion.NORMAL_ANGLE;
-			}
-			setFinalFallingHoldingAngles(variableCapThrowFallingVectorC, variableAngleAdjusted - ctFinalRotation, holdingAngle, movementFrames.get(variableCapThrowIndex + 1));
+			double ctFinalRotation = variableCapThrowVector.initialAngle + (variableCapThrowVector.rightVector ? -SimpleMotion.NORMAL_ANGLE : SimpleMotion.NORMAL_ANGLE);
+			setOtherMovementHoldingAngles(variableCapThrowFallingVectorC, variableCapThrowIndex + 1, variableAngleAdjusted - variableCapThrowVector.finalAngle, variableCapThrowVector.finalAngle, ctFinalRotation, rightVector);
+			//setFinalFallingHoldingAngles(variableCapThrowFallingVectorC, variableAngleAdjusted - ctFinalRotation, holdingAngle, movementFrames.get(variableCapThrowIndex + 1));
 			//variableCapThrowFallingVectorC.setHoldingAngle(0);
 		}
 		else {
@@ -1809,15 +1819,15 @@ public class VectorMaximizer {
 		// Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
-			//boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableCapThrow1Index + 1) >= 4;
-			boolean rotateDuringFall = false;
+			boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableCapThrow1Index + 1) >= 4;
+			rotateDuringFall = true;
 			if (rotateDuringFall)
 				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
 			else if (hasVariableCapThrow2) {
 					setCapThrowHoldingAngles(variableMovement2Vector, variableAngle2, p.customFCTAngle ? Math.toRadians(p.fctAngle) : OPTIMAL_ANGLE_DIFF, SimpleMotion.NORMAL_ANGLE, variableMovement2Frames, variableMovement2FallingFrames);
 			}
 			else
-				setOtherMovementHoldingAngles(variableMovement2Vector, motionGroup, variableMovement2Index, variableAngle2, initialAngle, initialRotation, currentVectorRight);
+				setOtherMovementHoldingAngles(variableMovement2Vector, variableMovement2Index, variableAngle2, initialAngle, initialRotation, currentVectorRight);
 			variableMovement2Vector.calcDisp();
 			variableMovement2Vector.calcDispCoords();
 			
