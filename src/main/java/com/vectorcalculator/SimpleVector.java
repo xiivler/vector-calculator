@@ -237,38 +237,33 @@ public class SimpleVector extends SimpleMotion {
 		return new RotationStep(rotation, angVel, holdingAngle, rotationDirection);
 	}
 
-	//does not currently account for fast turnarounds, returns -1 if no frames to rotation can be calculated
-	// public double calcFramesToRotation(double targetRotation) {
-	// 	double rotation = initialRotation;
-	// 	RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
+	public int calcFramesToRotation(double targetRotation) {
+		double rotation = initialRotation;
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
-	// 	for (int i = 0; i < frames; i++) {
-	// 		//System.out.println("CFTR Step " + i);
-	// 		double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
-	// 		RotationStep prevRotationStep = rotationStep;
-	// 		rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
+		for (int i = 0; i < frames; i++) {
+			//System.out.println("CFTR Step " + i);
+			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
 
-	// 		rotation = rotationStep.rotation;
-	// 		double prevRotation = prevRotationStep.rotation;
-	// 		while (rotation < targetRotation - Math.PI)
-	// 			rotation += Math.PI * 2;
-	// 		while (rotation > targetRotation + Math.PI)
-	// 			rotation -= Math.PI * 2;
-	// 		while (prevRotation < targetRotation - Math.PI)
-	// 			rotation += Math.PI * 2;
-	// 		while (prevRotation > targetRotation + Math.PI)
-	// 			rotation -= Math.PI * 2;
+			rotation = rotationStep.rotation;
+			double prevRotation = prevRotationStep.rotation;
+			while (rotation < targetRotation - Math.PI)
+				rotation += Math.PI * 2;
+			while (rotation > targetRotation + Math.PI)
+				rotation -= Math.PI * 2;
+			while (prevRotation < targetRotation - Math.PI)
+				rotation += Math.PI * 2;
+			while (prevRotation > targetRotation + Math.PI)
+				rotation -= Math.PI * 2;
 
-	// 		if (rotation == targetRotation) {
-	// 			if (Math.abs(rotation - prevRotation) < rotationStep.angVel) //if not the entire rotation is needed
-	// 				return i + .5;
-	// 			else
-	// 				return i + 1;
-	// 		}
-	// 	}
+			if ((prevRotation <= targetRotation && targetRotation <= rotation) || (prevRotation >= targetRotation && targetRotation >= rotation))
+				return i + 1;
+		}
 
-	// 	return -1;
-	// }
+		return -1;
+	}
 
 	//calculates number of frames until Mario's rotation is maximized
 	public int calcFramesToFullRotation() {
@@ -282,7 +277,6 @@ public class SimpleVector extends SimpleMotion {
 			if (rotationStep.rotation == normalAngle)
 				return i + 1;
 		}
-
 		return -1;
 	}
 	
@@ -298,6 +292,24 @@ public class SimpleVector extends SimpleMotion {
 		finalRotation = rotationStep.rotation;
 
 		return finalRotation;
+	}
+
+	//calculates the minimum possible rotation assuming the player counter-rotates as soon as they can begin doing so (1f after holding the normal angle); note that a ComplexVector will be needed to actually perform this
+	public double calcMinRotation() {
+		if (!optimalForwardAccel)
+			return angularAccel * frames;
+
+		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
+		
+		double minRotation = 0;
+
+		for (int i = 0; i < frames - vectorFrames + 1; i++) {
+			RotationStep prevRotationStep = rotationStep;
+			rotationStep = calcRotationStep(0, prevRotationStep);
+			minRotation += Math.abs(rotationStep.angVel); //TODO don't do this with absolute value
+		}
+		minRotation += (vectorFrames - 1) * angularAccel; //TODO this assumes no fast turnaround
+		return minRotation;
 	}
 
 	//calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
