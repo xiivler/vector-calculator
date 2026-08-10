@@ -139,9 +139,11 @@ public class VectorMaximizer {
 	ArrayList<Integer> movementFrames;
 	MovementNameListPreparer listPreparer;
 
-	static double[] fastTurnarounds = {Math.toRadians(85), Math.toRadians(75), Math.toRadians(72.5), Math.toRadians(67.5), Math.toRadians(50), Math.toRadians(47.5), Math.toRadians(25), 0};
-	static int[] fastTurnaroundFrames = {4, 3, 3, 3, 2, 2, 1, 0};
-	static int[] maxVelocityFastTurnaroundFrames = {1, 3, 2, 1, 2, 1, 1, 0}; //how many frames you're rotating at 25 deg/fr
+	// static double[] fastTurnarounds = {Math.toRadians(85), Math.toRadians(75), Math.toRadians(72.5), Math.toRadians(67.5), Math.toRadians(50), Math.toRadians(47.5), Math.toRadians(25), 0};
+	// static int[] fastTurnaroundFrames = {4, 3, 3, 3, 2, 2, 1, 0};
+	// static int[] maxVelocityFastTurnaroundFrames = {1, 3, 2, 1, 2, 1, 1, 0}; //how many frames you're rotating at 25 deg/fr
+
+	static double[] fastTurnarounds = {0, Math.toRadians(25), Math.toRadians(25 + 22.5), Math.toRadians(25 + 22.5 + 20), Math.toRadians(25 + 22.5 + 20 + 17.5)};
 	
 	public VectorMaximizer(MovementNameListPreparer listPreparer) {
 		
@@ -865,32 +867,49 @@ public class VectorMaximizer {
 		}
 
 		double totalRotation = Math.abs(targetRotation - initialRotation); //TODO eliminate math.abs
-		//double totalRegularRotation = totalRotation; //non quickturn rotation
+		double rotationWithoutQuickturn = totalRotation;
 		double minRotation = angleCalculator.calcMinRotation();
+		double overshoot = 0;
 
 		Debug.println(1, "Frames to Target Rotation: " + framesToTargetRotation);
 
 		//we can't rotate enough normally and need to add a quickturn to help
 		if (framesToTargetRotation == -1) {
-			double neededRotation = Math.abs(targetRotation - angleCalculator.calcFinalRotation());
-			if (neededRotation <= FAST_TURNAROUND_VELOCITY && totalRotation > (FAST_TURNAROUND_VELOCITY + (minRotation - motion.angularAccel))) {
+			double rotationWithQuickturn = -Double.MAX_VALUE;
+			turnaroundFrames = 0; //which type of fast turnaround from the list that we're checking
+			while (rotationWithQuickturn < angle && turnaroundFrames < fastTurnarounds.length - 1) {
+				turnaroundFrames++;
+				rotationWithoutQuickturn = rotations[frames - 1 - turnaroundFrames];
+				rotationWithQuickturn = rotationWithoutQuickturn + fastTurnarounds[turnaroundFrames];
+				overshoot = rotationWithQuickturn - angle;
+			}
+
+			if (turnaroundFrames == 1 && totalRotation > (FAST_TURNAROUND_VELOCITY + (minRotation - motion.angularAccel))) {
 				counterrotationMethod = true;
-				turnaroundFrames = 1;
-				//totalRegularRotation -= FAST_TURNAROUND_VELOCITY;
 				minRotation += FAST_TURNAROUND_VELOCITY - motion.angularAccel;
 			}
-			else {
+			else if (turnaroundFrames <= 4) //TODO accept larger?
 				quickturnAssistMethod = true;
-				ang_deg = Math.toDegrees(neededRotation);
-				if (ang_deg <= 25 + 22.5)
-					turnaroundFrames = 2;
-				else if (ang_deg <= 25 + 22.5 + 20) //do I need + FINAL_CT_ANGLE_REDUCTION_LIMIT?
-					turnaroundFrames = 3;
-				else if (ang_deg <= 25 + 22.5 + 20 + 17.5)
-					turnaroundFrames = 4;
-				else
-					quickturnAssistMethod = false; //TODO we should always use this method in this case
-			}
+
+			// double neededRotation = Math.abs(targetRotation - angleCalculator.calcFinalRotation());
+			// if (neededRotation <= FAST_TURNAROUND_VELOCITY && totalRotation > (FAST_TURNAROUND_VELOCITY + (minRotation - motion.angularAccel))) {
+			// 	counterrotationMethod = true;
+			// 	turnaroundFrames = 1;
+			// 	//totalRegularRotation -= FAST_TURNAROUND_VELOCITY;
+			// 	minRotation += FAST_TURNAROUND_VELOCITY - motion.angularAccel;
+			// }
+			// else {
+			// 	quickturnAssistMethod = true;
+			// 	ang_deg = Math.toDegrees(neededRotation);
+			// 	if (ang_deg <= 25 + 22.5)
+			// 		turnaroundFrames = 2;
+			// 	else if (ang_deg <= 25 + 22.5 + 20) //do I need + FINAL_CT_ANGLE_REDUCTION_LIMIT?
+			// 		turnaroundFrames = 3;
+			// 	else if (ang_deg <= 25 + 22.5 + 20 + 17.5)
+			// 		turnaroundFrames = 4;
+			// 	else
+			// 		quickturnAssistMethod = false; //TODO we should always use this method in this case
+			// }
 		}
 
 		//counterrotation method (turnaroundFrames is 0 or 1)
@@ -917,7 +936,7 @@ public class VectorMaximizer {
 				}
 				//System.out.println(Math.toDegrees(rotationSum));
 			}
-			double overshoot = rotationSum - totalRotation;
+			overshoot = rotationSum - totalRotation;
 			Debug.println(1, "Additional Rotation Frames: " + additionalRotationFrames);
 			Debug.println(1, "Overshoot: " + Math.toDegrees(overshoot));
 
@@ -946,16 +965,7 @@ public class VectorMaximizer {
 		}
 
 		if (quickturnAssistMethod) {
-			double difference = 0; //difference between exact turnaround and how much Mario needs to turn around
-			if (ang_deg <= 25 + 22.5) {
-				difference = ang_deg - 25 - 22.5;
-			}
-			// else if (ang_deg <= 25 + 22.5 + 20) {
-			// 	difference = ang_deg - 25 - 22.5 - 20;
-			// }
-			// else {
-			// 	difference = ang_deg - 25 - 22.5 - 20 - 17.5;
-			// }
+			Debug.println(1, "Overshoot: " + overshoot);
 
 			for (int i = 0; i < (int) forwardAccelFrames; i++)
                 holdingAngles[i] = 0;
@@ -965,19 +975,19 @@ public class VectorMaximizer {
 				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 			}
 			if (turnaroundFrames == 2) { //this is only optimal for non cap throws
-				holdingAngles[frames - turnaroundFrames] = SimpleMotion.NORMAL_ANGLE - Math.PI * 136/180.0;
-				holdingAngles[frames - 1] = SimpleMotion.NORMAL_ANGLE - Math.PI * (136 + difference)/180.0;
+				holdingAngles[frames - turnaroundFrames] = rotationWithoutQuickturn + Math.PI * 136/180.0;
+				holdingAngles[frames - 1] = rotationWithoutQuickturn + Math.PI * 136/180.0 - overshoot;
 				holdingMinRadius[frames - 1] = true;
 			}
 			else {
-				holdingAngles[frames - turnaroundFrames] = SimpleMotion.NORMAL_ANGLE + Math.PI * 181/180.0;
+				holdingAngles[frames - turnaroundFrames] = rotationWithoutQuickturn - Math.PI * 181/180.0;
 				if (turnaroundFrames > 1)
-					holdingAngles[frames - turnaroundFrames + 1] = SimpleMotion.NORMAL_ANGLE + Math.PI * 2/180.0;
+					holdingAngles[frames - turnaroundFrames + 1] = rotationWithoutQuickturn - Math.PI * 2/180.0;
 				if (turnaroundFrames > 2)
-					holdingAngles[frames - turnaroundFrames + 2] = SimpleMotion.NORMAL_ANGLE - Math.PI * 5/180.0;
+					holdingAngles[frames - turnaroundFrames + 2] = rotationWithoutQuickturn + Math.PI * 5/180.0;
 				if (turnaroundFrames > 3)
-					holdingAngles[frames - turnaroundFrames + 3] = SimpleMotion.NORMAL_ANGLE - Math.PI * 9/180.0;
-				if (difference < -0.001) {
+					holdingAngles[frames - turnaroundFrames + 3] = rotationWithoutQuickturn + Math.PI * 9/180.0;
+				if (overshoot > 0.001) {
 					holdingAngles[frames - 1] = angle;
 				}
 			}
@@ -987,73 +997,73 @@ public class VectorMaximizer {
 		}
 
 		//this should never run anymore
-		double rotationWithFastTurnaround = -Double.MAX_VALUE;
-		int listIndex = -1; //which type of fast turnaround from the list that we're checking
-		while (rotationWithFastTurnaround < angle && listIndex < fastTurnarounds.length - 1) {
-			listIndex++;
-			rotationWithFastTurnaround = rotations[frames - 1 - fastTurnaroundFrames[listIndex]] - fastTurnarounds[listIndex];
-		}
-		if (listIndex >= fastTurnarounds.length) {
-			listIndex = fastTurnarounds.length - 1;
-		}
-		double turnaroundRotation = fastTurnarounds[listIndex];
-		turnaroundFrames = fastTurnaroundFrames[listIndex];
-		int firstTurnaroundFrame = frames - turnaroundFrames;
-		int i = 0;
-		while (i < totalForwardAccelFrames) {
-			holdingAngles[i] = 0;
-			i++;
-		}
-		while (i < rotations.length && rotations[i] < turnaroundRotation + angle) {
-			holdingAngles[i] = angleCalculator.holdingAngle; //NORMAL_ANGLE unless dive cap bounce where it's slightly less to account for error
-			i++;
-		}
-		boolean overshot = false;
-		if (i < rotations.length && i > 1 && rotations[i] != turnaroundRotation + angle) { //we overshoot on this frame if we don't adjust the holding angle
-			double previousVelocity = rotations[i - 1] - rotations[i - 2];
-			double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
-			if (neededVelocity < angleCalculator.angularAccel) { //we can't rotate this small, so overshoot by .3 degrees (the rotational acceleration)
-				neededVelocity += angleCalculator.angularAccel;
-				overshot = true;
-			}
-			holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.angularAccel - neededVelocity);
-			rotations[i] = rotations[i - 1] + neededVelocity;
-			i++;
-		}
-		for (; i < firstTurnaroundFrame && i < rotations.length; i++) {
-			if (overshot) {
-				holdingAngles[i] = turnaroundRotation + angle - Math.toRadians(1);
-				overshot = false;
-			}
-			else {
-				holdingAngles[i] = turnaroundRotation + angle;
-			}
-			rotations[i] = turnaroundRotation + angle;
-		}
-		//finally, apply the turnaround so we end up at the desired angle
-		double fastTurnaroundVelocity = FAST_TURNAROUND_VELOCITY;
-		for (; i < frames; i++) {
-			if (i == firstTurnaroundFrame) {
-				holdingAngles[i] = rotations[i - 1] - FAST_TURNAROUND_ANGLE;
-				rotations[i] = rotations[i - 1] - FAST_TURNAROUND_VELOCITY;
-			}
-			else if (i < firstTurnaroundFrame + maxVelocityFastTurnaroundFrames[listIndex]) {
-				holdingAngles[i] = holdingAngles[i - 1] - FAST_TURNAROUND_VELOCITY; //need to rotate by another 25 degrees
-				rotations[i] = rotations[i - 1] - FAST_TURNAROUND_VELOCITY;
-			}
-			else { //fast turnaround decelerates as we keep holding the same angle
-				fastTurnaroundVelocity -= FAST_TURNAROUND_ACCEL;
-				holdingAngles[i] = holdingAngles[i - 1];
-				rotations[i] = rotations[i - 1] - fastTurnaroundVelocity;
-			}
-			holdingMinRadius[i] = true;
-		}
-		 for (int z = 0; z < frames; z++) {
-			if (Debug.debug == 0) {
-				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
-			}
-		}
-		Debug.println(); 
+		// double rotationWithQuickturn = -Double.MAX_VALUE;
+		// int listIndex = -1; //which type of fast turnaround from the list that we're checking
+		// while (rotationWithQuickturn < angle && listIndex < fastTurnarounds.length - 1) {
+		// 	listIndex++;
+		// 	rotationWithQuickturn = rotations[frames - 1 - fastTurnaroundFrames[listIndex]] - fastTurnarounds[listIndex];
+		// }
+		// if (listIndex >= fastTurnarounds.length) {
+		// 	listIndex = fastTurnarounds.length - 1;
+		// }
+		// double turnaroundRotation = fastTurnarounds[listIndex];
+		// turnaroundFrames = fastTurnaroundFrames[listIndex];
+		// int firstTurnaroundFrame = frames - turnaroundFrames;
+		// int i = 0;
+		// while (i < totalForwardAccelFrames) {
+		// 	holdingAngles[i] = 0;
+		// 	i++;
+		// }
+		// while (i < rotations.length && rotations[i] < turnaroundRotation + angle) {
+		// 	holdingAngles[i] = angleCalculator.holdingAngle; //NORMAL_ANGLE unless dive cap bounce where it's slightly less to account for error
+		// 	i++;
+		// }
+		// boolean overshot = false;
+		// if (i < rotations.length && i > 1 && rotations[i] != turnaroundRotation + angle) { //we overshoot on this frame if we don't adjust the holding angle
+		// 	double previousVelocity = rotations[i - 1] - rotations[i - 2];
+		// 	double neededVelocity = (turnaroundRotation + angle) - rotations[i - 1];
+		// 	if (neededVelocity < angleCalculator.angularAccel) { //we can't rotate this small, so overshoot by .3 degrees (the rotational acceleration)
+		// 		neededVelocity += angleCalculator.angularAccel;
+		// 		overshot = true;
+		// 	}
+		// 	holdingAngles[i] = angleCalculator.holdingAngle - (previousVelocity + angleCalculator.angularAccel - neededVelocity);
+		// 	rotations[i] = rotations[i - 1] + neededVelocity;
+		// 	i++;
+		// }
+		// for (; i < firstTurnaroundFrame && i < rotations.length; i++) {
+		// 	if (overshot) {
+		// 		holdingAngles[i] = turnaroundRotation + angle - Math.toRadians(1);
+		// 		overshot = false;
+		// 	}
+		// 	else {
+		// 		holdingAngles[i] = turnaroundRotation + angle;
+		// 	}
+		// 	rotations[i] = turnaroundRotation + angle;
+		// }
+		// //finally, apply the turnaround so we end up at the desired angle
+		// double fastTurnaroundVelocity = FAST_TURNAROUND_VELOCITY;
+		// for (; i < frames; i++) {
+		// 	if (i == firstTurnaroundFrame) {
+		// 		holdingAngles[i] = rotations[i - 1] - FAST_TURNAROUND_ANGLE;
+		// 		rotations[i] = rotations[i - 1] - FAST_TURNAROUND_VELOCITY;
+		// 	}
+		// 	else if (i < firstTurnaroundFrame + maxVelocityFastTurnaroundFrames[listIndex]) {
+		// 		holdingAngles[i] = holdingAngles[i - 1] - FAST_TURNAROUND_VELOCITY; //need to rotate by another 25 degrees
+		// 		rotations[i] = rotations[i - 1] - FAST_TURNAROUND_VELOCITY;
+		// 	}
+		// 	else { //fast turnaround decelerates as we keep holding the same angle
+		// 		fastTurnaroundVelocity -= FAST_TURNAROUND_ACCEL;
+		// 		holdingAngles[i] = holdingAngles[i - 1];
+		// 		rotations[i] = rotations[i - 1] - fastTurnaroundVelocity;
+		// 	}
+		// 	holdingMinRadius[i] = true;
+		// }
+		//  for (int z = 0; z < frames; z++) {
+		// 	if (Debug.debug == 0) {
+		// 		Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+		// 	}
+		// }
+		// Debug.println(); 
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 
@@ -1957,7 +1967,7 @@ public class VectorMaximizer {
 		// Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
-			boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 10; //TODO figure out correct logic
+			boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 6; //TODO 6 might not always work, but it really seems like it does
 			if (rotateDuringFall) { //yank does not appear to be effective, neither is holding back
 				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
 			}

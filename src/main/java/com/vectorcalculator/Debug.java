@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Debug {
     
-    public static int debug = 1; //-1 is no debug, 0 is print all debug statements
+    public static int debug = -1; //-1 is no debug, 0 is print all debug statements
 
     public static void println(Object o) {
         println(0, o);
