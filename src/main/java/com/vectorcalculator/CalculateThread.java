@@ -163,9 +163,9 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     p.initialMovementName = "Sideflip";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
                     VectorMaximizer maximizerSideflip = VectorCalculator.calculate();
-                    Debug.println("TJ: " + maximizerTJ.bestDisp);
-                    Debug.println("RC: " + maximizerRC.bestDisp);
-                    Debug.println("SF: " + maximizerSideflip.bestDisp);
+                    // Debug.println("TJ: " + maximizerTJ.bestDisp);
+                    // Debug.println("RC: " + maximizerRC.bestDisp);
+                    // Debug.println("SF: " + maximizerSideflip.bestDisp);
                     if (maximizerTJ != null && maximizerRC != null && maximizerSideflip != null) {
                         if (maximizerTJ.bestDisp > maximizerRC.bestDisp && maximizerTJ.bestDisp > maximizerSideflip.bestDisp) {
                             maximizer = maximizerTJ;
@@ -195,7 +195,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     VectorDisplayWindow.generateData(maximizer);
                     VectorDisplayWindow.display();
                 }
-                Debug.println();
+                // Debug.println();
             }
 
             if (VectorCalculator.cancelCalculating) {

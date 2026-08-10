@@ -12,7 +12,7 @@ public class VectorMaximizer {
 
 	public static final double FAST_TURNAROUND_VELOCITY = Math.toRadians(25);
 	public static final double FAST_TURNAROUND_ACCEL = Math.toRadians(2.5);
-	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(137); //only needs to be 135, but extra .5 degrees for safety
+	public static final double FAST_TURNAROUND_ANGLE = Math.toRadians(137); //only needs to be 135, but extra degrees for safety
 
 	public static final double TURN_COUNTERROTATION = Math.toRadians(.35); //really should be .3 but this produces inaccurate results
 	public static final double TRUE_TURN_COUNTERROTATION = Math.toRadians(.3);
@@ -701,8 +701,10 @@ public class VectorMaximizer {
 
 			if (totalForwardAccelFrames == 0)
 				holdingAngles[0] = initialHoldingAngle;
-			for (int i = 0; i < totalForwardAccelFrames; i++)
-				holdingAngles[i] = 0;
+			for (int i = 0; i < (int) forwardAccelFrames; i++)
+                holdingAngles[i] = 0;
+            if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
+                holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
 			for (int i = firstVectorAngleFrame; i < frames - turnaroundFrames; i++) {
 				holdingAngles[i] = vectorAngle;
 			}
@@ -799,9 +801,9 @@ public class VectorMaximizer {
 			angleCalculator.setInitialRotation(initialRotation);
 		}
 
-		// System.out.println("Initial Angle: " + Math.toDegrees(initialAngle));
-		// System.out.println("Initial Rotation: " + Math.toDegrees(initialRotation));
-		// System.out.println("Target Rotation: " + Math.toDegrees(initialAngle + (rightVector ? -angle : angle)));
+		Debug.println(1, "Initial Angle: " + Math.toDegrees(initialAngle));
+		Debug.println(1, "Initial Rotation: " + Math.toDegrees(initialRotation));
+		Debug.println(1, "Target Rotation: " + Math.toDegrees(initialAngle + (rightVector ? -angle : angle)));
 		
 		//System.out.println("Target Rotation (Relative): " + Math.toDegrees(angle));
 
@@ -833,10 +835,10 @@ public class VectorMaximizer {
 		boolean[] holdingMinRadius = new boolean[frames];
 
 		for (int z = 0; z < frames; z++) {
-			if (Debug.debug)
+			if (Debug.debug == 0)
 				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(initialAngle + (rightVector ? -rotations[z] : rotations[z])));
 		}
-		Debug.println();
+		Debug.println(1, "");
 
 		int framesToFullRotation = angleCalculator.calcFramesToFullRotation();
 
@@ -848,53 +850,143 @@ public class VectorMaximizer {
 			canUseOptimal = false;
 
 		if (canUseOptimal) {
+			Debug.println(1, "Using optimal");
 			setOptimalHoldingAngles(motion, angle, OPTIMAL_ANGLE_DIFF, SimpleMotion.NORMAL_ANGLE, frames);
 			return;
 		}
 
 		double targetRotation = initialAngle + (rightVector ? -angle : angle);
 		int framesToTargetRotation = angleCalculator.calcFramesToRotation(targetRotation);
+		boolean counterrotationMethod = false;
+		boolean quickturnAssistMethod = false;
+		if (framesToTargetRotation != -1) {
+			counterrotationMethod = true; //TODO this criteria is not airtight because maybe Mario has to rotate too much with counterrotation, so look at minRotation probably
+			turnaroundFrames = 0;
+		}
 
 		double totalRotation = Math.abs(targetRotation - initialRotation); //TODO eliminate math.abs
+		//double totalRegularRotation = totalRotation; //non quickturn rotation
+		double minRotation = angleCalculator.calcMinRotation();
 
-		//counterrotation method
-		if (framesToTargetRotation != -1) {
-			double minRotation = angleCalculator.calcMinRotation();
-			// System.out.println("Min Rotation: " + Math.toDegrees(minRotation));
-			// System.out.println("Total Rotation: " + Math.toDegrees(totalRotation));
+		Debug.println(1, "Frames to Target Rotation: " + framesToTargetRotation);
+
+		//we can't rotate enough normally and need to add a quickturn to help
+		if (framesToTargetRotation == -1) {
+			double neededRotation = Math.abs(targetRotation - angleCalculator.calcFinalRotation());
+			if (neededRotation <= FAST_TURNAROUND_VELOCITY && totalRotation > (FAST_TURNAROUND_VELOCITY + (minRotation - motion.angularAccel))) {
+				counterrotationMethod = true;
+				turnaroundFrames = 1;
+				//totalRegularRotation -= FAST_TURNAROUND_VELOCITY;
+				minRotation += FAST_TURNAROUND_VELOCITY - motion.angularAccel;
+			}
+			else {
+				quickturnAssistMethod = true;
+				ang_deg = Math.toDegrees(neededRotation);
+				if (ang_deg <= 25 + 22.5)
+					turnaroundFrames = 2;
+				else if (ang_deg <= 25 + 22.5 + 20) //do I need + FINAL_CT_ANGLE_REDUCTION_LIMIT?
+					turnaroundFrames = 3;
+				else if (ang_deg <= 25 + 22.5 + 20 + 17.5)
+					turnaroundFrames = 4;
+				else
+					quickturnAssistMethod = false; //TODO we should always use this method in this case
+			}
+		}
+
+		//counterrotation method (turnaroundFrames is 0 or 1)
+		if (counterrotationMethod) {
+			double firstCounterrotation = motion.angularAccel * (totalForwardAccelFrames + 1); //how much counterrotation on the frame right after the first normal angle frame
+			Debug.println(1, "Min Rotation: " + Math.toDegrees(minRotation));
+			Debug.println(1, "Total Rotation: " + Math.toDegrees(totalRotation));
 			double rotationSum = minRotation;
 			double angularVelocity = motion.angularAccel;
 			int additionalRotationFrames = 0;
+			int maxAdditionalRotationFrames = frames - (totalForwardAccelFrames + 1) - turnaroundFrames;
+			double replacementAngularVelocity = motion.angularAccel; //angular velocity of the frame we're replacing
 			while (rotationSum < totalRotation) { //swap out frames of min rotation for frames with regular rotation
 				if (angularVelocity >= motion.maxAngVel)
 					angularVelocity -= Math.toRadians(2.5);
 				else
 					angularVelocity += motion.angularAccel;
-				rotationSum += angularVelocity - motion.angularAccel;
+				rotationSum += angularVelocity - replacementAngularVelocity;
 				additionalRotationFrames++;
+				if (additionalRotationFrames >= maxAdditionalRotationFrames) { //this is really complicated but our first counterrotation frame's velocity can increase so we keep replacing it
+					additionalRotationFrames = maxAdditionalRotationFrames;
+					replacementAngularVelocity += motion.angularAccel;
+					firstCounterrotation -= motion.angularAccel;
+				}
+				//System.out.println(Math.toDegrees(rotationSum));
 			}
 			double overshoot = rotationSum - totalRotation;
-			Debug.println("Overshoot: " + Math.toDegrees(overshoot));
-			//how much counterrotation there should be on the first frame of acceleration
-			int firstAdditionalRotationFrame = frames - additionalRotationFrames;
+			Debug.println(1, "Additional Rotation Frames: " + additionalRotationFrames);
+			Debug.println(1, "Overshoot: " + Math.toDegrees(overshoot));
+
+			int firstAdditionalRotationFrame = frames - additionalRotationFrames - turnaroundFrames;
 			
-			for (int i = 0; i < totalForwardAccelFrames; i++) //TODO hold as sharp as you can on the last forward accel frame
-				holdingAngles[i] = 0;
+			for (int i = 0; i < (int) forwardAccelFrames; i++)
+                holdingAngles[i] = 0;
+            if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
+                holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
 			holdingAngles[totalForwardAccelFrames] = SimpleMotion.NORMAL_ANGLE;
-			double firstCounterrotation = motion.angularAccel * (totalForwardAccelFrames + 1);
 			holdingAngles[totalForwardAccelFrames + 1] = SimpleMotion.NORMAL_ANGLE - firstCounterrotation;
 			for (int i = totalForwardAccelFrames + 2; i < firstAdditionalRotationFrame; i++) {
 				holdingAngles[i] = holdingAngles[i - 1] - motion.angularAccel;
 				//currentRotation += Math.toRadians(0.3);
 			}
-			for (int i = firstAdditionalRotationFrame; i < frames; i++) {
+			for (int i = Math.max(totalForwardAccelFrames + 2, firstAdditionalRotationFrame); i < frames - turnaroundFrames; i++) {
 				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 			}
-			holdingAngles[frames - 1] = holdingAngles[frames - 2] - overshoot;
-			motion.setHoldingAngles(holdingAngles);
+			holdingAngles[frames - 1 - turnaroundFrames] = holdingAngles[frames - 2 - turnaroundFrames] - (additionalRotationFrames == 0 ? motion.angularAccel : overshoot);
+			if (turnaroundFrames == 1) {
+				holdingAngles[frames - 1] = angle - FAST_TURNAROUND_VELOCITY + Math.PI * (136 / 180.0);
+				holdingMinRadius[frames - 1] = true;
+			}
+			motion.setHolding(holdingAngles, holdingMinRadius);
 			return;
 		}
 
+		if (quickturnAssistMethod) {
+			double difference = 0; //difference between exact turnaround and how much Mario needs to turn around
+			if (ang_deg <= 25 + 22.5) {
+				difference = ang_deg - 25 - 22.5;
+			}
+			// else if (ang_deg <= 25 + 22.5 + 20) {
+			// 	difference = ang_deg - 25 - 22.5 - 20;
+			// }
+			// else {
+			// 	difference = ang_deg - 25 - 22.5 - 20 - 17.5;
+			// }
+
+			for (int i = 0; i < (int) forwardAccelFrames; i++)
+                holdingAngles[i] = 0;
+            if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
+                holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+			for (int i = totalForwardAccelFrames; i < frames - turnaroundFrames; i++) {
+				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+			}
+			if (turnaroundFrames == 2) { //this is only optimal for non cap throws
+				holdingAngles[frames - turnaroundFrames] = SimpleMotion.NORMAL_ANGLE - Math.PI * 136/180.0;
+				holdingAngles[frames - 1] = SimpleMotion.NORMAL_ANGLE - Math.PI * (136 + difference)/180.0;
+				holdingMinRadius[frames - 1] = true;
+			}
+			else {
+				holdingAngles[frames - turnaroundFrames] = SimpleMotion.NORMAL_ANGLE + Math.PI * 181/180.0;
+				if (turnaroundFrames > 1)
+					holdingAngles[frames - turnaroundFrames + 1] = SimpleMotion.NORMAL_ANGLE + Math.PI * 2/180.0;
+				if (turnaroundFrames > 2)
+					holdingAngles[frames - turnaroundFrames + 2] = SimpleMotion.NORMAL_ANGLE - Math.PI * 5/180.0;
+				if (turnaroundFrames > 3)
+					holdingAngles[frames - turnaroundFrames + 3] = SimpleMotion.NORMAL_ANGLE - Math.PI * 9/180.0;
+				if (difference < -0.001) {
+					holdingAngles[frames - 1] = angle;
+				}
+			}
+			holdingMinRadius[frames - turnaroundFrames] = true;
+			motion.setHolding(holdingAngles, holdingMinRadius);
+			return;
+		}
+
+		//this should never run anymore
 		double rotationWithFastTurnaround = -Double.MAX_VALUE;
 		int listIndex = -1; //which type of fast turnaround from the list that we're checking
 		while (rotationWithFastTurnaround < angle && listIndex < fastTurnarounds.length - 1) {
@@ -957,7 +1049,7 @@ public class VectorMaximizer {
 			holdingMinRadius[i] = true;
 		}
 		 for (int z = 0; z < frames; z++) {
-			if (Debug.debug) {
+			if (Debug.debug == 0) {
 				Debug.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
 			}
 		}
@@ -1173,7 +1265,7 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
-		if (Debug.debug)
+		if (Debug.debug >= 0)
 			return maximize(MAX_TRY);
 		try {
 			return maximize(MAX_TRY);
@@ -1865,8 +1957,7 @@ public class VectorMaximizer {
 		// Debug.println("Initial Angle:" + Math.toDegrees(initialAngle));
 		
 		while(high - low > .00001) {
-			boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableCapThrow1Index + 1) >= 4;
-			rotateDuringFall = true;
+			boolean rotateDuringFall = p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 10; //TODO figure out correct logic
 			if (rotateDuringFall) { //yank does not appear to be effective, neither is holding back
 				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
 			}

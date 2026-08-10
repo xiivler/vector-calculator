@@ -296,7 +296,7 @@ public class SimpleVector extends SimpleMotion {
 
 	//calculates the minimum possible rotation assuming the player counter-rotates as soon as they can begin doing so (1f after holding the normal angle); note that a ComplexVector will be needed to actually perform this
 	public double calcMinRotation() {
-		if (!optimalForwardAccel)
+		if (!optimalForwardAccel || initialForwardVelocity >= defaultSpeedCap)
 			return angularAccel * frames;
 
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
