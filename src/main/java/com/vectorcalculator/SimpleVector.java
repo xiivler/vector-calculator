@@ -285,6 +285,8 @@ public class SimpleVector extends SimpleMotion {
 		
 		for (int i = 0; i < frames; i++) {
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+			if (i >= frames - vectorFrames && rotationStep.rotation == normalAngle) //shortcut to exit early
+				break;
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
 		}
