@@ -286,6 +286,7 @@ public class Properties {
     double reverseBonkAngle = 30; //positive number is left if initial vector direction is left, right if initial vector direction is right; negative values also accepted
     int finalGPFrames = 1;
     int firstCTIndex = 0;
+    boolean optimizeCT1Falling = false;
     int fctType = Movement.MCCTU;
     boolean optimizeFCTFalling = false;
     boolean customFCTAngle = false;

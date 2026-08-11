@@ -21,6 +21,8 @@ public class VectorMaximizer {
 
 	public static final double MAX_DIVE_CAP_BOUNCE_ANGLE = 41.2;
 
+	public static final int COMPLEX_HCT_FALL_MIN_FRAMES = 6; //this is observational and perhaps bothshould be tested
+
 	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
 	SimpleVector[] vectors;
@@ -48,6 +50,7 @@ public class VectorMaximizer {
 	boolean rightVector;
 	boolean currentVectorRight;
 
+	boolean complexHCTFallVector = false;
 	boolean switchHCTFallVectorDir = true;
 	boolean bestSwitchHCTFallVectorDir = true;
 	
@@ -66,7 +69,7 @@ public class VectorMaximizer {
 	boolean only_maximize_variableAngle2 = false;
 
 	boolean optimizeFCTFalling = false;
-	boolean optimizeCT1Falling = false; //does not appear to gain distance and also takes forever to calculate
+	boolean optimizeCT1Falling = false; //gains a little under 2 units in the best cases that have been found, only relevant in moon gravity currently
 	
 	int variableCapThrow1Index;
 	int variableMovement2Index;
@@ -108,6 +111,7 @@ public class VectorMaximizer {
 	double variableAngle2;
 	double variableAngle2Adjusted;
 	double variableHCTHoldingAngle;
+	int variableHCTCountervectorFrames;
 
 	double rsYankFrames;
 	double imYankFrames;
@@ -219,6 +223,7 @@ public class VectorMaximizer {
 			//we need to optimize the hct fall specifically
 			else if (movementNames.get(i).contains("Homing") && i < movementNames.size() - 1 && movementNames.get(i + 1).equals("Falling")) {
 				hasVariableHCTFallVector = true;
+				complexHCTFallVector = movementFrames.get(i + 1) >= COMPLEX_HCT_FALL_MIN_FRAMES; //this is just a rough idea
 				variableHCTFallIndex = i + 1;
 			}
 			else if (movementNames.get(i).equals("Rainbow Spin")) {
@@ -235,6 +240,8 @@ public class VectorMaximizer {
 		}
 		
 		motions = new SimpleMotion[movementNames.size()];
+
+		optimizeCT1Falling = p.optimizeCT1Falling && p.turnarounds && hasVariableCapThrow1 && hasVariableCapThrow1Falling && movementFrames.get(variableCapThrow1Index + 1) >= 6; //TODO 6 might not always work, but it really seems like it does
 		
 		Debug.println("Variable cap throw 1: " + hasVariableCapThrow1);
 		Debug.println("Variable cap throw 2: " + hasVariableCapThrow2);
@@ -313,6 +320,7 @@ public class VectorMaximizer {
 		if (p.hctNeutralHoming) {
 			homingMotionThrowHoldingAngles[p.hctHomingFrame] = SimpleMotion.NO_ANGLE;
 		}
+		//homingMotionThrowHoldingAngles[23] = Math.toRadians(90 + p.debugValue); //yank here can help a slight amount, about .1 units, probably not worth calculating
 		return homingMotionThrowHoldingAngles;
 	}
 	
@@ -1100,6 +1108,34 @@ public class VectorMaximizer {
 		motion.setHolding(holdingAngles, holdingMinRadius);
 	}
 
+	private void setHCTFallingHoldingAngles(ComplexVector motion) {
+		Movement movement = motion.movement;
+		double[] holdingAngles = new double[motion.frames];
+
+		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
+		int totalForwardAccelFrames = (int) Math.ceil(forwardAccelFrames);
+
+		int firstVectorAngleFrame = Math.max(totalForwardAccelFrames, 1);
+
+		//number of frames the variable holding angle is applied for
+		//TODO this is what should be calculated INSTEAD of the angle
+		
+		for (int i = 0; i < (int) forwardAccelFrames; i++)
+			holdingAngles[i] = 0;
+		if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
+			holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+		for (int i = firstVectorAngleFrame; i < motion.frames - variableHCTCountervectorFrames; i++)
+			holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+		for (int i = Math.max(motion.frames - variableHCTCountervectorFrames, (int) forwardAccelFrames); i < motion.frames; i++) {
+			holdingAngles[i] = -SimpleMotion.NORMAL_ANGLE; //really should test both directions
+		}
+		if (motion.frames - variableHCTCountervectorFrames == (int) forwardAccelFrames) { //if variableHCTCountervectorFrames is 1f more than this, then the partial accel frame becomes a countervector frame instead
+			holdingAngles[(int) forwardAccelFrames] = 0;
+		} //this must help because it makes the results have the correct shape
+		
+		motion.setHoldingAngles(holdingAngles);
+	}
+
 	private void setYankHoldingAngles(SimpleMotion[] motionGroup, Movement movement, int motionIndex, int movementIndex, double yankFrames) {
 		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
 		int firstMaxForwardSpeedFrame = (int) Math.ceil(forwardAccelFrames);
@@ -1220,11 +1256,18 @@ public class VectorMaximizer {
             else
                 motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, false);
             if (hasVariableHCTFallVector && j == variableHCTFallIndex) { //use the holding angle we are testing this iteration for optimizing the HCT fall  
-                ((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
-                // Debug.println("Testing: " + variableHCTHoldingAngle);
-                if (movementFrames.get(j) <= 3) {
-                    ((SimpleVector) motionGroup[i]).optimalForwardAccel = false; //may need to not hold straight ahead in the falling frames even though under max speed
-                }
+				if (complexHCTFallVector) {
+					motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
+					setHCTFallingHoldingAngles((ComplexVector) motionGroup[i]);
+				}
+				else {
+					variableHCTCountervectorFrames = 0;
+					((SimpleVector) motionGroup[i]).setHoldingAngle(variableHCTHoldingAngle);
+					// Debug.println("Testing: " + variableHCTHoldingAngle);
+					if (movementFrames.get(j) <= 3) {
+						((SimpleVector) motionGroup[i]).optimalForwardAccel = false; //may need to not hold straight ahead in the falling frames even though under max speed
+					}
+				}
                 if (!switchHCTFallVectorDir) {
                     currentVectorRight = !currentVectorRight;
                 }
@@ -1353,7 +1396,10 @@ public class VectorMaximizer {
 				else break;
 			case MAX_HCT: //hct falling optimization
 				if (hasVariableHCTFallVector)
-					return binarySearch(-Math.PI / 2, Math.PI / 2, MAX_HCT, maximize_HCT_limit)[0];
+					if (complexHCTFallVector)
+						return binarySearch(0, 16, MAX_HCT, 0.99)[0];
+					else
+						return binarySearch(- Math.PI / 2, Math.PI / 2, MAX_HCT, maximize_HCT_limit)[0];
 				else break;
 			case MAX_VA1: //first cap throw angle optimization, and also finds second cap throw/last movement optimization via findVariableAngle2()
 				return maximize_variableAngle1();
@@ -1367,13 +1413,17 @@ public class VectorMaximizer {
 	public void applySearchValue(double value, int optID) {
 		switch (optID) {
 			case MAX_HCT:
-				if (value < 0) {
-					switchHCTFallVectorDir = true;
-					variableHCTHoldingAngle = -value;
-				}
+				if (complexHCTFallVector)
+					variableHCTCountervectorFrames = (int) value;
 				else {
-					switchHCTFallVectorDir = false;
-					variableHCTHoldingAngle = value;
+					if (value < 0) {
+						switchHCTFallVectorDir = true;
+						variableHCTHoldingAngle = -value;
+					}
+					else {
+						switchHCTFallVectorDir = false;
+						variableHCTHoldingAngle = value;
+					}
 				}
 				break;
 			case MAX_IM:
@@ -1747,7 +1797,7 @@ public class VectorMaximizer {
 			Movement variableCapThrow1 = new Movement(movementNames.get(variableCapThrow1Index), motions[variableCapThrow1Index - 1].finalSpeed);
 			variableCapThrow1Frames = movementFrames.get(variableCapThrow1Index);
 			//Debug.println("frames: " + variableCapThrow1Frames);
-			variableCapThrow1Vector = (SimpleVector) variableCapThrow1.getMotion(variableCapThrow1Frames, variableCapThrow1VectorRight, true); //TODO might not need to be true for CT1 falling vectoring
+			variableCapThrow1Vector = (SimpleVector) variableCapThrow1.getMotion(variableCapThrow1Frames, variableCapThrow1VectorRight, true);
 			motions[variableCapThrow1Index] = variableCapThrow1Vector;
 			variableCapThrow1Vector.setInitialAngle(motionGroup1FinalAngle);
 			
@@ -2082,7 +2132,7 @@ public class VectorMaximizer {
 				//falling.setHoldingAngle((ct.rightVector) ? -1 : 1) * (ct.finalAngle - bestAngle1Adjusted));
 				if (!optimizeCT1Falling)
 					falling.setHoldingAngle((falling.rightVector ? 1 : -1) * (ct.finalAngle - bestAngle1Adjusted));
-				else { //TODO is this necessary?
+				else { //TODO is this necessary? takes a bit extra time
 					double ctFinalRotation = ct.calcFinalRotation();
 					double fallingInitialAngle = ct.finalAngle;
 					boolean vectorRight = !ct.rightVector;
