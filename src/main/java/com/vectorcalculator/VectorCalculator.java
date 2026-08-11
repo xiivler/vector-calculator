@@ -103,7 +103,7 @@ public class VectorCalculator extends JPanel {
 		dive_turn("Turn During First Dive"), cb_cap_return_frame("CB Cap Return Frame"), hct_type("Homing Throw Type"), hct_angle("Homing Throw Angle"),
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
 		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"), test_yanks("Test Yanks"),
-		custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
+		optimize_final_cap_throw_falling("Optimize Final Cap Throw Falling"), custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
@@ -269,8 +269,10 @@ public class VectorCalculator extends JPanel {
 			}
 
 			params.add(null);
-			if (p.turnarounds)
+			if (p.turnarounds) {
+				params.add(Parameter.optimize_final_cap_throw_falling);
 				params.add(Parameter.custom_final_cap_throw_angle);
+			}
 			if (p.customFCTAngle) {
 				params.add(Parameter.final_cap_throw_angle);
 			}
@@ -507,6 +509,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case test_yanks:
 			value = p.maximizeYank ? "Yes" : "No";
+			break;
+		case optimize_final_cap_throw_falling:
+			value = p.optimizeFCTFalling ? "Yes" : "No";
 			break;
 		case custom_final_cap_throw_angle:
 			value = p.customFCTAngle ? "Yes" : "No";
@@ -885,7 +890,12 @@ public class VectorCalculator extends JPanel {
 			p.finalGPFrames = clampInt(parseIntWithDefault(value, 1), 1, 25);
 			break;
 		case gravity:
+			boolean onMoonOld = p.onMoon;
 			p.onMoon = value.toString().equals("Moon");
+			if (!onMoonOld && p.onMoon)
+				p.optimizeFCTFalling = true;
+			else if (onMoonOld && !p.onMoon)
+				p.optimizeFCTFalling = false;
 			break;
 		case upwarp:
 			p.upwarp = clampDouble(parseDoubleWithDefault(value, 40), 0, 40);
@@ -950,6 +960,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case test_yanks:
 			p.maximizeYank = value.toString().equals("Yes");
+			break;
+		case optimize_final_cap_throw_falling:
+			p.optimizeFCTFalling = value.toString().equals("Yes");
 			break;
 		case custom_final_cap_throw_angle:
 			p.customFCTAngle = value.toString().equals("Yes");
@@ -1864,6 +1877,8 @@ public class VectorCalculator extends JPanel {
 							return dropdown(new String[]{"Yes", "No", "Test Both"});
 						else
 							return dropdown(new String[]{"Yes", "No"});
+					case optimize_final_cap_throw_falling:
+						return dropdown(new String[]{"Yes", "No"});
 					case custom_final_cap_throw_angle:
 						return dropdown(new String[]{"Yes", "No"});
 					case ground_mode:
