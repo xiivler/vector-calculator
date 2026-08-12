@@ -221,15 +221,20 @@ public class VectorMaximizer {
 				}
 			}
 			//we need to optimize the hct fall specifically
-			else if (movementNames.get(i).contains("Homing") && i < movementNames.size() - 1 && movementNames.get(i + 1).equals("Falling")) {
-				hasVariableHCTFallVector = true;
-				complexHCTFallVector = movementFrames.get(i + 1) >= COMPLEX_HCT_FALL_MIN_FRAMES; //this is just a rough idea
-				variableHCTFallIndex = i + 1;
-			}
+			// else if (movementNames.get(i).contains("Homing") && i < movementNames.size() - 1 && movementNames.get(i + 1).equals("Falling")) {
+			// 	hasVariableHCTFallVector = true;
+			// 	complexHCTFallVector = movementFrames.get(i + 1) >= COMPLEX_HCT_FALL_MIN_FRAMES; //this is just a rough idea
+			// 	variableHCTFallIndex = i + 1;
+			// }
 			else if (movementNames.get(i).equals("Rainbow Spin")) {
 				hasRainbowSpin = true;
 				rainbowSpinIndex = i;
 				rainbowSpinFrames = movementFrames.get(i);
+				if (i >= 2 && (movementNames.get(i - 2).equals("Fake Throw") || movementNames.get(i - 2).contains("Homing")) && movementNames.get(i - 1).equals("Falling")) {
+					hasVariableHCTFallVector = true;
+					complexHCTFallVector = movementFrames.get(i - 1) >= COMPLEX_HCT_FALL_MIN_FRAMES; //this is just a rough idea
+					variableHCTFallIndex = i - 1;
+				}
 			}
 			else if (Movement.isCapBounce(movementNames.get(i))) {
 				hasCapBounce = true;
@@ -331,7 +336,7 @@ public class VectorMaximizer {
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
 	//vectorAngle is how many degrees to the side are being held in order to vector the cap throw
 	private boolean setCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
-		if ((angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle))
+		if (!optimizeCT1Falling && (angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle))
 			return setOptimalHoldingAngles(motion, angle, angleDiff, vectorAngle, frames);
 		else if (angleDiff == OPTIMAL_ANGLE_DIFF)
 			angleDiff = Math.toRadians(diveCapBounceAngle);
@@ -349,6 +354,8 @@ public class VectorMaximizer {
 		if (optimizeCT1Falling) { //no turnaround is performed during the cap throw
 			for (int i = 1; i < frames; i++)
 				holdingAngles[i] = vectorAngle;
+			//holdingAngles[22] = Math.toRadians(p.debugValue);
+			//holdingAngles[23] = Math.toRadians(p.debugValue);
 			motion.setHoldingAngles(holdingAngles);
 			return true;
 		}
@@ -425,7 +432,7 @@ public class VectorMaximizer {
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 						currentRotation += Math.toRadians(0.3);
-						if (i == FIRST_VECTOR_ANGLE_FRAME/* && p.debugValue == 0 */) {
+						if (i == FIRST_VECTOR_ANGLE_FRAME/*  && p.debugValue == 0 */) {
 							if (holdingAngles[i] > vectorAngle)
 								holdingAngles[i] = vectorAngle;
 						}
@@ -434,12 +441,8 @@ public class VectorMaximizer {
 						if (holdTargetRotation)
 							holdingAngles[i] = throwAngle + totalRotation;
 					}
-					// if (p.spreadOutOvershoot)
-					// 	holdingAngles[firstAdditionalRotationFrame] = holdingAngles[firstAdditionalRotationFrame - 1] - firstAdditionalRotationFrameCounterrotation;
-					// else
-					holdingAngles[firstAdditionalRotationFrame] = holdTargetRotation ? throwAngle + totalRotation : holdingAngles[1];
 					//Debug.println(holdingAngles[firstAdditionalRotationFrame]);
-					for (int i = firstAdditionalRotationFrame + 1; i < frames - turnaroundFrames; i++) {
+					for (int i = firstAdditionalRotationFrame; i < frames - turnaroundFrames; i++) {
 						holdingAngles[i] = holdTargetRotation ? throwAngle + totalRotation : holdingAngles[1];
 					}
 					if (!holdTargetRotation) { //counterrotate enough to mitigate all the overshoot in one frame
@@ -1378,9 +1381,10 @@ public class VectorMaximizer {
 		}
 	}
 
-	public static final int MAX_IM_YANK_FRAMES = 8;
+	public static final int MAX_IM_YANK_FRAMES = 32;
 	public static final int MAX_IM_YANK_FRAMES_NONVECTOR = 32;
-	public static final double MAX_IM_NONVECTOR_LIMIT = 1;
+	public static final double MAX_IM_LIMIT = 0.99;
+	public static final double MAX_IM_NONVECTOR_LIMIT = 0.99;
 	
 	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
 	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_CB = 3, MAX_HCT = 4, MAX_VA1 = 5;
@@ -1392,7 +1396,9 @@ public class VectorMaximizer {
 				imYankFrames = 0;
 				if (p.maximizeYank) {
 					Movement initialMovement = new Movement(movementNames.get(listPreparer.initialMovementIndex));
-					if (initialMovement.canVector)
+					if (p.onMoon && p.midairVault)
+						return binarySearch(0, MAX_IM_YANK_FRAMES, MAX_IM, MAX_IM_LIMIT)[0];
+					else if (initialMovement.canVector)
 						return linearSearch(0, MAX_IM_YANK_FRAMES, MAX_IM)[0];
 					else if (initialMovement.sidewaysAccel > 0)
 						return binarySearch(0, MAX_IM_YANK_FRAMES_NONVECTOR, MAX_IM, MAX_IM_NONVECTOR_LIMIT)[0];
@@ -2069,6 +2075,11 @@ public class VectorMaximizer {
 		
 		while(high - low > .00001) {
 			if (optimizeFCTFalling) { //yank does not appear to be effective, neither is holding back
+				// double[] holdingAngles = new double[24];
+				// for (int i = 0; i <= 22; i++)
+				// 	holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+				// holdingAngles[23] = Math.toRadians(p.debugValue);
+				// ((ComplexVector) variableMovement2Vector).setHoldingAngles(holdingAngles);
 				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
 			}
 			else if (hasVariableCapThrow2) {

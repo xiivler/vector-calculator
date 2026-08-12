@@ -79,6 +79,8 @@ public class Solver implements SolverInterface {
     int rainbowSpinIndex = -1;
     int homingMCCTIndex = -1;
     int homingTTIndex = -1;
+    int homingFTIndex = -1;
+    int firstCTIndex = -1;
     int firstDiveIndex = -1;
     int secondDiveIndex = -1;
     int finalCapThrowIndex = -1;
@@ -205,8 +207,11 @@ public class Solver implements SolverInterface {
         for (int i = 0; i < preset.length; i++) {
             preset[i][0] = p.midairs[i][0];
             preset[i][1] = p.midairs[i][1];
-            if (preset[i][0] == VectorCalculator.RS)
+            if (preset[i][0] == VectorCalculator.RS) {
                 rainbowSpinIndex = i + 1;
+                if (i > 0 && preset[i - 1][0] == VectorCalculator.FT)
+                    homingFTIndex = i;
+            }
             else if (preset[i][0] == VectorCalculator.HMCCT) {
                 homingMCCTIndex = i + 1;
                 preset[i][1] = Math.max(30, p.hctCapReturnFrame);
@@ -216,6 +221,8 @@ public class Solver implements SolverInterface {
             else if (preset[i][0] == VectorCalculator.CB && i > 0 && preset[i - 1][0] == VectorCalculator.DIVE) {
                 diveCapBounceIndex = i + 1;
                 firstDiveIndex = i;
+                if (i >= 2 && VectorCalculator.isCT(preset[i - 2][0]))
+                    firstCTIndex = i - 1;
             }
             else if (preset[i][0] == VectorCalculator.P2CB) {
                 midairVaultIndex = i + 1;
@@ -278,20 +285,27 @@ public class Solver implements SolverInterface {
         }
         if (p.onMoon) { //make movement longer to account for this
             if (cbvFirst || mcctFirst) {
-                if (p.tripleThrow == TripleThrow.YES)
+                if (p.twoPlayerMode)
+                    preset[homingFTIndex - 1][1] = 48;
+                else if (p.tripleThrow == TripleThrow.YES)
                     preset[homingTTIndex - 1][1] = 48;
                 else
                     preset[homingMCCTIndex - 1][1] = 48;
-                // if (rainbowSpinIndex >= 0)
-                //     preset[rainbowSpinIndex - 1][1] = 32;
             }
             else {
                 if (rainbowSpinIndex >= 0)
                     preset[rainbowSpinIndex - 1][1] = 40;
             }
-            preset[firstDiveIndex - 1][1] = 32;
-            if (firstDiveIndex - 2 >= 0)
-                preset[firstDiveIndex - 2][1] = 33;
+            if (firstDiveIndex - 1 >= 0)
+                preset[firstDiveIndex - 1][1] = 32;
+            if (firstCTIndex - 1 >= 0) {
+                if (p.twoPlayerMode) { //should it start even longer?
+                    preset[firstCTIndex - 1][1] = 48;
+                    preset[firstDiveIndex - 1][1] = 40;
+                }
+                else
+                    preset[firstCTIndex - 1][1] = 33;
+            }
         }
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
@@ -388,7 +402,7 @@ public class Solver implements SolverInterface {
                 if (canSubtractFrame(i, durations[i]) && efficiencies[lastFrames[i]] < worstEfficiency) {
                     if (i == secondDiveIndex && !secondGPHeightCorrect) //don't remove frames from final dive until second GP height is correct
                         continue;
-                    if (i == firstDiveIndex - 1 && durations[i] <= 28) //28 and 21 are the best for high movement
+                    if (i == firstCTIndex && durations[i] <= 28) //28 and 21 are the best for high movement
                         continue;
                     if (i == firstDiveIndex && durations[i] <= 21)
                         continue;
@@ -1046,7 +1060,7 @@ public class Solver implements SolverInterface {
                     yDiff = p.groundHeightSecondGP - y_pos;
             }
         }
-        else if (motionIndex == firstDiveIndex - 1) { //first CT
+        else if (motionIndex == firstCTIndex) {
             if (p.groundTypeFirstGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
                 return y_pos;
             else

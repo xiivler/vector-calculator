@@ -872,6 +872,7 @@ public class VectorCalculator extends JPanel {
 			}
 			break;
 		case reverse_bonk:
+			oldMidairVault = p.midairVault;
 			boolean oldReverseBonk = p.reverseBonk;
 			p.reverseBonk = value.toString().equals("Yes");
 			if (oldReverseBonk != p.reverseBonk && !p.midairPreset.equals("Custom")) {
@@ -885,6 +886,7 @@ public class VectorCalculator extends JPanel {
 					setProperty(Parameter.solve_upwarp, "No");
 					setProperty(Parameter.upwarp, 40);
 				}
+				setProperty(Parameter.midair_vault, oldMidairVault ? "2P Midair Vault" : "Dive CB"); //fixes a weird glitch I don't understand
 			}
 			break;
 		case reverse_bonk_angle:
@@ -1094,6 +1096,12 @@ public class VectorCalculator extends JPanel {
 	static String[] two_player_midairMovementNames = {"Motion Cap Throw", "Fake Throw", "Single Throw", "Triple Throw", "Rainbow Spin", "Dive", "Cap Bounce", "2P Midair Vault", "Reverse Bonk"};
 
 	static final int MCCT = 0, CT = 1, TT = 2, HMCCT = 3, HTT = 4, RS = 5, DIVE = 6, CB = 7, P2CB = 8, FT = 9, RB = 10;
+
+	static final int[] CTs = new int[]{MCCT, CT, TT, HMCCT, HTT, FT};
+
+	static boolean isCT(int movementID) {
+		return Arrays.stream(CTs).anyMatch(ct -> ct == movementID);
+	}
 
 	static void updateMidairs() {
 		p.midairs = new int[movementModel.getRowCount()][2];
