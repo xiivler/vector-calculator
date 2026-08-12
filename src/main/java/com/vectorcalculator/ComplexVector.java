@@ -139,7 +139,7 @@ public class ComplexVector extends SimpleVector {
 	}
 	
 	public double calcFinalSpeed() {
-		finalSpeed = Math.sqrt(Math.pow(finalForwardVelocity, 2) + Math.pow(finalSidewaysVelocity, 2));
+		finalSpeed = Math.sqrt(finalForwardVelocity * finalForwardVelocity + finalSidewaysVelocity * finalSidewaysVelocity);
 		return finalSpeed;
 	}
 	
@@ -228,7 +228,7 @@ public class ComplexVector extends SimpleVector {
 				info[i][2] = dispZ;
 				info[i][3] = xVelocity;
 				info[i][5] = zVelocity;
-				info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
+				info[i][6] = Math.sqrt(zVelocity * zVelocity + xVelocity * xVelocity);
 				info[i][7] = holdingAnglesAdjusted[i];
 				if (holdingMinRadius[i]) {
 					info[i][8] = MIN_RADIUS;

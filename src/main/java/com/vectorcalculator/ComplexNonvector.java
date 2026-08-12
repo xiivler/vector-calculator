@@ -87,7 +87,7 @@ public class ComplexNonvector extends SimpleMotion {
 				forwardVelocity += forwardAccel * Math.cos(velocityAngle);
 				sidewaysVelocity += forwardAccel * Math.sin(velocityAngle);
 
-				double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
+				double normalizer = Math.min(velocityCap / Math.sqrt(forwardVelocity * forwardVelocity + sidewaysVelocity * sidewaysVelocity), 1);
 				forwardVelocity *= normalizer;
 				sidewaysVelocity *= normalizer;
 
@@ -121,7 +121,7 @@ public class ComplexNonvector extends SimpleMotion {
 
 	//requires calcDisp() to be called first
 	public double calcFinalSpeed() {
-		finalSpeed = Math.sqrt(Math.pow(finalForwardVelocity, 2) + Math.pow(finalSidewaysVelocity, 2));
+		finalSpeed = Math.sqrt(finalForwardVelocity * finalForwardVelocity + finalSidewaysVelocity * finalSidewaysVelocity);
 		return finalSpeed;
 	}
 	
@@ -188,7 +188,7 @@ public class ComplexNonvector extends SimpleMotion {
 					forwardVelocity += forwardAccel * Math.cos(velocityAngle);
 					sidewaysVelocity += forwardAccel * Math.sin(velocityAngle); //is it -forwardAccel * sin?
 
-					double normalizer = Math.min(velocityCap / Math.hypot(forwardVelocity, sidewaysVelocity), 1);
+					double normalizer = Math.min(velocityCap / Math.sqrt(forwardVelocity * forwardVelocity + sidewaysVelocity * sidewaysVelocity), 1);
 					forwardVelocity *= normalizer;
 					sidewaysVelocity *= normalizer;
 
@@ -222,7 +222,7 @@ public class ComplexNonvector extends SimpleMotion {
 				info[i][2] = dispZ;
 				info[i][3] = xVelocity;
 				info[i][5] = zVelocity;
-				info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
+				info[i][6] = Math.sqrt(zVelocity * zVelocity + xVelocity * xVelocity);
 				info[i][7] = holdingAnglesAdjusted[i];
 				if (holdingMinRadius[i]) {
 					info[i][8] = MIN_RADIUS;

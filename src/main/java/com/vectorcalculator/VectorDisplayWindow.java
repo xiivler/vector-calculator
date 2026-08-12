@@ -632,7 +632,7 @@ public class VectorDisplayWindow {
 		infoTableModel.setValueAt(shorten(reduceAngle(initialAngleAbsolute - cameraAngle + Math.PI / 2), 4), INITIAL_JOYSTICK_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), TARGET_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
-		infoTableModel.setValueAt(shorten(Math.sqrt(Math.pow(x - p.x0, 2) + Math.pow(z - p.z0, 2)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(Math.sqrt((x - p.x0) * (x - p.x0) + (z - p.z0) * (z - p.z0)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
 		if (!p.targetCoordinatesGiven)

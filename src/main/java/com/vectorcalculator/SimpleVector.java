@@ -136,7 +136,7 @@ public class SimpleVector extends SimpleMotion {
 	
 	//requires calcDisp() to be called first
 	public double calcFinalSpeed() {
-		finalSpeed = Math.sqrt(Math.pow(finalForwardVelocity, 2) + Math.pow(finalSidewaysVelocity, 2));
+		finalSpeed = Math.sqrt(finalForwardVelocity * finalForwardVelocity + finalSidewaysVelocity * finalSidewaysVelocity);
 		return finalSpeed;
 	}
 	
@@ -398,7 +398,7 @@ public class SimpleVector extends SimpleMotion {
 			info[i][2] = dispZ;
 			info[i][3] = xVelocity;
 			info[i][5] = zVelocity;
-			info[i][6] = Math.sqrt(Math.pow(zVelocity, 2) + Math.pow(xVelocity, 2));
+			info[i][6] = Math.sqrt(zVelocity * zVelocity + xVelocity * xVelocity);
 			if (i < nonVectorFrames) {
 				info[i][7] = initialAngle;
 			}

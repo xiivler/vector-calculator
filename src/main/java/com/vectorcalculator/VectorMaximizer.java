@@ -261,7 +261,7 @@ public class VectorMaximizer {
 	}
 	
 	private void calcDisp() {
-		disp = Math.sqrt(Math.pow(dispZ, 2) + Math.pow(dispX, 2));
+		disp = Math.sqrt(dispZ * dispZ + dispX * dispX);
 	}
 	
 	private void calcAngle() {
@@ -1637,7 +1637,7 @@ public class VectorMaximizer {
 		bestDispZ1 = once_bestDispZ;
 		bestDispX1 = once_bestDispX;
 		
-		once_bestDisp = Math.sqrt(Math.pow(dispZMotionGroup1, 2) + Math.pow(dispXMotionGroup1, 2));
+		once_bestDisp = Math.sqrt(dispZMotionGroup1 * dispZMotionGroup1 + dispXMotionGroup1 * dispXMotionGroup1);
 		
 		//Debug.println(variableCapThrow1VectorRight);
 		
@@ -1786,7 +1786,7 @@ public class VectorMaximizer {
 			}
 		}
 		
-		once_bestDisp = Math.sqrt(Math.pow(once_bestDispZ, 2) + Math.pow(once_bestDispX, 2));
+		once_bestDisp = Math.sqrt(once_bestDispZ * once_bestDispZ + once_bestDispX * once_bestDispX);
 
 		return once_bestDisp;
 	}
@@ -1871,14 +1871,14 @@ public class VectorMaximizer {
 				//Debug.println("Testing 1st angle: " + Math.toDegrees(variableAngle1));
 				if (findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, testDispZ1, testDispX1)) {
 					//if we're able to find a variable angle 2
-					double testDisp = Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
+					double testDisp = Math.sqrt(testDispZ2 * testDispZ2 + testDispX2 * testDispX2);
 					//Debug.println("Test disp this calcDisp(): " + testDisp);
 					return testDisp;
 				}
 				return 0;
 			}
 			else { //if there isn't one we just compare this choice of variableAngle1 to the ones we've tried before
-				double testDisp = Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
+				double testDisp = Math.sqrt(testDispZ1 * testDispZ1 + testDispX1 * testDispX1);
 				// Debug.println("Test Disp X1: " + testDispZ1);
 				// Debug.println("Test Disp Y1: " + testDispX1);
 				return testDisp;
@@ -1889,10 +1889,10 @@ public class VectorMaximizer {
 			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
 			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
 			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
-			return Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
+			return Math.sqrt(testDispZ2 * testDispZ2 + testDispX2 * testDispX2);
 		}
 		else { //TODO is this right?
-			return Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
+			return Math.sqrt(testDispZ1 * testDispZ1 + testDispX1 * testDispX1);
 		}
 	}
 	
