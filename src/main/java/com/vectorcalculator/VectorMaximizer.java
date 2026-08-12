@@ -1563,7 +1563,7 @@ public class VectorMaximizer {
 
 		//rcTrueInitialAngleDiff = Math.toRadians(30); //target - initial if initially left vector, initial - target if initially right vector
 		if (only_maximize_variableAngle2) {
-			maximize(MAX_VA1);
+			maximize(MAX_VA1); //TODO: update this to not check other later maximize functions
 		}
 		else if (hasVariableRollCancel) {
 			if (movementNames.get(0).equals("Optimal Distance RCV")) {
@@ -1906,9 +1906,6 @@ public class VectorMaximizer {
 				calcFallingDisplacements(variableCapThrow1Vector, variableCapThrow1Index, once_bestAngle1Adjusted, !variableCapThrow1VectorRight, optimizeCT1Falling);
 			//recalculate variable cap throw or movement 2 for the best angle 1
 			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-				testDispZ1 = bestDispZ1;
-				testDispX1 = bestDispX1;
-				variableAngle1Adjusted = once_bestAngle1Adjusted;
 				maximize(MAX_VA1 + 1);
 				// double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted + motionGroup2FinalAngle;
 				// double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
