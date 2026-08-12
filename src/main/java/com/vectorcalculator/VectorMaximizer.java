@@ -21,7 +21,7 @@ public class VectorMaximizer {
 
 	public static final double MAX_DIVE_CAP_BOUNCE_ANGLE = 41.2;
 
-	public static final int COMPLEX_HCT_FALL_MIN_FRAMES = 6; //this is observational and perhaps bothshould be tested
+	public static final int COMPLEX_HCT_FALL_MIN_FRAMES = 5; //for 28f and faster HTTs this method is not optimal
 
 	double maximize_HCT_limit = Math.toRadians(2); //binary search limit for hct fall vector angle
 
@@ -111,7 +111,7 @@ public class VectorMaximizer {
 	double variableAngle2;
 	double variableAngle2Adjusted;
 	double variableHCTHoldingAngle;
-	int variableHCTCountervectorFrames;
+	double variableHCTCountervectorFrames;
 
 	double rsYankFrames;
 	double imYankFrames;
@@ -1114,24 +1114,30 @@ public class VectorMaximizer {
 
 		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
 		int totalForwardAccelFrames = (int) Math.ceil(forwardAccelFrames);
+		int totalCountervectorFrames = (int) Math.ceil(variableHCTCountervectorFrames);
+		double partialCountervector = variableHCTCountervectorFrames - (int) variableHCTCountervectorFrames;
 
 		int firstVectorAngleFrame = Math.max(totalForwardAccelFrames, 1);
+		int firstCountervectorFrame = Math.max(motion.frames - totalCountervectorFrames, 0); //if totalHCTCountervectorFrames is large enough, it will overwrite the last forward accel frame which is intentional
 
 		//number of frames the variable holding angle is applied for
 		//TODO this is what should be calculated INSTEAD of the angle
 		
 		for (int i = 0; i < (int) forwardAccelFrames; i++)
 			holdingAngles[i] = 0;
-		if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
-			holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
-		for (int i = firstVectorAngleFrame; i < motion.frames - variableHCTCountervectorFrames; i++)
+		if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0) {
+			if (firstCountervectorFrame == (int) forwardAccelFrames) //this might not run anymore
+				holdingAngles[totalForwardAccelFrames - 1] = 0;
+			else
+				holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
+		}
+		for (int i = firstVectorAngleFrame; i < firstCountervectorFrame; i++)
 			holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
-		for (int i = Math.max(motion.frames - variableHCTCountervectorFrames, (int) forwardAccelFrames); i < motion.frames; i++) {
+		if (partialCountervector > 0)
+			holdingAngles[firstCountervectorFrame] = SimpleMotion.NORMAL_ANGLE - (Math.PI * partialCountervector);
+		for (int i = firstCountervectorFrame + (partialCountervector > 0 ? 1 : 0); i < motion.frames; i++) {
 			holdingAngles[i] = -SimpleMotion.NORMAL_ANGLE; //really should test both directions
 		}
-		if (motion.frames - variableHCTCountervectorFrames == (int) forwardAccelFrames) { //if variableHCTCountervectorFrames is 1f more than this, then the partial accel frame becomes a countervector frame instead
-			holdingAngles[(int) forwardAccelFrames] = 0;
-		} //this must help because it makes the results have the correct shape
 		
 		motion.setHoldingAngles(holdingAngles);
 	}
@@ -1397,7 +1403,7 @@ public class VectorMaximizer {
 			case MAX_HCT: //hct falling optimization
 				if (hasVariableHCTFallVector)
 					if (complexHCTFallVector)
-						return binarySearch(0, 16, MAX_HCT, 0.99)[0];
+						return binarySearch(0, 16, MAX_HCT, 0.49)[0];
 					else
 						return binarySearch(- Math.PI / 2, Math.PI / 2, MAX_HCT, maximize_HCT_limit)[0];
 				else break;
@@ -1414,7 +1420,7 @@ public class VectorMaximizer {
 		switch (optID) {
 			case MAX_HCT:
 				if (complexHCTFallVector)
-					variableHCTCountervectorFrames = (int) value;
+					variableHCTCountervectorFrames = value;
 				else {
 					if (value < 0) {
 						switchHCTFallVectorDir = true;
