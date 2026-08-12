@@ -56,7 +56,7 @@ public class VectorCalculator extends JPanel {
 	
 	public static final String VERSION = "2.2.0";
 
-	public static boolean DEBUG_VALUE = false;
+	public static boolean DEBUG_VALUE = true;
 
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 500;

@@ -416,11 +416,18 @@ public class VectorMaximizer {
 					//double firstAdditionalRotationFrameCounterrotation = overshoot / additionalRotationFrames;
 					int firstAdditionalRotationFrame = frames - turnaroundFrames - additionalRotationFrames;
 					double currentRotation = throwAngle + Math.toRadians(0.3);
-					holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
+					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
+					if (p.debugValue != 0) {
+						holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); 
+					}
 					boolean holdTargetRotation = false;
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 						currentRotation += Math.toRadians(0.3);
+						if (i == motion.movement.minFrames && p.debugValue == 0) {
+							if (holdingAngles[i] > vectorAngle)
+								holdingAngles[i] = vectorAngle;
+						}
 						if (currentRotation > holdingAngles[i] - Math.toRadians(1)) //getting too close
 							holdTargetRotation = true;
 						if (holdTargetRotation)
