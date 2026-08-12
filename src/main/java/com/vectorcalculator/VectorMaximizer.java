@@ -1387,7 +1387,7 @@ public class VectorMaximizer {
 	public static final double MAX_IM_NONVECTOR_LIMIT = 0.99;
 	
 	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
-	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_CB = 3, MAX_HCT = 4, MAX_VA1 = 5;
+	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_CB = 3, MAX_HCT = 4, MAX_VA1 = 5, MAX_VA2 = 6;
 	public double maximize(int optID) {
 		switch (optID) {
 			case MAX_TRY:
@@ -1423,8 +1423,10 @@ public class VectorMaximizer {
 				else break;
 			case MAX_VA1: //first cap throw angle optimization, and also finds second cap throw/last movement optimization via findVariableAngle2()
 				return maximize_variableAngle1();
+			case MAX_VA2:
+				return maximize_variableAngle2();
 			default:
-				return maximize_variableAngle1();
+				return 0;
 		}
 		return maximize(optID + 1);
 	}
@@ -1828,7 +1830,7 @@ public class VectorMaximizer {
 			// 	high = Math.PI;
 			// 	med = Math.PI / 2;
 			// }
-			double medDisp = calcDisp(med); 
+			double medDisp = calcDisp(med);
 			double lowMed;
 			double lowMedDisp;
 			double highMed;
@@ -1904,24 +1906,29 @@ public class VectorMaximizer {
 				calcFallingDisplacements(variableCapThrow1Vector, variableCapThrow1Index, once_bestAngle1Adjusted, !variableCapThrow1VectorRight, optimizeCT1Falling);
 			//recalculate variable cap throw or movement 2 for the best angle 1
 			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-				double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted + motionGroup2FinalAngle;
-				double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
-				if (hasVariableOtherMovement2) { //use more accurate calculation
-					SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
-					for (int i = 0; i < variableMovement2Index; i++)
-						motionGroups1and2[i] = motions[i];
-					motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
-				}
-				Debug.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
-				Debug.println("Adjusted mg2 final angle: " + Math.toDegrees(motionGroup2AdjustedFinalAngle));
-				findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, bestDispZ1, bestDispX1); //will make bestDispZ2 and bestDispX2 wrong
+				testDispZ1 = bestDispZ1;
+				testDispX1 = bestDispX1;
+				variableAngle1Adjusted = once_bestAngle1Adjusted;
+				maximize(MAX_VA1 + 1);
+				// double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted + motionGroup2FinalAngle;
+				// double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+				// if (hasVariableOtherMovement2) { //use more accurate calculation
+				// 	SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+				// 	for (int i = 0; i < variableMovement2Index; i++)
+				// 		motionGroups1and2[i] = motions[i];
+				// 	motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+				// }
+				// Debug.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+				// Debug.println("Adjusted mg2 final angle: " + Math.toDegrees(motionGroup2AdjustedFinalAngle));
+				// findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, bestDispZ1, bestDispX1); //will make bestDispZ2 and bestDispX2 wrong
 			}	
 		}
 		//if we didn't have variableCapThrow1 but we do have a second variable movement (i.e. before the final dive)
 		else if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
-			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
-			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
+			maximize(MAX_VA1 + 1);
+			// double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
+			// Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
+			// findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
 			once_bestAngle2 = variableAngle2;
 			once_bestAngle2Adjusted = variableAngle2Adjusted;
 			once_bestDispZ = testDispZ2;
@@ -2006,43 +2013,105 @@ public class VectorMaximizer {
 		testDispZ1 = dispZMotionGroup1 + variableCapThrow1DispZ + dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle);
 		testDispX1 = dispXMotionGroup1 + variableCapThrow1DispX + dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle);
 		
+		return maximize(MAX_VA1 + 1);
 		//find correct cap throw 2 angle and add that on
-		if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double motionGroup2AdjustedFinalAngle = variableAngle1Adjusted + motionGroup2FinalAngle;
+		// if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+		// 	double motionGroup2AdjustedFinalAngle = variableAngle1Adjusted + motionGroup2FinalAngle;
 			
-			//need to know the final rotation so that we can get the right rotation before a final dive if we're rotating, say, a cap bounce
-			double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
-			if (hasVariableOtherMovement2) { //use more accurate calculation
-				SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
-				for (int i = 0; i < variableMovement2Index; i++)
-					motionGroups1and2[i] = motions[i];
-				motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
-			}
+		// 	//need to know the final rotation so that we can get the right rotation before a final dive if we're rotating, say, a cap bounce
+		// 	double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+		// 	if (hasVariableOtherMovement2) { //use more accurate calculation
+		// 		SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+		// 		for (int i = 0; i < variableMovement2Index; i++)
+		// 			motionGroups1and2[i] = motions[i];
+		// 		motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+		// 	}
 			
-			//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
-			//Debug.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
-			//Debug.println(Math.toDegrees(variableAngle2) + ": " + Math.toDegrees(variableAngle2Adjusted));
-			Debug.println("Testing 1st angle: " + Math.toDegrees(variableAngle1));
-			if (findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, testDispZ1, testDispX1)) {
-				//if we're able to find a variable angle 2
-				double testDisp = Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
-				//Debug.println("Test disp this calcDisp(): " + testDisp);
-				return testDisp;
-			}
-			return 0;
-		}
-		else { //if there isn't one we just compare this choice of variableAngle1 to the ones we've tried before
-			double testDisp = Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
-			Debug.println("Test Disp X1: " + testDispZ1);
-			Debug.println("Test Disp Y1: " + testDispX1);
-			return testDisp;
-		}
+		// 	//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+		// 	//Debug.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+		// 	//Debug.println(Math.toDegrees(variableAngle2) + ": " + Math.toDegrees(variableAngle2Adjusted));
+		// 	Debug.println("Testing 1st angle: " + Math.toDegrees(variableAngle1));
+		// 	if (findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, testDispZ1, testDispX1)) {
+		// 		//if we're able to find a variable angle 2
+		// 		double testDisp = Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
+		// 		//Debug.println("Test disp this calcDisp(): " + testDisp);
+		// 		return testDisp;
+		// 	}
+		// 	return 0;
+		// }
+		// else { //if there isn't one we just compare this choice of variableAngle1 to the ones we've tried before
+		// 	double testDisp = Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
+		// 	Debug.println("Test Disp X1: " + testDispZ1);
+		// 	Debug.println("Test Disp Y1: " + testDispX1);
+		// 	return testDisp;
+		// }
 		
 		//Debug.println("Angle: " + Math.toDegrees(variableAngle1));
 		//Debug.println("Group 2 Angle: " + Math.toDegrees(motionGroup2AdjustedAngle));
 		//Debug.println("Displacement x, y: " + testDispZ1 + ", " + testDispX1);
 		//Debug.println("Variable 1 displacement x, y: " + motions[variableCapThrow1Index].dispZ + ", " + motions[variableCapThrow1Index].dispX);
 		//Debug.println("Group 2 displacement x, y: " + dispMotionGroup2 * Math.cos(motionGroup2AdjustedAngle) + ", " + dispMotionGroup2 * Math.sin(motionGroup2AdjustedAngle));
+	}
+
+	private double maximize_variableAngle2() {
+		//recalculate variable cap throw or movement 2 for the best angle 1
+		if (hasVariableCapThrow1) {
+			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+				double motionGroup2AdjustedFinalAngle = variableAngle1Adjusted + motionGroup2FinalAngle;
+				double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+				if (hasVariableOtherMovement2) { //use more accurate calculation
+					SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+					for (int i = 0; i < variableMovement2Index; i++)
+						motionGroups1and2[i] = motions[i];
+					motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+				}
+				
+				//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+				//Debug.println("the final angle adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+				//Debug.println(Math.toDegrees(variableAngle2) + ": " + Math.toDegrees(variableAngle2Adjusted));
+				//Debug.println("Testing 1st angle: " + Math.toDegrees(variableAngle1));
+				if (findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, testDispZ1, testDispX1)) {
+					//if we're able to find a variable angle 2
+					double testDisp = Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
+					//Debug.println("Test disp this calcDisp(): " + testDisp);
+					return testDisp;
+				}
+				return 0;
+			}
+			else { //if there isn't one we just compare this choice of variableAngle1 to the ones we've tried before
+				double testDisp = Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
+				// Debug.println("Test Disp X1: " + testDispZ1);
+				// Debug.println("Test Disp Y1: " + testDispX1);
+				return testDisp;
+			}
+			// if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+			// 	double motionGroup2AdjustedFinalAngle = once_bestAngle1Adjusted + motionGroup2FinalAngle; //variableAngle1Adjusted in the case of calcDisp version
+			// 	double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
+			// 	if (hasVariableOtherMovement2) { //use more accurate calculation
+			// 		SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
+			// 		for (int i = 0; i < variableMovement2Index; i++)
+			// 			motionGroups1and2[i] = motions[i];
+			// 		motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+			// 	}
+			// 	Debug.println("Adjusted mg2 final rotation: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
+			// 	Debug.println("Adjusted mg2 final angle: " + Math.toDegrees(motionGroup2AdjustedFinalAngle));
+			// 	findVariableAngle2(motionGroup2, motionGroup2AdjustedFinalAngle, motionGroup2FinalRotationAdjusted, bestDispZ1, bestDispX1); //will make bestDispZ2 and bestDispX2 wrong //use testDispZ1 and testDispX1 for calcDisp version
+			// }
+		}
+		//if we didn't have variableCapThrow1 but we do have a second variable movement (i.e. before the final dive)
+		else if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
+			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
+			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
+			return Math.sqrt(Math.pow(testDispZ2, 2) + Math.pow(testDispX2, 2));
+			// once_bestAngle2 = variableAngle2; //TODO make sure included elsewhere
+			// once_bestAngle2Adjusted = variableAngle2Adjusted;
+			// once_bestDispZ = testDispZ2;
+			// once_bestDispX = testDispX2;
+		}
+		else { //TODO is this right?
+			return Math.sqrt(Math.pow(testDispZ1, 2) + Math.pow(testDispX1, 2));
+		}
 	}
 	
 	private boolean findVariableAngle2(SimpleMotion[] motionGroup, double initialAngle, double initialRotation, double previousDispZ, double previousDispX) {
