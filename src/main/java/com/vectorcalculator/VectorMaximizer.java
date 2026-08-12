@@ -325,6 +325,7 @@ public class VectorMaximizer {
 	}
 	
 	public static final double OPTIMAL_ANGLE_DIFF = Double.MAX_VALUE;
+	public static final double FIRST_VECTOR_ANGLE_FRAME = 7;
 
 	//angle is the angle of the dive
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
@@ -417,14 +418,14 @@ public class VectorMaximizer {
 					int firstAdditionalRotationFrame = frames - turnaroundFrames - additionalRotationFrames;
 					double currentRotation = throwAngle + Math.toRadians(0.3);
 					holdingAngles[1] = SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5); //shifting by 1.5 degrees makes fast turnarounds not reverse the wrong way
-					if (p.debugValue != 0) {
-						holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); 
-					}
+					// if (p.debugValue != 0) {
+					// 	holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); 
+					// }
 					boolean holdTargetRotation = false;
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 						currentRotation += Math.toRadians(0.3);
-						if (i == motion.movement.minFrames && p.debugValue == 0) {
+						if (i == FIRST_VECTOR_ANGLE_FRAME/* && p.debugValue == 0 */) {
 							if (holdingAngles[i] > vectorAngle)
 								holdingAngles[i] = vectorAngle;
 						}
@@ -2169,7 +2170,7 @@ public class VectorMaximizer {
 	}
 
 	public double edgeCBMin = 12, edgeCBMax = 26;
-	public double vectorAngleMin = 50; double vectorAngleMax = 90;
+	public double vectorAngleMin = 45; double vectorAngleMax = 90;
 	//public double firstFrameDecelIncrement = 0.005;
 	public double vectorAngleIncrement = 1;
 	public double edgeCBAngleIncrement = 0.01;

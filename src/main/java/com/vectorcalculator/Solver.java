@@ -526,7 +526,7 @@ public class Solver implements SolverInterface {
                     testDurations[diveCapBounceIndex - 1] = diveDuration;
                     setDurations(testDurations);
                     boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
-                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 10, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                         //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                         //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
                         //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
