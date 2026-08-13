@@ -237,7 +237,7 @@ public class SimpleVector extends SimpleMotion {
 		return new RotationStep(rotation, angVel, holdingAngle, rotationDirection);
 	}
 
-	public int calcFramesToRotation(double targetRotation) {
+	/* public int calcFramesToRotation(double targetRotation) {
 		double rotation = initialRotation;
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
 		
@@ -278,7 +278,7 @@ public class SimpleVector extends SimpleMotion {
 				return i + 1;
 		}
 		return -1;
-	}
+	} */
 	
 	public double calcFinalRotation() {
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
@@ -322,6 +322,11 @@ public class SimpleVector extends SimpleMotion {
 			
 		for (int i = 0; i < frames; i++) {
 			double actualHoldingAngle = (optimalForwardAccel && i < frames - vectorFrames) ? 0 : holdingAngle;
+			if (i >= frames - vectorFrames && rotationStep.rotation == normalAngle) { //shortcut to exit early
+				for (int j = i; j < frames; j++)
+					relativeRotations[j] = rightVector ? (initialAngle - normalAngle) : (normalAngle - initialAngle);
+				break;
+			}
 			RotationStep prevRotationStep = rotationStep;
 			rotationStep = calcRotationStep(actualHoldingAngle, prevRotationStep);
 			relativeRotations[i] = rightVector ? (initialAngle - rotationStep.rotation) : (rotationStep.rotation - initialAngle);

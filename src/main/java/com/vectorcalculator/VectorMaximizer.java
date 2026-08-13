@@ -807,17 +807,38 @@ public class VectorMaximizer {
 
 		//System.out.println("Turnaround Frames: " + turnaroundFrames);
 		
-		double[] rotations = angleCalculator.calcRelativeRotations();
 		double[] holdingAngles = new double[frames];
 		boolean[] holdingMinRadius = new boolean[frames];
+		double[] rotations = angleCalculator.calcRelativeRotations();
 
-		for (int z = 0; z < frames; z++) {
-			if (Debug.debug == 0)
-				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(initialAngle + (rightVector ? -rotations[z] : rotations[z])));
+		// for (int z = 0; z < frames; z++) {
+		// 	if (Debug.debug == 0)
+		// 		System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(initialAngle + (rightVector ? -rotations[z] : rotations[z])));
+		// }
+		// Debug.println(1, "");
+
+		//int framesToFullRotation = angleCalculator.calcFramesToFullRotation();
+		int framesToFullRotation = -1;
+		int framesToTargetRotation = -1;
+
+		double prevRotation = rotations[0];
+
+		for (int i = 0; i < rotations.length; i++) {
+			while (rotations[i] < -Math.PI)
+				rotations[i] += Math.PI * 2;
+			while (rotations[i] > Math.PI)
+				rotations[i] -= Math.PI * 2;
+
+			if ((prevRotation <= angle && angle <= rotations[i]) || (prevRotation >= angle && angle >= rotations[i])) {
+				if (framesToTargetRotation == -1)
+					framesToTargetRotation = i;
+			}
+			if (rotations[i] == SimpleMotion.NORMAL_ANGLE) {
+				framesToFullRotation = i + 1;
+				break;
+			}
+			prevRotation = rotations[i];
 		}
-		Debug.println(1, "");
-
-		int framesToFullRotation = angleCalculator.calcFramesToFullRotation();
 
 		//System.out.println("Frames to Full Rotation: " + framesToFullRotation);
 
@@ -833,7 +854,7 @@ public class VectorMaximizer {
 		}
 
 		double targetRotation = initialAngle + (rightVector ? -angle : angle);
-		int framesToTargetRotation = angleCalculator.calcFramesToRotation(targetRotation);
+		//int framesToTargetRotation = angleCalculator.calcFramesToRotation(targetRotation);
 		boolean counterrotationMethod = false;
 		boolean quickturnAssistMethod = false;
 		boolean counterQuickturn = false; //if quickturn is contrary to the direction of regular rotation
@@ -1858,7 +1879,7 @@ public class VectorMaximizer {
 			if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
 				double motionGroup2AdjustedFinalAngle = variableAngle1Adjusted + motionGroup2FinalAngle;
 				double motionGroup2FinalRotationAdjusted = motionGroup2FinalRotation + once_bestAngle1Adjusted - Math.PI / 2;
-				if (hasVariableOtherMovement2) { //use more accurate calculation
+				if (hasVariableOtherMovement2) { //use more accurate calculation //TODO see how slow this is
 					SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
 					for (int i = 0; i < variableMovement2Index; i++)
 						motionGroups1and2[i] = motions[i];
