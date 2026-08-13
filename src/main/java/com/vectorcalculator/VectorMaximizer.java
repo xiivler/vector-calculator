@@ -345,11 +345,18 @@ public class VectorMaximizer {
 		holdingAngles[0] = throwAngle;
 
 		if (optimizeCT1Falling) { //no turnaround is performed during the cap throw
-			for (int i = 1; i < frames; i++)
+			for (int i = 1; i < frames; i++) {
 				holdingAngles[i] = vectorAngle;
-			//holdingAngles[22] = Math.toRadians(p.debugValue);
-			//holdingAngles[23] = Math.toRadians(p.debugValue);
-			motion.setHoldingAngles(holdingAngles);
+				//holdingAngles[i] = vectorAngle - Math.toRadians(.3) * (i - 1);
+			}
+			// holdingAngles[22] = Math.toRadians(p.debugValue);
+			// holdingAngles[23] = Math.toRadians(p.debugValue);
+			//holdingAngles[22] = vectorAngle - 3.01 / 4 * Math.PI;
+			//holdingAngles[23] = vectorAngle - 3.01 / 4 * Math.PI + Math.toRadians(p.debugValue);
+			boolean[] holdingMinRadius = new boolean[frames];
+			// holdingMinRadius[22] = true;
+			// holdingMinRadius[23] = true;
+			motion.setHolding(holdingAngles, holdingMinRadius);
 			return true;
 		}
 
