@@ -22,6 +22,8 @@ public class SimpleVector extends SimpleMotion {
 	boolean rightVector;
 	
 	int vectorFrames;
+
+	public static final boolean FAST_RELATIVE_ROTATIONS = true;
 	
 	public SimpleVector(Movement movement, boolean rightVector, int frames) {
 		
@@ -316,6 +318,9 @@ public class SimpleVector extends SimpleMotion {
 
 	//calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
 	public double[] calcRelativeRotations() {
+		if (FAST_RELATIVE_ROTATIONS)
+			return calcRelativeRotationsFast();
+
 		double[] relativeRotations = new double[frames];
 
 		RotationStep rotationStep = new RotationStep(initialRotation, 0, NO_ANGLE, RotationDirection.NONE);
@@ -333,6 +338,78 @@ public class SimpleVector extends SimpleMotion {
 		}
 
 		return relativeRotations;
+	}
+
+	public double[] calcRelativeRotationsFast() { //calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
+		double relativeInitialRotation;
+		if (rightVector) {
+			relativeInitialRotation = initialAngle - initialRotation;
+		}
+		else {
+			relativeInitialRotation = initialRotation - initialAngle;
+		}
+		while (relativeInitialRotation < -Math.PI)
+			relativeInitialRotation += Math.PI * 2;
+		while (relativeInitialRotation > Math.PI)
+			relativeInitialRotation -= Math.PI * 2;
+		
+		double rotation = relativeInitialRotation;
+		double[] rotations = new double[frames];
+		double angularVelocity = 0;
+
+		int i = 0;
+		//when holding forwards, rotate until facing the forward direction
+		if (optimalForwardAccel) { //TODO add fast turnaround, but that shouldn't ever occur in the conditions in which we are using this
+			while (i < frames - vectorFrames) {
+				if (rotation < Math.toRadians(1) && rotation > Math.toRadians(-1))
+					angularVelocity -= Math.toRadians(0.6);
+				if (rotation > 0) {
+					angularVelocity -= angularAccel;
+					if (angularVelocity < -maxAngVel)
+						angularVelocity = -rotationalSpeedAfterMax;
+				}
+				else if (rotation < 0) {
+					angularVelocity += angularAccel;
+					if (angularVelocity > maxAngVel)
+						angularVelocity = rotationalSpeedAfterMax;
+				}
+						
+				rotation += angularVelocity;
+
+				if (i > 0 && ((rotations[i - 1] <= 0 && 0 <= rotation) || (rotation <= 0 && 0 <= rotations[i - 1]))) {
+					rotation = 0;
+				}
+				rotations[i] = rotation;
+				i++;
+			}
+		}
+		
+		//now keep rotating until we reach the angle that we're holding
+		if (holdingAngle != NO_ANGLE) {
+			while (i < frames) {
+				if (angularVelocity < 0) {
+					angularVelocity = 0;
+				}
+				angularVelocity += angularAccel;
+				if (angularVelocity > maxAngVel) {
+					angularVelocity = rotationalSpeedAfterMax;
+				}
+				rotation += angularVelocity;
+
+				if (rotation > holdingAngle) {
+					rotation = holdingAngle;
+				}
+				rotations[i] = rotation;
+				i++;
+			}
+		}
+		else {
+			while (i < frames) {
+				rotations[i] = rotations[i - 1];
+			}
+		}
+
+		return rotations;
 	}
 	
 	//must run calcDisp() first to calculate acceleration values and vectorFrames

@@ -758,6 +758,7 @@ public class Solver implements SolverInterface {
         if (zeroAngleTolerance && userTolerance < .1)
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
+        ballparkMaximizer.roughOptimizeFCTFalling = true;
         ballparkMaximizer.maximize();
         ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
         //diveDecel = ballparkMaximizer.firstFrameDecel;
@@ -983,6 +984,8 @@ public class Solver implements SolverInterface {
 
         if (!fullAccuracy) {
             maximizer.maximize_HCT_limit = MAXIMIZE_HCT_LIMIT;
+            maximizer.roughOptimizeCT1Falling = true;
+            maximizer.roughOptimizeFCTFalling = true;
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
         }
