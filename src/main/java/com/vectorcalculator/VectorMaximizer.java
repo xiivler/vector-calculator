@@ -323,7 +323,7 @@ public class VectorMaximizer {
 	}
 	
 	public static final double OPTIMAL_ANGLE_DIFF = Double.MAX_VALUE;
-	public static final double FIRST_VECTOR_ANGLE_FRAME = 7;
+	public static final int FIRST_VECTOR_ANGLE_FRAME = 7;
 
 	//angle is the angle of the dive
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
