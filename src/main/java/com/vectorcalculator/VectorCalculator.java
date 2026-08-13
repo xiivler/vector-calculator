@@ -900,11 +900,9 @@ public class VectorCalculator extends JPanel {
 			p.onMoon = value.toString().equals("Moon");
 			if (!onMoonOld && p.onMoon) {
 				p.optimizeCT1Falling = true;
-				p.optimizeFCTFalling = true;
 			}
 			else if (onMoonOld && !p.onMoon) {
-				p.optimizeCT1Falling = false;
-				p.optimizeFCTFalling = false;
+				p.optimizeCT1Falling = false; //TODO maybe we should optimize it
 			}
 			break;
 		case upwarp:
@@ -1685,7 +1683,7 @@ public class VectorCalculator extends JPanel {
 					solver.bestDurations[i] = p.midairs[i - 1][1];
 				}
 			}
-			solver.test(solver.bestDurations, true, true, solver.hasRCV);
+			solver.test(solver.bestDurations, true, true, true, solver.hasRCV);
 		}
 		else
 			solverInterface.solve(40);

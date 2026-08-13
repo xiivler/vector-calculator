@@ -288,7 +288,7 @@ public class Properties {
     int firstCTIndex = 0;
     boolean optimizeCT1Falling = false;
     int fctType = Movement.MCCTU;
-    boolean optimizeFCTFalling = false;
+    boolean optimizeFCTFalling = true;
     boolean customFCTAngle = false;
     double fctAngle = 0;
     boolean turnarounds = true;

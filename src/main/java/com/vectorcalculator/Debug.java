@@ -6,6 +6,13 @@ public class Debug {
     
     public static int debug = 2; //-1 is no debug, 0 is print all debug statements
 
+    static int index = 0;
+
+    public static void mark() {
+        System.out.println("Mark " + index);
+        index++;
+    }
+
     public static void println(Object o) {
         println(0, o);
     }

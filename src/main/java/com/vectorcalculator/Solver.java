@@ -33,7 +33,7 @@ public class Solver implements SolverInterface {
     int initialDurationLimit = Integer.MAX_VALUE; //limit for how initial movement duration can be
     int cbDurationLimit = Integer.MAX_VALUE; //limit for how long cb duration can be
 
-    double bestResultsRange = 5; //range of values worse than the current best to still test in full
+    double bestResultsRange = 5; //range of values worse than the current best to still test in full (in units)
 
     boolean singleThrowAllowed = true;
     boolean mcctAllowed = true;
@@ -284,6 +284,7 @@ public class Solver implements SolverInterface {
                 preset[homingMCCTIndex - 1][1] += 8;
         }
         if (p.onMoon) { //make movement longer to account for this
+            bestResultsRange = 5; //there are so many possibilities
             if (cbvFirst || mcctFirst) {
                 if (p.twoPlayerMode)
                     preset[homingFTIndex - 1][1] = 48;
@@ -586,9 +587,10 @@ public class Solver implements SolverInterface {
 
         //now test adding and subtracting some frames to get a better result
         p.durationFrames = true;
-        bestDurations = test(durations, delta, 0, p.y0).intArray;
+        DoubleIntArray best = test(durations, delta, 0, p.y0);
+        bestDurations = best.intArray;
         p.maximizeYank = userMaximizeYank; //now test with RS optimization for full accuracy, be careful to also include this in CalculateThread.restest()
-        bestDisp = test(bestDurations, true, false, false);
+        bestDisp = test(bestDurations, true, false, false, false);
         //Debug.println(test(best.intArray));
 
         Debug.println("Best Results " + 0 + ": " + bestDisp);
@@ -600,18 +602,26 @@ public class Solver implements SolverInterface {
 
         VectorCalculator.setProgressText("Solver: Testing Optimal Duration Candidates");
 
+        double originalReportedDisp = best.d;
+        double bestReportedDisp = best.d;
+
+        Debug.println(2, "Best Results 0: " + originalReportedDisp + ", " + bestDisp);
+
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
             testDurations = bestResults.get(i).intArray;
-            double testDisp = test(testDurations, true, false, false);
+            double testDisp = test(testDurations, true, false, false, false);
             if (testDisp > bestDisp) {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
+                bestReportedDisp = bestResults.get(i).d;
             }
-            Debug.println("Best Results " + i + ": " + testDisp);
+            Debug.println(2, "Best Results " + i + ": " + bestResults.get(i).d + ", " + testDisp);
             Debug.println(Arrays.toString(testDurations));
         }
-        test(bestDurations, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV
+        test(bestDurations, true, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV (and do this with full rotation accuracy)
+
+        Debug.println(2, "Best Results Range Needed: " + (originalReportedDisp - bestReportedDisp));
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
@@ -759,6 +769,7 @@ public class Solver implements SolverInterface {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.roughOptimizeFCTFalling = true;
+        ballparkMaximizer.roughCTRotations = true;
         ballparkMaximizer.maximize();
         ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
         //diveDecel = ballparkMaximizer.firstFrameDecel;
@@ -915,7 +926,7 @@ public class Solver implements SolverInterface {
             int[] testDurations = durations.clone();
             testDurations[index] = durations[index] + test_delta;
 
-            DoubleIntArray result = new DoubleIntArray(test(testDurations, false, false, false), testDurations);
+            DoubleIntArray result = new DoubleIntArray(test(testDurations, false, false, false, false), testDurations);
             //Debug.println(Arrays.toString(testDurations) + ", " + test_y_pos + ", " + result.d);
             double currentBest = bestResults.get(0).d;
             if (result.d > 0) {
@@ -938,7 +949,7 @@ public class Solver implements SolverInterface {
         }
     }
 
-    public double test(int[] testDurations, boolean fullAccuracy, boolean resetDiveAndVectorAngles, boolean adjustInitialAngle) {
+    public double test(int[] testDurations, boolean fullAccuracy, boolean fullRotationAccuracy, boolean resetDiveAndVectorAngles, boolean adjustInitialAngle) {
         if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
             return 0;
         }
@@ -989,6 +1000,11 @@ public class Solver implements SolverInterface {
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
         }
+        if (fullAccuracy) {
+            System.out.println("Full Accuracy");
+        }
+        if (!fullRotationAccuracy)
+            maximizer.roughCTRotations = true;
         if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode && !resetDiveAndVectorAngles) {
             p.vectorAngle = vectorAngles[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
@@ -1021,7 +1037,7 @@ public class Solver implements SolverInterface {
                 p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
                 Debug.println(firstFrameVelocityAngle);
             }
-            return test(testDurations, fullAccuracy, false, false);
+            return test(testDurations, fullAccuracy, fullRotationAccuracy, false, false);
         }
         return disp;
     }

@@ -21,6 +21,8 @@ public class SimpleMotion {
 	double initialForwardVelocity;
 	
 	int frames;
+
+	int minFrames;
 	
 	double dispForward;
 	double dispZ;
@@ -59,6 +61,7 @@ public class SimpleMotion {
 		this.baseBackwardAccel = movement.backwardAccel;
 		this.forwardAccel = baseForwardAccel;
 		this.finalForwardVelocity = initialForwardVelocity; //in case 0 frame movement
+		this.minFrames = movement.minFrames;
 		
 		if (initialForwardVelocity > defaultSpeedCap)
 			forwardVelocityCap = initialForwardVelocity;

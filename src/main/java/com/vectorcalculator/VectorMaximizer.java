@@ -73,6 +73,7 @@ public class VectorMaximizer {
 	
 	boolean roughOptimizeFCTFalling = false; //if this is true, then the calculator does not worry about the turnaround at the end to get a rough value
 	boolean roughOptimizeCT1Falling = false;
+	boolean roughCTRotations = false; //assumes ct rotates to normal angle to make calculations faster
 
 	int variableCapThrow1Index;
 	int variableMovement2Index;
@@ -323,7 +324,7 @@ public class VectorMaximizer {
 	}
 	
 	public static final double OPTIMAL_ANGLE_DIFF = Double.MAX_VALUE;
-	public static final int FIRST_VECTOR_ANGLE_FRAME = 7;
+	//public static final int FIRST_VECTOR_ANGLE_FRAME = 7;
 
 	//angle is the angle of the dive
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
@@ -429,12 +430,14 @@ public class VectorMaximizer {
 					// 	holdingAngles[1] = Math.min(vectorAngle, SimpleMotion.NORMAL_ANGLE - Math.toRadians(1.5)); 
 					// }
 					boolean holdTargetRotation = false;
+					boolean vectorAngleApplied = false;
 					for (int i = 2; i < firstAdditionalRotationFrame; i++) {
 						holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 						currentRotation += Math.toRadians(0.3);
-						if (i == FIRST_VECTOR_ANGLE_FRAME/*  && p.debugValue == 0 */) {
+						if (i == motion.minFrames - 1/*  && p.debugValue == 0 */) {
 							if (holdingAngles[i] > vectorAngle)
 								holdingAngles[i] = vectorAngle;
+							vectorAngleApplied = true; //TODO if this isn't applied, then it should get applied somehow
 						}
 						if (currentRotation > holdingAngles[i] - Math.toRadians(1)) //getting too close
 							holdTargetRotation = true;
@@ -773,6 +776,7 @@ public class VectorMaximizer {
 	}
 	
 	private void setOtherMovementHoldingAngles(ComplexVector motion, int index, double angle, double initialAngle, double initialRotation, boolean rightVector) {
+		
 		Movement movement;
 		SimpleVector angleCalculator;
 		int frames = movementFrames.get(index);
@@ -932,6 +936,7 @@ public class VectorMaximizer {
 					firstCounterrotation -= motion.angularAccel;
 					if (firstCounterrotation < 0) //TODO this is a fail state, but this should not commonly occur
 						firstCounterrotation = 0;
+						break;
 				}
 				//System.out.println(Math.toDegrees(rotationSum));
 			}
@@ -1618,7 +1623,15 @@ public class VectorMaximizer {
 				variableCapThrowFallingVectorC.setInitialAngle(variableCapThrowVector.finalAngle);
 				//double ctFinalRotation = variableCapThrowVector.initialAngle + (variableCapThrowVector.rightVector ? -SimpleMotion.NORMAL_ANGLE : SimpleMotion.NORMAL_ANGLE);
 				variableCapThrowVector.setInitialRotation(variableCapThrowVector.initialAngle + (variableCapThrowVector.rightVector ? -variableCapThrowVector.holdingAngle : variableCapThrowVector.holdingAngle)); //TODO breaks if NO_ANGLE?
-				double ctFinalRotation = variableCapThrowVector.calcFinalRotation();
+				double ctFinalRotation;
+				if (roughCTRotations) {
+					if (variableCapThrowIndex == variableCapThrow1Index)
+						ctFinalRotation = variableCapThrowVector.initialAngle + (variableCapThrowVector.rightVector ? -Math.toRadians(vectorAngle) : Math.toRadians(vectorAngle)); //TODO this doesn't seem perfect
+					else
+						ctFinalRotation = variableCapThrowVector.normalAngle;
+				}
+				else
+					ctFinalRotation = variableCapThrowVector.calcFinalRotation();
 				double fallingInitialAngle = variableCapThrowVector.finalAngle;
 				double ctTargetRotation = vectorRight ? fallingInitialAngle - variableAngleAdjusted : variableAngleAdjusted - fallingInitialAngle;
 				setOtherMovementHoldingAngles(variableCapThrowFallingVectorC, variableCapThrowIndex + 1, ctTargetRotation, fallingInitialAngle, ctFinalRotation, vectorRight);
@@ -2044,8 +2057,12 @@ public class VectorMaximizer {
 				//falling.setHoldingAngle((ct.rightVector) ? -1 : 1) * (ct.finalAngle - bestAngle1Adjusted));
 				if (!optimizeCT1Falling)
 					falling.setHoldingAngle((falling.rightVector ? 1 : -1) * (ct.finalAngle - bestAngle1Adjusted));
-				else { //TODO is this necessary? takes a bit extra time
-					double ctFinalRotation = ct.calcFinalRotation();
+				else {
+					double ctFinalRotation;
+					if (roughCTRotations)
+						ctFinalRotation = ct.initialAngle + (ct.rightVector ? -Math.toRadians(vectorAngle) : Math.toRadians(vectorAngle)); //TODO this doesn't seem perfect
+					else
+						ctFinalRotation = ct.calcFinalRotation();
 					double fallingInitialAngle = ct.finalAngle;
 					boolean vectorRight = !ct.rightVector;
 					double ctTargetRotation = vectorRight ? fallingInitialAngle - bestAngle1Adjusted : bestAngle1Adjusted - fallingInitialAngle;
@@ -2140,6 +2157,8 @@ public class VectorMaximizer {
 				else if (!allowTT && Movement.isTT(ct)) {
 					continue;
 				}
+
+				variableCapThrow1Vector.minFrames = Movement.isTT(ct) ? 3 : 8;
 				
 				boolean found = false;
 				boolean overshot = false;
@@ -2149,7 +2168,7 @@ public class VectorMaximizer {
 						break;
 					}
 					boolean possibleAngle = setCapThrowHoldingAngles((ComplexVector) variableCapThrow1Vector, bestAngle1, p.twoPlayerMode ? OPTIMAL_ANGLE_DIFF : Math.toRadians(diveCapBounceAngle), Math.toRadians(vectorAngle), variableCapThrow1Frames, variableCapThrow1FallingFrames);
-					if (!possibleAngle)
+					if (!possibleAngle) //TODO possible angle for the falling
 						continue;
 
 					int cbFrame = getCapBounceFrame(ct);
