@@ -1597,13 +1597,13 @@ public class VectorMaximizer {
 		Movement variableCapThrowFalling = new Movement("Falling", variableCapThrowVector.calcFinalSpeed());
 		SimpleVector variableCapThrowFallingVector;
 		double holdingAngle = (vectorRight ? 1 : -1) * (variableCapThrowVector.finalAngle - variableAngleAdjusted);
-		variableCapThrowFallingVector = (SimpleVector) variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, optimizeFalling || (holdingAngle < 0));
+		variableCapThrowFallingVector = (SimpleVector) variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, (optimizeFalling && !roughOptimizeFalling) || (!optimizeFalling && holdingAngle < 0));
 		//SimpleVector variableCapThrowFallingVector = (SimpleVector) variableCapThrowFalling.getMotion(movementFrames.get(variableCapThrowIndex + 1), vectorRight, false);
 		motions[variableCapThrowIndex + 1] = variableCapThrowFallingVector;
 		if (optimizeFalling) {
 			if (roughOptimizeFalling) {
 				variableCapThrowFallingVector.setInitialAngle(variableCapThrowVector.finalAngle);
-				variableCapThrowFallingVector.setHoldingAngle(holdingAngle);
+				//variableCapThrowFallingVector.setHoldingAngle(holdingAngle);
 			}
 			else {
 				ComplexVector variableCapThrowFallingVectorC = (ComplexVector) variableCapThrowFallingVector;
