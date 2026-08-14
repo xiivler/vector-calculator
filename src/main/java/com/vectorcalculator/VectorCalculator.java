@@ -765,6 +765,7 @@ public class VectorCalculator extends JPanel {
 			}
 			else if (p.coyoteType == CoyoteType.RUNNING) {
 				p.framesMoonwalk = 0;
+				p.chooseInitialRotation = false;
 			}
 			break;
 		case moonwalk_frames:
@@ -1417,7 +1418,7 @@ public class VectorCalculator extends JPanel {
 		else {
 			updateCalculateUsing();
 		}
-		p.chooseInitialRotation = initialMovement.chooseInitialRotation;
+		p.chooseInitialRotation = initialMovement.chooseInitialRotation && p.coyoteType != CoyoteType.RUNNING;
 		if (!p.chooseInitialRotation) {
 			p.customInitialRotation = false;
 			p.initialRotation = initialMovement.defaultRotation;

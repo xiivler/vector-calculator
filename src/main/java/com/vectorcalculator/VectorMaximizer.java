@@ -284,15 +284,42 @@ public class VectorMaximizer {
 	}
 	
 	
-	private double calcFinalRotation(SimpleMotion[] motionGroup, boolean hasInitialMovement) {
+	private double calcFinalRotation(SimpleMotion[] motionGroup, boolean hasInitialMovement, boolean optimizeInitialRotation) {
 		if (motionGroup.length == 0)
 			return Math.PI / 2;
 		else {
 			if (hasInitialMovement) {
 				if (hasVariableRollCancel)
 					initialRotation = Math.toRadians(p.initialAngle);
-				else
-					initialRotation = motionGroup[0].initialAngle + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motionGroup[0].movement.defaultRotation);
+				else {
+					if (p.chooseInitialRotation) {
+						if (!p.customInitialRotation && !(p.initialMovementName.equals("Single Jump") || p.initialMovementName.equals("Double Jump"))) {
+							initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation); //rotate by 60 degrees to the side of the target angle
+							motionGroup[0].setInitialRotation(initialRotation);
+							for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
+								motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
+							}
+							double originalFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
+
+							initialRotation = variableAngle2Adjusted + (p.rightVector ? Math.PI / 3 : -Math.PI / 3); //rotate by 60 degrees to the side of the target angle
+							if (p.initialMovementName.equals("Triple Jump"))
+								initialRotation = VectorCalculator.clampDouble(initialRotation, motionGroup[0].initialAngle - Math.PI / 4, motionGroup[0].initialAngle + Math.PI / 4);
+							motionGroup[0].setInitialRotation(initialRotation);
+							for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
+								motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
+							}
+							double optimizedFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
+
+							if (originalFinalRotation != optimizedFinalRotation) { //we did not rotate to the same spot
+								initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation);
+							}
+						}
+						else
+							initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation);
+					}
+					else
+						initialRotation = motionGroup[0].initialAngle + motionGroup[0].movement.defaultRotation;
+				}
 				motionGroup[0].setInitialRotation(initialRotation);
 			}
 			else {
@@ -1599,7 +1626,7 @@ public class VectorMaximizer {
 		}
 
 		//calculate rotations properly
-		calcFinalRotation(motions, true);
+		calcFinalRotation(motions, true, true);
 
 
 		//rotating motions to the right angle
@@ -1859,7 +1886,7 @@ public class VectorMaximizer {
 		motionGroup2Angle = angle - Math.PI / 2;
 		motionGroup2FinalAngle = motionGroup2[motionGroup2.length - 1].finalAngle - Math.PI / 2;
 		
-		motionGroup2FinalRotation = calcFinalRotation(motionGroup2, false);
+		motionGroup2FinalRotation = calcFinalRotation(motionGroup2, false, false);
 	}
 
 	private double calcDisp(double variableAngle1) {
@@ -1920,7 +1947,7 @@ public class VectorMaximizer {
 					SimpleMotion[] motionGroups1and2 = new SimpleMotion[variableMovement2Index];
 					for (int i = 0; i < variableMovement2Index; i++)
 						motionGroups1and2[i] = motions[i];
-					motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true);
+					motionGroup2FinalRotationAdjusted = calcFinalRotation(motionGroups1and2, true, false);
 				}
 				
 				//Debug.println("while optimizing mg2 final rotation adjusted: " + Math.toDegrees(motionGroup2FinalRotationAdjusted));
@@ -1944,7 +1971,7 @@ public class VectorMaximizer {
 		}
 		//if we didn't have variableCapThrow1 but we do have a second variable movement (i.e. before the final dive)
 		else if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
-			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true);
+			double motionGroup1FinalRotation = calcFinalRotation(motionGroup1, true, false);
 			Debug.println("Rotation before variable movement 2:" + Math.toDegrees(motionGroup1FinalRotation));
 			findVariableAngle2(motionGroup1, motionGroup1FinalAngle, motionGroup1FinalRotation, dispZMotionGroup1, dispXMotionGroup1);
 			return Math.sqrt(testDispZ2 * testDispZ2 + testDispX2 * testDispX2);

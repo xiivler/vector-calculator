@@ -55,15 +55,16 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Initial Joystick Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Initial Joystick Angle", ""}, {"Initial Facing Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
 	static final int INITIAL_ANGLE_ROW = 0;
 	static final int TARGET_ANGLE_ROW = 1;
 	static final int INITIAL_JOYSTICK_ANGLE_ROW = 2;
-	static final int FINAL_POSITION_ROW = 3;
-	static final int HORIZONTAL_DISPLACEMENT_ROW = 4;
-	static final int VERTICAL_DISPLACEMENT_ROW = 5;
-	static final int TOTAL_FRAMES_ROW = 6;
-	static final int MADE_JUMP_ROW = 7;
+	static final int INITIAL_FACING_ANGLE_ROW = 3;
+	static final int FINAL_POSITION_ROW = 4;
+	static final int HORIZONTAL_DISPLACEMENT_ROW = 5;
+	static final int VERTICAL_DISPLACEMENT_ROW = 6;
+	static final int TOTAL_FRAMES_ROW = 7;
+	static final int MADE_JUMP_ROW = 8;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -630,6 +631,7 @@ public class VectorDisplayWindow {
 	
 		infoTableModel.setValueAt(shorten(reduceAngle(initialAngle), 4), INITIAL_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(shorten(reduceAngle(initialAngleAbsolute - cameraAngle + Math.PI / 2), 4), INITIAL_JOYSTICK_ANGLE_ROW, 1);
+		infoTableModel.setValueAt(shorten(reduceAngle(maximizer.initialRotation), 4), INITIAL_FACING_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), TARGET_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
 		infoTableModel.setValueAt(shorten(Math.sqrt((x - p.x0) * (x - p.x0) + (z - p.z0) * (z - p.z0)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
