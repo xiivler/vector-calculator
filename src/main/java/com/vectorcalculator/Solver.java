@@ -59,6 +59,7 @@ public class Solver implements SolverInterface {
     int[][] preset;
     int[] durations;
     int[] lastFrames;
+    int[] lastNonYankFrames;
     double[] y_vels;
     double[] efficiencies;
     double[] final_y_heights; //the end y height of each motion
@@ -75,6 +76,10 @@ public class Solver implements SolverInterface {
     boolean[][] diveTurns;
 
     double firstFrameDecel;
+
+    double imYankFrames = 0;
+    double cbYankFrames = 0;
+    double rsYankFrames = 0;
 
     int rainbowSpinIndex = -1;
     int homingMCCTIndex = -1;
@@ -229,7 +234,8 @@ public class Solver implements SolverInterface {
             }
             else if (i == preset.length - (p.reverseBonk ? 2 : 1) && preset[i][0] == VectorCalculator.DIVE) {
                 secondDiveIndex = i + 1;
-                finalCapThrowIndex = i;
+                if (i >= 2 && VectorCalculator.isCT(preset[i - 1][0]))
+                    finalCapThrowIndex = i;
             }
             else if (preset[i][0] == VectorCalculator.RB)
                 reverseBonkIndex = i + 1;
@@ -244,6 +250,8 @@ public class Solver implements SolverInterface {
     }
 
     public boolean solve(int delta) {
+        //delta = (int) p.debugValue;
+
         Debug.println("Starting Solver");
 
         VectorCalculator.setProgressText("Solver: Finding Ballpark Durations");
@@ -272,7 +280,7 @@ public class Solver implements SolverInterface {
         if (diveCapBounceIndex > 0)
             preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
         if (midairVaultIndex > 0)
-            preset[midairVaultIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
+            preset[midairVaultIndex - 1][1] = tooManyFrames - 100; //make cap bounce also big to start (will be shortened later)
         if (secondDiveIndex > 0)
             preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
         if (finalCapThrowIndex > 0)
@@ -284,7 +292,7 @@ public class Solver implements SolverInterface {
                 preset[homingMCCTIndex - 1][1] += 8;
         }
         if (p.onMoon) { //make movement longer to account for this
-            bestResultsRange = 5; //there are so many possibilities
+            bestResultsRange = 10; //there are so many possibilities
             if (cbvFirst || mcctFirst) {
                 if (p.twoPlayerMode)
                     preset[homingFTIndex - 1][1] = 48;
@@ -362,7 +370,7 @@ public class Solver implements SolverInterface {
         }
         //shorten either first movement or cap bounce until second GP isn't too low
         presetMaximizer = VectorCalculator.getMaximizer();
-        calcFrameByFrame(presetMaximizer);
+        calcFrameByFrame(presetMaximizer, false);
         final_y_heights = getFinalYHeights(presetMaximizer);
 
         VectorCalculator.addPreset(preset);
@@ -377,7 +385,7 @@ public class Solver implements SolverInterface {
 
         Debug.println(Arrays.toString(final_y_heights));
 
-        Debug.println("Initial Durations: " + Arrays.toString(durations));
+        Debug.println(3, "Initial Durations: " + Arrays.toString(durations));
         Debug.println("Initial Last Frames: " + Arrays.toString(lastFrames));
 
         //remove the frames with the weakest efficiencies until Mario's height is above the target y position
@@ -386,7 +394,7 @@ public class Solver implements SolverInterface {
         int iterations = 0;
         while (true) {
             int maximizer_finalCTIndex = initialMaximizer.variableMovement2Index;
-            if (durations[finalCapThrowIndex] > 24) //refresh index of second dive
+            if (finalCapThrowIndex >= 0 && durations[finalCapThrowIndex] > 24) //refresh index of second dive
                 maximizer_secondGPIndex = maximizer_finalCTIndex + 2;
             else
                 maximizer_secondGPIndex = maximizer_finalCTIndex + 1;
@@ -399,19 +407,23 @@ public class Solver implements SolverInterface {
             iterations++;
             double worstEfficiency = 2;
             int worstEfficiencyIndex = 0;
-            for (int i = 0; i < lastFrames.length; i++) {
-                if (canSubtractFrame(i, durations[i]) && efficiencies[lastFrames[i]] < worstEfficiency) {
+            for (int i = 0; i < lastNonYankFrames.length; i++) {
+                double efficiency = efficiencies[lastNonYankFrames[i]];
+                if (durations[i] == Arrays.stream(durations).max().getAsInt() && (int) p.debugValue == 0) {
+                    efficiency -= 0.01; //this tends to balance out the results better for moon kingdom
+                }
+                if (canSubtractFrame(i, durations[i]) && efficiency < worstEfficiency) {
                     if (i == secondDiveIndex && !secondGPHeightCorrect) //don't remove frames from final dive until second GP height is correct
                         continue;
                     if (i == firstCTIndex && durations[i] <= 28) //28 and 21 are the best for high movement
                         continue;
                     if (i == firstDiveIndex && durations[i] <= 21)
                         continue;
-                    worstEfficiency = efficiencies[lastFrames[i]];
+                    worstEfficiency = efficiency;
                     worstEfficiencyIndex = i;
                 }
             }
-            //Debug.println("Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
+            Debug.println(4, "Worst Efficiency: " + worstEfficiency + " of movement index " + worstEfficiencyIndex);
             if (worstEfficiency == 2) { //we are now cutting positive y-velocity frames so the jump height is too high to make
                 p.durationFrames = true;
                 success = false;
@@ -435,22 +447,24 @@ public class Solver implements SolverInterface {
             // }
             VectorCalculator.addPreset(preset);
             initialMaximizer = VectorCalculator.getMaximizer();
-            if (iterations % REFRESH_RATE == 0 || durations[finalCapThrowIndex] == 24) { //recalculate efficiency every REFRESH_RATE times
-                calcFrameByFrame(initialMaximizer);
+            if (iterations % REFRESH_RATE == 0 || (finalCapThrowIndex >= 0 && durations[finalCapThrowIndex] == 24)) { //recalculate efficiency every REFRESH_RATE times
+                calcFrameByFrame(initialMaximizer, false);
             }
             final_y_heights = getFinalYHeights(initialMaximizer);
         }
 
+        p.maximizeYank = true;
+
         VectorCalculator.addPreset(preset);
         initialMaximizer = VectorCalculator.getMaximizer();         
-        calcFrameByFrame(initialMaximizer);
+        calcFrameByFrame(initialMaximizer, true);
 
         //if the movement is an rcv and we are solving for initial angle, figure out what initial angle should be used
         if (hasRCV && p.solveForInitialAngle) {
             p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
             Debug.println(firstFrameVelocityAngle);
             initialMaximizer = VectorCalculator.getMaximizer();         
-            calcFrameByFrame(initialMaximizer);
+            calcFrameByFrame(initialMaximizer, true);
         }
 
         //calculate the y displacement of each piece of movement
@@ -473,9 +487,14 @@ public class Solver implements SolverInterface {
         // System.out.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
         // System.out.println("Ballpark Y Heights: " + Arrays.toString(y_heights));
 
-        // System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
         // System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         // System.out.println("Ballpark Y Height: " + y);
+
+        //save yank frames so we can include them in the new tests without having to recalculate them
+        imYankFrames = initialMaximizer.imYankFrames;
+        cbYankFrames = initialMaximizer.cbYankFrames;
+        rsYankFrames = initialMaximizer.rsYankFrames;
 
         //create a new maximizer with some extra frames so the testing works
         p.initialFrames = durations[0] + delta;
@@ -487,7 +506,7 @@ public class Solver implements SolverInterface {
         }
         VectorCalculator.addPreset(preset);
         VectorMaximizer testMaximizer = VectorCalculator.getMaximizer();         
-        calcFrameByFrame(testMaximizer);
+        calcFrameByFrame(testMaximizer, true);
 
         Debug.println("Test Start Durations: " + Arrays.toString(durations));
         Debug.println("Test Start Last Frames: " + Arrays.toString(lastFrames));
@@ -514,6 +533,8 @@ public class Solver implements SolverInterface {
         //Debug.println(test(durations));
 
         //test cap throw and dive combinations that will be used using the ballpark durations
+
+        p.maximizeYank = false;
 
         int[] testDurations = durations.clone();
 
@@ -621,7 +642,7 @@ public class Solver implements SolverInterface {
         }
         test(bestDurations, true, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV (and do this with full rotation accuracy)
 
-        Debug.println(2, "Best Results Range Needed: " + (originalReportedDisp - bestReportedDisp));
+        Debug.println(3, "Best Results Range Needed: " + (originalReportedDisp - bestReportedDisp));
 
         int[] deltas = new int[durations.length];
         int maxDelta = 0;
@@ -669,15 +690,22 @@ public class Solver implements SolverInterface {
         return true;
     }
 
-    public void calcFrameByFrame(VectorMaximizer maximizer) {
+    public void calcFrameByFrame(VectorMaximizer maximizer, boolean testAllYanks) {
+        if (!testAllYanks) {
+            maximizer.optimizeCBYank = false;
+            maximizer.optimizeRSYank = false;
+        }
+
         maximizer.maximize();
         maximizer.adjustToGivenAngle();
 
         durations = new int[preset.length + 1]; //the durations that a user would enter
         lastFrames = new int[preset.length + 1]; //the last frames of each motion taking into account added frames for ground pounds, crouches, moonwalks, etc.
+        lastNonYankFrames = new int[preset.length + 1]; //last frames of each motion ignoring the yank frames
         int currentMotionLastFrame = VectorCalculator.lastInitialMovementFrame;
         durations[0] = p.initialFrames;
         lastFrames[0] = currentMotionLastFrame;
+        lastNonYankFrames[0] = currentMotionLastFrame - (int) Math.ceil(maximizer.imYankFrames);
         for (int i = 0; i < preset.length; i++) {
             durations[i + 1] = preset[i][1];
             currentMotionLastFrame += preset[i][1];
@@ -689,6 +717,11 @@ public class Solver implements SolverInterface {
                     currentMotionLastFrame++; //the ground pound adds a frame
             }
             lastFrames[i + 1] = currentMotionLastFrame;
+            lastNonYankFrames[i + 1] = lastFrames[i + 1];
+            if (i + 1 == rainbowSpinIndex)
+                lastNonYankFrames[i + 1] -= (int) Math.ceil(maximizer.rsYankFrames);
+            else if (i + 1 == midairVaultIndex || i + 1 == diveCapBounceIndex)
+                lastNonYankFrames[i + 1] -= (int) Math.ceil(maximizer.cbYankFrames);
         }
 
         // Debug.println("Initial Durations: " + Arrays.toString(durations));
@@ -770,6 +803,9 @@ public class Solver implements SolverInterface {
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.roughOptimizeFCTFalling = true;
         ballparkMaximizer.roughCTRotations = true;
+        // ballparkMaximizer.imYankFrames = imYankFrames;
+        // ballparkMaximizer.cbYankFrames = cbYankFrames;
+        // ballparkMaximizer.rsYankFrames = rsYankFrames;
         ballparkMaximizer.maximize();
         ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
         //diveDecel = ballparkMaximizer.firstFrameDecel;
@@ -999,10 +1035,13 @@ public class Solver implements SolverInterface {
             maximizer.roughOptimizeFCTFalling = true;
             maximizer.maxRCVNudges = 5;
             maximizer.maxRCVFineNudges = 1;
+            maximizer.imYankFrames = imYankFrames;
+            maximizer.cbYankFrames = cbYankFrames;
+            maximizer.rsYankFrames = rsYankFrames;
         }
-        if (fullAccuracy) {
-            System.out.println("Full Accuracy");
-        }
+        // if (fullAccuracy) {
+        //     System.out.println("Full Accuracy");
+        // }
         if (!fullRotationAccuracy)
             maximizer.roughCTRotations = true;
         if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode && !resetDiveAndVectorAngles) {
@@ -1032,7 +1071,7 @@ public class Solver implements SolverInterface {
             }
         }
         if (adjustInitialAngle) {
-            calcFrameByFrame(maximizer);
+            calcFrameByFrame(maximizer, fullAccuracy);
             if (hasRCV && p.solveForInitialAngle) {
                 p.initialAngle += p.targetAngle - firstFrameVelocityAngle;
                 Debug.println(firstFrameVelocityAngle);

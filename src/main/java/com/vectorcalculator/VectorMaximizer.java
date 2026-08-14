@@ -75,6 +75,10 @@ public class VectorMaximizer {
 	boolean roughOptimizeCT1Falling = false;
 	boolean roughCTRotations = false; //assumes ct rotates to normal angle to make calculations faster
 
+	boolean optimizeIMYank = true;
+	boolean optimizeCBYank = true;
+	boolean optimizeRSYank = true;
+
 	int variableCapThrow1Index;
 	int variableMovement2Index;
 	int motionGroup2Index;
@@ -117,9 +121,9 @@ public class VectorMaximizer {
 	double variableHCTHoldingAngle;
 	double variableHCTCountervectorFrames;
 
-	double rsYankFrames;
-	double imYankFrames;
-	double cbYankFrames;
+	double rsYankFrames = 0;
+	double imYankFrames = 0;
+	double cbYankFrames = 0;
 	
 	double rcTrueInitialAngleDiff;
 	double rcFinalAngleDiff;
@@ -1295,8 +1299,7 @@ public class VectorMaximizer {
 			case MAX_TRY:
 				return maximize_try();
 			case MAX_IM:
-				imYankFrames = 0;
-				if (p.maximizeYank) {
+				if (p.maximizeYank && optimizeIMYank) {
 					Movement initialMovement = new Movement(movementNames.get(listPreparer.initialMovementIndex));
 					if (p.onMoon && p.midairVault)
 						return binarySearch(0, MAX_IM_YANK_FRAMES, MAX_IM, MAX_IM_LIMIT)[0];
@@ -1307,13 +1310,11 @@ public class VectorMaximizer {
 				}
 				else break;
 			case MAX_RS: //holding back on last rainbow spin frame
-				rsYankFrames = 0;
-				if (hasRainbowSpin && p.maximizeYank)
+				if (hasRainbowSpin && p.maximizeYank && optimizeRSYank)
 					return linearSearch(0, 1, MAX_RS)[0];
 				else break;
 			case MAX_CB: //holding back on last cap bounce frame(s)
-				cbYankFrames = 0;
-				if (hasCapBounce && p.maximizeYank && movementFrames.get(cbIndex) >= 50) //only test for long cbs
+				if (hasCapBounce && p.maximizeYank && movementFrames.get(cbIndex) >= 50 && optimizeCBYank) //only test for long cbs
 					return linearSearch(0, MAX_IM_YANK_FRAMES, MAX_CB)[0];
 				else break;
 			case MAX_HCT: //hct falling optimization
