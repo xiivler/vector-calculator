@@ -293,7 +293,7 @@ public class VectorMaximizer {
 					initialRotation = Math.toRadians(p.initialAngle);
 				else {
 					if (p.chooseInitialRotation) {
-						if (!p.customInitialRotation && !(p.initialMovementName.equals("Single Jump") || p.initialMovementName.equals("Double Jump"))) {
+						if (optimizeInitialRotation && !p.customInitialRotation && !(p.initialMovementName.equals("Single Jump") || p.initialMovementName.equals("Double Jump"))) {
 							initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation); //rotate by 60 degrees to the side of the target angle
 							motionGroup[0].setInitialRotation(initialRotation);
 							for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
