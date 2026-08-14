@@ -41,17 +41,17 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                 if (optimalDistanceMotion) {
                     p.initialMovementName = "Triple Jump";
                     p.framesJump = 10;
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     SolverInterface solverTJ = VectorCalculator.runSolver(diveSolver, false);
                     int[][] tjMidairs = p.midairs;
                     //solverTJ.solve(p.durationSearchRange);
                     p.initialMovementName = "Motion Cap Throw RCV";
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     SolverInterface solverRCV = VectorCalculator.runSolver(diveSolver, false);
                     int[][] rcvMidairs = p.midairs;
                     //solverRCV.solve(Math.min(p.durationSearchRange, 3));
                     p.initialMovementName = "Sideflip";
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     SolverInterface solverSideflip = VectorCalculator.runSolver(diveSolver, false);
                     int[][] sideflipMidairs = p.midairs;
                     //solverSideflip.solve(p.durationSearchRange);
@@ -155,13 +155,13 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                 if (p.initialMovementName.equals("Optimal Distance Motion")) {
                     p.initialMovementName = "Triple Jump";
                     p.framesJump = 10;
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     VectorMaximizer maximizerTJ = VectorCalculator.calculate();
                     p.initialMovementName = "Optimal Distance RCV";
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     VectorMaximizer maximizerRC = VectorCalculator.calculate();
                     p.initialMovementName = "Sideflip";
-                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+                    VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
                     VectorMaximizer maximizerSideflip = VectorCalculator.calculate();
                     // Debug.println("TJ: " + maximizerTJ.bestDisp);
                     // Debug.println("RC: " + maximizerRC.bestDisp);

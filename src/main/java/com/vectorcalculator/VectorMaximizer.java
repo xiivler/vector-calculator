@@ -311,6 +311,10 @@ public class VectorMaximizer {
 		}
 	}
 
+	private boolean canRocketFlower(int index) {
+		return (index <= listPreparer.initialMovementIndex) || (index  == listPreparer.initialMovementIndex + 1) && (movementNames.get(index).equals("Cap Bounce") || (movementNames.get(index).equals("2P Midair Vault")));
+	}
+
 	private double[] generateHomingMotionThrowHoldingAngles() {
 		double[] homingMotionThrowHoldingAngles = new double[24];
 		homingMotionThrowHoldingAngles[0] = Math.toRadians(p.hctThrowAngle);
@@ -782,13 +786,13 @@ public class VectorMaximizer {
 		int frames = movementFrames.get(index);
 
 		if (index == 0) {
-			movement = new Movement(movementNames.get(index), p.initialHorizontalSpeed);
+			movement = new Movement(movementNames.get(index), p.initialHorizontalSpeed, p.rocketFlower);
 			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
 			angleCalculator.setInitialAngle(Math.PI / 2);
 			angleCalculator.setInitialRotation(Math.PI / 2 + (p.chooseInitialRotation ? Math.toRadians(p.initialRotation) : motion.movement.defaultRotation));
 		}
 		else {
-			movement = new Movement(movementNames.get(index), motions[index - 1].finalSpeed);
+			movement = new Movement(movementNames.get(index), motions[index - 1].finalSpeed, canRocketFlower(index) ? p.rocketFlower : false);
 			angleCalculator = (SimpleVector) movement.getMotion(frames, rightVector, false);
 			angleCalculator.setInitialAngle(initialAngle);
 			angleCalculator.setInitialRotation(initialRotation);
@@ -1119,13 +1123,13 @@ public class VectorMaximizer {
         //case for roll cancel vectors (note it assumes at least 1 falling frame afterward)
         //if we're the first motion group and there's a variable roll cancel
         if (hasVariableRollCancel && startIndex == 0) {
-            Movement rc = new Movement(movementNames.get(0), initialVelocity);
+            Movement rc = new Movement(movementNames.get(0), initialVelocity, p.rocketFlower);
             GroundedCapThrow rcMotion = new GroundedCapThrow(rc, Math.PI / 2, rcTrueInitialAngleDiff, rcFinalAngleDiff, !currentVectorRight);
             rcMotion.calcDispDispCoordsAngleSpeed();
             motionGroup[0] = rcMotion;
         }
         else {
-            Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump); //need to add frames jump if want to use that here
+            Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump, startIndex == 0 ? p.rocketFlower : false); //need to add frames jump if want to use that here
             if (startIndex == 0 && movementNames.get(1).equals("Backflip"))
                 initialMovement.defaultRotation = Math.PI;
             if (startIndex == listPreparer.initialMovementIndex)
@@ -1142,8 +1146,10 @@ public class VectorMaximizer {
             int j = i + startIndex;
             Movement currentMovement;
             if (movementNames.get(j - 1).equals("Moonwalk") || movementNames.get(j - 1).equals("Coyote Time"))
-                currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump);
-            else
+                currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, framesJump, p.rocketFlower);
+            else if (canRocketFlower(j))
+				currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed, p.rocketFlower);
+			else
                 currentMovement = new Movement(movementNames.get(j), motionGroup[i - 1].finalSpeed);
             if (j == listPreparer.initialMovementIndex) {
                  setYankHoldingAngles(motionGroup, currentMovement, i, j, imYankFrames);
@@ -1218,11 +1224,11 @@ public class VectorMaximizer {
         while (i < RCV_MAX_ITERATIONS) {
             test = (high + low) / 2; //binary search for the correct angle
             //Debug.println("Testing " + Math.toDegrees(test));
-            Movement rcCapThrow = new Movement(movementType, initialVelocity);
+            Movement rcCapThrow = new Movement(movementType, initialVelocity, p.rocketFlower);
             GroundedCapThrow rcMotion = new GroundedCapThrow(rcCapThrow, 0, rcTrueInitialAngleDiff, test, true);
             rcMotion.calcDispDispCoordsAngleSpeed();
             //Debug.println("Final Angle: " + Math.toDegrees(rcMotion.finalAngle));
-            Movement rcv = new Movement("Falling", rcMotion.finalSpeed);
+            Movement rcv = new Movement("Falling", rcMotion.finalSpeed, p.rocketFlower);
             SimpleVector rcvMotion = new SimpleVector(rcv, rcMotion.finalAngle, SimpleMotion.NORMAL_ANGLE, false, framesRCV);
             rcvMotion.calcDispDispCoordsAngleSpeed();
             double sumDispZ = rcMotion.dispX + rcvMotion.dispX;
@@ -1467,7 +1473,7 @@ public class VectorMaximizer {
 				for (int i = 0; i < Movement.RC_TYPES.length; i++) {
 
 					movementNames.set(0, Movement.RC_TYPES[i]);
-					Movement rc = new Movement(Movement.RC_TYPES[i]);
+					Movement rc = new Movement(Movement.RC_TYPES[i], p.rocketFlower);
 					GroundedCapThrow rcMotion = new GroundedCapThrow(rc, false);
 					int totalFrames = rcMotion.calcFrames(p.initialDispY);
 					movementFrames.set(0, rc.minFrames);
@@ -1952,7 +1958,7 @@ public class VectorMaximizer {
 		else
 			initialForwardVelocity = p.initialHorizontalSpeed;
 		
-		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity);
+		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity, canRocketFlower(variableMovement2Index) ? p.rocketFlower : false);
 		//this boolean signifies whether to rotate during the fall component of a final cap throw
 		optimizeFCTFalling = p.optimizeFCTFalling && p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 6; //TODO 6 might not always work, but it really seems like it does
 		variableMovement2Vector = (SimpleVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, !optimizeFCTFalling);

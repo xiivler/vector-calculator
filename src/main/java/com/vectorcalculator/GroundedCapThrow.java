@@ -168,7 +168,8 @@ public class GroundedCapThrow extends SimpleMotion {
 		double currentVelocity = initialForwardVelocity;
 		
 		for (int i = 0; i < postHookFrames - turningFrames; i++) {
-			currentVelocity -= WALKING_DECEL;
+			if (!movement.rocketFlower)
+				currentVelocity -= WALKING_DECEL;
 			if (currentVelocity < WALKING_SPEED) {
 				currentVelocity = WALKING_SPEED;
 			}
@@ -184,7 +185,8 @@ public class GroundedCapThrow extends SimpleMotion {
 		//first frame of turn
 		int firstTurnFrame = frames - turningFrames;
 		if (turningFrames > 0) {
-			currentVelocity -= WALKING_DECEL;
+			if (!movement.rocketFlower)
+				currentVelocity -= WALKING_DECEL;
 			if (currentVelocity < WALKING_SPEED) {
 				currentVelocity = WALKING_SPEED;
 			}
@@ -210,7 +212,8 @@ public class GroundedCapThrow extends SimpleMotion {
 			framesAtMaxRotationalSpeed = 0;
 			friction = FRICTION_COEFFICIENT;
 			for (int i = firstTurnFrame + 1; i < frames; i++) {
-				currentVelocity -= WALKING_DECEL;
+				if (!movement.rocketFlower)
+					currentVelocity -= WALKING_DECEL;
 				if (currentVelocity < WALKING_SPEED) {
 					currentVelocity = WALKING_SPEED;
 				}
@@ -392,7 +395,8 @@ public class GroundedCapThrow extends SimpleMotion {
 			//Debug.println(holdingAngles[i]);
 			if (i >= PRE_HOOK_FRAMES) { //when the hook happens, change vertical velocity and start reducing current velocity
 				yVelocity = POST_HOOK_Y_VEL;
-				currentVelocity -= WALKING_DECEL;
+				if (!movement.rocketFlower)
+					currentVelocity -= WALKING_DECEL;
 				if (currentVelocity < WALKING_SPEED) {
 					currentVelocity = WALKING_SPEED;
 				}

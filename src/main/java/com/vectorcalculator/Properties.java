@@ -258,6 +258,8 @@ public class Properties {
 	int framesMoonwalk = 5;
     int framesRun = 0; //frames of running coyote time (1st doesn't have any walking deceleration)
     int framesCrouch = 0; //frames of crouching before a long jump (can be up to 4)
+    boolean canRocketFlower = false;
+    boolean rocketFlower = false;
     boolean chooseInitialHorizontalSpeed = true;
 	double initialHorizontalSpeed = 24;
 	boolean rightVector = false;

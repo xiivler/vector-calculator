@@ -114,6 +114,9 @@ public class Movement {
 	boolean variableJumpFrames = false;
 	boolean variableInitialHorizontalSpeed = true;
 
+	boolean canRocketFlower = false;
+	boolean rocketFlower = false;
+
 	public static boolean isMidairCapThrow(String str) {
 		return str.contains("Throw") && !str.contains("RCV");
 	}
@@ -141,19 +144,35 @@ public class Movement {
 		this.sidewaysAccel = sidewaysAccel;
 	}
 	
+	public Movement(String movementType) {
+		this(movementType, Double.MAX_VALUE, 10);
+	}
+
+	public Movement(String movementType, boolean rocketFlower) {
+		this(movementType, Double.MAX_VALUE, 10, rocketFlower);
+	}
+
 	public Movement(String movementType, double initialHorizontalSpeed) {
 		this(movementType, initialHorizontalSpeed, 10);
+	}
+
+	public Movement(String movementType, double initialHorizontalSpeed, boolean rocketFlower) {
+		this(movementType, initialHorizontalSpeed, 10, rocketFlower);
 	}
 	
 	public Movement(String movementType, int framesJump) {
 		this(movementType, Double.MAX_VALUE, framesJump);
 	}
-	
-	public Movement(String movementType) {
-		this(movementType, Double.MAX_VALUE, 10);
+
+	public Movement(String movementType, int framesJump, boolean rocketFlower) {
+		this(movementType, Double.MAX_VALUE, framesJump, rocketFlower);
+	}
+
+	public Movement(String movementType, double initialHorizontalSpeed, int framesJump) {
+		this(movementType, initialHorizontalSpeed, framesJump, false);
 	}
 	
-	public Movement(String movementType, double initialHorizontalSpeed, int framesJump) {
+	public Movement(String movementType, double initialHorizontalSpeed, int framesJump, boolean rocketFlower) {
 
 		//this check will not work for some capture movement
 		framesJump = Math.min(framesJump, 10);
@@ -176,6 +195,19 @@ public class Movement {
 			recommendedInitialHorizontalSpeed = 0;
 			//defaultSpeedCap = 0;
 			//trueSpeedCap = 0;
+			canRocketFlower = true;
+		}
+
+		else if (rocketFlower && (movementType.equals("Single Jump") || movementType.equals("Double Jump") || movementType.equals("Triple Jump"))) {
+			canRocketFlower = true;
+			initialVerticalSpeed = 18;
+			framesAtMaxVerticalSpeed = framesJump;
+			gravity = 1;
+			moonGravity = .35;
+			variableJumpFrames = true;
+			canMoonwalk = true;
+			for (int i = 0; i < framesJump; i++)
+				inputs1.add(Inputs.B);
 		}
 
 		else if (movementType.equals("Optimal Distance Motion")) {
@@ -185,6 +217,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Single Jump")) {
+			canRocketFlower = true;
 			calcVerticalVelocity(initialHorizontalSpeed, 17, 19.5, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
@@ -194,6 +227,7 @@ public class Movement {
 		}
 
 		else if (movementType.equals("Double Jump")) {
+			canRocketFlower = true;
 			calcVerticalVelocity(initialHorizontalSpeed, 19.5, 21, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			variableJumpFrames = true;
@@ -203,28 +237,13 @@ public class Movement {
 		}
 
 		else if (movementType.equals("Triple Jump")) {
+			canRocketFlower = true;
 			calcVerticalVelocity(initialHorizontalSpeed, 19.5, 25, 3, 14);
 			framesAtMaxVerticalSpeed = framesJump;
 			gravity = 1;
 			moonGravity = .3;
 			variableJumpFrames = true;
 			canMoonwalk = true;
-			for (int i = 0; i < framesJump; i++)
-				inputs1.add(Inputs.B);
-		}
-		
-		else if (movementType.equals("Rocket Flower Jump")) {
-			variableInitialHorizontalSpeed = false;
-			initialHorizontalSpeed = 38;
-			defaultSpeedCap = 38;
-			trueSpeedCap = 38;
-			initialVerticalSpeed = 18;
-			framesAtMaxVerticalSpeed = framesJump;
-			gravity = 1;
-			moonGravity = .35;
-			variableJumpFrames = true;
-			canMoonwalk = true;
-			displayName = "RF Jump";
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
 		}
@@ -240,6 +259,7 @@ public class Movement {
 		}
 
 		else if (movementType.equals("Coyote Time")) {
+			canRocketFlower = true;
 			forwardAccel = 0;
 			sidewaysAccel = 0;
 			canVector = false;
@@ -251,7 +271,8 @@ public class Movement {
 			chooseInitialRotation = false;
 		}
 		
-		else if (movementType.equals("Cap Return Jump") || movementType.equals("Rocket Flower Cap Return Jump")) {
+		else if (movementType.equals("Cap Return Jump")) {
+			canRocketFlower = true;
 			initialVerticalSpeed = 22;
 			framesAtMaxVerticalSpeed = framesJump;
 			gravity = 1.3;
@@ -260,13 +281,6 @@ public class Movement {
 			canMoonwalk = true;
 			for (int i = 0; i < framesJump; i++)
 				inputs1.add(Inputs.B);
-			if (movementType.equals("Rocket Flower Cap Return Jump")) {
-				displayName = "RF Cap Return Jump";
-				variableInitialHorizontalSpeed = false;
-				initialHorizontalSpeed = 38;
-				defaultSpeedCap = 38;
-				trueSpeedCap = 38;
-			}
 		}
 		
 		else if (movementType.equals("Ground Pound Jump")) {
@@ -317,7 +331,8 @@ public class Movement {
 			defaultRotation = Math.PI; //actually enforced within VectorMaximizer because the crouch occurs first
 		}
 	
-		else if (movementType.equals("Vault") || movementType.equals("Rocket Flower Vault")) {
+		else if (movementType.equals("Vault")) {
+			canRocketFlower = true;
 			if (p.onMoon)
 				initialVerticalSpeed = 30;
 			else
@@ -329,13 +344,6 @@ public class Movement {
 			else {
 				inputs1.add(Inputs.Y);
 				inputs1.add(Inputs.Y);
-			}
-			if (movementType.equals("Rocket Flower Vault")) {
-				displayName = "RF Vault";
-				variableInitialHorizontalSpeed = false;
-				initialHorizontalSpeed = 38;
-				defaultSpeedCap = 38;
-				trueSpeedCap = 38;
 			}
 		}
 		
@@ -560,6 +568,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Cap Bounce")) {
+			canRocketFlower = true;
 			initialVerticalSpeed = 25;
 			gravity = 1;
 			inputs1.add(Inputs.Y);
@@ -595,6 +604,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Large NPC Bounce")) {
+			canRocketFlower = true;
 			initialVerticalSpeed = 25;
 			gravity = 1;
 			inputs1.add(Inputs.NONE);
@@ -602,6 +612,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Small NPC Bounce")) {
+			canRocketFlower = true;
 			initialVerticalSpeed = 20;
 			gravity = 1.75;
 			moonGravity = .5;
@@ -623,6 +634,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("2P Midair Vault")) {
+			canRocketFlower = true;
 			if (p.onMoon)
 				initialVerticalSpeed = 25;
 			else
@@ -632,6 +644,7 @@ public class Movement {
 		}
 		
 		else if (movementType.contains("RCV")) {
+			canRocketFlower = true;
 			trueSpeedCap = 100;
 			recommendedInitialHorizontalSpeed = 29.94;
 			chooseInitialRotation = false;
@@ -766,6 +779,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Falling")) {
+			canRocketFlower = true;
 			displayName = "";
 			defaultSpeedCap = 11;
 			trueSpeedCap = 30;
@@ -808,6 +822,7 @@ public class Movement {
 		}
 		
 		else if (movementType.equals("Bouncy Object Bounce")) {
+			canRocketFlower = true;
 			initialVerticalSpeed = 57;
 			initialHorizontalSpeed = 0;
 		}
@@ -939,7 +954,17 @@ public class Movement {
 			trueSpeedCap = 8;
 			chooseInitialRotation = false;
 		}
+
+		if (rocketFlower && !canRocketFlower)
+			rocketFlower = false;
+		if (rocketFlower) {
+			variableInitialHorizontalSpeed = false;
+			initialHorizontalSpeed = 38;
+			defaultSpeedCap = 38;
+			trueSpeedCap = 38;
+		}
 		
+		this.rocketFlower = rocketFlower;
 		this.initialHorizontalSpeed = Math.min(initialHorizontalSpeed, trueSpeedCap);
 	}
 	

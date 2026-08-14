@@ -91,7 +91,7 @@ public class VectorCalculator extends JPanel {
 	static enum Parameter {
 		mode("Calculator Mode"), initial_coordinates("Initial Coordinates"), calculate_using("Calculate Using"),
 		solve_for_initial_angle("Solve For Initial Angle"), initial_angle("Initial Angle"), target_angle("Target Angle"), target_coordinates("Target Coordinates"),
-		target_y_position("Target Y Position"), two_player("Two Player Mode"),
+		target_y_position("Target Y Position"), two_player("Two Player Mode"), rocket_flower("Rocket Flower"),
 		midairs("Midairs"), triple_throw("Homing Triple Throw"), triple_throw_dive_cb("Triple Throw Before Dive CB"), midair_vault("CB Type"), reverse_bonk("Reverse Bonk"), reverse_bonk_angle("Reverse Bonk Angle"), final_gp_frames("Final GP Frames"),
 		gravity("Gravity"), turnarounds("Enable Turnarounds"), zero_axis("0 Degree Axis"), camera("Camera Angle"),
 		custom_camera_angle("Custom Camera Angle"), initial_movement_category("Initial Movement"), initial_movement("Initial Movement Type"),
@@ -147,6 +147,7 @@ public class VectorCalculator extends JPanel {
 
 			params.add(Parameter.two_player);
 			params.add(Parameter.gravity);
+			params.add(Parameter.rocket_flower);
 			params.add(null);
 
 			params.add(Parameter.initial_movement_category);
@@ -384,6 +385,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case two_player:
 			value = p.twoPlayerMode ? "Yes" : "No";
+			break;
+		case rocket_flower:
+			value = p.rocketFlower ? "Yes" : "No";
 			break;
 		case midairs:
 			value = p.midairPreset;
@@ -698,6 +702,10 @@ public class VectorCalculator extends JPanel {
 					addPreset(p.midairPreset, false);
 				}
 			}
+			break;
+		case rocket_flower:
+			p.rocketFlower = value.toString().equals("Yes");
+			updateInitialMovement();
 			break;
 		case initial_movement_category:
 			String oldInitialMovementCategory = p.initialMovementCategory;
@@ -1074,10 +1082,9 @@ public class VectorCalculator extends JPanel {
 			p.chooseDurationType = true;
 	}
 
-	static String[] initialMovementCategories = {"Jump", "Rocket Flower Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
+	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
-		{"Rocket Flower Jump", "Rocket Flower Vault", "Rocket Flower Cap Return Jump"},
 		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
@@ -1085,7 +1092,7 @@ public class VectorCalculator extends JPanel {
 		{"Falling", "Uncapture", "Flip Forward", "Swinging Jump"},
 		{"Optimal Distance Motion", "Optimal Distance RCV"},
 		{"None"}};
-	static String[] initialMovementDefaults = {"Triple Jump", "Rocket Flower Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Falling", "Optimal Distance Motion", "None"};
+	static String[] initialMovementDefaults = {"Triple Jump", "Motion Cap Throw RCV", "Ground Pound Roll", "Motion Horizontal Pole/Fork Flick", "Large NPC Bounce", "Falling", "Optimal Distance Motion", "None"};
 	
 	static String[] midairPresetNames = {"Spinless (No Final Cap Throw)", "Spinless", "Simple Tech", "Simple Tech Rainbow Spin First", "MCCT First", "CB First", "None", "Custom"};
 	
@@ -1178,7 +1185,7 @@ public class VectorCalculator extends JPanel {
 
 	static int lastInitialMovementFrame;
 	
-	static Movement initialMovement = new Movement(p.initialMovementName);
+	static Movement initialMovement = new Movement(p.initialMovementName, p.rocketFlower);
 	static SimpleMotion initialMotion = new SimpleMotion(initialMovement, p.initialFrames);
 	
 	static boolean settingPropertyRow = false;
@@ -1364,7 +1371,8 @@ public class VectorCalculator extends JPanel {
 
 	public static void updateInitialMovement() {
 		boolean suggestSpeed = p.initialHorizontalSpeed == initialMovement.getSuggestedSpeed();
-		initialMovement = new Movement(p.initialMovementName);
+		initialMovement = new Movement(p.initialMovementName, p.rocketFlower);
+		p.canRocketFlower = initialMovement.canRocketFlower;
 		if (initialMovement.variableJumpFrames()) {
 			if (!p.chooseJumpFrames) {
 				p.chooseJumpFrames = true;
@@ -1476,7 +1484,7 @@ public class VectorCalculator extends JPanel {
 		if (!changeTab)
 			p.currentTab = currentTab;
 			
-		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+		initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
 		addPreset(p.midairPreset, true);
 		refreshPropertiesRows(getRowParams(), true);
 
@@ -1846,6 +1854,8 @@ public class VectorCalculator extends JPanel {
 						return dropdown(options);
 					case two_player:
 						return dropdown(new String[]{"Yes", "No"});
+					case rocket_flower:
+						return dropdown(new String[]{"Yes", "No"});
 					case duration_type:
 						return dropdown(new String[]{"Frames", "Vertical Displacement"});
 					case coyote_type:
@@ -2034,7 +2044,7 @@ public class VectorCalculator extends JPanel {
 				if (calculating)
 					return;
 
-				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+				initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
 
 				int row = e.getFirstRow();
 				int col = e.getColumn();
@@ -2048,7 +2058,7 @@ public class VectorCalculator extends JPanel {
 					setProperty(row);
 					refreshPropertiesRows(getRowParams(), false);
 
-					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump);
+					initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
 
 					checkIfSaved(true);
 
