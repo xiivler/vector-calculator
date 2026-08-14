@@ -811,7 +811,7 @@ public class VectorMaximizer {
 		//first check if we can just use the optimal version
 		boolean canUseOptimal = true;
 
-		double forwardAccelFrames = Math.max((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0);
+		double forwardAccelFrames = VectorCalculator.clampDouble((movement.defaultSpeedCap - movement.initialHorizontalSpeed) / movement.forwardAccel, 0, frames);
 		int totalForwardAccelFrames = (int) Math.ceil(forwardAccelFrames);
 
 		int turnaroundFrames = 0;
@@ -958,8 +958,10 @@ public class VectorMaximizer {
                 holdingAngles[i] = 0;
             if (forwardAccelFrames != totalForwardAccelFrames && totalForwardAccelFrames > 0)
                 holdingAngles[totalForwardAccelFrames - 1] = Math.acos(forwardAccelFrames - (int) forwardAccelFrames);
-			holdingAngles[totalForwardAccelFrames] = SimpleMotion.NORMAL_ANGLE;
-			holdingAngles[totalForwardAccelFrames + 1] = SimpleMotion.NORMAL_ANGLE - firstCounterrotation;
+			if (totalForwardAccelFrames < frames)
+				holdingAngles[totalForwardAccelFrames] = SimpleMotion.NORMAL_ANGLE;
+			if (totalForwardAccelFrames + 1 < frames)
+				holdingAngles[totalForwardAccelFrames + 1] = SimpleMotion.NORMAL_ANGLE - firstCounterrotation;
 			for (int i = totalForwardAccelFrames + 2; i < firstAdditionalRotationFrame; i++) {
 				holdingAngles[i] = holdingAngles[i - 1] - motion.angularAccel;
 				//currentRotation += Math.toRadians(0.3);

@@ -33,7 +33,7 @@ public class Solver implements SolverInterface {
     int initialDurationLimit = Integer.MAX_VALUE; //limit for how initial movement duration can be
     int cbDurationLimit = Integer.MAX_VALUE; //limit for how long cb duration can be
 
-    double bestResultsRange = 5; //range of values worse than the current best to still test in full (in units)
+    double bestResultsRange = 3; //range of values worse than the current best to still test in full (in units)
 
     boolean singleThrowAllowed = true;
     boolean mcctAllowed = true;
@@ -264,6 +264,7 @@ public class Solver implements SolverInterface {
         
         setup();
 
+        // if (p.debugValue == 0)
         p.maximizeYank = false;
 
         //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
@@ -280,7 +281,7 @@ public class Solver implements SolverInterface {
         if (diveCapBounceIndex > 0)
             preset[diveCapBounceIndex - 1][1] = Math.min(tooManyFrames, cbDurationLimit); //make cap bounce also big to start (will be shortened later)
         if (midairVaultIndex > 0)
-            preset[midairVaultIndex - 1][1] = tooManyFrames - 100; //make cap bounce also big to start (will be shortened later)
+            preset[midairVaultIndex - 1][1] = Math.min(tooManyFrames, p.onMoon ? 150 : 75); //TODO make this able to be longer in the event of ground underneath it and much lower/no ground afterward
         if (secondDiveIndex > 0)
             preset[secondDiveIndex - 1][1] = tooManyFrames; //make final dive also big to start
         if (finalCapThrowIndex > 0)
@@ -292,7 +293,7 @@ public class Solver implements SolverInterface {
                 preset[homingMCCTIndex - 1][1] += 8;
         }
         if (p.onMoon) { //make movement longer to account for this
-            bestResultsRange = 10; //there are so many possibilities
+            bestResultsRange = 1; //more possibilities come up, so test fewer
             if (cbvFirst || mcctFirst) {
                 if (p.twoPlayerMode)
                     preset[homingFTIndex - 1][1] = 48;
@@ -409,7 +410,7 @@ public class Solver implements SolverInterface {
             int worstEfficiencyIndex = 0;
             for (int i = 0; i < lastNonYankFrames.length; i++) {
                 double efficiency = efficiencies[lastNonYankFrames[i]];
-                if (durations[i] == Arrays.stream(durations).max().getAsInt() && (int) p.debugValue == 0) {
+                if (durations[i] == Arrays.stream(durations).max().getAsInt()/*  && (int) p.debugValue == 0 */) {
                     efficiency -= 0.01; //this tends to balance out the results better for moon kingdom
                 }
                 if (canSubtractFrame(i, durations[i]) && efficiency < worstEfficiency) {
@@ -440,6 +441,7 @@ public class Solver implements SolverInterface {
             else
                 preset[worstEfficiencyIndex - 1][1] --;
             lastFrames[worstEfficiencyIndex]--;
+            lastNonYankFrames[worstEfficiencyIndex]--;
             //we can keep the "removed" frames in the arrays, as they won't be considered anymore
             // p.initialFrames = durations[0];
             // for (int i = 0; i < preset.length; i++) {
@@ -803,18 +805,17 @@ public class Solver implements SolverInterface {
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.roughOptimizeFCTFalling = true;
         ballparkMaximizer.roughCTRotations = true;
-        // ballparkMaximizer.imYankFrames = imYankFrames;
-        // ballparkMaximizer.cbYankFrames = cbYankFrames;
-        // ballparkMaximizer.rsYankFrames = rsYankFrames;
+        // if (p.debugValue == 0) { //broke things once and hasn't helped in any tests
+        //     ballparkMaximizer.imYankFrames = imYankFrames;
+        //     ballparkMaximizer.cbYankFrames = cbYankFrames;
+        //     ballparkMaximizer.rsYankFrames = rsYankFrames;
+        // }
         ballparkMaximizer.maximize();
         ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
         //diveDecel = ballparkMaximizer.firstFrameDecel;
         vectorAngle = ballparkMaximizer.vectorAngle;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
         p.diveCapBounceTolerance = userTolerance;
-        // if (ctType > -1) {
-        //     System.out.println("CT Type: " + ctType + " " + preset[0][1] + " " + preset[1][1]);
-        // }
         return ctType;
     }
 

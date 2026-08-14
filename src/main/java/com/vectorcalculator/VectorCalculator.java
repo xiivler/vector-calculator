@@ -146,8 +146,8 @@ public class VectorCalculator extends JPanel {
 			params.add(null);
 
 			params.add(Parameter.two_player);
-			params.add(Parameter.gravity);
 			params.add(Parameter.rocket_flower);
+			params.add(Parameter.gravity);
 			params.add(null);
 
 			params.add(Parameter.initial_movement_category);
@@ -746,7 +746,7 @@ public class VectorCalculator extends JPanel {
 			p.initialFrames = initialMotion.calcFrames(p.initialDispY - getCoyoteDisp());
 			break;
 		case duration_search_range:
-			p.durationSearchRange = clampInt(parseIntWithDefault(value, 4), 2, 5);
+			p.durationSearchRange = clampInt(parseIntWithDefault(value, 3), 2, 10);
 			break;
 		case vault_cap_return_frame:
 			p.vaultCapReturnFrame = clampInt(parseIntWithDefault(value, 28), 0, Integer.MAX_VALUE);
@@ -823,7 +823,7 @@ public class VectorCalculator extends JPanel {
 			p.canTestTripleThrow = p.mode != Mode.CALCULATE && p.canTripleThrowDiveCB;
 			if ((!p.canTripleThrow || (!oldCanTripleThrow && p.canTripleThrow)) && !name.equals("Custom"))
 				setProperty(Parameter.triple_throw, "No");
-			if (!p.canTestTripleThrow && p.tripleThrowDiveCB == TripleThrow.TEST)
+			if (!p.canTripleThrowDiveCB || (!p.canTestTripleThrow && p.tripleThrowDiveCB == TripleThrow.TEST))
 				setProperty(Parameter.triple_throw_dive_cb, "No");
 			if (!name.equals(p.midairPreset))
 				addPreset(name, false);
