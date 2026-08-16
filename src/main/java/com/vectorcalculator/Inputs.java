@@ -8,6 +8,7 @@ class Inputs {
 
     int input1, input2;
     double r, theta;
+    double rawTheta = SimpleMotion.NO_ANGLE; //theta before the camera angle offset was applied, in radians
     double P2_r, P2_theta;
 
     public Inputs() {
@@ -26,6 +27,11 @@ class Inputs {
         this.theta = theta;
         this.P2_r = 0;
         this.P2_theta = SimpleMotion.NO_ANGLE;
+    }
+
+    public Inputs(double r, double theta, double rawTheta) {
+        this(r, theta);
+        this.rawTheta = rawTheta;
     }
 
     @Override

@@ -932,12 +932,15 @@ public class VectorCalculator extends JPanel {
 			break;
 		case zero_axis:
 			p.xAxisZeroDegrees = value.toString().equals("X");
+			VectorDisplayWindow.refresh();
 			break;
 		case camera:
 			p.cameraType = Properties.CameraType.fromName(value.toString());
+			VectorDisplayWindow.refresh();
 			break;
 		case custom_camera_angle:
 			p.customCameraAngle = parseDoubleWithDefault(value, 0);
+			VectorDisplayWindow.refresh();
 			break;
 		case dive_turn:
 			p.diveTurn = Properties.TurnDuringDive.fromDisplayName(value.toString());

@@ -320,6 +320,14 @@ public class VectorDisplayWindow {
 		dataTableModel.setRowCount(0);
 	}
 
+	//the zero-axis convention affects the underlying angle interpretation, so redraw the entire table
+	public static void refresh() {
+		if (frame == null || !frame.isVisible() || maximizer == null) {
+			return;
+		}
+		generateData(maximizer);
+	}
+
 	public static void initialize() {
 		//updateScriptTypeAvailability();
 		shiftMotion = (p.scriptType == TSV_TAS_2);
@@ -607,9 +615,9 @@ public class VectorDisplayWindow {
 				//configure the Inputs array
 				if (row == 1 && p.framesRun > 0) {
 					inputs.remove(0);
-					inputs.add(new Inputs(info[i][8], theta));
+					inputs.add(new Inputs(info[i][8], theta, info[i][7]));
 				}
-				inputs.add(new Inputs(info[i][8], theta));
+				inputs.add(new Inputs(info[i][8], theta, info[i][7]));
 				if (i < motion.movement.inputs1.size()) {
 					int offset = motion.movement.inputOffset;
 					int input1 = motion.movement.inputs1.get(i);
