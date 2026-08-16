@@ -18,11 +18,15 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Vector;
 
+import java.awt.Component;
+
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -160,8 +164,22 @@ public class VectorDisplayWindow {
 		JPanel export = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JLabel scriptTypeLabel = new JLabel("Script Format: ", JLabel.RIGHT);
 		scriptTypeComboBox = new JComboBox<String>(new String[]{"nx-TAS", "TSV-TAS (Practice Mod)", "TSV-TAS (Lunakit)"});
+		scriptTypeComboBox.setRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				if (index == NX_TAS && Properties.p_calculated != null && Properties.p_calculated.twoPlayerMode) {
+					c.setEnabled(false);
+				}
+				return c;
+			}
+		});
 		scriptTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (scriptTypeComboBox.getSelectedIndex() == NX_TAS && Properties.p_calculated != null && Properties.p_calculated.twoPlayerMode) {
+					scriptTypeComboBox.setSelectedIndex(p.scriptType);
+					return;
+				}
 				p.scriptType = scriptTypeComboBox.getSelectedIndex();
 				if (p.scriptType == TSV_TAS_2) {
 					setShiftMotion(true);
@@ -303,11 +321,22 @@ public class VectorDisplayWindow {
 	}
 
 	public static void initialize() {
+		//updateScriptTypeAvailability();
 		shiftMotion = (p.scriptType == TSV_TAS_2);
 		scriptPath = p.scriptPath;
 		scriptPathField.setText(p.scriptPath);
 		scriptFile = new File(p.scriptPath);
 		scriptTypeComboBox.setSelectedIndex(p.scriptType);
+	}
+
+	//disallows nx-TAS while in two-player mode, switching to Lunakit format if it was selected
+	public static void updateScriptTypeAvailability() {
+		if (p.twoPlayerMode && p.scriptType == NX_TAS) {
+			p.scriptType = TSV_TAS_2;
+			scriptTypeComboBox.setSelectedIndex(p.scriptType);
+			shiftMotion = true;
+		}
+		scriptTypeComboBox.repaint();
 	}
 	
 	public static void generateData(VectorMaximizer maximizer) {
@@ -659,6 +688,8 @@ public class VectorDisplayWindow {
 			infoTableModel.setValueAt("Yes", MADE_JUMP_ROW, 1);
 		else
 			infoTableModel.setValueAt("No", MADE_JUMP_ROW, 1);
+
+		updateScriptTypeAvailability();
 	}
 	
 	public static void display() {
