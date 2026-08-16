@@ -3,6 +3,7 @@ package com.vectorcalculator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -681,13 +682,13 @@ public class VectorCalculator extends JPanel {
 			double oldInitialAngle = p.initialAngle;
 			p.initialAngle = parseDoubleWithDefault(value, 0);
 			// if (Properties.p_calculated != null && !Properties.p_calculated.targetCoordinatesGiven && !Properties.p_calculated.initialAndTargetGiven)
-			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.initialAngle - oldInitialAngle));
+			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.xAxisZeroDegrees ? oldInitialAngle - p.initialAngle : p.initialAngle - oldInitialAngle));
 			break;
 		case target_angle:
 			double oldTargetAngle = p.targetAngle;
 			p.targetAngle = parseDoubleWithDefault(value, 0);
 			// if (Properties.p_calculated != null && !Properties.p_calculated.targetCoordinatesGiven && !Properties.p_calculated.initialAndTargetGiven)
-			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.targetAngle - oldTargetAngle));
+			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.xAxisZeroDegrees ? oldTargetAngle - p.targetAngle : p.targetAngle - oldTargetAngle));
 			break;
 		case two_player:
 			boolean oldTwoPlayerMode = p.twoPlayerMode;
@@ -940,7 +941,7 @@ public class VectorCalculator extends JPanel {
 			break;
 		case zero_axis:
 			p.xAxisZeroDegrees = value.toString().equals("X");
-			VectorDisplayWindow.refresh();
+			VectorDisplayWindow.refresh(); //TODO: should this also switch initial and target angles in response if the player hasn't specified target coordinates?
 			break;
 		case camera:
 			p.cameraType = Properties.CameraType.fromName(value.toString());
@@ -2252,6 +2253,12 @@ public class VectorCalculator extends JPanel {
 					menuBar.promptSaveAndClose();
 				}
 			});
+		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+			Desktop.getDesktop().setQuitHandler((event, response) -> {
+				menuBar.promptSaveAndClose();
+				response.performQuit();
+			});
+		}
 
 		f.add(tabPanel, BorderLayout.NORTH);
 		f.add(nonResize, BorderLayout.CENTER);
