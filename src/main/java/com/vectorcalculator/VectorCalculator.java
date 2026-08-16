@@ -2253,7 +2253,7 @@ public class VectorCalculator extends JPanel {
 					menuBar.promptSaveAndClose();
 				}
 			});
-		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+		if (Debug.debug == 0 && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
 			Desktop.getDesktop().setQuitHandler((event, response) -> {
 				menuBar.promptSaveAndClose();
 				response.performQuit();

@@ -124,7 +124,7 @@ public class DiveSolver implements SolverInterface {
             else if (midairs[i][0] == VectorCalculator.HTT && solveSecondDive) //CBV first
                 singleThrowAllowed = false;
         } //start with all of the movements as low as they might end up so we can calculate falling displacements easier later
-
+        
         if (solveFirstDive) {
             int firstDiveDuration = midairs[firstDiveIndex][1];
 
@@ -207,7 +207,7 @@ public class DiveSolver implements SolverInterface {
             maximizer = VectorCalculator.getMaximizer();
             maximizer.maximize();
             if (solveFirstDive)
-                maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO); 
+                testCT();
         // }
 
         if (!solveFirstDive && !solveSecondDive) {
