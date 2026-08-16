@@ -20,6 +20,8 @@ public class UpwarpMaximizer {
 		this.vy1 = vy1;
 		this.vf = vf;
 		this.rot = rot;
+		while (rot < 0)
+			rot += Math.PI * 2;
 		dland = 30 * Math.cos(((rot + Math.PI / 3) % (2.0 / 3.0 * Math.PI) - Math.PI / 3));
 	}
 

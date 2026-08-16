@@ -46,6 +46,7 @@ public class VectorMaximizer {
 	double angleAdjustment = 0;
 
 	double initialRotation = 0;
+	double finalRotation = 0;
 	
 	boolean rightVector;
 	boolean currentVectorRight;
@@ -337,7 +338,6 @@ public class VectorMaximizer {
 					motionGroup[i].setInitialRotation(prevRotation);
 				}
 			}
-			
 			return motionGroup[motionGroup.length - 1].calcFinalRotation();
 		}
 	}
@@ -1626,7 +1626,7 @@ public class VectorMaximizer {
 		}
 
 		//calculate rotations properly
-		calcFinalRotation(motions, true, true);
+		finalRotation = calcFinalRotation(motions, true, true);
 
 
 		//rotating motions to the right angle
@@ -1635,6 +1635,15 @@ public class VectorMaximizer {
 		//Debug.println("Angle 1: " + Math.toDegrees(bestAngle1));
 		//Debug.println("Angle 2: " + Math.toDegrees(bestAngle2));
 		Debug.println("Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+
+		if (p.reverseBonk) { //calculate the actual distance the jump gives including rotation at the start and end (TODO: use for everything?)
+			double initialRotationDiff = VectorDisplayWindow.reduceAngleRad(variableAngle2Adjusted + Math.PI - initialRotation);
+			double initialLedgeDisp = 30 * Math.cos((initialRotationDiff + Math.PI / 3) % (2.0 / 3.0 * Math.PI) - Math.PI / 3);
+			double finalRotationDiff = VectorDisplayWindow.reduceAngleRad(variableAngle2Adjusted - finalRotation);
+			double finalLedgeDisp = 30 * Math.cos((finalRotationDiff + Math.PI / 3) % (2.0 / 3.0 * Math.PI) - Math.PI / 3);
+			double trueHorizontalDisp = bestDisp + initialLedgeDisp + finalLedgeDisp;
+			bestDisp = trueHorizontalDisp;
+		}
 
 		return bestDisp;
 	}
@@ -1991,7 +2000,7 @@ public class VectorMaximizer {
 		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity, canRocketFlower(variableMovement2Index) ? p.rocketFlower : false);
 		//this boolean signifies whether to rotate during the fall component of a final cap throw
 		optimizeFCTFalling = p.optimizeFCTFalling && p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 6; //TODO 6 might not always work, but it really seems like it does
-		variableMovement2Vector = (SimpleVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, !optimizeFCTFalling);
+		variableMovement2Vector = (SimpleVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, !optimizeFCTFalling || p.reverseBonk);
 		motions[variableMovement2Index] = variableMovement2Vector;
 		variableMovement2Vector.setInitialAngle(initialAngle); 
 

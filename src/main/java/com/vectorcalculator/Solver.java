@@ -316,6 +316,9 @@ public class Solver implements SolverInterface {
                 else
                     preset[firstCTIndex - 1][1] = 33;
             }
+            if (reverseBonkIndex - 1 >= 0) {
+                preset[reverseBonkIndex - 1][1] = 21;
+            }
         }
         VectorCalculator.addPreset(preset);
         VectorMaximizer presetMaximizer = VectorCalculator.getMaximizer();
@@ -686,7 +689,7 @@ public class Solver implements SolverInterface {
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
-        if (i == reverseBonkIndex && frames <= 14) {
+        if (i == reverseBonkIndex && frames <= 14 || (p.onMoon && frames <= 19)) {
             return false;
         }
         return true;
@@ -832,7 +835,7 @@ public class Solver implements SolverInterface {
     //calculates max upwarp given number of frames of reverse bonk
     public double[] calcRBMaxUpwarps() {
         double[] rbMaxUpwarps = new double[p.midairs[p.midairs.length - 1][1] + delta];
-        for (int i = 13; i < rbMaxUpwarps.length; i++) {
+        for (int i = p.onMoon ? 18 : 13; i < rbMaxUpwarps.length; i++) {
             SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), i);
             UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
             rbMaxUpwarps[i] = um.maximize();

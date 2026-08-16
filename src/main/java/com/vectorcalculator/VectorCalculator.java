@@ -271,7 +271,8 @@ public class VectorCalculator extends JPanel {
 
 			params.add(null);
 			if (p.turnarounds) {
-				params.add(Parameter.optimize_first_cap_throw_falling);
+				if (p.onMoon)
+					params.add(Parameter.optimize_first_cap_throw_falling);
 				params.add(Parameter.optimize_final_cap_throw_falling);
 				params.add(Parameter.custom_final_cap_throw_angle);
 			}
@@ -693,6 +694,8 @@ public class VectorCalculator extends JPanel {
 				}
 				else {
 					p.reverseBonk = false;
+					p.upwarp = 40;
+					p.solveUpwarp = false;
 					p.midairVault = false;
 				}
 				if (p.midairPreset.equals("Custom")) //reset Custom preset
@@ -1170,7 +1173,7 @@ public class VectorCalculator extends JPanel {
 		if (!p.reverseBonk && oldReverseBonk) {
 			p.solveUpwarp = false;
 			if (p.midairs.length > 0 && !loading)
-				p.upwarp = 40;
+				setProperty(Parameter.upwarp, 40);
 		}
 	}
 
@@ -1275,10 +1278,14 @@ public class VectorCalculator extends JPanel {
 			case "Spinless (No Final Cap Throw)":
 				if (p.midairVault) {
 					p.reverseBonk = false;
+					p.upwarp = 40;
+					p.solveUpwarp = false;
 					preset = new int[][]{{P2CB, 54}, {DIVE, 25}};
 				}
 				else if (p.twoPlayerMode) {
 					p.reverseBonk = false;
+					p.upwarp = 40;
+					p.solveUpwarp = false;
 					preset = new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {DIVE, 25}};
 				}
 				else

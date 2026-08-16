@@ -792,6 +792,7 @@ public class Movement {
 			defaultSpeedCap = 2;
 			trueSpeedCap = 2;
 			gravity = .95;
+			moonGravity = .7;
 			initialVerticalSpeed = 12;
 			forwardAccel = 0;
 			backwardAccel = 0;

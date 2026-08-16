@@ -55,16 +55,17 @@ public class VectorDisplayWindow {
 	static TableModel infoTableModel;
 	
 	static String[] infoColumnTitles = {"Attribute", "Value"};
-	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Initial Joystick Angle", ""}, {"Initial Facing Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
+	static String[][] infoColumnData = {{"Initial Angle", ""}, {"Target Angle", ""}, {"Initial Joystick Angle", ""}, {"Initial Facing Angle", ""}, {"Final Position", ""}, {"Horizontal Displacement", ""}, {"Ledge Horizontal Displacement", ""}, {"Vertical Displacement", ""}, {"Total Frames", ""}, {"Made Jump", ""}};
 	static final int INITIAL_ANGLE_ROW = 0;
 	static final int TARGET_ANGLE_ROW = 1;
 	static final int INITIAL_JOYSTICK_ANGLE_ROW = 2;
 	static final int INITIAL_FACING_ANGLE_ROW = 3;
 	static final int FINAL_POSITION_ROW = 4;
 	static final int HORIZONTAL_DISPLACEMENT_ROW = 5;
-	static final int VERTICAL_DISPLACEMENT_ROW = 6;
-	static final int TOTAL_FRAMES_ROW = 7;
-	static final int MADE_JUMP_ROW = 8;
+	static final int LEDGE_HORIZONTAL_DISPLACEMENT_ROW = 6;
+	static final int VERTICAL_DISPLACEMENT_ROW = 7;
+	static final int TOTAL_FRAMES_ROW = 8;
+	static final int MADE_JUMP_ROW = 9;
 
 	static final int NX_TAS = 0;
 	static final int TSV_TAS = 1;
@@ -280,13 +281,21 @@ public class VectorDisplayWindow {
 		return String.format(format, d);
 	}
 	
-	private static double reduceAngle(double angle) {
+	public static double reduceAngle(double angle) {
 		double d = Math.toDegrees(angle);
 		while (d >= 360)
 			d -= 360;
 		while (d < 0)
 			d += 360;
 		return d;
+	}
+
+	public static double reduceAngleRad(double angle) {
+		while (angle >= Math.PI * 2)
+			angle -= Math.PI * 2;
+		while (angle < 0)
+			angle += Math.PI * 2;
+		return angle;
 	}
 	
 	public static void clearDataTable() {
@@ -634,7 +643,14 @@ public class VectorDisplayWindow {
 		infoTableModel.setValueAt(shorten(reduceAngle(maximizer.initialRotation), 4), INITIAL_FACING_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(shorten(reduceAngle(targetAngle), 4), TARGET_ANGLE_ROW, 1);
 		infoTableModel.setValueAt(toCoordinates(x, y, z), FINAL_POSITION_ROW, 1);
-		infoTableModel.setValueAt(shorten(Math.sqrt((x - p.x0) * (x - p.x0) + (z - p.z0) * (z - p.z0)), 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		double horizontalDisp = Math.sqrt((x - p.x0) * (x - p.x0) + (z - p.z0) * (z - p.z0));
+		double initialRotationDiff = reduceAngleRad(targetAngleAbsolute + Math.PI - maximizer.initialRotation);
+		double initialLedgeDisp = 30 * Math.cos((initialRotationDiff + Math.PI / 3) % (2.0 / 3.0 * Math.PI) - Math.PI / 3);
+		double finalRotationDiff = reduceAngleRad(targetAngleAbsolute - maximizer.finalRotation);
+		double finalLedgeDisp = 30 * Math.cos((finalRotationDiff + Math.PI / 3) % (2.0 / 3.0 * Math.PI) - Math.PI / 3);
+		double trueHorizontalDisp = horizontalDisp + initialLedgeDisp + finalLedgeDisp;
+		infoTableModel.setValueAt(shorten(horizontalDisp, 3), HORIZONTAL_DISPLACEMENT_ROW, 1);
+		infoTableModel.setValueAt(shorten(trueHorizontalDisp, 3), LEDGE_HORIZONTAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt(shorten(y - p.y0, 3), VERTICAL_DISPLACEMENT_ROW, 1);
 		infoTableModel.setValueAt("" + (row - 1), TOTAL_FRAMES_ROW, 1);
 		if (!p.targetCoordinatesGiven)
