@@ -656,6 +656,8 @@ public class VectorCalculator extends JPanel {
 			p.z0 = coords[2];
 			if (p.targetCoordinatesGiven)
 				setProperty(Parameter.target_angle, targetCoordinatesToTargetAngle());
+			// if (Properties.p_calculated != null && !Properties.p_calculated.targetCoordinatesGiven)
+			// 	VectorDisplayWindow.refresh();
 			break;
 		case calculate_using:
 			String val = value.toString();
@@ -676,10 +678,16 @@ public class VectorCalculator extends JPanel {
 		case solve_for_initial_angle:
 			p.solveForInitialAngle = value.toString().equals("Yes");
 		case initial_angle:
+			double oldInitialAngle = p.initialAngle;
 			p.initialAngle = parseDoubleWithDefault(value, 0);
+			// if (Properties.p_calculated != null && !Properties.p_calculated.targetCoordinatesGiven && !Properties.p_calculated.initialAndTargetGiven)
+			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.initialAngle - oldInitialAngle));
 			break;
 		case target_angle:
+			double oldTargetAngle = p.targetAngle;
 			p.targetAngle = parseDoubleWithDefault(value, 0);
+			// if (Properties.p_calculated != null && !Properties.p_calculated.targetCoordinatesGiven && !Properties.p_calculated.initialAndTargetGiven)
+			// 	VectorDisplayWindow.refreshAngle(Math.toRadians(p.targetAngle - oldTargetAngle));
 			break;
 		case two_player:
 			boolean oldTwoPlayerMode = p.twoPlayerMode;

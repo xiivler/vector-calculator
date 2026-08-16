@@ -2327,6 +2327,28 @@ public class VectorMaximizer {
 			targetAngle = unadjustedTargetAngle + angleAdjustment;
 		}
 		initialRotation += angleAdjustment;
+		finalRotation += angleAdjustment;
+		for (int i = 0; i < motions.length; i++) {
+			motions[i].adjustInitialAngle(angleAdjustment);
+			motions[i].adjustInitialRotation(angleAdjustment);
+		}
+		if (initialAngle < 0)
+			initialAngle += 2 * Math.PI;
+		if (targetAngle < 0)
+			targetAngle += 2 * Math.PI;
+		Debug.println("Initial angle:" + Math.toDegrees(initialAngle));
+		Debug.println("Target angle:" + Math.toDegrees(targetAngle));
+	}
+
+	public void adjustBy(double angleAdjustment) {
+		if (bestDisp == 0)
+			return;
+
+		initialAngle += angleAdjustment;
+		targetAngle += angleAdjustment;
+		initialRotation += angleAdjustment;
+		finalRotation += angleAdjustment;
+
 		for (int i = 0; i < motions.length; i++) {
 			motions[i].adjustInitialAngle(angleAdjustment);
 			motions[i].adjustInitialRotation(angleAdjustment);

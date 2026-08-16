@@ -320,11 +320,18 @@ public class VectorDisplayWindow {
 		dataTableModel.setRowCount(0);
 	}
 
-	//the zero-axis convention affects the underlying angle interpretation, so redraw the entire table
 	public static void refresh() {
 		if (frame == null || !frame.isVisible() || maximizer == null) {
 			return;
 		}
+		generateData(maximizer);
+	}
+
+	public static void refreshAngle(double adjustment) { //TODO also update top stuff
+		if (frame == null || !frame.isVisible() || maximizer == null) {
+			return;
+		}
+		maximizer.adjustBy(adjustment);
 		generateData(maximizer);
 	}
 
