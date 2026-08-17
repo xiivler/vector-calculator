@@ -47,6 +47,7 @@ import com.vectorcalculator.Properties.CameraType;
 import com.vectorcalculator.Properties.CoyoteType;
 import com.vectorcalculator.Properties.GroundMode;
 import com.vectorcalculator.Properties.GroundType;
+import com.vectorcalculator.Properties.HctDirection;
 import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
 import com.vectorcalculator.Properties.TripleThrow;
@@ -959,20 +960,7 @@ public class VectorCalculator extends JPanel {
 			break;
 		case hct_type:
 			p.hctType = Properties.HctType.fromName(value.toString());
-			if (p.hctType == HctType.RELAX) {
-				setProperty(Parameter.hct_angle, 60);
-				setProperty(Parameter.hct_neutral, "Yes");
-				setProperty(Parameter.hct_direction, "Down");
-				setProperty(Parameter.hct_homing_frame, 19);
-				setProperty(Parameter.hct_cap_return_frame, 36);
-			}
-			else if (p.hctType == HctType.RELAXLESS) {
-				setProperty(Parameter.hct_angle, 60);
-				setProperty(Parameter.hct_neutral, "No");
-				setProperty(Parameter.hct_direction, "Down");
-				setProperty(Parameter.hct_homing_frame, 19);
-				setProperty(Parameter.hct_cap_return_frame, 38);
-			}
+			updateHCTType(false);
 			break;
 		case hct_angle:
 			p.hctThrowAngle = parseDoubleWithDefault(value, 60);
@@ -1193,9 +1181,44 @@ public class VectorCalculator extends JPanel {
 		for (int i = 0; i < movementModel.getRowCount(); i++) {
 			if (movementModel.getValueAt(i, 0).toString().equals("Homing Motion Cap Throw")) {
 				int currentDuration = Integer.parseInt(movementModel.getValueAt(i, 1).toString());
-				if (currentDuration < p.hctCapReturnFrame)
+				if (p.hctType == HctType.OPTIMAL) {
+					if (currentDuration <= 36)
+						movementModel.setValueAt(36, i, 1);
+				}
+				else if (currentDuration < p.hctCapReturnFrame);
 					movementModel.setValueAt(p.hctCapReturnFrame, i, 1);
 			}
+		}
+	}
+
+	static int getHCTDuration() {
+		for (int i = 0; i < p.midairs.length; i++) {
+			if (p.midairs[i][0] == HMCCT) {
+				return p.midairs[i][1];
+			}
+		}
+		return -1;
+	}
+
+	static void updateHCTType(boolean aboveGround) {
+		int hctDuration = getHCTDuration();
+		if (p.hctType == HctType.RELAX || (p.hctType == HctType.OPTIMAL && hctDuration <= 37)) {
+			p.hctThrowAngle = p.onMoon ? (hctDuration == 37 ? 90 : 80) : (aboveGround ? 40 : 60);
+			p.hctNeutralHoming = true;
+			p.hctDirection = p.onMoon ? (p.rightVector ? HctDirection.RIGHT : HctDirection.LEFT) : HctDirection.DOWN;
+			p.hctHomingFrame = 19;
+			p.hctCapReturnFrame = 36;
+			if (!calculating)
+				updateHCTDuration();
+		}
+		else if (p.hctType == HctType.RELAXLESS || (p.hctType == HctType.OPTIMAL && hctDuration >= 38)) {
+			p.hctThrowAngle = p.onMoon ? (hctDuration >= 39 ? 90 : 70) : (aboveGround ? 40 : 60);
+			p.hctNeutralHoming = false;
+			p.hctDirection = p.onMoon ? (p.rightVector ? HctDirection.RIGHT : HctDirection.LEFT) : HctDirection.DOWN;
+			p.hctHomingFrame = 19;
+			p.hctCapReturnFrame = 38;
+			if (!calculating)
+				updateHCTDuration();
 		}
 	}
 

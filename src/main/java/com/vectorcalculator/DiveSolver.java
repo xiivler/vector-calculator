@@ -139,7 +139,7 @@ public class DiveSolver implements SolverInterface {
 
             //test the given dive duration, then 1 more, than 1 less, than 2 more, then 2 less, etc. until a possible dive is found
             boolean found = false;
-            found = (testCT() != -1);
+            found = (testCT(true) != -1);
             while (!found) {
                 if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
                     return false;
@@ -166,7 +166,7 @@ public class DiveSolver implements SolverInterface {
                     continue;
                 midairs[firstDiveIndex][1] = testFirstDiveDuration;
                 VectorCalculator.addPreset(midairs);
-                found = (testCT() != -1);
+                found = (testCT(true) != -1);
             }
         }
 
@@ -207,7 +207,7 @@ public class DiveSolver implements SolverInterface {
             maximizer = VectorCalculator.getMaximizer();
             maximizer.maximize();
             if (solveFirstDive)
-                testCT();
+                testCT(false);
         // }
 
         if (!solveFirstDive && !solveSecondDive) {
@@ -231,27 +231,27 @@ public class DiveSolver implements SolverInterface {
         return true;
     }
 
-    public int testCT() {
+    public int testCT(boolean roughOptimizeFCTFalling) {
         if (VectorCalculator.cancelCalculating) {
             return -1;
         }
 
         if (p.diveTurn == TurnDuringDive.TEST) {
-            int testDiveTurn = testCT(.02, 1, true);
+            int testDiveTurn = testCT(.02, 1, true, roughOptimizeFCTFalling);
             if (testDiveTurn != -1)
                 return testDiveTurn;
             else
-                return testCT(.1, 1, false);
+                return testCT(.1, 1, false, roughOptimizeFCTFalling);
         }
         else if (p.diveTurn == TurnDuringDive.YES) {
-            return testCT(.02, 1, true);
+            return testCT(.02, 1, true, roughOptimizeFCTFalling);
         }
         else
-            return testCT(.1, 1, false);
+            return testCT(.1, 1, false, roughOptimizeFCTFalling);
     }
 
     //public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
-    public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn) {
+    public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn, boolean roughOptimizeFCTFalling) {
         p.vectorAngle = 90;
         p.diveFirstFrameDecel = 0;
         maximizer = VectorCalculator.getMaximizer();
@@ -270,7 +270,7 @@ public class DiveSolver implements SolverInterface {
         //maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
         maximizer.vectorAngleIncrement = vectorAngleIncrement;
         maximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
-        maximizer.roughOptimizeFCTFalling = true;
+        maximizer.roughOptimizeFCTFalling = roughOptimizeFCTFalling;
         maximizer.roughCTRotations = true;
         bestDisp = maximizer.maximize();
         int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);

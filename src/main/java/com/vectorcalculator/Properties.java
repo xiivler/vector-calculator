@@ -204,7 +204,7 @@ public class Properties {
     }
 
     static enum HctType {
-        RELAX("Relax"), RELAXLESS("Relaxless"), CUSTOM("Custom");
+        OPTIMAL("Optimal"), RELAX("Relax"), RELAXLESS("Relaxless"), CUSTOM("Custom");
 
         String name;
 
@@ -324,7 +324,7 @@ public class Properties {
     boolean hasgroundHeightSecondGP = false;
 
     boolean hct = false;
-    HctType hctType = HctType.RELAX;
+    HctType hctType = HctType.OPTIMAL;
     double hctThrowAngle = 60;
     boolean hctNeutralHoming = true;
     HctDirection hctDirection = HctDirection.DOWN;

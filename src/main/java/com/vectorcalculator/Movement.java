@@ -3,6 +3,7 @@ package com.vectorcalculator;
 import java.util.ArrayList;
 
 import com.vectorcalculator.Properties.HctDirection;
+import com.vectorcalculator.Properties.HctType;
 
 public class Movement {
 	
@@ -739,7 +740,7 @@ public class Movement {
 				minFrames = 3;
 			else if (movementType.equals("Homing Motion Cap Throw")) {
 				displayName = "Homing MCCT";
-				minFrames = Math.max(p.hctCapReturnFrame, 23); //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
+				minFrames = Math.max(p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame, 23); //potentially as small as 23 when throwing against a wall but program would need to know frame and maybe angle of homing
 				for (int i = 0; i < p.hctHomingFrame; i++) {
 					inputs1.add(Inputs.NONE);
 				}

@@ -1242,11 +1242,11 @@ public class Solver implements SolverInterface {
                 groundHeightRS = p.groundHeightSecondGP;
             if (final_y_heights[maximizer_hmcctIndex] < groundHeightRS + HCT_CHANGE_ANGLE_HEIGHT) {
                 //Debug.println("Reducing HMCCT Angle");
-                p.hctThrowAngle = HCT_SMALLER_ANGLE;
+                //p.hctThrowAngle = HCT_SMALLER_ANGLE;
+                VectorCalculator.updateHCTType(true);
             }
-            else {
-                p.hctThrowAngle = 60;
-            }
+            else
+                VectorCalculator.updateHCTType(false);
         }
         // not sure if these should be < or <=, but the user can always increase the ground height slightly
         if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] < p.groundHeightFirstGP)

@@ -18,6 +18,8 @@ class CalculateThread extends SwingWorker<Boolean, String> {
     public Boolean doInBackground(){
         VectorCalculator.calculating = true;
 
+        VectorCalculator.updateHCTType(false);
+
         try {
             if (p.reverseBonk && p.solveUpwarp) {
                 SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), p.midairs[p.midairs.length - 1][1]);
