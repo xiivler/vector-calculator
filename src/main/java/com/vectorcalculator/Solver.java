@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import com.vectorcalculator.Properties.TurnDuringDive;
 import com.vectorcalculator.Properties.GroundType;
+import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.TripleThrow;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
@@ -219,7 +220,7 @@ public class Solver implements SolverInterface {
             }
             else if (preset[i][0] == VectorCalculator.HMCCT) {
                 homingMCCTIndex = i + 1;
-                preset[i][1] = Math.max(30, p.hctCapReturnFrame);
+                preset[i][1] = Math.max(30, p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame);
             }
             else if (preset[i][0] ==  VectorCalculator.HTT)
                 homingTTIndex = i + 1;
@@ -685,7 +686,7 @@ public class Solver implements SolverInterface {
             return false;
         if (i == rainbowSpinIndex && frames <= 32)
             return false;
-        if (i == homingMCCTIndex && frames <= p.hctCapReturnFrame)
+        if (i == homingMCCTIndex && frames <= (p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame))
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
