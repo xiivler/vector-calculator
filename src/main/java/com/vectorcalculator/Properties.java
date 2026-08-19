@@ -293,6 +293,7 @@ public class Properties {
     boolean optimizeFCTFalling = true;
     boolean customFCTAngle = false;
     double fctAngle = 0;
+    double finalDiveAngle = 0;
     boolean turnarounds = true;
     boolean solveUpwarp = false;
     double upwarp = 40;

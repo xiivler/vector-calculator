@@ -106,6 +106,7 @@ public class VectorCalculator extends JPanel {
 		hct_neutral("Neutral Joystick During Homing"), hct_direction("Homing Direction"),
 		hct_homing_frame("Frames Before Home"), hct_cap_return_frame("HCT Cap Return Frame"), test_yanks("Test Yanks"),
 		optimize_first_cap_throw_falling("Optimize First Cap Throw Falling"), optimize_final_cap_throw_falling("Optimize Final Cap Throw Falling"), custom_final_cap_throw_angle("Custom Final Cap Throw Angle"), final_cap_throw_angle("Final Cap Throw Angle"),
+		final_dive_angle("Final Dive Angle"),
 		ground_mode("Ground/Liquid Under Midairs"), ground_type("Type"), ground_height("Height"),
 		ground_type_firstGP("Type Under First GP"), ground_height_firstGP("Height Under First GP"),
 		ground_type_CB("Type Under CB"), ground_height_CB("Height Under CB"),
@@ -292,6 +293,7 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.reverse_bonk_angle);
 				params.add(Parameter.final_gp_frames);
 			}
+			params.add(Parameter.final_dive_angle);
 
 			params.add(null);
 			params.add(Parameter.ground_mode);
@@ -412,6 +414,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case final_gp_frames:
 			value = p.finalGPFrames;
+			break;
+		case final_dive_angle:
+			value = p.finalDiveAngle;
 			break;
 		case upwarp:
 			value = p.upwarp;
@@ -916,6 +921,9 @@ public class VectorCalculator extends JPanel {
 			break;
 		case final_gp_frames:
 			p.finalGPFrames = clampInt(parseIntWithDefault(value, 1), 1, 25);
+			break;
+		case final_dive_angle:
+			p.finalDiveAngle = clampDouble(parseDoubleWithDefault(value, 0), -45, 45);
 			break;
 		case gravity:
 			boolean onMoonOld = p.onMoon;

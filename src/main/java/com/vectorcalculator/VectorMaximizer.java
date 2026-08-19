@@ -88,6 +88,7 @@ public class VectorMaximizer {
 	int preCapBounceDiveIndex = Integer.MIN_VALUE;
 	int rainbowSpinIndex = Integer.MIN_VALUE;
 	int cbIndex = Integer.MIN_VALUE;
+	int finalDiveIndex = Integer.MIN_VALUE;
 
 	int maxRCVNudges = 20;
 	int maxRCVFineNudges = 10;
@@ -188,11 +189,12 @@ public class VectorMaximizer {
 		for (int i = 0; i < movementNames.size(); i++) {
 			if (movementNames.get(i).equals("Dive")) {
 				boolean isFinalDive = (i == movementNames.size() - (p.reverseBonk ? 2 : 1));
+				if (isFinalDive)
+					finalDiveIndex = i;
 				if (i - 2 >= 0 && Movement.isMidairCapThrow(movementNames.get(i - 2))) {
 					if (isFinalDive) {
 						hasVariableCapThrow2 = true;
 						variableMovement2Index = i - 2;
-						//motionGroup3Index = i - 1;
 					}
 					else {
 						hasVariableCapThrow1 = true;
@@ -1853,15 +1855,17 @@ public class VectorMaximizer {
 		}
 		
 		//if there was a variable 2nd movement, we need to calculate a motion group 3 consisting of the ground pound and dive after it, and possibly reverse bonk
-		if (hasVariableCapThrow2 || hasVariableOtherMovement2) {	
+		if (hasVariableCapThrow2 || hasVariableOtherMovement2) {
+			double diveAngle = once_bestAngle2Adjusted + (p.rightVector ? -1 : 1) * Math.toRadians(p.finalDiveAngle);
+
 			Movement groundPound = new Movement("Ground Pound");
 			SimpleMotion gpMotion = groundPound.getMotion(movementFrames.get(motions.length - (p.reverseBonk ? 3 : 2)), false, false);
-			gpMotion.setInitialAngle(once_bestAngle2Adjusted);
+			gpMotion.setInitialAngle(diveAngle);
 			motions[motions.length - (p.reverseBonk ? 3 : 2)] = gpMotion;
 			
 			Movement dive = new Movement("Dive");
 			SimpleMotion diveMotion = dive.getMotion(movementFrames.get(motions.length - (p.reverseBonk ? 2 : 1)), false, false);
-			diveMotion.setInitialAngle(once_bestAngle2Adjusted);
+			diveMotion.setInitialAngle(diveAngle);
 			motions[motions.length - (p.reverseBonk ? 2 : 1)] = diveMotion;
 			diveMotion.calcDispDispCoordsAngleSpeed();
 
@@ -1871,7 +1875,7 @@ public class VectorMaximizer {
 			if (p.reverseBonk) {
 				Movement reverseBonk = new Movement("Reverse Bonk");
 				SimpleMotion reverseBonkMotion = reverseBonk.getMotion(movementFrames.get(motions.length - 1), false, false);
-				reverseBonkMotion.setInitialAngle(once_bestAngle2Adjusted + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle));
+				reverseBonkMotion.setInitialAngle(diveAngle + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle));
 				reverseBonkMotion.calcDispDispCoordsAngleSpeed();
 				motions[motions.length - 1] = reverseBonkMotion;
 
@@ -2031,7 +2035,7 @@ public class VectorMaximizer {
 				setCapThrowHoldingAngles((ComplexVector) variableMovement2Vector, variableAngle2, p.customFCTAngle ? Math.toRadians(p.fctAngle) : OPTIMAL_ANGLE_DIFF, SimpleMotion.NORMAL_ANGLE, variableMovement2Frames, variableMovement2FallingFrames);
 			}
 			else
-				setOtherMovementHoldingAngles((ComplexVector) variableMovement2Vector, variableMovement2Index, variableAngle2, initialAngle, initialRotation, currentVectorRight);
+				setOtherMovementHoldingAngles((ComplexVector) variableMovement2Vector, variableMovement2Index, p.rightVector ? variableAngle2 - Math.toRadians(p.finalDiveAngle) : variableAngle2 + Math.toRadians(p.finalDiveAngle), initialAngle, initialRotation, currentVectorRight);
 			variableMovement2Vector.calcDisp();
 			variableMovement2Vector.calcDispCoords();
 			
@@ -2041,7 +2045,7 @@ public class VectorMaximizer {
 			variableAngle2Adjusted = initialAngle - (currentVectorRight ? 1 : -1) * variableAngle2; //the absolute direction we're throwing in/trying to go in
 
 			if (hasVariableMovement2Falling) {
-				double[] fallingDisplacements = calcFallingDisplacements(variableMovement2Vector, variableMovement2Index, variableAngle2Adjusted, !currentVectorRight, optimizeFCTFalling, roughOptimizeFCTFalling);
+				double[] fallingDisplacements = calcFallingDisplacements(variableMovement2Vector, variableMovement2Index, p.rightVector ? variableAngle2Adjusted - Math.toRadians(p.finalDiveAngle) : variableAngle2Adjusted + Math.toRadians(p.finalDiveAngle), !currentVectorRight, optimizeFCTFalling, roughOptimizeFCTFalling);
 				variableMovement2DispZ += fallingDisplacements[0];
 				variableMovement2DispX += fallingDisplacements[1];
 			}
@@ -2280,10 +2284,10 @@ public class VectorMaximizer {
 				motions[i].setInitialAngle(bestAngle1Adjusted);
 			}
 			else if ((i == variableMovement2Index + 1 || i == variableMovement2Index + 2) && motions[i].movement.movementType.equals("Ground Pound")) {
-				motions[i].setInitialAngle(bestAngle2Adjusted);
+				motions[i].setInitialAngle(bestAngle2Adjusted + (p.rightVector ? -1 : 1) * Math.toRadians(p.finalDiveAngle));
 			}
 			else if (p.reverseBonk && i == motions.length - 1) {
-				motions[i].setInitialAngle(motions[i - 1].finalAngle + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle));
+				motions[i].setInitialAngle(motions[i - 1].finalAngle + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle + p.finalDiveAngle));
 			}
 			else if (i > 0) {
 				motions[i].setInitialAngle(motions[i - 1].finalAngle);

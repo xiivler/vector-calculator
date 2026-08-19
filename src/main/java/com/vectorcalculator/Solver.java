@@ -111,6 +111,7 @@ public class Solver implements SolverInterface {
     boolean success = false;
 
     boolean userMaximizeYank;
+    double userFinalDiveAngle;
 
     ArrayList<DoubleIntArray> bestResults;
 
@@ -169,6 +170,8 @@ public class Solver implements SolverInterface {
         p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         p.vectorAngle = 90;
         userMaximizeYank = p.maximizeYank;
+        //userFinalDiveAngle = p.finalDiveAngle; //doesn't seem to do anything
+        //p.finalDiveAngle = 0;
 
         if (p.solveForInitialAngle) {
             p.initialAngle = p.targetAngle;
@@ -613,6 +616,7 @@ public class Solver implements SolverInterface {
         bestResults.add(new DoubleIntArray(0, durations));
 
         //now test adding and subtracting some frames to get a better result
+        p.finalDiveAngle = userFinalDiveAngle;
         p.durationFrames = true;
         DoubleIntArray best = test(durations, delta, 0, p.y0);
         bestDurations = best.intArray;
