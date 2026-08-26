@@ -1381,7 +1381,7 @@ public class VectorCalculator extends JPanel {
 		}
 		if (p.reverseBonk) {
 			ArrayList<int[]> presetList = new ArrayList<>(Arrays.asList(preset));
-			presetList.add(new int[]{RB, 19});
+			presetList.add(new int[]{RB, Movement.RB_FRAMES});
 			preset = presetList.toArray(new int[0][0]);
 		}
 		return preset;
