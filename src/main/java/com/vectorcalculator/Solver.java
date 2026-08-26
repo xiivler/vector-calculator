@@ -694,7 +694,7 @@ public class Solver implements SolverInterface {
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
-        if (i == reverseBonkIndex && frames <= 14 || (p.onMoon && frames <= 19)) {
+        if (i == reverseBonkIndex && frames <= 19 || (p.onMoon && frames <= 19)) {
             return false;
         }
         return true;
@@ -840,7 +840,7 @@ public class Solver implements SolverInterface {
     //calculates max upwarp given number of frames of reverse bonk
     public double[] calcRBMaxUpwarps() {
         double[] rbMaxUpwarps = new double[p.midairs[p.midairs.length - 1][1] + delta];
-        for (int i = p.onMoon ? 18 : 13; i < rbMaxUpwarps.length; i++) {
+        for (int i = p.onMoon ? 18 : 18; i < rbMaxUpwarps.length; i++) {
             SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), i);
             UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
             rbMaxUpwarps[i] = um.maximize();
@@ -884,9 +884,6 @@ public class Solver implements SolverInterface {
                 }
                 if ((index == diveCapBounceIndex || index == midairVaultIndex) && testDuration > cbDurationLimit) {
                     continue;
-                }
-                if (index == reverseBonkIndex) {
-                    //System.out.println("duration is " + testDuration);
                 }
                 if (!canSubtractFrame(index, testDuration + 1)) {
                     continue;
@@ -934,13 +931,14 @@ public class Solver implements SolverInterface {
             //Debug.println("Start Y Pos: " + y_pos);
             double base_y_pos = y_pos + y_disps[index];
             double test_y_pos = base_y_pos;
+            int last_delta = index == reverseBonkIndex ? 0 : delta; //don't test any other durations for a reverse bonk
             int test_delta = 0;
             int lastFrame = lastFrames[index];
             //Debug.println("Base Y Pos: " + base_y_pos);
             if (base_y_pos + getUpwarp(durations[index]) > p.y1) {
                 // Debug.println();
                 // Debug.println(test_y_pos);
-                for (test_delta = 1; test_delta <= delta; test_delta++) {
+                for (test_delta = 1; test_delta <= last_delta; test_delta++) {
                     test_y_pos += y_vels[lastFrame + test_delta];
                     // Debug.println(test_y_pos);
                     if (test_y_pos + getUpwarp(durations[index] + test_delta) < p.y1 - ERROR) {
@@ -951,7 +949,7 @@ public class Solver implements SolverInterface {
                 test_delta--;
             }
             else if (base_y_pos + getUpwarp(durations[index]) < p.y1 - ERROR) {
-                for (test_delta = 1; test_delta <= delta; test_delta++) {
+                for (test_delta = 1; test_delta <= last_delta; test_delta++) {
                     test_y_pos -= y_vels[lastFrame - test_delta + 1];
                     if (test_y_pos + getUpwarp(durations[index] - test_delta) >= p.y1 - ERROR) {
                         break;
