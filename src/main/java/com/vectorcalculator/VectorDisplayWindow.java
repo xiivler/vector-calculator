@@ -439,11 +439,11 @@ public class VectorDisplayWindow {
 					if (Movement.isCapBounce(simpleMotions[j].movement.movementType))
 						cbBefore = true;
 				}
-				if (cbBefore) {
-					ArrayList<Integer> inputs = new ArrayList<Integer>();
-					int duration = motion.frames;
+				int duration = motion.frames;
 					if (simpleMotions[index + 1].movement.movementType.equals("Falling"))
 						duration += simpleMotions[index + 1].frames;
+				if (cbBefore && duration <= 40) {
+					ArrayList<Integer> inputs = new ArrayList<Integer>();
 					int framesWait = Math.max(2, 31 - duration); //make sure to press B early, earlier if the cap throw is very short
 					inputs.add(Inputs.P2B);
 					for (int i = 0; i < framesWait; i++) {
@@ -454,7 +454,21 @@ public class VectorDisplayWindow {
 					motion.movement.inputOffset = -2 - framesWait;
 				}
 				else {
-					motion.movement.inputs1.add(Inputs.P2Y); //this button press returns cappy ASAP
+					if (duration >= 32) {
+						if (duration >= 24 + 17) { //now the cappy return input needs to be in the falling movement
+							Movement fallingMovement = simpleMotions[index + 1].movement;
+							for (int i = 0; i < duration - (24 + 17); i++)
+								fallingMovement.inputs1.add(Inputs.NONE);
+							fallingMovement.inputs1.add(Inputs.P2Y);
+						}
+						else {
+							for (int i = 0; i < duration - 17; i++)
+								motion.movement.inputs1.add(Inputs.NONE);
+							motion.movement.inputs1.add(Inputs.P2Y);
+						}
+					}
+					else
+						motion.movement.inputs1.add(Inputs.P2Y); //this button press returns cappy ASAP
 					inputs.get(row - 1).P2_r = 1;
 					inputs.get(row - 1).P2_theta = reduceAngle(targetAngleAbsolute - cameraAngle + Math.PI / 2);
 				}
@@ -470,7 +484,7 @@ public class VectorDisplayWindow {
 
 				double reverseBonkAngle = simpleMotions[index].initialAngle;
 
-				double[] cappyTarget = {marioPos[0] + reverseBonkDistance * Math.sin(reverseBonkAngle + Math.PI), marioPos[1], marioPos[2] + reverseBonkDistance * Math.cos(reverseBonkAngle + Math.PI)}; //where cappy needs to move to
+				double[] cappyTarget = {marioPos[0] + reverseBonkDistance * Math.sin(reverseBonkAngle + Math.PI), marioPos[1] + (p.onMoon ? 320 : 0), marioPos[2] + reverseBonkDistance * Math.cos(reverseBonkAngle + Math.PI)}; //where cappy needs to move to
 				
 				double direction = Math.atan2(cappyTarget[0] - cappyPos[0], cappyTarget[2] - cappyPos[2]); //angle cappy needs to move in
 				double cappyJoystickTheta = reduceAngle(direction - cameraAngle + Math.PI / 2);
@@ -485,6 +499,8 @@ public class VectorDisplayWindow {
 				if (cappyPos[1] < cappyTarget[1]) {
 					framesJump = (int) Math.ceil((cappyTarget[1] - cappyPos[1]) / Movement.CAPPY_JUMP_V_SPEED);
 				}
+				// if (p.onMoon)
+				//  	framesJump += 9; //make cappy higher so Mario doesn't push Cappy out of the way
 
 				int startFrame = finalCapThrowFrame + Movement.CT_FRAMES_UNTIL_FULLY_THROWN[p.fctType] - 1; //assumes motion throw
 				//System.out.println(p.fctType);
@@ -495,6 +511,9 @@ public class VectorDisplayWindow {
 				}
 
 				int cappyGPRow = row - Movement.CAPPY_GP_FRAMES;
+				if (p.onMoon) {
+					cappyGPRow -= 4; //to make up for him being 90 units higher
+				}
 				Inputs GPFrameInputs = inputs.get(cappyGPRow);
 				if (GPFrameInputs.input1 == Inputs.NONE)
 					GPFrameInputs.input1 = Inputs.P2ZL;
@@ -503,26 +522,26 @@ public class VectorDisplayWindow {
 
 				if (inputs.get(cappyGPRow - 1).P2_theta == SimpleMotion.NO_ANGLE && framesJump > 0) { //cappy can jump to get closer to target height
 					if (GPFrameInputs.input2 == Inputs.NONE)
-						GPFrameInputs.input2 = Inputs.P2B;
+						GPFrameInputs.input2 = framesJump > 9 ? Inputs.P2A : Inputs.P2B;
 					int curRow = cappyGPRow - 1;
 					int framesJumpAchieved = 0;
 					while (inputs.get(curRow).P2_theta == SimpleMotion.NO_ANGLE && framesJumpAchieved < framesJump) {
 						if (inputs.get(curRow).input1 == Inputs.NONE)
-							inputs.get(curRow).input1 = Inputs.P2B;
+							inputs.get(curRow).input1 = (framesJump - framesJumpAchieved) > 9 ? Inputs.P2A : Inputs.P2B;
 						else
-							inputs.get(curRow).input2 = Inputs.P2B;
+							inputs.get(curRow).input2 = (framesJump - framesJumpAchieved) > 9 ? Inputs.P2A : Inputs.P2B;
 						framesJumpAchieved++;
 						curRow--;
 					}
 				}
 
-				// System.out.println("Cappy Position: " + Arrays.toString(cappyPos));
-				// System.out.println("Mario Position: " + Arrays.toString(marioPos));
-				// System.out.println("Cappy Target: " + Arrays.toString(cappyTarget));
-				// System.out.println("Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
-				// System.out.println("Horizontal Distance: " + hDistance);
-				// System.out.println("Movement Frames: " + frames);
-				// System.out.println("GP Frame: " + (row - Movement.CAPPY_GP_FRAMES));
+				Debug.println(4, "Cappy Position: " + Arrays.toString(cappyPos));
+				Debug.println(4, "Mario Position: " + Arrays.toString(marioPos));
+				Debug.println(4, "Cappy Target: " + Arrays.toString(cappyTarget));
+				Debug.println(4, "Cappy Joystick: (" + cappyJoystickRadius + "; " + cappyJoystickTheta + ")");
+				Debug.println(4, "Horizontal Distance: " + hDistance);
+				Debug.println(4, "Movement Frames: " + frames);
+				Debug.println(4, "GP Frame: " + (row - Movement.CAPPY_GP_FRAMES));
 			}
 			motion.calcDisp();
 			motion.setInitialCoordinates(x, y, z);
