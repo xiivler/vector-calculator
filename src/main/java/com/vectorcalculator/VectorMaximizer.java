@@ -910,7 +910,7 @@ public class VectorMaximizer {
 		boolean quickturnAssistMethod = false;
 		boolean counterQuickturn = false; //if quickturn is contrary to the direction of regular rotation
 
-		double totalRotation = Math.abs(targetRotation - initialRotation); //TODO eliminate math.abs
+		double totalRotation = rightVector ? initialRotation - targetRotation : targetRotation - initialRotation;
 		double rotationWithoutQuickturn = totalRotation;
 		double minRotation = angleCalculator.calcMinRotation();
 		double overshoot = 0;

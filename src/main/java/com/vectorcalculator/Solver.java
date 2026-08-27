@@ -812,7 +812,7 @@ public class Solver implements SolverInterface {
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
         ballparkMaximizer.roughOptimizeFCTFalling = true;
-        ballparkMaximizer.roughCTRotations = true;
+        //ballparkMaximizer.roughCTRotations = true;
         // if (p.debugValue == 0) { //broke things once and hasn't helped in any tests
         //     ballparkMaximizer.imYankFrames = imYankFrames;
         //     ballparkMaximizer.cbYankFrames = cbYankFrames;
@@ -1046,11 +1046,8 @@ public class Solver implements SolverInterface {
             maximizer.cbYankFrames = cbYankFrames;
             maximizer.rsYankFrames = rsYankFrames;
         }
-        // if (fullAccuracy) {
-        //     System.out.println("Full Accuracy");
-        // }
-        if (!fullRotationAccuracy)
-            maximizer.roughCTRotations = true;
+        // if (!fullRotationAccuracy)
+        //     maximizer.roughCTRotations = true;
         if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode && !resetDiveAndVectorAngles) {
             p.vectorAngle = vectorAngles[ctDuration][diveDuration];
             p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];

@@ -712,6 +712,7 @@ public class VectorCalculator extends JPanel {
 					p.upwarp = 40;
 					p.solveUpwarp = false;
 					p.midairVault = false;
+					p.finalGPFrames = 1;
 				}
 				if (p.midairPreset.equals("Custom")) //reset Custom preset
 					addPreset(new int[0][0]);
@@ -1182,6 +1183,7 @@ public class VectorCalculator extends JPanel {
 			p.solveUpwarp = false;
 			if (p.midairs.length > 0 && !loading)
 				setProperty(Parameter.upwarp, 40);
+			p.finalGPFrames = 1;
 		}
 	}
 
@@ -1417,7 +1419,9 @@ public class VectorCalculator extends JPanel {
 			movementModel.addRow(new Object[]{midairMovementNames[row[0]], row[1]});
 		}
 		addingPreset = false;
-		//saveMidairs();
+		updateMidairs();
+		if (!calculating)
+			refreshPropertiesRows(getRowParams(), false);
 	}
 
 	public static void updateInitialMovement() {
@@ -2209,9 +2213,10 @@ public class VectorCalculator extends JPanel {
 					}
 				}
 
-				updateMidairs();
-
-				refreshPropertiesRows(getRowParams(), false);
+				if (!addingPreset) {
+					updateMidairs();
+					refreshPropertiesRows(getRowParams(), false);
+				}
 				// record undo state for midairs edits
 				if (initialized && !loading && !addingPreset) {
 					UndoManager.recordState(true);
