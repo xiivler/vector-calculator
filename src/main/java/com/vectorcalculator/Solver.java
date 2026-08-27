@@ -641,14 +641,14 @@ public class Solver implements SolverInterface {
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
             testDurations = bestResults.get(i).intArray;
-            double testDisp = test(testDurations, true, false, false, false);
+            double testDisp = test(testDurations, true, false, !p.onMoon, false);
             if (testDisp > bestDisp) {
                 bestDisp = testDisp;
                 bestDurations = testDurations;
                 bestReportedDisp = bestResults.get(i).d;
             }
             Debug.println(2, "Best Results " + i + ": " + bestResults.get(i).d + ", " + testDisp);
-            Debug.println(Arrays.toString(testDurations));
+            Debug.println(2, Arrays.toString(testDurations));
         }
         Debug.println(4, "Best being tested: ");
         test(bestDurations, true, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV (and do this with full rotation accuracy)
@@ -1049,9 +1049,17 @@ public class Solver implements SolverInterface {
         }
         // if (!fullRotationAccuracy)
         //     maximizer.roughCTRotations = true;
-        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode && !resetDiveAndVectorAngles) {
-            p.vectorAngle = vectorAngles[ctDuration][diveDuration];
-            p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
+        double maxTestVectorAngle = 90;
+        if (diveCapBounceIndex >= 0 && vectorAngles != null && edgeCBAngles != null && !p.twoPlayerMode) {
+            if (!resetDiveAndVectorAngles) {
+                p.vectorAngle = vectorAngles[ctDuration][diveDuration];
+                p.diveCapBounceAngle = edgeCBAngles[ctDuration][diveDuration];
+            }
+            else {
+                p.vectorAngle = 90;
+                p.diveCapBounceAngle = diveTurn ? DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN;
+            }
+            maxTestVectorAngle = vectorAngles[ctDuration][diveDuration] + 15; //don't test all the way from 90 degrees because that is slow
             //these will get internalized by the maximizer in the next call
             //Debug.println("It is " + p.diveCapBounceAngle + " at " + ctDuration + ", " + diveDuration);
         }
@@ -1059,12 +1067,14 @@ public class Solver implements SolverInterface {
             p.vectorAngle = 90;
             p.diveCapBounceAngle = diveTurn ? DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN;
         }
+        if (maxTestVectorAngle > 90)
+            maxTestVectorAngle = 90;
         double disp = maximizer.maximize();
         if (fullAccuracy) {
             // if (p.vectorAngle == 66 && ctDuration == 30 && diveDuration == 25) {
             //     System.out.println(maximizer.motionGroup1FinalAngle);
             // }
-            maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
+            maximizer.vectorAngleMax = maxTestVectorAngle;
             if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
