@@ -28,6 +28,8 @@ public class DiveSolver implements SolverInterface {
 
     double bestDisp = 0;
 
+    boolean diveTurn = true;
+
     public String getError() {
         return error;
     }
@@ -139,7 +141,7 @@ public class DiveSolver implements SolverInterface {
 
             //test the given dive duration, then 1 more, than 1 less, than 2 more, then 2 less, etc. until a possible dive is found
             boolean found = false;
-            found = (testCT(true) != -1);
+            found = (testCT(true, false) != -1);
             while (!found) {
                 if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
                     return false;
@@ -166,7 +168,7 @@ public class DiveSolver implements SolverInterface {
                     continue;
                 midairs[firstDiveIndex][1] = testFirstDiveDuration;
                 VectorCalculator.addPreset(midairs);
-                found = (testCT(true) != -1);
+                found = (testCT(true, false) != -1);
             }
         }
 
@@ -203,16 +205,21 @@ public class DiveSolver implements SolverInterface {
 
         VectorCalculator.addPreset(midairs);
 
-        // if (solveSecondDive) {
-            maximizer = VectorCalculator.getMaximizer();
-            maximizer.maximize();
-            if (solveFirstDive)
-                testCT(false);
-        // }
+        maximizer = VectorCalculator.getMaximizer();
+        Debug.println(4, "Last Maximizer: ");
 
-        if (!solveFirstDive && !solveSecondDive) {
-            maximizer = VectorCalculator.getMaximizer();
+        if (solveFirstDive) {
+            double disp = test();
+            if (disp == 0) { //if testing the same way as Solver failed, test using testCT instead
+                testCT(false, false);
+                maximizer.recalculateDisps(true);
+                maximizer.adjustToGivenAngle();
+            }
+        }
+        else {
             maximizer.maximize();
+            maximizer.recalculateDisps(true);
+            maximizer.adjustToGivenAngle();
         }
 
         if (maximizer.bestDisp == 0) {
@@ -221,9 +228,6 @@ public class DiveSolver implements SolverInterface {
             return false;   
         }
 
-        maximizer.recalculateDisps(true);
-        maximizer.adjustToGivenAngle();
-
         VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
 
         p.durationFrames = oldDurationFrames;
@@ -231,40 +235,44 @@ public class DiveSolver implements SolverInterface {
         return true;
     }
 
-    public int testCT(boolean roughOptimizeFCTFalling) {
+    public int testCT(boolean roughOptimizeFCTFalling, boolean useCurrentAngles) {
         if (VectorCalculator.cancelCalculating) {
             return -1;
         }
 
         if (p.diveTurn == TurnDuringDive.TEST) {
-            int testDiveTurn = testCT(.02, 1, true, roughOptimizeFCTFalling);
+            int testDiveTurn = testCT(.01, 1, true, roughOptimizeFCTFalling, useCurrentAngles);
             if (testDiveTurn != -1)
                 return testDiveTurn;
             else
-                return testCT(.1, 1, false, roughOptimizeFCTFalling);
+                return testCT(.1, 1, false, roughOptimizeFCTFalling, useCurrentAngles);
         }
         else if (p.diveTurn == TurnDuringDive.YES) {
-            return testCT(.02, 1, true, roughOptimizeFCTFalling);
+            return testCT(.01, 1, true, roughOptimizeFCTFalling, useCurrentAngles);
         }
         else
-            return testCT(.1, 1, false, roughOptimizeFCTFalling);
+            return testCT(.1, 1, false, roughOptimizeFCTFalling, useCurrentAngles);
     }
 
     //public int testCT(double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean diveTurn) {
-    public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn, boolean roughOptimizeFCTFalling) {
-        p.vectorAngle = 90;
-        p.diveFirstFrameDecel = 0;
+    public int testCT(double edgeCBAngleIncrement, double vectorAngleIncrement, boolean diveTurn, boolean roughOptimizeFCTFalling, boolean useCurrentAngles) {
+        if (!useCurrentAngles) {
+            p.vectorAngle = 90;
+            p.diveFirstFrameDecel = 0;
+        }
         maximizer = VectorCalculator.getMaximizer();
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
             maximizer.edgeCBMin = 0;
-            p.diveCapBounceAngle = 0;
+            if (!useCurrentAngles)
+                p.diveCapBounceAngle = Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
         }
         else {
             VectorCalculator.setProperty(Parameter.dive_turn, "No");
-            maximizer.edgeCBMin = 0;
-            p.diveCapBounceAngle = 0;
+            maximizer.edgeCBMin = Solver.EDGE_CB_MIN_NO_DIVE_TURN;
             maximizer.edgeCBMax = Solver.EDGE_CB_MAX_NO_DIVE_TURN;
+            if (!useCurrentAngles)
+                p.diveCapBounceAngle = 0;
         }
         maximizer.maximize_HCT_limit = Solver.MAXIMIZE_HCT_LIMIT;
         //maximizer.firstFrameDecelIncrement = firstFrameDecelIncrement;
@@ -274,7 +282,30 @@ public class DiveSolver implements SolverInterface {
         maximizer.roughCTRotations = true;
         bestDisp = maximizer.maximize();
         int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
+        if (ctType != -1)
+            this.diveTurn = diveTurn;
         return ctType;
+    }
+
+    public double test() {
+        maximizer = VectorCalculator.getMaximizer();
+        if (!diveTurn && !p.twoPlayerMode) {
+            maximizer.edgeCBMin = Solver.EDGE_CB_MIN_NO_DIVE_TURN;
+            maximizer.edgeCBMax = Solver.EDGE_CB_MAX_NO_DIVE_TURN;
+        }
+        p.vectorAngle = 90;
+        p.diveCapBounceAngle = diveTurn ? Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : 0;
+        maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
+        maximizer.maximize();
+        if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            maximizer.recalculateDisps(true);
+            maximizer.adjustToGivenAngle();
+            return maximizer.bestDisp;
+        }
+        else {
+            Debug.println(4, "Not actually possible");
+            return 0.0;
+        }
     }
 
     public double getFinalYPos(VectorMaximizer maximizer) {

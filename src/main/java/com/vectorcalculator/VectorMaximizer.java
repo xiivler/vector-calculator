@@ -31,7 +31,7 @@ public class VectorMaximizer {
 	int[] frames;
 
 	double diveCapBounceAngle; //in degrees
-	double vectorAngle; //in radians
+	double vectorAngle; //in degrees
 	int ctType = Movement.MCCTU;
 	double firstFrameDecel = 0; //for the dive before the cap bounce
 	
@@ -366,12 +366,12 @@ public class VectorMaximizer {
 	//angle is the angle of the dive
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
 	//vectorAngle is how many degrees to the side are being held in order to vector the cap throw
-	private boolean setCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {
+	private boolean setCapThrowHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {		
 		if (!optimizeCT1Falling && (angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle))
 			return setOptimalHoldingAngles(motion, angle, angleDiff, vectorAngle, frames);
 		else if (angleDiff == OPTIMAL_ANGLE_DIFF)
 			angleDiff = Math.toRadians(diveCapBounceAngle);
-		
+
 		double angleDiffDeg = Math.toDegrees(angleDiff);
 		double throwAngle = angle + angleDiff;
 		double diveAngle = angle;
@@ -655,6 +655,7 @@ public class VectorMaximizer {
 			int remainingFrames = frames - 1;
 			if (trueMaxRotation < angleDiffDeg) {
 				error = "Error: Edge CB angle too large";
+				motion.setHoldingAngle(diveAngle);
 				return false;
 			}
 			double firstVelocity = 0; //velocity on the frame we've gotten back to the initial throw angle and are moving toward the dive bounce angle
@@ -1067,7 +1068,6 @@ public class VectorMaximizer {
 		int firstCountervectorFrame = Math.max(motion.frames - totalCountervectorFrames, 0); //if totalHCTCountervectorFrames is large enough, it will overwrite the last forward accel frame which is intentional
 
 		//number of frames the variable holding angle is applied for
-		//TODO this is what should be calculated INSTEAD of the angle
 		
 		for (int i = 0; i < (int) forwardAccelFrames; i++)
 			holdingAngles[i] = 0;
@@ -1305,6 +1305,9 @@ public class VectorMaximizer {
 	}
 	
 	public double maximize() {
+		Debug.println(4, "Vector Angle: " + p.vectorAngle);
+		Debug.println(4, "Dive CB Angle: " + p.diveCapBounceAngle);
+
 		if (Debug.debug >= 0)
 			return maximize(MAX_TRY);
 		try {

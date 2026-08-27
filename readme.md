@@ -16,6 +16,8 @@ Vector Calculator has three modes: `Solve`, `Calculate (Solve Dives)`, and `Calc
 
 * `Calculate`: Determines optimal inputs for each piece of movement given the durations the user entered
 
+Running `Solve` usually takes the longest. Once you have solved for the optimal durations using `Solve` mode, if you want to make changes that would not affect the durations (ex. adjust the target angle or the initial coordinates), you should switch to `Calculate (Solve Dives)` mode for faster calculation.
+
 ## Properties
 Vector Calculator has several properties that can be configured by the user. Some of these are only visible depending on the settings of other properties. There are two sets of properties: `General Properties` and `Midair Properties`.
 

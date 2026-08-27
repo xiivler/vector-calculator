@@ -462,7 +462,7 @@ public class Solver implements SolverInterface {
             final_y_heights = getFinalYHeights(initialMaximizer);
         }
 
-        p.maximizeYank = true;
+        p.maximizeYank = userMaximizeYank;
 
         VectorCalculator.addPreset(preset);
         initialMaximizer = VectorCalculator.getMaximizer();         
@@ -496,7 +496,7 @@ public class Solver implements SolverInterface {
         // System.out.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
         // System.out.println("Ballpark Y Heights: " + Arrays.toString(y_heights));
 
-        System.out.println("Ballpark Durations: " + Arrays.toString(durations));
+        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
         // System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         // System.out.println("Ballpark Y Height: " + y);
 
@@ -571,7 +571,7 @@ public class Solver implements SolverInterface {
                     testDurations[diveCapBounceIndex - 1] = diveDuration;
                     setDurations(testDurations);
                     boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
-                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .02, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .01, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                         //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                         //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
                         //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
@@ -650,6 +650,7 @@ public class Solver implements SolverInterface {
             Debug.println(2, "Best Results " + i + ": " + bestResults.get(i).d + ", " + testDisp);
             Debug.println(Arrays.toString(testDurations));
         }
+        Debug.println(4, "Best being tested: ");
         test(bestDurations, true, true, true, hasRCV); //run again to bring the best result to present and also to adjust the initial angle in the case of an RCV (and do this with full rotation accuracy)
 
         Debug.println(3, "Best Results Range Needed: " + (originalReportedDisp - bestReportedDisp));
@@ -789,6 +790,7 @@ public class Solver implements SolverInterface {
     public int testCT(int throwType, double edgeCBAngleIncrement, double vectorAngleIncrement, boolean zeroAngleTolerance, boolean diveTurn) {
     //public int testCT(int throwType, double edgeCBAngleIncrement, double firstFrameDecelIncrement, boolean zeroAngleTolerance, boolean diveTurn) {
         p.vectorAngle = 90;
+        p.diveFirstFrameDecel = 0;
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
             p.diveCapBounceAngle = DEFAULT_EDGE_CB_ANGLE_DIVE_TURN;
@@ -807,7 +809,6 @@ public class Solver implements SolverInterface {
         //ballparkMaximizer.maxRCVNudges = 5;
         ballparkMaximizer.maximize_HCT_limit = MAXIMIZE_HCT_LIMIT;
         ballparkMaximizer.vectorAngleIncrement = vectorAngleIncrement;
-        p.diveFirstFrameDecel = 0;
         if (zeroAngleTolerance && userTolerance < .1)
             p.diveCapBounceTolerance = 0;
         ballparkMaximizer.edgeCBAngleIncrement = edgeCBAngleIncrement;
@@ -1070,7 +1071,7 @@ public class Solver implements SolverInterface {
                 disp = maximizer.bestDisp;
             }
             else {
-                Debug.println("Not actually possible: " + Arrays.toString(testDurations));
+                Debug.println(5, "Not actually possible: " + Arrays.toString(testDurations));
                 return 0.0;
             }
         }
