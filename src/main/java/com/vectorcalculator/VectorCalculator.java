@@ -1325,56 +1325,56 @@ public class VectorCalculator extends JPanel {
 					p.reverseBonk = false;
 					p.upwarp = 40;
 					p.solveUpwarp = false;
-					preset = new int[][]{{P2CB, 54}, {DIVE, 25}};
+					preset = new int[][]{{P2CB, 55}, {DIVE, 24}};
 				}
 				else if (p.twoPlayerMode) {
 					p.reverseBonk = false;
 					p.upwarp = 40;
 					p.solveUpwarp = false;
-					preset = new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {DIVE, 25}};
+					preset = new int[][]{{FT, 30}, {DIVE, 24}, {CB, 41}, {DIVE, 24}};
 				}
 				else
-					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {DIVE, 25}};
+					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 26}, {CB, 42}, {DIVE, 25}};
 				break;
 			case "Spinless":
 				if (p.midairVault)
-					preset = new int[][]{{P2CB, 54}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{P2CB, 55}, {MCCT, 32}, {DIVE, 25}};
 				else if (p.twoPlayerMode)
-					preset = new int[][]{{FT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{FT, 31}, {DIVE, 24}, {CB, 43}, {MCCT, 31}, {DIVE, 25}};
 				else
-					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 30}, {DIVE, 25}, {CB, 44}, {MCCT, 32}, {DIVE, 26}};
 				break;
 			case "Simple Tech":
 				if (p.midairVault)	
-					preset = new int[][]{{P2CB, 54}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					preset = new int[][]{{P2CB, 54}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 				else if (p.twoPlayerMode)
-					preset = new int[][]{{FT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					preset = new int[][]{{FT, 31}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
 				else
-					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
+					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 30}, {DIVE, 25}, {CB, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 26}};
 				break;
 			case "Simple Tech Rainbow Spin First":
 				if (p.twoPlayerMode)
-					preset = new int[][]{{RS, 32}, {FT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+					preset = new int[][]{{RS, 32}, {FT, 31}, {DIVE, 25}, {CB, 40}, {MCCT, 32}, {DIVE, 25}};
 				else
-					preset = new int[][]{{RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 43}, {MCCT, 30}, {DIVE, 25}};
+					preset = new int[][]{{RS, 32}, {MCCT, 33}, {DIVE, 23}, {CB, 42}, {MCCT, 30}, {DIVE, 25}};
 				break;
 			case "MCCT First":
 				if (p.twoPlayerMode)
-					preset = new int[][]{{FT, 30}, {RS, 32}, {FT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{FT, 31}, {RS, 32}, {FT, 31}, {DIVE, 24}, {CB, 42}, {MCCT, 32}, {DIVE, 24}};
 				else if (p.tripleThrow == TripleThrow.NO)
-					preset = new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 24}};
 				else
-					preset = new int[][]{{HTT, 30}, {RS, 32}, {MCCT, 28}, {DIVE, 26}, {CB, 42}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{HTT, 31}, {RS, 32}, {MCCT, 28}, {DIVE, 25}, {CB, 44}, {MCCT, 31}, {DIVE, 25}};
 				break;
 			case "CB First":
 				if (p.midairVault)
-					preset = new int[][]{{P2CB, 54}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+					preset = new int[][]{{P2CB, 55}, {FT, 29}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
 				else if (p.twoPlayerMode)
-					preset = new int[][]{{FT, 28}, {DIVE, 26}, {CB, 36}, {FT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+					preset = new int[][]{{FT, 31}, {DIVE, 24}, {CB, 42}, {FT, 31}, {RS, 32}, {MCCT, 32}, {DIVE, 24}};
 				else if (p.tripleThrow == TripleThrow.NO)
-					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 28}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
+					preset = new int[][]{{p.tripleThrowDiveCB == TripleThrow.NO ? MCCT : TT, 30}, {DIVE, 25}, {CB, 42}, {HMCCT, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}};
 				else
-					preset = new int[][]{{MCCT, 28}, {DIVE, 26}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 30}, {DIVE, 24}};
+					preset = new int[][]{{MCCT, 30}, {DIVE, 25}, {CB, 36}, {HTT, 30}, {RS, 32}, {MCCT, 31}, {DIVE, 25}};
 				break;
 			case "None":
 			default:
