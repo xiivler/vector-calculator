@@ -111,7 +111,7 @@ public class Solver implements SolverInterface {
     boolean success = false;
 
     boolean userMaximizeYank;
-    double userFinalDiveAngle;
+    //double userFinalDiveAngle;
 
     ArrayList<DoubleIntArray> bestResults;
 
@@ -359,6 +359,7 @@ public class Solver implements SolverInterface {
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     success = false;
                     error = "Error: Could not avoid ground/liquid";
+                    p.maximizeYank = userMaximizeYank;
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -370,6 +371,7 @@ public class Solver implements SolverInterface {
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
                     error = "Error: Could not avoid ground/liquid";
+                    p.maximizeYank = userMaximizeYank;
                     return false;
                 }
                 presetMaximizer.movementFrames.set(maximizer_initialMovementIndex, p.initialFrames);
@@ -439,6 +441,7 @@ public class Solver implements SolverInterface {
                     error = "Error: Could not avoid ground/liquid";
                 else
                     error = "Error: Could not reach target height";
+                p.maximizeYank = userMaximizeYank;
                 return false;
             }
             //y -= y_vels[lastFrames[worstEfficiencyIndex]];
@@ -606,6 +609,7 @@ public class Solver implements SolverInterface {
         }
 
         if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+            p.maximizeYank = userMaximizeYank;
             return false;
         }
 
@@ -628,6 +632,7 @@ public class Solver implements SolverInterface {
         Debug.println(Arrays.toString(bestDurations));
 
         if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+            p.maximizeYank = userMaximizeYank;
             return false;
         }
 
@@ -667,10 +672,12 @@ public class Solver implements SolverInterface {
         if (bestDisp == 0) {
             success = false;
             error = "Error: Could not reach target height or could not bounce on cappy";
+            p.maximizeYank = userMaximizeYank;
             return false;
         }
 
         if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+            p.maximizeYank = userMaximizeYank;
             return false;
         }
 

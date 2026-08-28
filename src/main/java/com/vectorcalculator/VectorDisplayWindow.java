@@ -482,6 +482,10 @@ public class VectorDisplayWindow {
 			else if (index == maximizer.variableMovement2Index && maximizer.hasVariableCapThrow2) {
 				finalCapThrowFrame = row;
 			}
+			else if (motion.movement.movementType.equals("Crouch")) {
+				for (int i = 1; i < motion.frames; i++)
+					motion.movement.inputs1.add(Inputs.ZL);
+			}
 			else if (motion.movement.movementType.equals("Reverse Bonk")) {
 				double[] cappyPos = maximizer.getFinalCapThrowPosition();
 				double[] marioPos = {simpleMotions[index - 1].dispX, simpleMotions[index - 1].dispY, simpleMotions[index - 1].dispZ};
