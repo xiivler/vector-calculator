@@ -23,7 +23,7 @@ public class SimpleVector extends SimpleMotion {
 	
 	int vectorFrames;
 
-	public static final boolean FAST_RELATIVE_ROTATIONS = true;
+	public static final boolean FAST_RELATIVE_ROTATIONS = false; //does not actually save much time and is less accurate
 	
 	public SimpleVector(Movement movement, boolean rightVector, int frames) {
 		
@@ -359,22 +359,23 @@ public class SimpleVector extends SimpleMotion {
 
 		int i = 0;
 		//when holding forwards, rotate until facing the forward direction
-		if (optimalForwardAccel) { //TODO add fast turnaround, but that shouldn't ever occur in the conditions in which we are using this
+		if (optimalForwardAccel) {
 			while (i < frames - vectorFrames) {
-				if (rotation < Math.toRadians(1) && rotation > Math.toRadians(-1))
-					angularVelocity -= Math.toRadians(0.6);
-				if (rotation > 0) {
-					angularVelocity -= angularAccel;
-					if (angularVelocity < -maxAngVel)
-						angularVelocity = -rotationalSpeedAfterMax;
+				if (Math.abs(rotation) >= Math.toRadians(135))
+					angularVelocity = Math.toRadians(25);
+				else {
+					if (rotation < Math.toRadians(1) && rotation > Math.toRadians(-1))
+						angularVelocity -= Math.toRadians(0.6);
+					else if ((!Movement.isMidairCapThrow(movement.movementType) && angularVelocity >= maxAngVel - ROTATION_ERROR) || angularVelocity > maxAngVel) { //cap throws don't quite reach max ang vel, so they don't get this slowdown
+						angularVelocity -= Math.toRadians(2.5);
+					}
+					else {
+						angularVelocity = Math.min(angularVelocity + angularAccel, maxAngVel);
+					}
 				}
-				else if (rotation < 0) {
-					angularVelocity += angularAccel;
-					if (angularVelocity > maxAngVel)
-						angularVelocity = rotationalSpeedAfterMax;
-				}
-						
-				rotation += angularVelocity;
+				
+				if (rotation != 0)
+					rotation += rotation < 0 ? angularVelocity : -angularVelocity;
 
 				if (i > 0 && ((rotations[i - 1] <= 0 && 0 <= rotation) || (rotation <= 0 && 0 <= rotations[i - 1]))) {
 					rotation = 0;
@@ -387,17 +388,31 @@ public class SimpleVector extends SimpleMotion {
 		//now keep rotating until we reach the angle that we're holding
 		if (holdingAngle != NO_ANGLE) {
 			while (i < frames) {
-				if (angularVelocity < 0) {
-					angularVelocity = 0;
+				if (Math.abs(rotation - holdingAngle) >= Math.toRadians(135))
+					angularVelocity = Math.toRadians(25);
+				else {
+					if (angularVelocity < 0) {
+						angularVelocity = 0;
+					}
+					if (Math.abs(rotation - holdingAngle) < Math.toRadians(1))
+						angularVelocity -= Math.toRadians(0.6);
+					else if ((!Movement.isMidairCapThrow(movement.movementType) && angularVelocity >= maxAngVel - ROTATION_ERROR) || angularVelocity > maxAngVel) { //cap throws don't quite reach max ang vel, so they don't get this slowdown
+						angularVelocity -= Math.toRadians(2.5);
+					}
+					else {
+						angularVelocity = Math.min(angularVelocity + angularAccel, maxAngVel);
+					}
 				}
-				angularVelocity += angularAccel;
-				if (angularVelocity > maxAngVel) {
-					angularVelocity = rotationalSpeedAfterMax;
-				}
+				//System.out.println(Math.toDegrees(angularVelocity));
+
 				rotation += angularVelocity;
 
-				if (rotation > holdingAngle) {
+				if (i > 0 && ((rotations[i - 1] <= holdingAngle && holdingAngle <= rotation) || (rotation <= holdingAngle && holdingAngle <= rotations[i - 1]))) {
 					rotation = holdingAngle;
+					for (int j = i; j < frames; j++) {
+						rotations[j] = holdingAngle;
+					}
+					break;
 				}
 				rotations[i] = rotation;
 				i++;

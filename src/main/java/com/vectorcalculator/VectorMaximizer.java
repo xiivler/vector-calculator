@@ -867,10 +867,10 @@ public class VectorMaximizer {
 		boolean[] holdingMinRadius = new boolean[frames];
 		double[] rotations = angleCalculator.calcRelativeRotations();
 
-		// for (int z = 0; z < frames; z++) {
-		// 	if (Debug.debug == 6)
-		// 		System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
-		// }
+		for (int z = 0; z < frames; z++) {
+			if (Debug.debug == 7)
+				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+		}
 		// Debug.println(1, "");
 
 		//int framesToFullRotation = angleCalculator.calcFramesToFullRotation();

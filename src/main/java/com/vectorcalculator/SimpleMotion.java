@@ -11,7 +11,6 @@ public class SimpleMotion {
 	
 	double angularAccel;
 	double maxAngVel;
-	double rotationalSpeedAfterMax;
 	
 	Movement movement;
 	
