@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Debug {
     
-    public static int debug = 2; //-1 is no debug, 0 is print all debug statements
+    public static int debug = 6; //-1 is no debug, 0 is print all debug statements
 
     static int index = 0;
 
