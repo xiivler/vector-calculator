@@ -490,7 +490,7 @@ public class VectorDisplayWindow {
 				double[] cappyPos = maximizer.getFinalCapThrowPosition();
 				double[] marioPos = {simpleMotions[index - 1].dispX, simpleMotions[index - 1].dispY, simpleMotions[index - 1].dispZ};
 
-				double reverseBonkDistance = 120; //how far cappy should be from Mario
+				double reverseBonkDistance = p.onMoon ? 120 : 130; //how far cappy should be from Mario
 
 				double reverseBonkAngle = simpleMotions[index].initialAngle;
 
