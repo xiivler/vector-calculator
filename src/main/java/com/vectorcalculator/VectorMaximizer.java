@@ -997,7 +997,7 @@ public class VectorMaximizer {
 			if (totalForwardAccelFrames + 1 < frames)
 				holdingAngles[totalForwardAccelFrames + 1] = SimpleMotion.NORMAL_ANGLE - firstCounterrotation;
 			for (int i = totalForwardAccelFrames + 2; i < firstAdditionalRotationFrame; i++) {
-				holdingAngles[i] = holdingAngles[i - 1] - motion.angularAccel;
+				holdingAngles[i] = holdingAngles[i - 1] - TURN_COUNTERROTATION;
 				//currentRotation += Math.toRadians(0.3);
 			}
 			for (int i = Math.max(totalForwardAccelFrames + 2, firstAdditionalRotationFrame); i < frames - turnaroundFrames - neutralFrames; i++) {
