@@ -1358,7 +1358,7 @@ public class VectorCalculator extends JPanel {
 				break;
 			case "MCCT First":
 				if (p.twoPlayerMode)
-					preset = new int[][]{{FT, 31}, {RS, 32}, {FT, 31}, {DIVE, 24}, {CB, 42}, {MCCT, 32}, {DIVE, 24}};
+					preset = new int[][]{{FT, 31}, {RS, 32}, {MCCT, 31}, {DIVE, 24}, {CB, 42}, {MCCT, 32}, {DIVE, 24}};
 				else if (p.tripleThrow == TripleThrow.NO)
 					preset = new int[][]{{HMCCT, 36}, {RS, 32}, {MCCT, 30}, {DIVE, 25}, {CB, 43}, {MCCT, 31}, {DIVE, 24}};
 				else

@@ -444,7 +444,7 @@ public class VectorDisplayWindow {
 						duration += simpleMotions[index + 1].frames;
 				if (cbBefore && duration <= 40) {
 					ArrayList<Integer> inputs = new ArrayList<Integer>();
-					int framesWait = Math.max(2, 31 - duration); //make sure to press B early, earlier if the cap throw is very short
+					int framesWait = Math.max(2, 35 - duration); //make sure to press B early, earlier if the cap throw is very short
 					inputs.add(Inputs.P2B);
 					for (int i = 0; i < framesWait; i++) {
 						inputs.add(Inputs.NONE);
@@ -472,6 +472,12 @@ public class VectorDisplayWindow {
 					inputs.get(row - 1).P2_r = 1;
 					inputs.get(row - 1).P2_theta = reduceAngle(targetAngleAbsolute - cameraAngle + Math.PI / 2);
 				}
+			}
+			else if (index == maximizer.variableCapThrow1Index && p.twoPlayerMode && p.midairPreset.equals("MCCT First")) { //TODO make this more robust, or make it into a homing throw?
+				for (int i = 0; i < p.hctHomingFrame; i++) {
+					motion.movement.inputs1.add(Inputs.NONE);
+				}
+				motion.movement.inputs1.add(p.rightVector ? Inputs.MR : Inputs.ML);
 			}
 			else if (index == maximizer.variableMovement2Index && maximizer.hasVariableCapThrow2) {
 				finalCapThrowFrame = row;
