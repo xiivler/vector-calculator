@@ -127,7 +127,7 @@ public class ComplexNonvector extends SimpleMotion {
 	
 	public double calcFinalRotation() {
 		if (movement.movementType.equals("Backflip"))
-			return initialRotation; //TODO muight be wrong
+			return initialRotation;
 		calcFinalAngle();
 		finalRotation = finalAngle;
 		return finalRotation;
