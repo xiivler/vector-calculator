@@ -423,9 +423,9 @@ public class Solver implements SolverInterface {
                 if (canSubtractFrame(i, durations[i]) && efficiency < worstEfficiency) {
                     if (i == secondDiveIndex && !secondGPHeightCorrect) //don't remove frames from final dive until second GP height is correct
                         continue;
-                    if (i == firstCTIndex && durations[i] <= 28) //28 and 21 are the best for high movement
+                    if (i == firstCTIndex && durations[i] <= 28 && !p.twoPlayerMode) //28 and 21 are the best for high movement for 1P mode
                         continue;
-                    if (i == firstDiveIndex && durations[i] <= 21)
+                    if (i == firstDiveIndex && durations[i] <= 21 && !p.twoPlayerMode)
                         continue;
                     worstEfficiency = efficiency;
                     worstEfficiencyIndex = i;
@@ -692,6 +692,8 @@ public class Solver implements SolverInterface {
         if (i == rainbowSpinIndex && frames <= 32)
             return false;
         if (i == homingMCCTIndex && frames <= (p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame))
+            return false;
+        if (i == homingFTIndex && frames <= 23)
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
