@@ -332,7 +332,10 @@ public class VectorMaximizer {
 				double prevRotation = motionGroup[i - 1].calcFinalRotation();
 				if (Movement.isMidairCapThrow(motionGroup[i].movement.movementType)) {
 					//System.out.println(i + " holding angle " + motionGroup[i].holdingAngle);
-					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + (((SimpleVector) motionGroup[i]).rightVector ? -1 : 1) * motionGroup[i].holdingAngle);
+					if (motionGroup[i].holdingAngle != SimpleMotion.NO_ANGLE)
+						motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + (((SimpleVector) motionGroup[i]).rightVector ? -1 : 1) * motionGroup[i].holdingAngle);
+					else
+						motionGroup[i].setInitialRotation(prevRotation);
 				}
 				else if (motionGroup[i].movement.movementType.equals("Reverse Bonk"))
 					motionGroup[i].setInitialRotation(motionGroup[i].initialAngle + Math.PI);
@@ -1675,7 +1678,7 @@ public class VectorMaximizer {
 				if (variableCapThrowVector.holdingAngle != SimpleMotion.NO_ANGLE)
 					variableCapThrowVector.setInitialRotation(variableCapThrowVector.initialAngle + (variableCapThrowVector.rightVector ? -variableCapThrowVector.holdingAngle : variableCapThrowVector.holdingAngle));
 				else
-					variableCapThrowVector.setInitialRotation(variableCapThrowVector.initialAngle);
+					variableCapThrowVector.setInitialRotation(motions[variableCapThrowIndex - 1].finalRotation);
 				double ctFinalRotation;
 				if (roughCTRotations) {
 					if (variableCapThrowIndex == variableCapThrow1Index)
