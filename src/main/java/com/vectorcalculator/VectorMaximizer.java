@@ -2306,7 +2306,7 @@ public class VectorMaximizer {
 				motions[i].setInitialAngle(bestAngle2Adjusted + (p.rightVector ? -1 : 1) * Math.toRadians(p.finalDiveAngle));
 			}
 			else if (p.reverseBonk && i == motions.length - 1) {
-				motions[i].setInitialAngle(motions[i - 1].finalAngle + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle + p.finalDiveAngle));
+				motions[i].setInitialAngle(motions[i - 1].finalAngle + (p.rightVector ? -1 : 1) * Math.toRadians(p.reverseBonkAngle));
 			}
 			else if (i > 0) {
 				motions[i].setInitialAngle(motions[i - 1].finalAngle);

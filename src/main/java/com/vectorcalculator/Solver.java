@@ -616,7 +616,7 @@ public class Solver implements SolverInterface {
         bestResults.add(new DoubleIntArray(0, durations));
 
         //now test adding and subtracting some frames to get a better result
-        p.finalDiveAngle = userFinalDiveAngle;
+        //p.finalDiveAngle = userFinalDiveAngle;
         p.durationFrames = true;
         DoubleIntArray best = test(durations, delta, 0, p.y0);
         bestDurations = best.intArray;
