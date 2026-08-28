@@ -766,6 +766,8 @@ public class VectorDisplayWindow {
 			}
 		}
 		String line = identicalLineCount + "\t" + currentInputs.toTSV();
+		if (Debug.debug >= 0)
+			line += "\n-1\t+"; //pause at end to test position
 		if (toClipboard) {
 			clipboardString += line;
 			clipboard.setContents(new StringSelection(clipboardString), null);

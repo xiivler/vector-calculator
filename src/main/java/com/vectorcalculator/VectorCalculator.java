@@ -58,8 +58,6 @@ public class VectorCalculator extends JPanel {
 	
 	public static final String VERSION = "2.2.0";
 
-	public static boolean DEBUG_VALUE = true;
-
 	public static final int WINDOW_WIDTH = 550;
 	public static final int PROPERTIES_TABLE_HEIGHT = 500;
 	public static final int MIDAIR_PANEL_HEIGHT = 300;
@@ -217,7 +215,7 @@ public class VectorCalculator extends JPanel {
 			if (p.cameraType == CameraType.CUSTOM)
 				params.add(Parameter.custom_camera_angle);
 
-			if (DEBUG_VALUE) {
+			if (Debug.debug >= 0) {
 				params.add(Parameter.debug_value);
 			}
 		}
