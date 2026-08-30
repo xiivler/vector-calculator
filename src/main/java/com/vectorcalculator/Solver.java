@@ -460,7 +460,10 @@ public class Solver implements SolverInterface {
             VectorCalculator.addPreset(preset);
             initialMaximizer = VectorCalculator.getMaximizer();
             if (iterations % REFRESH_RATE == 0 || (finalCapThrowIndex >= 0 && durations[finalCapThrowIndex] == 24)) { //recalculate efficiency every REFRESH_RATE times
+                initialMaximizer.maxRCVNudges = 5;
+                initialMaximizer.maxRCVFineNudges = 1;
                 calcFrameByFrame(initialMaximizer, false);
+                Debug.println(3, iterations);
             }
             final_y_heights = getFinalYHeights(initialMaximizer);
         }
