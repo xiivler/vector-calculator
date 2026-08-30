@@ -395,7 +395,7 @@ public class Solver implements SolverInterface {
 
         Debug.println(Arrays.toString(final_y_heights));
 
-        Debug.println(3, "Initial Durations: " + Arrays.toString(durations));
+        Debug.println(2, "Initial Durations: " + Arrays.toString(durations));
         Debug.println("Initial Last Frames: " + Arrays.toString(lastFrames));
 
         //remove the frames with the weakest efficiencies until Mario's height is above the target y position
@@ -1028,14 +1028,14 @@ public class Solver implements SolverInterface {
             return 0.0;
         }
         //if (p.groundTypeFirstGP != GroundType.NONE || p.groundTypeCB != GroundType.NONE || p.groundTypeSecondGP != GroundType.NONE) {
-        if (!fullAccuracy) {
+        // if (!fullAccuracy) {
             double dispY = validateHeights(testDurations, maximizer);
             if (dispY == FALSE) {
                 return 0.0;
             }
             //}
             bestYDisp = dispY; //for debugging
-        }
+        // }
 
         boolean diveTurn = diveTurns != null ? diveTurns[ctDuration][diveDuration] : (p.diveTurn != TurnDuringDive.NO);
         if (diveTurn) {
