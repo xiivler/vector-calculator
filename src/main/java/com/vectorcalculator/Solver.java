@@ -499,7 +499,7 @@ public class Solver implements SolverInterface {
         // System.out.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
         // System.out.println("Ballpark Y Heights: " + Arrays.toString(y_heights));
 
-        Debug.println("Ballpark Durations: " + Arrays.toString(durations));
+        Debug.println(2, "Ballpark Durations: " + Arrays.toString(durations));
         // System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         // System.out.println("Ballpark Y Height: " + y);
 
@@ -572,12 +572,11 @@ public class Solver implements SolverInterface {
                     }
                     testDurations[diveCapBounceIndex - 2] = ctDuration;
                     testDurations[diveCapBounceIndex - 1] = diveDuration;
-                    setDurations(testDurations);
+                    setDurations(testDurations, p.tripleThrow == TripleThrow.YES);
                     boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
                     if (dtAllowed != TurnDuringDive.NO && testCT(-1, .01, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                         //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
-                        //VectorCalculator.setProgressText("Possible: " + ctDuration + " " + diveDuration);
-                        //System.out.println("Possible: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
+                        Debug.println(2, "Possible CT/Dive: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
                         ctTypes[ctDuration][diveDuration] = ctType;
                         //diveDecels[ctDuration][diveDuration] = diveDecel;
                         vectorAngles[ctDuration][diveDuration] = vectorAngle;
@@ -590,7 +589,6 @@ public class Solver implements SolverInterface {
                         vectorAngles[ctDuration][diveDuration] = vectorAngle;
                         edgeCBAngles[ctDuration][diveDuration] = edgeCBAngle;
                         diveTurns[ctDuration][diveDuration] = false;
-                        //Debug.println("Wahoo");
                     }
                     else {
                         ctTypes[ctDuration][diveDuration] = -1;
@@ -608,7 +606,7 @@ public class Solver implements SolverInterface {
             //Debug.println(Arrays.toString(rbMaxUpwarps));
         }
 
-        if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
+        if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
             p.maximizeYank = userMaximizeYank;
             return false;
         }
@@ -625,11 +623,11 @@ public class Solver implements SolverInterface {
         DoubleIntArray best = test(durations, delta, 0, p.y0);
         bestDurations = best.intArray;
         p.maximizeYank = userMaximizeYank; //now test with RS optimization for full accuracy, be careful to also include this in CalculateThread.restest()
-        bestDisp = test(bestDurations, true, false, false, false);
+        bestDisp = test(bestDurations, true, false, !p.onMoon, false);
         //Debug.println(test(best.intArray));
 
-        Debug.println("Best Results " + 0 + ": " + bestDisp);
-        Debug.println(Arrays.toString(bestDurations));
+        Debug.println(2, "Best Results " + 0 + ": " + bestDisp);
+        Debug.println(2, Arrays.toString(bestDurations));
 
         if (VectorCalculator.cancelCalculating &&  VectorCalculator.calculateThread != null) {
             p.maximizeYank = userMaximizeYank;
@@ -640,8 +638,6 @@ public class Solver implements SolverInterface {
 
         double originalReportedDisp = best.d;
         double bestReportedDisp = best.d;
-
-        Debug.println(2, "Best Results 0: " + originalReportedDisp + ", " + bestDisp);
 
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
@@ -1018,7 +1014,11 @@ public class Solver implements SolverInterface {
             diveDuration = testDurations[diveCapBounceIndex - 1];
         }
 
-        setDurations(testDurations);
+        boolean tt = false;
+        if (ctTypes != null) {
+            tt = Movement.isTT(ctTypes[ctDuration][diveDuration]);
+        }
+        setDurations(testDurations, tt);
         getUpwarp(testDurations[testDurations.length - 1]);
         maximizer = VectorCalculator.getMaximizer();
         if (maximizer == null) {
@@ -1297,12 +1297,16 @@ public class Solver implements SolverInterface {
     }
 
     //sets Vector Calculator to be using the current durations
-    public void setDurations(int[] testDurations) {
+    public void setDurations(int[] testDurations, boolean tt) {
         p.initialFrames = testDurations[0];
         VectorCalculator.setProperty(Parameter.initial_frames, testDurations[0]);
         int[][] midairs = new int[p.midairs.length][p.midairs[0].length];
         for (int i = 0; i < preset.length; i++) {
             midairs[i][0] = p.midairs[i][0];
+            if (midairs[i][0] == VectorCalculator.TT && !tt)
+                midairs[i][0] = VectorCalculator.MCCT;
+            else if (midairs[i][0] == VectorCalculator.MCCT && tt)
+                midairs[i][0] = VectorCalculator.TT;
             midairs[i][1] = testDurations[i + 1];
         }
         //Debug.printArray(midairs);
