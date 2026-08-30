@@ -420,7 +420,6 @@ public class VectorDisplayWindow {
 			}
 			else if (motion.movement.movementType.equals("Homing Triple Throw") && motion.frames >= 24 && simpleMotions[index + 1].frames >= 6) { //home later
 				ArrayList<Integer> inputs = motion.movement.inputs1;
-				Debug.println("Wah");
 				inputs.clear();
 				inputs.add(Inputs.MU);
 				for (int i = 0; i < 8; i++) {
@@ -466,6 +465,15 @@ public class VectorDisplayWindow {
 								motion.movement.inputs1.add(Inputs.NONE);
 							motion.movement.inputs1.add(Inputs.P2Y);
 						}
+					}
+					else if (duration == 23) { //send cappy out 1f early
+						ArrayList<Integer> inputs = new ArrayList<Integer>();
+						inputs.add(Inputs.P2Y);
+						inputs.add(Inputs.NONE);
+						inputs.add(Inputs.Y);
+						inputs.add(Inputs.P2Y);
+						motion.movement.inputs1 = inputs;
+						motion.movement.inputOffset--;
 					}
 					else
 						motion.movement.inputs1.add(Inputs.P2Y); //this button press returns cappy ASAP

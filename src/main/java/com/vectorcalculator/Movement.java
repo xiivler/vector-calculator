@@ -690,8 +690,8 @@ public class Movement {
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);
 			}
-			else if (movementType.equals("Fakethrow RCV")) {
-				displayName = "Fakethrow RCV";
+			else if (movementType.equals("Fake Throw RCV")) {
+				displayName = "Fake Throw RCV";
 				minFrames = 34;
 				inputs1.add(Inputs.X);
 				inputs2.add(Inputs.B);

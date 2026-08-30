@@ -1096,7 +1096,7 @@ public class VectorCalculator extends JPanel {
 	static String[] initialMovementCategories = {"Jump", "RCV", "Roll", "Fork Flick", "Bounce", "Misc", "Optimal Distance Motion", "None"};
 	static String[][] initialMovementNames =
 		{{"Single Jump", "Double Jump", "Triple Jump", "Vault", "Cap Return Jump", "Long Jump", "Ground Pound Jump", "Backflip", "Sideflip", "Spin Jump"},
-		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fakethrow RCV", "Optimal Distance RCV"},
+		{"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Downthrow RCV", "Double Throw RCV", "Spinthrow RCV", "Triple Throw RCV", "Fake Throw RCV", "Optimal Distance RCV"},
 		{"Ground Pound Roll", "Crouch Roll", "Crouch Roll (No Vector)", "Roll Boost", "Roll Boost (No Vector)"},
 		{"Horizontal Pole/Fork Flick", "Motion Horizontal Pole/Fork Flick", "Motion Vertical Pole/Fork Flick"},
 		{"Small NPC Bounce", "Large NPC Bounce", "Ground Pound Object/Enemy Bounce", "Bouncy Object Bounce", "Flower Bounce"},
@@ -1193,8 +1193,9 @@ public class VectorCalculator extends JPanel {
 					if (currentDuration <= 36)
 						movementModel.setValueAt(36, i, 1);
 				}
-				else if (currentDuration < p.hctCapReturnFrame);
+				else if (currentDuration < p.hctCapReturnFrame) {
 					movementModel.setValueAt(p.hctCapReturnFrame, i, 1);
+				}
 			}
 		}
 	}
@@ -1216,8 +1217,6 @@ public class VectorCalculator extends JPanel {
 			p.hctDirection = p.onMoon ? (p.rightVector ? HctDirection.RIGHT : HctDirection.LEFT) : HctDirection.DOWN;
 			p.hctHomingFrame = 19;
 			p.hctCapReturnFrame = 36;
-			if (!calculating)
-				updateHCTDuration();
 		}
 		else if (p.hctType == HctType.RELAXLESS || (p.hctType == HctType.OPTIMAL && hctDuration >= 38)) {
 			p.hctThrowAngle = p.onMoon ? (hctDuration >= 39 ? 90 : 70) : (aboveGround ? 40 : 60);
@@ -1225,9 +1224,9 @@ public class VectorCalculator extends JPanel {
 			p.hctDirection = p.onMoon ? (p.rightVector ? HctDirection.RIGHT : HctDirection.LEFT) : HctDirection.DOWN;
 			p.hctHomingFrame = 19;
 			p.hctCapReturnFrame = 38;
-			if (!calculating)
-				updateHCTDuration();
 		}
+		if (!calculating)
+			updateHCTDuration();
 	}
 
 	static int lastInitialMovementFrame;
