@@ -868,8 +868,8 @@ public class VectorMaximizer {
 		double[] rotations = angleCalculator.calcRelativeRotations();
 
 		for (int z = 0; z < frames; z++) {
-			if (Debug.debug == 7)
-				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(rotations[z]));
+			if (Debug.debug == 6)
+				System.out.printf("Frame %d, Rotation %.3f\n", z, Math.toDegrees(initialAngle - rotations[z]));
 		}
 		// Debug.println(1, "");
 
@@ -922,7 +922,7 @@ public class VectorMaximizer {
 
 		int neutralFrames = 0; //frames of neutral before quickturn (might need 1 to make the qt rotate in the correct direction)
 
-		Debug.println(1, "Frames to Target Rotation: " + framesToTargetRotation);
+		Debug.println(6, "Frames to Target Rotation: " + framesToTargetRotation);
 
 		if (framesToTargetRotation != -1) {
 			counterrotationMethod = true;
@@ -957,9 +957,10 @@ public class VectorMaximizer {
 
 		//counterrotation method (turnaroundFrames is 0 or 1)
 		if (counterrotationMethod) {
+			Debug.println(6, "Turnaround Frames: " + turnaroundFrames);
 			double firstCounterrotation = motion.angularAccel * (totalForwardAccelFrames + 1); //how much counterrotation on the frame right after the first normal angle frame
-			Debug.println(1, "Min Rotation: " + Math.toDegrees(minRotation));
-			Debug.println(1, "Total Rotation: " + Math.toDegrees(totalRotation));
+			Debug.println(6, "Min Rotation: " + Math.toDegrees(minRotation));
+			Debug.println(6, "Total Rotation: " + Math.toDegrees(totalRotation));
 			double rotationSum = minRotation;
 			double angularVelocity = motion.angularAccel;
 			int additionalRotationFrames = 0;
@@ -976,15 +977,16 @@ public class VectorMaximizer {
 					additionalRotationFrames = maxAdditionalRotationFrames;
 					replacementAngularVelocity += motion.angularAccel;
 					firstCounterrotation -= motion.angularAccel;
-					if (firstCounterrotation < 0) //TODO this is a fail state, but this should not commonly occur
+					if (firstCounterrotation < 0) { //TODO this is a fail state, but this should not commonly occur
 						firstCounterrotation = 0;
 						break;
+					}
 				}
 				//System.out.println(Math.toDegrees(rotationSum));
 			}
 			overshoot = rotationSum - totalRotation;
-			Debug.println(1, "Additional Rotation Frames: " + additionalRotationFrames);
-			Debug.println(1, "Overshoot: " + Math.toDegrees(overshoot));
+			Debug.println(6, "Additional Rotation Frames: " + additionalRotationFrames);
+			Debug.println(6, "Overshoot: " + Math.toDegrees(overshoot));
 
 			int firstAdditionalRotationFrame = frames - additionalRotationFrames - turnaroundFrames - neutralFrames;
 			
