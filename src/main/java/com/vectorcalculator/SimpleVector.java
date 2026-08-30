@@ -318,7 +318,7 @@ public class SimpleVector extends SimpleMotion {
 
 	//calculate rotations relative to the initial velocity angle; if initialRotation is negative, that means it's to the left of the initial velocity if we're vectoring right or the opposite if we're vectoring left
 	public double[] calcRelativeRotations() {
-		if (FAST_RELATIVE_ROTATIONS)
+		if (FAST_RELATIVE_ROTATIONS || p.onMoon)
 			return calcRelativeRotationsFast();
 
 		double[] relativeRotations = new double[frames];
@@ -421,6 +421,7 @@ public class SimpleVector extends SimpleMotion {
 		else {
 			while (i < frames) {
 				rotations[i] = rotations[i - 1];
+				i++;
 			}
 		}
 
