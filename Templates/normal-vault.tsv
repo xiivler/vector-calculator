@@ -1,0 +1,22 @@
+//	Normal vault template for Vector Calculator			
+//	by Xiivler			
+				
+//	Edit the following parameters			
+$initial_joystick_angle = 0			// input value from Vector Calculator	
+$camera_angle = 0			// choose whatever you want (if the zero degree axis is the Z-axis: enter 90 minus the angle you want)	
+				
+4				
+1	r			
+1	y			
+1				ls(-$camera_angle)
+68	r/			
+5				[1] ls($initial_joystick_angle)
+1	y			
+1				ls($initial_joystick_angle)
+11		r		
+1	a		x	
+3			x	
+40	zl	r/	x	
+	zl	y		
+17		[19] y		ls($initial_joystick_angle)
+//	Paste the script from Vector Calculator to overwrite this row once the vault is as close to the edge as possible			

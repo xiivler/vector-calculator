@@ -3,13 +3,15 @@
 				
 //	Edit the following parameters			
 $initial_joystick_angle = 5			// input value from Vector Calculator	
-$camera_angle = 0			// choose whatever you want	
+$camera_angle = 0			// choose whatever you want (if the zero degree axis is the Z-axis: enter 90 minus the angle you want)	
 				
-1	r			
-1	m-uu			
+4				
+1	m-uu	r		
+1				
 1			ls(-$camera_angle)	
-60	r/			
+59	r/			
 1	m-u			
+1				
 1			ls($initial_joystick_angle)	
 60				
 1	a			

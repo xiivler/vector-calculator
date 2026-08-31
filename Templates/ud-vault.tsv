@@ -3,9 +3,10 @@
 				
 //	Edit the following parameters			
 $initial_joystick_angle = 19.3446			// input value from Vector Calculator	
-$camera_angle = 0			// choose whatever you want	
+$camera_angle = 0			// choose whatever you want (if the zero degree axis is the Z-axis: enter 90 minus the angle you want)	
 				
 $motion_offset = -1			//set to 0 for practice mod	
+4				
 1	r			
 1	m-uu			
 1				ls(-$camera_angle)

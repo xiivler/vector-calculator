@@ -10,6 +10,7 @@ $vector_direction = -1		// input -1 for left or 1 for right
 $frames_decel = 8		// modify to a different whole number if Mario is not bouncing	
 $initial_offset = -1.78		// modify so that Mario's velocity angle matches the initial angle one frame before the vault	
 $camera_angle = 0		// choose whatever you want	
+//	If the zero degree axis is the Z-axis: enter 90 minus the initial/ledge/camera angles instead		
 			
 //	Do not edit these parameters		
 $initial_joystick_angle = -1 * $initial_angle - $vector_direction * (20 + $initial_offset)			
@@ -17,6 +18,7 @@ $initial_rotation = -$ledge_angle + $vector_direction * 60
 $rc_angle = $initial_joystick_angle + $vector_direction * 20			
 			
 $motion_offset = -1			//set to 0 for practice mod
+4			
 1	r		
 1	y		
 1			ls(-$camera_angle)
