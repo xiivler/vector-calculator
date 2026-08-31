@@ -554,7 +554,7 @@ public class Solver implements SolverInterface {
         int[] testDurations = durations.clone();
 
         if (diveCapBounceIndex >= 2) {
-            VectorCalculator.setProgressText("Solver: Testing Dive Durations");
+            VectorCalculator.setProgressText("Solver: Testing Cap Bounces");
             
             int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
             int maxDiveDuration = durations[diveCapBounceIndex - 1] + delta;
