@@ -1954,11 +1954,11 @@ public class VectorCalculator extends JPanel {
 					case ground_mode:
 						return dropdown(new String[]{"None", "Uniform", "Varied"});
 					case ground_type:
-						return dropdown(new String[]{"Ground", "Lava/Poison"});
+						return dropdown(new String[]{"Ground", "Lava/Poison", "Water"});
 					case ground_type_firstGP:
 					case ground_type_CB:
 					case ground_type_secondGP:
-						return dropdown(new String[]{"None", "Ground", "Lava/Poison"});
+						return dropdown(new String[]{"None", "Ground", "Lava/Poison", "Water"});
 					case mode:
 						if (p.midairPreset.equals("Custom") || p.midairPreset.equals("None"))
 							return dropdown(new String[]{"Calculate (Solve Dives)", "Calculate"});

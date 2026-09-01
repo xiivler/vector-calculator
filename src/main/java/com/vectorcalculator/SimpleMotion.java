@@ -31,6 +31,7 @@ public class SimpleMotion {
 	double finalForwardVelocity;
 	double forwardVelocityCap;
 	double finalVerticalVelocity;
+	double penultimateVerticalVelocity;
 	
 	double defaultSpeedCap;
 	double baseForwardAccel;
@@ -136,13 +137,19 @@ public class SimpleMotion {
 	}
 	
 	public double calcFinalVerticalVelocity() {
-		if (frames <= movement.frameOffset)
+		if (frames <= movement.frameOffset) {
 			finalVerticalVelocity = 0;
+			penultimateVerticalVelocity = 0;
+		}
 		else
-			if (p.onMoon)
+			if (p.onMoon) {
 				finalVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.moonGravity * (frames - movement.frameOffset), movement.fallSpeedCap);
-			else
+				penultimateVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.moonGravity * (frames - movement.frameOffset - 1), movement.fallSpeedCap);
+			}
+			else {
 				finalVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.gravity * (frames - movement.frameOffset), movement.fallSpeedCap);
+				penultimateVerticalVelocity = Math.max(movement.initialVerticalSpeed - movement.gravity * (frames - movement.frameOffset - 1), movement.fallSpeedCap);
+			}
 		return finalVerticalVelocity;
 	}
 
@@ -163,6 +170,8 @@ public class SimpleMotion {
 			if (i >= movement.frameOffset) {
 				dispY += yVelocity;
 			}
+			if (i == frames - 2)
+				penultimateVerticalVelocity = yVelocity;
 		}
 		finalVerticalVelocity = yVelocity;
 		return dispY;

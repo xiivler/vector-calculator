@@ -166,7 +166,7 @@ public class Properties {
     }
 
     static enum GroundType {
-        NONE("None"), GROUND("Ground"), DAMAGING("Lava/Poison");
+        NONE("None"), GROUND("Ground"), DAMAGING("Lava/Poison"), WATER("Water");
 
         String name;
 

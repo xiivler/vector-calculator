@@ -353,7 +353,7 @@ public class Solver implements SolverInterface {
         //shorten first movement until first GP isn't too low
         double[] final_y_heights = getFinalYHeights(presetMaximizer);
         if (p.groundTypeFirstGP != GroundType.NONE) {
-            while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT) {
+            while (final_y_heights[maximizer_firstGPIndex] < p.groundHeightFirstGP + (p.groundTypeFirstGP == GroundType.WATER ? 0 : Movement.MIN_GP_HEIGHT)) { //TODO: shouldn't this be penultimate for ground pounds not above water?
                 // System.out.println(final_y_heights[maximizer_firstGPIndex]);
                 p.initialFrames--;
                 if (p.initialFrames < VectorCalculator.initialMovement.getMinFrames()) {
@@ -410,7 +410,7 @@ public class Solver implements SolverInterface {
                 maximizer_secondGPIndex = maximizer_finalCTIndex + 1;
             maximizer_secondDiveIndex = maximizer_secondGPIndex + 1;
             boolean endHeightCorrect = final_y_heights[final_y_heights.length - 1] + p.getUpwarpMinusError() >= p.y1 - ERROR;
-            boolean secondGPHeightCorrect = p.groundTypeSecondGP == GroundType.NONE || final_y_heights[maximizer_secondGPIndex] >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT;
+            boolean secondGPHeightCorrect = p.groundTypeSecondGP == GroundType.NONE || final_y_heights[maximizer_secondGPIndex] >= p.groundHeightSecondGP + (p.groundTypeSecondGP == GroundType.WATER ? 0 : Movement.MIN_GP_HEIGHT);
             if (endHeightCorrect && secondGPHeightCorrect) {
                 break;
             }
@@ -1113,14 +1113,17 @@ public class Solver implements SolverInterface {
     public static final double FALSE = -Double.MAX_VALUE;
     public double validateHeight(int motionIndex, double y_pos, double y_vel, int[] durations) {
         double yDiff = -Double.MAX_VALUE;
+        GroundType groundType = GroundType.NONE;
         if (motionIndex == 0) { //initial movement
             //Debug.println(y_pos);
             if (p.groundTypeFirstGP == GroundType.NONE)
                 return y_pos;
             else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
                 return FALSE;
-            else
+            else {
                 yDiff = p.groundHeightFirstGP - y_pos;
+                groundType = p.groundTypeFirstGP;
+            }
             // System.out.println(yDiff);
             // System.out.println(-y_vel);
         }
@@ -1133,20 +1136,24 @@ public class Solver implements SolverInterface {
                     return y_pos;
                 else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
                     return FALSE;
-                else
+                else {
                     yDiff = p.groundHeightFirstGP - y_pos;
+                    groundType = p.groundTypeFirstGP;
+                }
             }
             else { //rainbow spin second
                 if (p.groundTypeSecondGP == GroundType.NONE)
                     return y_pos;
                 else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
                     return FALSE;
-                else
+                else {
                     yDiff = p.groundHeightSecondGP - y_pos;
+                    groundType = p.groundTypeSecondGP;
+                }
             }
         }
         else if (motionIndex == firstCTIndex) {
-            if (p.groundTypeFirstGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
+            if (p.groundTypeFirstGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightFirstGP + (p.groundTypeFirstGP == GroundType.WATER ? 0 : Movement.MIN_GP_HEIGHT))
                 return y_pos;
             else
                 return FALSE;
@@ -1162,11 +1169,13 @@ public class Solver implements SolverInterface {
                 return y_pos;
             else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
                 return FALSE;
-            else
+            else {
                 yDiff = p.groundHeightSecondGP - y_pos;
+                groundType = p.groundTypeSecondGP;
+            }
         }
         else if (motionIndex == secondDiveIndex - 1) { //second CT
-            if (p.groundTypeSecondGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT) {
+            if (p.groundTypeSecondGP == GroundType.NONE || y_pos - y_vel >= p.groundHeightSecondGP + (p.groundTypeSecondGP == GroundType.WATER ? 0 : Movement.MIN_GP_HEIGHT)) {
                 return y_pos;
             }
             else
@@ -1189,7 +1198,10 @@ public class Solver implements SolverInterface {
             return y_pos;
         if (yDiff <= -y_vel) {
             // System.out.println("Adjusted " + y_pos + " to " + (y_pos + yDiff));
-            return y_pos + yDiff;
+            if (groundType == GroundType.WATER) //no height change from being "below" water surface
+                return y_pos;
+            else
+                return y_pos + yDiff;
         }
         else
             return FALSE;
@@ -1232,8 +1244,11 @@ public class Solver implements SolverInterface {
         boolean rainbowSpinFirst = (rainbowSpinIndex < Math.max(diveCapBounceIndex, midairVaultIndex));
 
         double[] penultimate_y_heights = new double[final_y_heights.length]; //calculate penultimate heights
+        double[] antepenultimate_y_heights = new double[final_y_heights.length];;
         for (int i = 0; i < final_y_heights.length; i++) {
             penultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity;
+            antepenultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity - motions[i].penultimateVerticalVelocity;
+            System.out.println(penultimate_y_heights[i] + " " + antepenultimate_y_heights[i]);
             double yDiff = 0;
             if (i == maximizer_initialMovementIndex && p.groundTypeFirstGP == GroundType.GROUND) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
                 yDiff = p.groundHeightFirstGP - final_y_heights[i];
@@ -1257,11 +1272,11 @@ public class Solver implements SolverInterface {
                 //Debug.println("After: " + Arrays.toString(final_y_heights));
             }
         }
-        if (p.hct) {
+        if (p.hct) { //if HCT is close enough to the ground, change the angle so that it still comes back in time
             double groundHeightRS = -Double.MAX_VALUE;
-            if (rainbowSpinFirst && p.groundTypeFirstGP == GroundType.GROUND)
+            if (rainbowSpinFirst && p.groundTypeFirstGP != GroundType.NONE)
                 groundHeightRS = p.groundHeightFirstGP;
-            else if (p.groundTypeSecondGP == GroundType.GROUND)
+            else if (p.groundTypeSecondGP != GroundType.NONE)
                 groundHeightRS = p.groundHeightSecondGP;
             if (final_y_heights[maximizer_hmcctIndex] < groundHeightRS + HCT_CHANGE_ANGLE_HEIGHT) {
                 //Debug.println("Reducing HMCCT Angle");
@@ -1274,25 +1289,35 @@ public class Solver implements SolverInterface {
         // not sure if these should be < or <=, but the user can always increase the ground height slightly
         if (p.groundTypeFirstGP == GroundType.GROUND && penultimate_y_heights[maximizer_initialMovementIndex] < p.groundHeightFirstGP)
             return FALSE;
+        if (p.groundTypeFirstGP == GroundType.WATER && antepenultimate_y_heights[maximizer_initialMovementIndex] < p.groundHeightFirstGP)
+            return FALSE;
         if (p.groundTypeFirstGP == GroundType.DAMAGING && final_y_heights[maximizer_initialMovementIndex] < p.groundHeightFirstGP)
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.GROUND && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] < p.groundHeightFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
+        if (maximizer.hasRainbowSpin && (p.groundTypeFirstGP == GroundType.GROUND || p.groundTypeFirstGP == GroundType.WATER) && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] < p.groundHeightFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
             return FALSE;
-        if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.GROUND && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] < p.groundHeightSecondGP)
+        if (maximizer.hasRainbowSpin && (p.groundTypeSecondGP == GroundType.GROUND || p.groundTypeSecondGP == GroundType.WATER) && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex] < p.groundHeightSecondGP)
             return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeFirstGP == GroundType.DAMAGING && rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] < p.groundHeightFirstGP) //actually the penultimate frame of the whole action but the final frame is a dive
             return FALSE;
         if (maximizer.hasRainbowSpin && p.groundTypeSecondGP == GroundType.DAMAGING && !rainbowSpinFirst && final_y_heights[maximizer_rainbowSpinIndex + 1] < p.groundHeightSecondGP)
             return FALSE;
-        if (p.groundTypeFirstGP != GroundType.NONE && penultimate_y_heights[maximizer_firstGPIndex - 1] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
+        if ((p.groundTypeFirstGP == GroundType.GROUND || p.groundTypeFirstGP == GroundType.DAMAGING) && penultimate_y_heights[maximizer_firstGPIndex - 1] < p.groundHeightFirstGP + Movement.MIN_GP_HEIGHT)
             return FALSE;
-        if (p.groundTypeCB != GroundType.NONE && final_y_heights[maximizer_firstDiveIndex] < p.groundHeightCB)
+        if (p.groundTypeFirstGP == GroundType.WATER && final_y_heights[maximizer_firstGPIndex - 1] < p.groundHeightFirstGP)
+            return FALSE;
+        if ((p.groundTypeCB == GroundType.GROUND || p.groundTypeCB == GroundType.DAMAGING) && final_y_heights[maximizer_firstDiveIndex] < p.groundHeightCB)
+            return FALSE;
+        if (p.groundTypeCB == GroundType.WATER && penultimate_y_heights[maximizer_firstDiveIndex] < p.groundHeightCB)
             return FALSE;
         if (p.groundTypeSecondGP == GroundType.GROUND && penultimate_y_heights[maximizer_capBounceIndex] < p.groundHeightSecondGP)
             return FALSE;
+        if (p.groundTypeSecondGP == GroundType.WATER && antepenultimate_y_heights[maximizer_capBounceIndex] < p.groundHeightSecondGP)
+            return FALSE;
         if (p.groundTypeSecondGP == GroundType.DAMAGING && final_y_heights[maximizer_capBounceIndex] < p.groundHeightSecondGP)
             return FALSE;
-        if (p.groundTypeSecondGP != GroundType.NONE && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT)
+        if ((p.groundTypeFirstGP == GroundType.GROUND || p.groundTypeFirstGP == GroundType.DAMAGING) && penultimate_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP + Movement.MIN_GP_HEIGHT)
+            return FALSE;
+        if (p.groundTypeFirstGP == GroundType.WATER && final_y_heights[maximizer_secondGPIndex - 1] < p.groundHeightSecondGP)
             return FALSE;
         if (final_y_heights[final_y_heights.length - 1] + getUpwarp(testDurations[testDurations.length - 1]) < p.y1 - ERROR)
             return FALSE;
