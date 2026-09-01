@@ -1713,7 +1713,7 @@ public class VectorCalculator extends JPanel {
 		}
 		else {
 			solver = new Solver();
-			int delta = p.initialMovementName.contains("RCV") ? Math.min(p.durationSearchRange, 3) : p.durationSearchRange;
+			int delta = p.durationSearchRange;
 			solver.solve(delta);
 		}
 		if (!solver.solveSuccess() && displayError) {

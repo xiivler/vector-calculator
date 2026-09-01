@@ -4,7 +4,7 @@
 //	Edit the following parameters					
 $initial_joystick_angle = 70			// input value from Vector Calculator			
 $ledge_angle = 90			// input the direction Mario is moving when walking straight off the ledge (180 degrees away from his rotation when ledge grabbing)			
-$vector_direction = -1			// input -1 for left or 1 for right (does not currently work for right vector)			
+$vector_direction = -1			// input -1 for left or 1 for right			
 $frames_y = 15			// this is how many additional frames the Y button is held for setting up triple throws			
 $camera_angle = 90			// choose whatever you want			
 //	If the zero degree axis is the Z-axis: enter 90 minus the ledge/camera angles instead					

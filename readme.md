@@ -145,8 +145,8 @@ Vector Calculator has several properties that can be configured by the user. Som
 * **Final Dive Angle**: How many degrees to the side Mario dives at relative to the direction of the rest of the jump. A positive final dive angle is to the left if the `Vector Direction` is `Left`, and to the right if the `Vector Direction` is `Right`. A negative final dive angle is in the opposite direction.
 
 * **Ground/Liquid Under Midairs**: Set to `Uniform` if the ground/liquid under the entire jump is the same height and type. Otherwise, if there is ground or liquid, set to `Varied`. A higher `Duration Search Range` is recommended for jumps over ground or liquid.
-    * **Type**: Whether there is ground, lava, or poison underneath the jump. (Quicksand counts as regular ground.)
-    * **Height**: The height of the ground, lava, or poison underneath the jump. You can obtain this value by standing on the ground or falling into the lava/poison, and recording Mario's Y coordinate. If the jump fails from landing on the ground, first make sure your initial Y coordinate is right. If the issue is still not resolved, try increasing the ground height a tiny bit.
+    * **Type**: Whether there is ground, lava, poison, or water underneath the jump. (Quicksand counts as regular ground.)
+    * **Height**: The height of the ground, lava, poison, or water underneath the jump. You can obtain this value by standing on the ground or falling into the lava/poison, and recording Mario's Y coordinate; when falling into water, the frame in which the water begins to splash is the second frame in which Mario is below the top of the water, so you can use this information to find the top of the water. If the jump fails from landing on the ground, first make sure your initial Y coordinate is right. If the issue is still not resolved, try increasing the ground height a tiny bit.
 
 ## Midair Movement Table
 
@@ -194,4 +194,5 @@ The lower table provides frame-by-frame information about the movement, which ca
 * Jumps over ground are not properly optimized in moon gravity
 * Minor optimizations can still be made to allow for slightly more vectoring during the cap throw preceding the cap bounce
 * `Solve` only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts
+* When solving for jumps above water, MCCTs are not currently tested, the user must use a custom HCT, and the results may not be reliable
 * Some calculations are still very time-intensive
