@@ -325,7 +325,7 @@ public class Solver implements SolverInterface {
                     preset[firstCTIndex - 1][1] = 33;
             }
             if (reverseBonkIndex - 1 >= 0) {
-                preset[reverseBonkIndex - 1][1] = 21;
+                preset[reverseBonkIndex - 1][1] = Movement.RB_FRAMES_MOON;
             }
         }
         VectorCalculator.addPreset(preset);
@@ -707,7 +707,7 @@ public class Solver implements SolverInterface {
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
-        if (i == reverseBonkIndex && (frames <= Movement.RB_FRAMES || (p.onMoon && frames <= Movement.MIN_RB_FRAMES_MOON))) {
+        if (i == reverseBonkIndex && (frames <= Movement.RB_FRAMES || (p.onMoon && frames <= Movement.RB_FRAMES_MOON))) {
             return false;
         }
         return true;
@@ -853,7 +853,7 @@ public class Solver implements SolverInterface {
     //calculates max upwarp given number of frames of reverse bonk
     public double[] calcRBMaxUpwarps() {
         double[] rbMaxUpwarps = new double[p.midairs[p.midairs.length - 1][1] + delta];
-        for (int i = p.onMoon ? Movement.MIN_RB_FRAMES_MOON - 1 : Movement.RB_FRAMES - 1; i < rbMaxUpwarps.length; i++) {
+        for (int i = p.onMoon ? Movement.RB_FRAMES_MOON - 1 : Movement.RB_FRAMES - 1; i < rbMaxUpwarps.length; i++) {
             SimpleMotion reverseBonkMotion = new SimpleMotion(new Movement("Reverse Bonk"), i);
             UpwarpMaximizer um = new UpwarpMaximizer(reverseBonkMotion.calcFinalVerticalVelocity(), 2, Math.toRadians(p.reverseBonkAngle), Math.toRadians(p.reverseBonkAngle) + Math.PI);
             rbMaxUpwarps[i] = um.maximize();
@@ -944,7 +944,7 @@ public class Solver implements SolverInterface {
             //Debug.println("Start Y Pos: " + y_pos);
             double base_y_pos = y_pos + y_disps[index];
             double test_y_pos = base_y_pos;
-            int last_delta = (!p.onMoon && index == reverseBonkIndex) ? 0 : delta; //don't test any other durations for a reverse bonk
+            int last_delta = (index == reverseBonkIndex) ? 0 : delta; //don't test any other durations for a reverse bonk
             int test_delta = 0;
             int lastFrame = lastFrames[index];
             //Debug.println("Base Y Pos: " + base_y_pos);

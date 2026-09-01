@@ -57,7 +57,7 @@ public class Movement {
 	public static final int CAPPY_GP_FRAMES = 28; //how many frames it takes for Cappy to start moving downward after pressing ZL/ZR
 
 	public static final int RB_FRAMES = 19; //duration of an optimal reverse bonk
-	public static final int MIN_RB_FRAMES_MOON = 19; //minimum RB frames on the moon
+	public static final int RB_FRAMES_MOON = 22; //duration of an optimal reverse bonk on the moon
 
 	//no downthrow or fakethrow because these are equivalent to others
 	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};

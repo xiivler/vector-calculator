@@ -498,11 +498,11 @@ public class VectorDisplayWindow {
 				double[] cappyPos = maximizer.getFinalCapThrowPosition();
 				double[] marioPos = {simpleMotions[index - 1].dispX, simpleMotions[index - 1].dispY, simpleMotions[index - 1].dispZ};
 
-				double reverseBonkDistance = p.onMoon ? 120 : 130; //how far cappy should be from Mario
+				double reverseBonkDistance = 130; //how far cappy should be from Mario
 
 				double reverseBonkAngle = simpleMotions[index].initialAngle;
 
-				double[] cappyTarget = {marioPos[0] + reverseBonkDistance * Math.sin(reverseBonkAngle + Math.PI), marioPos[1] + (p.onMoon ? 320 : 0), marioPos[2] + reverseBonkDistance * Math.cos(reverseBonkAngle + Math.PI)}; //where cappy needs to move to
+				double[] cappyTarget = {marioPos[0] + reverseBonkDistance * Math.sin(reverseBonkAngle + Math.PI), marioPos[1] + (p.onMoon ? 310 : 0), marioPos[2] + reverseBonkDistance * Math.cos(reverseBonkAngle + Math.PI)}; //where cappy needs to move to
 				
 				double direction = Math.atan2(cappyTarget[0] - cappyPos[0], cappyTarget[2] - cappyPos[2]); //angle cappy needs to move in
 				double cappyJoystickTheta = reduceAngle(direction - cameraAngle + Math.PI / 2);
