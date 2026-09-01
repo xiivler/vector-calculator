@@ -198,13 +198,8 @@ public class VectorCalculator extends JPanel {
 			}
 			if (p.reverseBonk) {
 				params.add(Parameter.solve_upwarp);
-				//if (!p.solveUpwarp) {
-					params.add(Parameter.upwarp);	
-				//}
 			}
-			else {
-				params.add(Parameter.upwarp);
-			}
+			params.add(Parameter.upwarp);
 			params.add(null);
 			
 			params.add(Parameter.test_yanks);
@@ -230,13 +225,8 @@ public class VectorCalculator extends JPanel {
 				params.add(Parameter.triple_throw_dive_cb);
 			if (p.reverseBonk) {
 				params.add(Parameter.solve_upwarp);
-				//if (!p.solveUpwarp) {
-					params.add(Parameter.upwarp);	
-				//}
 			}
-			else {
-				params.add(Parameter.upwarp);
-			}
+			params.add(Parameter.upwarp);
 			params.add(null);
 
 			if (p.mode == Mode.SOLVE) {

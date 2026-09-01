@@ -6,9 +6,11 @@ This tutorial is for anyone who wants to learn how to TAS jumps using Vector Cal
 
 If you haven't already, download the latest version of Vector Calculator from GitHub (under Releases).
 
-Join the [Super Mario Odyssey TAS server](https://discord.gg/HdB2P586ch) and follow the instructions in `#resources` to set up either `smo-practice` or `smo-lunakit` to TAS with. If using `smo-practice`, make sure you install and test the `smo-practice-server` before continuing.
+Join the [Super Mario Odyssey TAS server](https://discord.gg/HdB2P586ch) and follow the instructions in `#resources` to set up either `smo-practice` or `smo-lunakit` to TAS with. If using `smo-practice`, make sure you install and test the `smo-practice-server` before continuing. You may also install MrKatzenGaming fork of `smo-lunakit`.
 
 This tutorial assumes that you will be using [TSV-TAS-2](https://github.com/xiivler/TSV-TAS-2) as your script format because it works most smoothly with Vector Calculator. Make sure to familiarize yourself with the script format by reading its [documentation](https://docs.google.com/document/d/1vW-swF3k96YxaIJqXbtRXbQ54mKKgeWfPFlW2hYBa_Q/edit?usp=sharing). This script format is compatible with both `smo-practice` and `smo-lunakit`.
+
+#### (Skip if Using MrKatzenGaming's fork)
 
 Now, install the absolute joystick mod. This mod, created by tetraxile, causes the game to ignore the camera angle when translating joystick angles to Mario's movement, so you do not have to point the camera downward to prevent it from turning left and right. This is not required to use Vector Calculator, but the rest of the tutorial assumes you have this mod installed. With this mod, while in the game, you can press down the left stick to toggle between absolute and regular joystick angles.
 
@@ -36,6 +38,8 @@ Select `Vault` as the `Initial Movement Type`, and choose whether you want a lef
 
 Select the type of midairs you want from the `Midairs` row. If you want to have a triple throw, set the value of the `Triple Throw` row to `Yes`.
 
+If using MrKatzenGaming's fork of LunaKit, switch the `0 Degree Axis` to `Z`.
+
 Now, press the `Solve` button. After some time, a window will open with frame-by-frame information about the jump. This is a good time to save your Vector Calculator project, which you can do by pressing Control + S while the main window is selected (Command + S for Mac users).
 
 Make a copy of `ud-vault.tsv` from the `Templates` folder and open this file in a spreadsheet editor or even a text editor. Replace the current value for `$initial_joystick_angle` with the number Vector Calculator displays in the window that opened after you clicked `Solve`. The camera angle can be set to whatever you want; the Target Angle from Vector Calculator usually looks good. Use `tsv-tas.py` to generate the script file and send it to your Switch.
@@ -50,7 +54,7 @@ Insert a line at the top of your copy of `ud-vault.tsv` that reads `$position = 
 
 #### (Both Mods)
 
-If you have not yet activated absolute joystick angles in-game, do so by pressing in the left joystick. It will be clear that they are active, as Mario will go in the same direction if you hold a certain angle on the joystick no matter the camera angle.
+If you have not yet activated absolute joystick angles in-game, do so by pressing in the left joystick (or by checking the box in the TAS window of MrKatzenGaming's fork). It will be clear that they are active, as Mario will go in the same direction if you hold a certain angle on the joystick no matter the camera angle.
 
 Run the TSV-TAS script and see if you get a vault. Keep tweaking the teleport coordinates until you get a vault as close to the edge as possible.
 
