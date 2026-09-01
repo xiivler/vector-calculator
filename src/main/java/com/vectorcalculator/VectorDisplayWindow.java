@@ -670,6 +670,8 @@ public class VectorDisplayWindow {
 							input1 = Movement.CT_INPUT[maximizer.ctType];
 							motion.movement.displayName = Movement.CT_NAMES[maximizer.ctType];
 						}
+						double[] cappyPos = ((ComplexVector) motion).getCappyPosition(maximizer.ctType);
+						Debug.printf(10, "Cappy Pos at CB: %.3f %.3f %.3f\n", cappyPos[0], cappyPos[1], cappyPos[2]);
 					}
 					if (Inputs.isMotion(input1) && shiftMotion) {
 						offset--;

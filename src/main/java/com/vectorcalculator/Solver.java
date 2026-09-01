@@ -251,6 +251,10 @@ public class Solver implements SolverInterface {
             mcctAllowed = false;
             throwOrRSAfterCB = false;
         }
+
+        if (p.groundTypeCB == GroundType.WATER) { //TODO: find way to let MCCTs happen with water
+            mcctAllowed = false;
+        }
     }
 
     public boolean solve(int delta) {
@@ -579,7 +583,7 @@ public class Solver implements SolverInterface {
                     boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
                     if (dtAllowed != TurnDuringDive.NO && testCT(-1, .01, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                         //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
-                        Debug.println(2, "Possible CT/Dive: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle);
+                        Debug.println(10, "Possible CT/Dive: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle + ", ct type: " + ctType);
                         ctTypes[ctDuration][diveDuration] = ctType;
                         //diveDecels[ctDuration][diveDuration] = diveDecel;
                         vectorAngles[ctDuration][diveDuration] = vectorAngle;
@@ -1087,7 +1091,7 @@ public class Solver implements SolverInterface {
             //     System.out.println(maximizer.motionGroup1FinalAngle);
             // }
             maximizer.vectorAngleMax = maxTestVectorAngle;
-            if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;
@@ -1248,7 +1252,6 @@ public class Solver implements SolverInterface {
         for (int i = 0; i < final_y_heights.length; i++) {
             penultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity;
             antepenultimate_y_heights[i] = final_y_heights[i] - motions[i].finalVerticalVelocity - motions[i].penultimateVerticalVelocity;
-            System.out.println(penultimate_y_heights[i] + " " + antepenultimate_y_heights[i]);
             double yDiff = 0;
             if (i == maximizer_initialMovementIndex && p.groundTypeFirstGP == GroundType.GROUND) { //account for cap throws executed very low to the ground, in which case all motion after is actaully higher than it would have been
                 yDiff = p.groundHeightFirstGP - final_y_heights[i];
