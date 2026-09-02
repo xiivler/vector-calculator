@@ -1,3 +1,20 @@
+Version 2.2.0:
+* Added support for 2P jumps, including fakethrows and reverse bonks
+* Improved optimization of many movement types by testing for yank (holding backward at the end of the movement to set up a better angle for the following movement)
+* Changed behavior for solving for cap throw/dive before cap bounces to vector the cap throw less rather than hold back on the first frame of the dive
+* Added support for vectoring and rotating during the falling part of cap throws, significantly improving distance for jumps in moon gravity
+* Improved optimization of HCT falling
+* Improved optimization of jumps without final cap throw
+* User can now input Mario’s initial facing angle, which affects the height of single and double jumps
+* Added full tracking of Mario’s facing angle during a jump
+* Added a “ledge horizontal displacement” field to the results, a distance metric that takes into account how far from the edge of the starting and ending ledges Mario can actually stand
+* Added support for crouching coyote time for long jumps
+* Made it so that changing the camera angle instantly updates the joystick angles
+* Updated rocket flower logic so that rocket flower speed persists past the initial movement if applicable
+* Added an option to dive at an angle at the end of the jump
+* Added support for jumps over water
+* Minor bugfixes
+
 Version 2.1.3:
 * Additional improvements in optimizing jumps over ground
 

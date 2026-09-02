@@ -883,7 +883,7 @@ public class Solver implements SolverInterface {
         }
         DoubleIntArray best = new DoubleIntArray(0, durations);
         if ((index == rainbowSpinIndex && !p.onMoon && p.groundType == GroundType.NONE) || (index == homingMCCTIndex && p.hctCapReturnFrame >= 36 && p.groundType == GroundType.NONE && !p.onMoon)) {
-            double test_y_pos = validateHeight(index, y_pos + y_disps[index], y_vels[lastFrames[index]], durations);
+            double test_y_pos = validateHeight(index, y_pos + y_disps[index], y_vels[lastFrames[index]], y_vels[lastFrames[index] - 1], durations);
             return test(durations, delta, index + 1, test_y_pos);
         }
         if (index < durations.length - 1) {
@@ -916,7 +916,7 @@ public class Solver implements SolverInterface {
                         test_y_pos += y_vels[lastFrame + j];
                     }
                 }
-                test_y_pos = validateHeight(index, test_y_pos, y_vels[lastFrame + i], testDurations);
+                test_y_pos = validateHeight(index, test_y_pos, y_vels[lastFrame + i], y_vels[lastFrame + i - 1], testDurations);
                 if (test_y_pos == FALSE) { //we were too low with respect to the ground
                     result = new DoubleIntArray(0, testDurations);
                 }
@@ -1115,13 +1115,16 @@ public class Solver implements SolverInterface {
     //if height is not possible because of the ground, returns FALSE constant
     //otherwise returns the height, adjusted if the ground was touched
     public static final double FALSE = -Double.MAX_VALUE;
-    public double validateHeight(int motionIndex, double y_pos, double y_vel, int[] durations) {
+    public double validateHeight(int motionIndex, double y_pos, double y_vel, double prev_y_vel, int[] durations) {
         double yDiff = -Double.MAX_VALUE;
         GroundType groundType = GroundType.NONE;
         if (motionIndex == 0) { //initial movement
             //Debug.println(y_pos);
             if (p.groundTypeFirstGP == GroundType.NONE)
                 return y_pos;
+            else if (p.groundTypeFirstGP == GroundType.WATER) {
+                return y_pos - y_vel - prev_y_vel >= p.groundHeightFirstGP ? y_pos : FALSE; 
+            }
             else if (p.groundTypeFirstGP == GroundType.DAMAGING && y_pos < p.groundHeightFirstGP)
                 return FALSE;
             else {
@@ -1131,10 +1134,10 @@ public class Solver implements SolverInterface {
             // System.out.println(yDiff);
             // System.out.println(-y_vel);
         }
-        else if (motionIndex == homingMCCTIndex || motionIndex == homingTTIndex) { //failures here will be caught by the rainbow spin because it is even lower
+        else if (motionIndex == homingMCCTIndex || motionIndex == homingTTIndex || motionIndex == homingFTIndex) { //failures here will be caught by the rainbow spin because it is even lower
             return y_pos;
         }
-        else if (motionIndex == rainbowSpinIndex) {
+        else if (motionIndex == rainbowSpinIndex) { //TODO maybe need something for water
             if (rainbowSpinIndex < Math.max(diveCapBounceIndex, midairVaultIndex)) { //rainbow spin first
                 if (p.groundTypeFirstGP == GroundType.NONE)
                     return y_pos;
@@ -1163,7 +1166,7 @@ public class Solver implements SolverInterface {
                 return FALSE;
         }
         else if (motionIndex == firstDiveIndex) {
-            if (p.groundTypeCB == GroundType.NONE || y_pos >= p.groundHeightCB)
+            if (p.groundTypeCB == GroundType.NONE || y_pos >= p.groundHeightCB || (p.groundTypeCB == GroundType.WATER && y_pos - y_vel >= p.groundHeightCB))
                 return y_pos;
             else
                 return FALSE;
@@ -1171,6 +1174,9 @@ public class Solver implements SolverInterface {
         else if (motionIndex == diveCapBounceIndex || motionIndex == midairVaultIndex) {
             if (p.groundTypeSecondGP == GroundType.NONE)
                 return y_pos;
+            else if (p.groundTypeSecondGP == GroundType.WATER) {
+                return y_pos - y_vel - prev_y_vel >= p.groundHeightSecondGP ? y_pos : FALSE; 
+            }
             else if (p.groundTypeSecondGP == GroundType.DAMAGING && y_pos < p.groundHeightSecondGP)
                 return FALSE;
             else {

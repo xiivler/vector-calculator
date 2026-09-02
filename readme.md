@@ -191,8 +191,7 @@ The lower table provides frame-by-frame information about the movement, which ca
 ## Current Limitations
 * The `Solve` mode does not yet support custom midairs
 * Skew is not accounted for, affecting jumps such as triple jump semi-verticals if the triple jump is short enough
-* Jumps over ground are not properly optimized in moon gravity
+* Jumps over ground/liquid are not always optimally or reliably calculated (examples include jumps in moon gravity, jumps above water, and sjumps without a final cap throw)
 * Minor optimizations can still be made to allow for slightly more vectoring during the cap throw preceding the cap bounce
 * `Solve` only optimizes for distance, not for speed, so it is not useful in all speedrunning contexts
-* When solving for jumps above water, MCCTs are not currently tested, the user must use a custom HCT, and the results may not be reliable
 * Some calculations are still very time-intensive

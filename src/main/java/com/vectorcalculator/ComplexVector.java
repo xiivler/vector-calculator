@@ -262,6 +262,8 @@ public class ComplexVector extends SimpleVector {
 	}
 
 	public double[] getCappyPosition(int throwType) {
+		if (throwType == Movement.FT)
+			return new double[]{0, 0, 0};
 		double throwAngle; //adjusted for the initial angle of the movement
 		if (rightVector)
 			throwAngle = initialAngle - holdingAngles[0];

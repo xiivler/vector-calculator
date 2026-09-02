@@ -766,13 +766,16 @@ public class VectorCalculator extends JPanel {
 			if (p.coyoteType == CoyoteType.NONE) {
 				p.framesMoonwalk = 0;
 				p.framesRun = 0;
+				p.chooseInitialRotation = initialMovement.chooseInitialRotation;
 			}
 			else if (p.coyoteType == CoyoteType.MOONWALK) {
 				p.framesRun = 0;
+				p.chooseInitialRotation = initialMovement.chooseInitialRotation;
 			}
 			else if (p.coyoteType == CoyoteType.RUNNING) {
 				p.framesMoonwalk = 0;
 				p.chooseInitialRotation = false;
+				setProperty(Parameter.custom_initial_rotation, "No");
 			}
 			break;
 		case moonwalk_frames:
@@ -969,7 +972,7 @@ public class VectorCalculator extends JPanel {
 			p.hctDirection = Properties.HctDirection.fromName(value.toString());
 			break;
 		case hct_homing_frame:
-			p.hctHomingFrame = clampInt(parseIntWithDefault(value, 19), 0, Integer.MAX_VALUE);
+			p.hctHomingFrame = clampInt(parseIntWithDefault(value, 19), 0, 23);
 			break;
 		case hct_cap_return_frame:
 			p.hctCapReturnFrame = clampInt(parseIntWithDefault(value, 36), 23, Integer.MAX_VALUE);
@@ -991,7 +994,7 @@ public class VectorCalculator extends JPanel {
 			}
 			break;
 		case final_cap_throw_angle:
-			p.fctAngle = clampDouble(parseDoubleWithDefault(value, 0), 0, VectorMaximizer.MAX_DIVE_CAP_BOUNCE_ANGLE);
+			p.fctAngle = clampDouble(parseDoubleWithDefault(value, 0), -90, 90);
 			break;
 		case ground_mode:
 			GroundMode oldGroundMode = p.groundMode;
@@ -1310,13 +1313,15 @@ public class VectorCalculator extends JPanel {
 			case "Spinless (No Final Cap Throw)":
 				if (p.midairVault) {
 					p.reverseBonk = false;
-					p.upwarp = 40;
+					if (p.solveUpwarp)
+						p.upwarp = 40;
 					p.solveUpwarp = false;
 					preset = new int[][]{{P2CB, 55}, {DIVE, 24}};
 				}
 				else if (p.twoPlayerMode) {
 					p.reverseBonk = false;
-					p.upwarp = 40;
+					if (p.solveUpwarp)
+						p.upwarp = 40;
 					p.solveUpwarp = false;
 					preset = new int[][]{{FT, 30}, {DIVE, 24}, {CB, 41}, {DIVE, 24}};
 				}
@@ -1460,6 +1465,14 @@ public class VectorCalculator extends JPanel {
 			updateCalculateUsing();
 		}
 		p.chooseInitialRotation = initialMovement.chooseInitialRotation && p.coyoteType != CoyoteType.RUNNING;
+		if (p.chooseInitialRotation && p.customInitialRotation) {
+			if (p.initialMovementName.equals("Triple Jump")) {
+				if (p.initialRotation < 135 && p.initialRotation > 45)
+					p.initialRotation = 45;
+				else if (p.initialRotation > -135 && p.initialRotation < -45)
+					p.initialRotation = -45;
+			}
+		}
 		if (!p.chooseInitialRotation) {
 			p.customInitialRotation = false;
 			p.initialRotation = initialMovement.defaultRotation;

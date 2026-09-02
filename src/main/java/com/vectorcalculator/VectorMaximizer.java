@@ -1419,7 +1419,7 @@ public class VectorMaximizer {
 		while (quarter > limit) {
 			lowMed = med - quarter;
 			highMed = med + quarter;
-			Debug.println("BS vals: " + lowMed + ", " + highMed);
+			// System.out.println("BS vals: " + low + ", " + lowMed + ", " + med + ", " + highMed + ", " + high);
 			applySearchValue(lowMed, optID);
 			lowMedDisp = maximize(optID + 1);
 			applySearchValue(highMed, optID);
@@ -1427,26 +1427,37 @@ public class VectorMaximizer {
 			Debug.println(lowMedDisp + ", " + highMedDisp);
 			if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
 				low = low;
-				med = lowMed;
 				high = med;
+				med = lowMed;
 				medDisp = lowMedDisp;
 			}
 			else if (highMedDisp > medDisp && highMedDisp > lowMedDisp) { //maximum is in the right half
 				low = med;
-				med = highMed;
 				high = high;
+				med = highMed;
 				medDisp = highMedDisp;
 			}
 			else { //maximum is in the middle half
 				low = lowMed;
-				med = med;
 				high = highMed;
+				med = med;
 				medDisp = medDisp;
 			}
 			quarter /= 2;
 		}
+		applySearchValue(low, optID);
+		double lowDisp = maximize(optID + 1);
+		applySearchValue(high, optID);
+		double highDisp = maximize(optID + 1);
+		applySearchValue(med, optID);
+		medDisp = maximize(optID + 1);
 		double bestValue = med;
-		applySearchValue(bestValue, optID);
+		if (lowDisp > medDisp && lowDisp > highDisp)
+			bestValue = low;
+		else if (highDisp > medDisp && highDisp > lowDisp)
+			bestValue = high;
+		if (bestValue != med)
+			applySearchValue(bestValue, optID);
 		double bestDisp = maximize(optID + 1);
 		return new double[]{bestDisp, bestValue};
 	}
@@ -1805,14 +1816,14 @@ public class VectorMaximizer {
 				//System.out.println();
 				if (lowMedDisp > medDisp && lowMedDisp > highMedDisp) { //maximum is in the left half
 					low = low;
-					med = lowMed;
 					high = med;
+					med = lowMed;
 					medDisp = lowMedDisp;
 				}
 				else if (highMedDisp > medDisp && highMedDisp > lowMedDisp) { //maximum is in the right half
 					low = med;
-					med = highMed;
 					high = high;
+					med = highMed;
 					medDisp = highMedDisp;
 				}
 				else { //maximum is in the middle half
@@ -2025,7 +2036,7 @@ public class VectorMaximizer {
 		Movement variableMovement2 = new Movement(movementNames.get(variableMovement2Index), initialForwardVelocity, canRocketFlower(variableMovement2Index) ? p.rocketFlower : false);
 		//this boolean signifies whether to rotate during the fall component of a final cap throw
 		optimizeFCTFalling = p.optimizeFCTFalling && p.turnarounds && hasVariableCapThrow2 && hasVariableMovement2Falling && movementFrames.get(variableMovement2Index + 1) >= 6; //TODO 6 might not always work, but it really seems like it does
-		variableMovement2Vector = (SimpleVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, !optimizeFCTFalling || p.reverseBonk);
+		variableMovement2Vector = (SimpleVector) variableMovement2.getMotion(movementFrames.get(variableMovement2Index), currentVectorRight, !optimizeFCTFalling || p.reverseBonk || p.customFCTAngle);
 		motions[variableMovement2Index] = variableMovement2Vector;
 		variableMovement2Vector.setInitialAngle(initialAngle); 
 
@@ -2047,12 +2058,18 @@ public class VectorMaximizer {
 			variableAngle2Adjusted = initialAngle - (currentVectorRight ? 1 : -1) * variableAngle2; //the absolute direction we're throwing in/trying to go in
 			
 			if (optimizeFCTFalling) { //yank does not appear to be effective, neither is holding back
-				// double[] holdingAngles = new double[24];
-				// for (int i = 0; i <= 22; i++)
-				// 	holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
-				// holdingAngles[23] = Math.toRadians(p.debugValue);
-				// ((ComplexVector) variableMovement2Vector).setHoldingAngles(holdingAngles);
-				variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
+				if (p.customFCTAngle) {
+					double[] holdingAngles = new double[24];
+					boolean[] holdingMinRadius = new boolean[24];
+					holdingAngles[0] = Math.toRadians(p.fctAngle);
+					holdingMinRadius[0] = p.fctAngle < 0;
+					for (int i = 1; i <= 23; i++)
+						holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
+					//holdingAngles[23] = Math.toRadians(p.debugValue);
+					((ComplexVector) variableMovement2Vector).setHolding(holdingAngles, holdingMinRadius);
+				}
+				else
+					variableMovement2Vector.setHoldingAngle(SimpleMotion.NORMAL_ANGLE);
 			}
 			else if (hasVariableCapThrow2) {
 				setCapThrowHoldingAngles((ComplexVector) variableMovement2Vector, variableAngle2, p.customFCTAngle ? Math.toRadians(p.fctAngle) : OPTIMAL_ANGLE_DIFF, SimpleMotion.NORMAL_ANGLE, variableMovement2Frames, variableMovement2FallingFrames);
