@@ -59,7 +59,7 @@ public class VectorCalculator extends JPanel {
 	public static final String VERSION = "2.2.0";
 
 	public static final int WINDOW_WIDTH = 550;
-	public static final int PROPERTIES_TABLE_HEIGHT = 500;
+	public static final int PROPERTIES_TABLE_HEIGHT = 530;
 	public static final int MIDAIR_PANEL_HEIGHT = 300;
 
 	public static CalculateThread calculateThread = null;

@@ -230,7 +230,7 @@ public class VectorDisplayWindow {
 		frame.add(infoScrollPane, BorderLayout.NORTH);
 		frame.add(dataScrollPane, BorderLayout.CENTER);
 		frame.add(export, BorderLayout.SOUTH);
-		frame.setSize(1250, 700);
+		frame.setSize(1250, 750);
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowOpened(java.awt.event.WindowEvent e) {
 				MainJMenuBar.updateCalculatorMenuItems();
