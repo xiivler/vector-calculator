@@ -2171,7 +2171,7 @@ public class VectorMaximizer {
 		else return -1;
 	}
 
-	public double edgeCBMin = 12, edgeCBMax = 26;
+	public double edgeCBMin = p.onMoon ? 6 : 12, edgeCBMax = 26;
 	public double vectorAngleMin = 45; double vectorAngleMax = 90;
 	//public double firstFrameDecelIncrement = 0.005;
 	public double vectorAngleIncrement = 1;

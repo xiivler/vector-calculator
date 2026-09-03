@@ -16,7 +16,7 @@ public class Solver implements SolverInterface {
 
     static final double DEFAULT_EDGE_CB_ANGLE_DIVE_TURN = 18;
     static final double DEFAULT_EDGE_CB_ANGLE_NO_DIVE_TURN = 9;
-    static final double EDGE_CB_MIN_NO_DIVE_TURN = 6;
+    static final double EDGE_CB_MIN_NO_DIVE_TURN = 0;
     static final double EDGE_CB_MAX_NO_DIVE_TURN = 12;
     static final double MAXIMIZE_HCT_LIMIT = Math.toRadians(8);
 
@@ -429,9 +429,9 @@ public class Solver implements SolverInterface {
                 if (canSubtractFrame(i, durations[i]) && efficiency < worstEfficiency) {
                     if (i == secondDiveIndex && !secondGPHeightCorrect) //don't remove frames from final dive until second GP height is correct
                         continue;
-                    if (i == firstCTIndex && durations[i] <= 28 && !p.twoPlayerMode) //28 and 21 are the best for high movement for 1P mode
+                    if (i == firstCTIndex && durations[i] <= (p.onMoon ? 32 : 28) && !p.twoPlayerMode) //28 and 21 are the best for high movement for 1P mode
                         continue;
-                    if (i == firstDiveIndex && durations[i] <= 21 && !p.twoPlayerMode)
+                    if (i == firstDiveIndex && durations[i] <= (p.onMoon ? 28 : 21) && !p.twoPlayerMode)
                         continue;
                     worstEfficiency = efficiency;
                     worstEfficiencyIndex = i;
@@ -506,7 +506,7 @@ public class Solver implements SolverInterface {
         // System.out.println("Ballpark Y Disps: " + Arrays.toString(y_disps));
         // System.out.println("Ballpark Y Heights: " + Arrays.toString(y_heights));
 
-        Debug.println(2, "Ballpark Durations: " + Arrays.toString(durations));
+        Debug.println(10, "Ballpark Durations: " + Arrays.toString(durations));
         // System.out.println("Ballpark Last Frames: " + Arrays.toString(lastFrames));
         // System.out.println("Ballpark Y Height: " + y);
 
@@ -569,6 +569,11 @@ public class Solver implements SolverInterface {
             diveTurns = new boolean[maxCTDuration + 1][maxDiveDuration + 1];
             for (int i = -delta; i <= delta; i++) {
                 for (int j = -delta; j <= delta; j++) {
+                    if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+                        p.maximizeYank = userMaximizeYank;
+                        return false;
+                    }
+
                     int ctDuration = durations[diveCapBounceIndex - 2] + i;
                     int diveDuration = durations[diveCapBounceIndex - 1] + j;
                     if (p.twoPlayerMode) {
@@ -648,6 +653,10 @@ public class Solver implements SolverInterface {
 
         //test the runner-ups in more detail to see if any are actually better
         for (int i = 1; i < bestResults.size(); i++) {
+            if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
+                p.maximizeYank = userMaximizeYank;
+                return false;
+            }
             testDurations = bestResults.get(i).intArray;
             double testDisp = test(testDurations, true, false, !p.onMoon, false);
             if (testDisp > bestDisp) {

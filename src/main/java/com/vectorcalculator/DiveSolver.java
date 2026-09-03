@@ -188,10 +188,10 @@ public class DiveSolver implements SolverInterface {
                 maximizer.movementFrames.set(maximizer.movementFrames.size() - (p.reverseBonk ? 2 : 1), midairs[secondDiveIndex][1]);
             }
             while (getFinalYPos(maximizer) + p.getUpwarpMinusError() < p.y1 - Solver.ERROR) {
-                if (midairs[secondDiveIndex][1] < 14) {
+                if (midairs[secondDiveIndex][1] < (p.onMoon ? 21 : 14)) {
                     midairs[secondDiveIndex][1]++; 
                 }
-                else if (midairs[secondDiveIndex][1] == 14) {
+                else if (midairs[secondDiveIndex][1] == (p.onMoon ? 21 : 14)) {
                     error = "Error: Could not reach target height"; 
                     p.durationFrames = oldDurationFrames;
                     success = false;
@@ -294,6 +294,8 @@ public class DiveSolver implements SolverInterface {
             maximizer.edgeCBMin = Solver.EDGE_CB_MIN_NO_DIVE_TURN;
             maximizer.edgeCBMax = Solver.EDGE_CB_MAX_NO_DIVE_TURN;
         }
+        else
+            maximizer.edgeCBMin = 0;
         p.vectorAngle = 90;
         p.diveCapBounceAngle = diveTurn ? Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : 0;
         maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
