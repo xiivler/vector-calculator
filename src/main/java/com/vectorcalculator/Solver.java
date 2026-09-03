@@ -559,6 +559,8 @@ public class Solver implements SolverInterface {
 
         if (diveCapBounceIndex >= 2) {
             VectorCalculator.setProgressText("Solver: Testing Cap Bounces");
+            lastAlertTime = System.currentTimeMillis();
+            seconds = 0;
             
             int maxCTDuration = durations[diveCapBounceIndex - 2] + delta;
             int maxDiveDuration = durations[diveCapBounceIndex - 1] + delta;
@@ -572,6 +574,12 @@ public class Solver implements SolverInterface {
                     if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) {
                         p.maximizeYank = userMaximizeYank;
                         return false;
+                    }
+
+                    if (System.currentTimeMillis() - lastAlertTime >= 1000) {
+                        seconds++;
+                        VectorCalculator.setProgressText("Solver: Testing Cap Bounces (" + seconds + "s)");
+                        lastAlertTime = System.currentTimeMillis();
                     }
 
                     int ctDuration = durations[diveCapBounceIndex - 2] + i;
@@ -625,6 +633,7 @@ public class Solver implements SolverInterface {
 
         VectorCalculator.setProgressText("Solver: Finding Optimal Duration Candidates");
         lastAlertTime = System.currentTimeMillis();
+        seconds = 0;
 
         bestResults = new ArrayList<DoubleIntArray>();
         bestResults.add(new DoubleIntArray(0, durations));
