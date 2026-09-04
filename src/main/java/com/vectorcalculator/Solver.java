@@ -295,7 +295,9 @@ public class Solver implements SolverInterface {
         if (finalCapThrowIndex > 0)
             preset[finalCapThrowIndex - 1][1] = tooManyFrames;
         if (p.groundTypeCB != GroundType.NONE && cbvFirst) {
-            if (p.tripleThrow == TripleThrow.YES)
+            if (p.twoPlayerMode)
+                preset[homingFTIndex - 1][1] += 2;
+            else if (p.tripleThrow == TripleThrow.YES)
                 preset[homingTTIndex - 1][1] += 2;
             else
                 preset[homingMCCTIndex - 1][1] += 8;
