@@ -296,25 +296,33 @@ public class VectorMaximizer {
 					initialRotation = Math.toRadians(p.initialAngle);
 				else {
 					if (p.chooseInitialRotation) {
+						//see if we can rotate Mario to be facing 60 degrees at the start
 						if (optimizeInitialRotation && !p.customInitialRotation && !(p.initialMovementName.equals("Single Jump") || p.initialMovementName.equals("Double Jump"))) {
-							initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation); //rotate by 60 degrees to the side of the target angle
-							motionGroup[0].setInitialRotation(initialRotation);
-							for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
-								motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
+							if (listPreparer.initialMovementIndex == motionGroup.length - 1) {
+								initialRotation = variableAngle2Adjusted + (p.rightVector ? Math.PI / 3 : -Math.PI / 3); //rotate by 60 degrees to the side of the target angle
+								if (p.initialMovementName.equals("Triple Jump"))
+									initialRotation = VectorCalculator.clampDouble(initialRotation, motionGroup[0].initialAngle - Math.PI / 4, motionGroup[0].initialAngle + Math.PI / 4);
 							}
-							double originalFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
-
-							initialRotation = variableAngle2Adjusted + (p.rightVector ? Math.PI / 3 : -Math.PI / 3); //rotate by 60 degrees to the side of the target angle
-							if (p.initialMovementName.equals("Triple Jump"))
-								initialRotation = VectorCalculator.clampDouble(initialRotation, motionGroup[0].initialAngle - Math.PI / 4, motionGroup[0].initialAngle + Math.PI / 4);
-							motionGroup[0].setInitialRotation(initialRotation);
-							for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
-								motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
-							}
-							double optimizedFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
-
-							if (originalFinalRotation != optimizedFinalRotation) { //we did not rotate to the same spot
+							else {
 								initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation);
+								motionGroup[0].setInitialRotation(initialRotation);
+								for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
+									motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
+								}
+								double originalFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
+
+								initialRotation = variableAngle2Adjusted + (p.rightVector ? Math.PI / 3 : -Math.PI / 3); //rotate by 60 degrees to the side of the target angle
+								if (p.initialMovementName.equals("Triple Jump"))
+									initialRotation = VectorCalculator.clampDouble(initialRotation, motionGroup[0].initialAngle - Math.PI / 4, motionGroup[0].initialAngle + Math.PI / 4);
+								motionGroup[0].setInitialRotation(initialRotation);
+								for (int i = 0; i <= listPreparer.initialMovementIndex; i++) {
+									motionGroup[i + 1].setInitialRotation(motionGroup[i].calcFinalRotation());
+								}
+								double optimizedFinalRotation = motionGroup[listPreparer.initialMovementIndex + 1].initialRotation;
+
+								if (originalFinalRotation != optimizedFinalRotation) { //we did not rotate to the same spot
+									initialRotation = motionGroup[0].initialAngle + Math.toRadians(p.initialRotation);
+								}
 							}
 						}
 						else
@@ -732,6 +740,8 @@ public class VectorMaximizer {
 		return (vectorAngle - relativeInitialRotation < Math.toRadians(maxRotation)); //is it possible to rotate enough to reach the vector angle from the throw angle? If so, then we can use an optimally vectored turnaround
 	}
 
+	public static final int OPTIMAL_HOLDING_MIN_FRAMES = 5; //should be 1f more than the max turnaround frames
+
 	//sets cap throw holding angles assuming Cappy is thrown at 90 degrees OR that Mario will rotate all the way to the vectorAngle so that he has enough time to do an optimal turnaround
 	//idea: vector perfectly for as long as you can
 	//then initiate a turnaround but then go back to vectoring afterward
@@ -742,7 +752,7 @@ public class VectorMaximizer {
 	private boolean setOptimalHoldingAngles(ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames) {
 		double[] holdingAngles = new double[frames];
 		boolean[] holdingMinRadius = new boolean[frames];
-		if (p.turnarounds) {
+		if (p.turnarounds && frames >= OPTIMAL_HOLDING_MIN_FRAMES) {
 			double initialHoldingAngle = angleDiff == OPTIMAL_ANGLE_DIFF ? SimpleMotion.NORMAL_ANGLE : angle + angleDiff;
 			double ang_deg = Math.toDegrees(vectorAngle - angle);
 			Debug.println("Final Cap Throw Dive Angle: " + ang_deg);
@@ -807,6 +817,8 @@ public class VectorMaximizer {
 		else {
 			holdingAngles[0] = angle;
 			int lastNormalAngleFrame = (frames - 1) / 2;
+			if (frames <= 10) //TODO figure out correct number of frames
+				lastNormalAngleFrame = 0;
 			for (int i = 1; i <= lastNormalAngleFrame; i++)
 				holdingAngles[i] = SimpleMotion.NORMAL_ANGLE;
 			for (int i = lastNormalAngleFrame + 1; i < frames; i++)
@@ -942,6 +954,10 @@ public class VectorMaximizer {
 			turnaroundFrames = 0; //which type of fast turnaround from the list that we're checking
 			while (rotationWithQuickturn < angle && turnaroundFrames < fastTurnarounds.length - 1) {
 				turnaroundFrames++;
+				if (frames - 1 - turnaroundFrames - neutralFrames < 0) { //motion is too short to do anything
+					motion.setHolding(holdingAngles, holdingMinRadius);
+					return;
+				}
 				rotationWithoutQuickturn = rotations[frames - 1 - turnaroundFrames];
 				rotationWithQuickturn = rotationWithoutQuickturn + fastTurnarounds[turnaroundFrames];
 				overshoot = rotationWithQuickturn - angle;
@@ -953,6 +969,13 @@ public class VectorMaximizer {
 			}
 			else if (turnaroundFrames <= 4) //TODO accept larger?
 				quickturnAssistMethod = true;
+		}
+
+		if (frames - 2 - turnaroundFrames - neutralFrames < 0 || frames <= 5) { //motion is very short, TODO perhaps qt both directions
+			for (int i = 0; i < frames; i++)
+				holdingAngles[i] = angle;
+			motion.setHolding(holdingAngles, holdingMinRadius);
+			return;
 		}
 
 		//counterrotation method (turnaroundFrames is 0 or 1)
