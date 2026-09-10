@@ -16,27 +16,72 @@ public class Sandbox {
 
     public static void main(String[] args) {
         VectorCalculator.main(args);
+        calcCTDiveDispData();
+    }
+
+    public static void calcDispData() {
         Properties p = Properties.getInstance();
         VectorCalculator.addPreset("Spinless (No Final Cap Throw)", false);
-        int frames = 50;
+        int frames = 100;
         double[] forwardDisps = new double[frames + 1];
         double[] yDisps = new double[frames + 1];
         for (int i = 1; i <= frames; i++) {
             //p.initialFrames = i;
-            p.midairs[p.midairs.length - 1][1] = i;
-            VectorMaximizer maximizer = VectorCalculator.calculate();
+            p.midairs[p.midairs.length - 2][1] = i;
+            //SolverInterface solver = VectorCalculator.runSolver(true, true);
+            DiveSolver solver = new DiveSolver();
+            solver.test();
+            VectorMaximizer maximizer = solver.getMaximizer();
+            //VectorMaximizer maximizer = VectorCalculator.calculate();
             //int index = maximizer.listPreparer.initialMovementIndex;
-            int index = maximizer.motions.length - 1;
+            int index = maximizer.motions.length - 3;
             SimpleMotion motion = maximizer.motions[index];
             double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
             double coordAngle = Math.atan(motion.dispX / motion.dispZ);
             double forwardDisp = Math.abs(Math.sqrt(motion.dispX * motion.dispX + motion.dispZ * motion.dispZ) * Math.cos(targetAngle - coordAngle));
-            forwardDisps[i] = VectorCalculator.round(forwardDisp, 0);
+            forwardDisps[i] = VectorCalculator.round(forwardDisp, 3);
             yDisps[i] = VectorCalculator.round(motion.calcDispY(), 0);
         }
         System.out.println(Arrays.toString(forwardDisps));
         System.out.println(Arrays.toString(yDisps));
     }
+
+    public static void calcCTDiveDispData() {
+        Properties p = Properties.getInstance();
+        VectorCalculator.addPreset("Spinless (No Final Cap Throw)", false);
+        double[][] forwardDisps = new double[34][41];
+        double[][] yDisps = new double[34][41];
+        for (int i = 8; i <= 33; i++) {
+            for (int j = 20; j <= 35; j++) {
+                //p.initialFrames = i;
+                p.midairs[p.firstCTIndex][1] = i;
+                p.midairs[p.firstCTIndex + 1][1] = j;
+                //SolverInterface solver = VectorCalculator.runSolver(true, true);
+                DiveSolver solver = new DiveSolver();
+                double disp = solver.test();
+                if (disp != 0) {
+                    VectorMaximizer maximizer = solver.getMaximizer();
+                    //VectorMaximizer maximizer = VectorCalculator.calculate();
+                    //int index = maximizer.listPreparer.initialMovementIndex;
+                    int ctIndex = maximizer.variableCapThrow1Index;
+                    int ctFallIndex = maximizer.hasVariableCapThrow1Falling ? maximizer.variableCapThrow1Index + 1 : -1;
+                    int diveIndex = maximizer.variableCapThrow1Index + (ctFallIndex >= 0 ? 3 : 2);
+                    double dispX = maximizer.motions[ctIndex].dispX + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].dispX : 0) + maximizer.motions[diveIndex].dispX;
+                    double dispZ = maximizer.motions[ctIndex].dispZ + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].dispZ : 0) + maximizer.motions[diveIndex].dispZ;
+                    double dispY = maximizer.motions[ctIndex].calcDispY() + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].calcDispY() : 0) + maximizer.motions[diveIndex].calcDispY();
+                    //SimpleMotion motion = maximizer.motions[index];
+                    double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
+                    double coordAngle = Math.atan(dispX / dispZ);
+                    double forwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));
+                    forwardDisps[i][j] = VectorCalculator.round(forwardDisp, 3);
+                    yDisps[i][j] = VectorCalculator.round(dispY, 1);
+                    System.out.printf("%s\t%s\t%s\t%s\t%s\n", i + j, i, j, forwardDisps[i][j], yDisps[i][j]);
+                }
+            }
+        }
+        //System.out.println(Arrays.toString(forwardDisps));
+        //System.out.println(Arrays.toString(yDisps));
+    } 
 
     /* public static void main(String[] args) {
         Properties p = Properties.getInstance();
