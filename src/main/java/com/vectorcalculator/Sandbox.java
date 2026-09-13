@@ -3,6 +3,8 @@ package com.vectorcalculator;
 import java.util.Arrays;
 import java.util.Vector;
 
+import com.vectorcalculator.Properties.TripleThrow;
+
 public class Sandbox {
 
     private static double reduceAngle(double angle) {
@@ -16,7 +18,11 @@ public class Sandbox {
 
     public static void main(String[] args) {
         VectorCalculator.main(args);
-        calcCTDiveDispData();
+        System.out.println("Testing Speedrun Solver");
+        DispData.initializeDispData();
+        SpeedrunSolver ss = new SpeedrunSolver();
+        ss.solve(0);
+        //calcCTDiveDispData();
     }
 
     public static void calcDispData() {
@@ -58,6 +64,7 @@ public class Sandbox {
                 p.midairs[p.firstCTIndex + 1][1] = j;
                 //SolverInterface solver = VectorCalculator.runSolver(true, true);
                 DiveSolver solver = new DiveSolver();
+                solver.ttAllowed = TripleThrow.NO;
                 double disp = solver.test();
                 if (disp != 0) {
                     VectorMaximizer maximizer = solver.getMaximizer();
