@@ -1257,6 +1257,8 @@ public class VectorCalculator extends JPanel {
 	static JTabbedPane tabbedPane;
 
 	public static double round(double d, int places) {
+		if (d < 0)
+			return ((int) (d * Math.pow(10, places) - .5)) / (double) Math.pow(10, places);
 		return ((int) (d * Math.pow(10, places) + .5)) / (double) Math.pow(10, places);
 	}
 

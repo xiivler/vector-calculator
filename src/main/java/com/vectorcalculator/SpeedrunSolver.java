@@ -36,6 +36,7 @@ public class SpeedrunSolver implements SolverInterface {
 		DispDataCTDive ctDiveData = (DispDataCTDive) DispData.getDispData("MCCT Dive", DispData.DEFAULT);
 		DispData cbData = DispData.getDispData("Dive Cap Bounce", DispData.DEFAULT);
 		DispData diveData = DispData.getDispData("Final Dive", DispData.DEFAULT);
+		DispData fctData = DispData.getDispData("Final Cap Throw", DispData.DEFAULT);
 
 		ArrayList<Candidate> candidates = new ArrayList<Candidate>();
 
@@ -46,17 +47,21 @@ public class SpeedrunSolver implements SolverInterface {
 		for (int imFrames = 0; imFrames <= imData.maxFrames() && imFrames <= maxFrames; imFrames++) {
 			for (int cbFrames = 1; cbFrames <= cbData.maxFrames(); cbFrames++) {
 				for (int diveFrames = 14; diveFrames <= diveData.maxFrames(); diveFrames++) {
-					for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
-						int totalFrames = imFrames + cbFrames + diveFrames + ctDiveData.frames(ctDiveDataIndex) + 2; //+2 for the two ground pounds
-						if (totalFrames > maxFrames)
+					for (int fctFrames = 0; fctFrames <= fctData.maxFrames(); fctFrames++) {
+						if (fctFrames > 0 && fctFrames < 8)
 							continue;
-
-						double forwardDisp = imData.forwardDisps[imFrames] + cbData.forwardDisps[cbFrames] + diveData.forwardDisps[diveFrames] + ctDiveData.data[ctDiveDataIndex][3];
-						double yDisp = imData.yDisps[imFrames] + cbData.yDisps[cbFrames] + diveData.yDisps[diveFrames] + ctDiveData.data[ctDiveDataIndex][4];
-						double y1 = p.y0 + yDisp;
-						if (y1 <= p.y1 + Solver.ERROR && y1 + p.getUpwarpMinusError() >= p.y1 - Solver.ERROR) {
+						for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
+							int totalFrames = imFrames + cbFrames + diveFrames + fctFrames + ctDiveData.frames(ctDiveDataIndex) + 2; //+2 for the two ground pounds
+							if (totalFrames > maxFrames)
+								continue;
+							double yDisp = imData.yDisps[imFrames] + cbData.yDisps[cbFrames] + diveData.yDisps[diveFrames] + fctData.yDisps[fctFrames] + ctDiveData.data[ctDiveDataIndex][4];
+							double y1 = p.y0 + yDisp;
+							if (!(y1 <= p.y1 + Solver.ERROR && y1 + p.getUpwarpMinusError() >= p.y1 - Solver.ERROR)) {
+								continue;
+							}
+							double forwardDisp = imData.forwardDisps[imFrames] + cbData.forwardDisps[cbFrames] + diveData.forwardDisps[diveFrames] + fctData.forwardDisps[fctFrames] + ctDiveData.data[ctDiveDataIndex][3];
 							if (forwardDisp >= targetDisp - RANGE) {
-								int durations[] = {imFrames, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, diveFrames};
+								int durations[] = {imFrames, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
 								candidates.add(new Candidate(totalFrames, durations, forwardDisp, yDisp));
 								if (forwardDisp >= targetDisp + RANGE)
 									maxFrames = totalFrames;
@@ -81,8 +86,23 @@ public class SpeedrunSolver implements SolverInterface {
 				if (c.totalFrames > minTotalFrames && bestDisp < targetDisp)
 					minTotalFrames++;
 				p.initialFrames = c.durations[0];
-				for (int i = 1; i < c.durations.length; i++)
+				int eliminatedMovements = 0;
+				VectorCalculator.addPreset("Spinless", false);
+				for (int i = 1; i < c.durations.length; i++) {
 					p.midairs[i - 1][1] = c.durations[i];
+					if (c.durations[i] == 0)
+						eliminatedMovements++;
+				}
+				int[][] realMidairs = new int[p.midairs.length - eliminatedMovements][2];
+				int realIndex = 0;
+				for (int i = 0; i < p.midairs.length; i++) {
+					if (p.midairs[i][1] != 0) {
+						realMidairs[realIndex][0] = p.midairs[i][0];
+						realMidairs[realIndex][1] = p.midairs[i][1];
+						realIndex++;
+					}
+				}
+				p.midairs = realMidairs;
 				VectorCalculator.addPreset(p.midairs);
 				double disp = test();
 				if (disp > bestDisp) {
@@ -96,8 +116,24 @@ public class SpeedrunSolver implements SolverInterface {
 		if (bestDisp >= targetDisp) {
 			System.out.println("Best Result: " + bestCandidate.toString() + ", " + bestDisp);
 			p.initialFrames = bestCandidate.durations[0];
-			for (int i = 1; i < bestCandidate.durations.length; i++)
+			int eliminatedMovements = 0;
+			VectorCalculator.addPreset("Spinless", false);
+			for (int i = 1; i < bestCandidate.durations.length; i++) {
 				p.midairs[i - 1][1] = bestCandidate.durations[i];
+				if (bestCandidate.durations[i] == 0)
+					eliminatedMovements++;
+			}
+			int[][] realMidairs = new int[p.midairs.length - eliminatedMovements][2];
+			int realIndex = 0;
+			for (int i = 0; i < p.midairs.length; i++) {
+				if (p.midairs[i][1] != 0) {
+					realMidairs[realIndex][0] = p.midairs[i][0];
+					realMidairs[realIndex][1] = p.midairs[i][1];
+					realIndex++;
+				}
+			}
+			//TODO identify what the preset SHOULD be now
+			p.midairs = realMidairs;
 			VectorCalculator.addPreset(p.midairs);
 			double disp = test();
 			// VectorDisplayWindow.generateData(maximizer);

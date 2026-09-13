@@ -18,16 +18,18 @@ public class Sandbox {
 
     public static void main(String[] args) {
         VectorCalculator.main(args);
-        System.out.println("Testing Speedrun Solver");
+        //System.out.println(VectorCalculator.round(-5.2, 1));
+        //System.out.println("Testing Speedrun Solver");
         //DispData.initializeDispData();
-        SpeedrunSolver ss = new SpeedrunSolver();
-        ss.solve(0);
-        //calcCTDiveDispData();
+        //SpeedrunSolver ss = new SpeedrunSolver();
+        //ss.solve(0);
+        calcFinalCTDispData();
     }
 
     public static void calcDispData() {
         Properties p = Properties.getInstance();
         VectorCalculator.addPreset("Spinless (No Final Cap Throw)", false);
+        VectorCalculator.addPreset("Spinless", false);
         int frames = 100;
         double[] forwardDisps = new double[frames + 1];
         double[] yDisps = new double[frames + 1];
@@ -50,6 +52,41 @@ public class Sandbox {
         }
         System.out.println(Arrays.toString(forwardDisps));
         System.out.println(Arrays.toString(yDisps));
+    }
+
+    public static void calcFinalCTDispData() {
+        Properties p = Properties.getInstance();
+        VectorCalculator.addPreset("Spinless", false);
+        p.midairs[0][1] = 28;
+        p.midairs[1][1] = 26;
+        int frames = 35;
+        double[] forwardDisps = new double[frames + 1];
+        double[] yDisps = new double[frames + 1];
+        VectorMaximizer maximizer = null;
+        for (int i = 8; i <= frames; i++) {
+            p.midairs[p.midairs.length - 2][1] = i;
+            //SolverInterface solver = VectorCalculator.runSolver(true, true);
+            DiveSolver solver = new DiveSolver();
+            solver.test();
+            maximizer = solver.getMaximizer();
+            //VectorMaximizer maximizer = VectorCalculator.calculate();
+            //int index = maximizer.listPreparer.initialMovementIndex;
+            int ctIndex = maximizer.variableMovement2Index;
+            int ctFallIndex = maximizer.hasVariableMovement2Falling ? maximizer.variableMovement2Index + 1 : -1;
+            double dispX = maximizer.motions[ctIndex].dispX + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].dispX : 0);
+            double dispZ = maximizer.motions[ctIndex].dispZ + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].dispZ : 0);
+            double dispY = maximizer.motions[ctIndex].calcDispY() + (ctFallIndex >= 0 ? maximizer.motions[ctFallIndex].calcDispY() : 0);
+            double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
+            double coordAngle = Math.atan(dispX / dispZ);
+            double forwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));
+            forwardDisps[i] = VectorCalculator.round(forwardDisp, 3);
+            yDisps[i] = VectorCalculator.round(dispY, 1);
+            System.out.println("Complete");
+        }
+        System.out.println(Arrays.toString(forwardDisps));
+        System.out.println(Arrays.toString(yDisps));
+        VectorDisplayWindow.generateData(maximizer);
+        VectorDisplayWindow.display();
     }
 
     public static void calcCTDiveDispData() {
