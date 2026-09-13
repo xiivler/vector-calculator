@@ -159,7 +159,7 @@ public class VectorCalculator extends JPanel {
 					params.add(Parameter.duration_type);
 				if (p.durationFrames)
 					params.add(Parameter.initial_frames);
-				else if (p.mode != Mode.SOLVE)
+				else if (p.mode == Mode.CALCULATE || p.mode == Mode.SOLVE_DIVES)
 					params.add(Parameter.initial_displacement);
 				if (p.initialMovementName.equals("Vault"))
 					params.add(Parameter.vault_cap_return_frame);
@@ -625,7 +625,7 @@ public class VectorCalculator extends JPanel {
 			if (p.mode == Mode.SOLVE) {
 				if (p.midairPreset.equals("Custom"))
 					setProperty(Parameter.midairs, "Spinless");
-				if (p.initialAndTargetGiven && oldMode != Mode.SOLVE)
+				if (p.initialAndTargetGiven && (oldMode == Mode.CALCULATE || oldMode == Mode.SOLVE_DIVES))
 					setProperty(Parameter.solve_for_initial_angle, "Yes");
 			}
 			else if (p.mode == Mode.SOLVE_DIVES) {
@@ -1600,7 +1600,7 @@ public class VectorCalculator extends JPanel {
 				}
 				else if (p.mode == Mode.SOLVE || p.mode == Mode.SOLVE_DIVES) {
 					SolverInterface solver = p.mode == Mode.SOLVE ? new Solver() : new DiveSolver();
-					retest(solver, p.mode == Mode.SOLVE_DIVES);
+					retest(solver, p.mode);
 					maximizer = solver.getMaximizer();
 					if (maximizer != null) {
 						if (p.firstCTIndex >= 0) {
@@ -1718,11 +1718,15 @@ public class VectorCalculator extends JPanel {
 		}
 	}
 
-	public static SolverInterface runSolver(boolean diveSolver, boolean displayError) {
+	public static SolverInterface runSolver(Mode mode, boolean displayError) {
 		SolverInterface solver;
-		if (diveSolver) {
+		if (mode == Mode.SOLVE_DIVES) {
 			solver = new DiveSolver();
 			solver.solve(40);
+		}
+		else if (mode == Mode.SOLVE_SPEEDRUN) {
+			solver = new SpeedrunSolver();
+			solver.solve(0); //TODO use delta for something?
 		}
 		else {
 			solver = new Solver();
@@ -1735,8 +1739,8 @@ public class VectorCalculator extends JPanel {
 		return solver;
 	}
 
-	public static void retest(SolverInterface solverInterface, boolean diveSolver) {
-		if (!diveSolver) {
+	public static void retest(SolverInterface solverInterface, Mode mode) {
+		if (mode == Mode.SOLVE) { //TODO faster version for speedrun solver
 			Solver solver = (Solver) solverInterface;
 			if (solver.bestDurations == null) {
 				solver.setup();
@@ -1976,7 +1980,7 @@ public class VectorCalculator extends JPanel {
 						if (p.midairPreset.equals("Custom") || p.midairPreset.equals("None"))
 							return dropdown(new String[]{"Calculate (Solve Dives)", "Calculate"});
 						else
-							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate"});
+							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate", "Speedrun Solver"});
 					default:
 						return super.getCellEditor(row, column);
 				}

@@ -8,6 +8,8 @@ public class DispData {
 
     public static final int DEFAULT = 0;
 
+    public static boolean initialized = false;
+
     String movementType;
     int context;
     double[] forwardDisps; //forward displacement if the movement is 1 frame, 2 frames, etc.

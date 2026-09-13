@@ -37,24 +37,23 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     return false;
                 }
 
-                boolean diveSolver = p.mode == Mode.SOLVE_DIVES;
                 TurnDuringDive oldTurnDuringDive = p.diveTurn;
                 SolverInterface solver;
                 if (optimalDistanceMotion) {
                     p.initialMovementName = "Triple Jump";
                     p.framesJump = 10;
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
-                    SolverInterface solverTJ = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverTJ = VectorCalculator.runSolver(p.mode, false);
                     int[][] tjMidairs = p.midairs;
                     //solverTJ.solve(p.durationSearchRange);
                     p.initialMovementName = "Motion Cap Throw RCV";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
-                    SolverInterface solverRCV = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverRCV = VectorCalculator.runSolver(p.mode, false);
                     int[][] rcvMidairs = p.midairs;
                     //solverRCV.solve(Math.min(p.durationSearchRange, 3));
                     p.initialMovementName = "Sideflip";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName, p.initialHorizontalSpeed, p.framesJump, p.rocketFlower);
-                    SolverInterface solverSideflip = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverSideflip = VectorCalculator.runSolver(p.mode, false);
                     int[][] sideflipMidairs = p.midairs;
                     //solverSideflip.solve(p.durationSearchRange);
                     // Debug.println("TJ: " + maximizerTJ.bestDisp);
@@ -75,15 +74,15 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                         p.initialMovementName = "Sideflip";
                         VectorCalculator.addPreset(sideflipMidairs);
                     }
-                    VectorCalculator.retest(solver, diveSolver);
+                    VectorCalculator.retest(solver, p.mode);
                 }
                 else if (p.initialMovementName.contains("Crouch Roll")) {
                     p.initialMovementName = "Crouch Roll";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    SolverInterface solverCR = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverCR = VectorCalculator.runSolver(p.mode, false);
                     p.initialMovementName = "Crouch Roll (No Vector)";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    SolverInterface solverCRNV = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverCRNV = VectorCalculator.runSolver(p.mode, false);
                     if (solverCR.getBestDisp() > solverCRNV.getBestDisp()) {
                         solver = solverCR;
                         p.initialMovementName = "Crouch Roll";
@@ -93,15 +92,15 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     }
                     VectorCalculator.setPropertiesRow(Parameter.initial_movement);
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    VectorCalculator.retest(solver, diveSolver);
+                    VectorCalculator.retest(solver, p.mode);
                 }
                 else if (p.initialMovementName.contains("Roll Boost")) {
                     p.initialMovementName = "Roll Boost";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    SolverInterface solverRB = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverRB = VectorCalculator.runSolver(p.mode, false);
                     p.initialMovementName = "Roll Boost (No Vector)";
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    SolverInterface solverRBNV = VectorCalculator.runSolver(diveSolver, false);
+                    SolverInterface solverRBNV = VectorCalculator.runSolver(p.mode, false);
                     if (solverRB.getBestDisp() > solverRBNV.getBestDisp()) {
                         solver = solverRB;
                         p.initialMovementName = "Roll Boost";
@@ -111,11 +110,57 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     }
                     VectorCalculator.setPropertiesRow(Parameter.initial_movement);
                     VectorCalculator.initialMovement = new Movement(p.initialMovementName);
-                    VectorCalculator.retest(solver, diveSolver);
+                    VectorCalculator.retest(solver, p.mode);
                 }
                 else {
-                    solver = VectorCalculator.runSolver(diveSolver, true);
+                    solver = VectorCalculator.runSolver(p.mode, true);
                 }
+
+                if (VectorCalculator.cancelCalculating) {
+                    cancelCalculating();
+                    return false;
+                }
+
+                VectorCalculator.addPreset(p.midairs);
+                VectorMaximizer maximizer = solver.getMaximizer();
+                if (solver.solveSuccess() && maximizer != null) {
+                    if (p.firstCTIndex >= 0) {
+                        if (maximizer.ctType == Movement.FT) {
+                            p.midairs[p.firstCTIndex][0] = VectorCalculator.FT;
+                        }
+                        if (Movement.isTT(maximizer.ctType))
+                            p.midairs[p.firstCTIndex][0] = VectorCalculator.TT;
+                        else if (maximizer.ctType == Movement.CT)
+                            p.midairs[p.firstCTIndex][0] = VectorCalculator.CT;
+                        else
+                            p.midairs[p.firstCTIndex][0] = VectorCalculator.MCCT;
+                    }
+                    VectorCalculator.addPreset(p.midairs);
+                    VectorCalculator.setPropertiesRow(Parameter.dive_angle);
+                    VectorCalculator.setPropertiesRow(Parameter.dive_deceleration);
+                    //Debug.println("Possible: " + possible + " " + maximizer.ctType);
+                    VectorDisplayWindow.generateData(maximizer);
+                    VectorDisplayWindow.display();
+                }
+                if (optimalDistanceMotion) {
+                    VectorCalculator.setProperty(Parameter.initial_movement, "Optimal Distance Motion");
+                    p.durationFrames = false;
+                }
+                if (p.hctType != HctType.CUSTOM) { //reload preset so that hct angle gets reset to 60 degrees for next use of the calculator
+                    VectorCalculator.setProperty(Parameter.hct_type, p.hctType.name);
+                }
+                VectorCalculator.setProperty(Parameter.dive_turn, oldTurnDuringDive.displayName); //set back to "Test Both" if that is the setting
+            }
+            else if (p.mode == Mode.SOLVE_SPEEDRUN) {
+                if (p.initialMovementName.equals("Optimal Distance RCV") || optimalDistanceMotion) {
+                    VectorCalculator.setErrorText("Error: Optimal Distance Motion not supported in this mode");
+                    return false;
+                }
+
+                TurnDuringDive oldTurnDuringDive = p.diveTurn;
+                SolverInterface solver;
+                //TODO crouch roll, roll boost
+                solver = VectorCalculator.runSolver(p.mode, true);
 
                 if (VectorCalculator.cancelCalculating) {
                     cancelCalculating();

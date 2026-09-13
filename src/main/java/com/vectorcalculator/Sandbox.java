@@ -19,7 +19,7 @@ public class Sandbox {
     public static void main(String[] args) {
         VectorCalculator.main(args);
         System.out.println("Testing Speedrun Solver");
-        DispData.initializeDispData();
+        //DispData.initializeDispData();
         SpeedrunSolver ss = new SpeedrunSolver();
         ss.solve(0);
         //calcCTDiveDispData();

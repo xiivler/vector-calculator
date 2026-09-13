@@ -128,7 +128,7 @@ public class Properties {
 	}
 
     static enum Mode {
-        SOLVE("Solve"), SOLVE_DIVES("Calculate (Solve Dives)"), CALCULATE("Calculate");
+        SOLVE("Solve"), SOLVE_DIVES("Calculate (Solve Dives)"), CALCULATE("Calculate"), SOLVE_SPEEDRUN("Speedrun Solver");
 
         String name;
 

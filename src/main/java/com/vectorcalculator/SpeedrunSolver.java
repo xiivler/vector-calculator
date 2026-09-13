@@ -12,11 +12,22 @@ public class SpeedrunSolver implements SolverInterface {
 	boolean diveTurn = true;
 	boolean singleThrowAllowed = true;
 	TripleThrow ttAllowed = TripleThrow.NO;
+	int minTotalFrames = 0;
+	boolean success = false;
+	double bestDisp;
+	String error = "";
+	boolean mcctAllowed = true; //TODO logic for this
 
 	public static final double RANGE = 10; //how much less far should still be considered as a candidate
 
 	@Override
 	public boolean solve(int delta) {
+		if (!DispData.initialized) {
+			DispData.initializeDispData();
+		}
+
+		long startTime = System.currentTimeMillis();
+
 		double xDiff = p.x1 - p.x0;
 		double zDiff = p.z1 - p.z0;
 		double targetDisp = Math.sqrt(xDiff * xDiff + zDiff * zDiff);
@@ -27,19 +38,28 @@ public class SpeedrunSolver implements SolverInterface {
 		DispData diveData = DispData.getDispData("Final Dive", DispData.DEFAULT);
 
 		ArrayList<Candidate> candidates = new ArrayList<Candidate>();
+
+		VectorCalculator.setProgressText("Solver: Testing Permutations");
 		
-		for (int imFrames = 0; imFrames <= imData.maxFrames(); imFrames++) {
+		int maxFrames = Integer.MAX_VALUE;
+
+		for (int imFrames = 0; imFrames <= imData.maxFrames() && imFrames <= maxFrames; imFrames++) {
 			for (int cbFrames = 1; cbFrames <= cbData.maxFrames(); cbFrames++) {
 				for (int diveFrames = 14; diveFrames <= diveData.maxFrames(); diveFrames++) {
 					for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
+						int totalFrames = imFrames + cbFrames + diveFrames + ctDiveData.frames(ctDiveDataIndex) + 2; //+2 for the two ground pounds
+						if (totalFrames > maxFrames)
+							continue;
+
 						double forwardDisp = imData.forwardDisps[imFrames] + cbData.forwardDisps[cbFrames] + diveData.forwardDisps[diveFrames] + ctDiveData.data[ctDiveDataIndex][3];
 						double yDisp = imData.yDisps[imFrames] + cbData.yDisps[cbFrames] + diveData.yDisps[diveFrames] + ctDiveData.data[ctDiveDataIndex][4];
 						double y1 = p.y0 + yDisp;
 						if (y1 <= p.y1 + Solver.ERROR && y1 + p.getUpwarpMinusError() >= p.y1 - Solver.ERROR) {
 							if (forwardDisp >= targetDisp - RANGE) {
-								int totalFrames = imFrames + cbFrames + diveFrames + ctDiveData.frames(ctDiveDataIndex) + 2; //+2 for the two ground pounds
 								int durations[] = {imFrames, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, diveFrames};
 								candidates.add(new Candidate(totalFrames, durations, forwardDisp, yDisp));
+								if (forwardDisp >= targetDisp + RANGE)
+									maxFrames = totalFrames;
 							}
 						}
 					}
@@ -47,12 +67,14 @@ public class SpeedrunSolver implements SolverInterface {
 			}
 		}
 		if (candidates.size() == 0) {
-			System.out.println("No Solution Found");
+			error = "No Solution Found";
+			success = false;
 			return false;
 		}
 		candidates.sort(null);
-		int minTotalFrames = candidates.get(0).totalFrames;
-		double bestDisp = 0;
+		VectorCalculator.setProgressText("Solver: Testing Optimal Candidates");
+		minTotalFrames = candidates.get(0).totalFrames;
+		bestDisp = 0;
 		Candidate bestCandidate = null;
 		for (Candidate c : candidates) {
 			if (c.totalFrames == minTotalFrames || c.totalFrames > minTotalFrames && bestDisp < targetDisp) {
@@ -78,12 +100,15 @@ public class SpeedrunSolver implements SolverInterface {
 				p.midairs[i - 1][1] = bestCandidate.durations[i];
 			VectorCalculator.addPreset(p.midairs);
 			double disp = test();
-			VectorDisplayWindow.generateData(maximizer);
-			VectorDisplayWindow.display();
+			// VectorDisplayWindow.generateData(maximizer);
+			// VectorDisplayWindow.display();
+			VectorCalculator.setProgressText("Solver: Calculated in " + (System.currentTimeMillis() - startTime) + " ms");
+			success = true;
 			return true;
 		}
 		else {
-			System.out.println("No Solution Found");
+			error = "No Solution Found";
+			success = false;
 			return false;
 		}
 	}
@@ -113,37 +138,37 @@ public class SpeedrunSolver implements SolverInterface {
 
 	@Override
 	public String getError() {
-		return "";
+		return error;
 	}
 
 	@Override
 	public double getBestDisp() {
-		return 0;
+		return bestDisp;
 	}
 
 	@Override
 	public boolean solveSuccess() {
-		return false;
+		return success;
 	}
 
 	@Override
 	public boolean singleThrowAllowed() {
-		return false;
+		return singleThrowAllowed;
 	}
 
 	@Override
 	public boolean mcctAllowed() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public TripleThrow ttAllowed() {
-		return null;
+		return ttAllowed;
 	}
 
 	@Override
 	public VectorMaximizer getMaximizer() {
-		return null;
+		return maximizer;
 	}
 
 	public class Candidate implements Comparable<Candidate> {
