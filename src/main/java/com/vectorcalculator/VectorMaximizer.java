@@ -1194,7 +1194,7 @@ public class VectorMaximizer {
         }
         else {
             Movement initialMovement = new Movement(movementNames.get(startIndex), initialVelocity, framesJump, startIndex == 0 ? p.rocketFlower : false); //need to add frames jump if want to use that here
-            if (startIndex == 0 && movementNames.get(1).equals("Backflip"))
+            if (startIndex == 0 && endIndex > 1 && movementNames.get(1).equals("Backflip"))
                 initialMovement.defaultRotation = Math.PI;
             if (startIndex == listPreparer.initialMovementIndex)
                 setYankHoldingAngles(motionGroup, initialMovement, 0, startIndex, imYankFrames);
