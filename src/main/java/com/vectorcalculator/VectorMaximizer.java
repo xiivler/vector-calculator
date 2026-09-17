@@ -1354,6 +1354,7 @@ public class VectorMaximizer {
 	public static final int MAX_IM_YANK_FRAMES_NONVECTOR = 32;
 	public static final double MAX_IM_LIMIT = 0.99;
 	public static final double MAX_IM_NONVECTOR_LIMIT = 0.99;
+	public static final double MAX_IM_MOON_MIDAIR_VAULT_LIMIT = 0.12;
 	
 	//the maximize functions are called in this order, each by the next so that all necessary permutations are tested
 	public static final int MAX_TRY = 0, MAX_IM = 1, MAX_RS = 2, MAX_CB = 3, MAX_HCT = 4, MAX_VA1 = 5, MAX_VA2 = 6;
@@ -1365,7 +1366,7 @@ public class VectorMaximizer {
 				if (p.maximizeYank && optimizeIMYank) {
 					Movement initialMovement = new Movement(movementNames.get(listPreparer.initialMovementIndex));
 					if (p.onMoon && p.midairVault)
-						return binarySearch(0, MAX_IM_YANK_FRAMES, MAX_IM, MAX_IM_LIMIT)[0];
+						return binarySearch(0, MAX_IM_YANK_FRAMES, MAX_IM, 0.99)[0];
 					else if (initialMovement.canVector)
 						return linearSearch(0, MAX_IM_YANK_FRAMES, MAX_IM)[0];
 					else if (initialMovement.sidewaysAccel > 0)
