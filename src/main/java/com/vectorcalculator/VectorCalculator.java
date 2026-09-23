@@ -1982,7 +1982,7 @@ public class VectorCalculator extends JPanel {
 						if (p.midairPreset.equals("Custom") || p.midairPreset.equals("None"))
 							return dropdown(new String[]{"Calculate (Solve Dives)", "Calculate"});
 						else
-							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate", "Speedrun Solver"});
+							return dropdown(new String[]{"Solve", "Calculate (Solve Dives)", "Calculate", "Speedrun"});
 					default:
 						return super.getCellEditor(row, column);
 				}

@@ -23,27 +23,33 @@ public class Sandbox {
         //DispData.initializeDispData();
         //SpeedrunSolver ss = new SpeedrunSolver();
         //ss.solve(0);
-        calcFinalCTDispData();
+        //calcDispData(1, 500, -1, 0, "Spinless (No Final Cap Throw)"); //initial motion
+        calcDispData(1, 500, -1, 0, false, "Spinless (No Final Cap Throw)"); //initial motion
+        calcDispData(1, 50, -1, 0, false, "Spinless (No Final Cap Throw)"); //final dive
+        //calcFinalCTDispData();
     }
 
-    public static void calcDispData() {
+    public static void calcDispData(int minFrames, int maxFrames, int presetIndex, int maximizerIndex, boolean solveCB, String preset) {
         Properties p = Properties.getInstance();
-        VectorCalculator.addPreset("Spinless (No Final Cap Throw)", false);
-        VectorCalculator.addPreset("Spinless", false);
-        int frames = 100;
-        double[] forwardDisps = new double[frames + 1];
-        double[] yDisps = new double[frames + 1];
-        for (int i = 1; i <= frames; i++) {
-            //p.initialFrames = i;
-            p.midairs[p.midairs.length - 2][1] = i;
-            //SolverInterface solver = VectorCalculator.runSolver(true, true);
-            DiveSolver solver = new DiveSolver();
-            solver.test();
-            VectorMaximizer maximizer = solver.getMaximizer();
-            //VectorMaximizer maximizer = VectorCalculator.calculate();
+        VectorCalculator.addPreset(preset, false);
+        double[] forwardDisps = new double[maxFrames + 1];
+        double[] yDisps = new double[maxFrames + 1];
+        for (int i = minFrames; i <= maxFrames; i++) {
+            if (presetIndex == -1)
+                p.initialFrames = i;
+            else
+                p.midairs[presetIndex][1] = i;
+            VectorMaximizer maximizer;
+            if (solveCB) {
+                DiveSolver solver = new DiveSolver();
+                solver.test();
+                maximizer = solver.getMaximizer();
+            }
+            else
+                maximizer = VectorCalculator.calculate();
             //int index = maximizer.listPreparer.initialMovementIndex;
-            int index = maximizer.motions.length - 3;
-            SimpleMotion motion = maximizer.motions[index];
+            //int index = maximizer.motions.length - 3;
+            SimpleMotion motion = maximizer.motions[maximizerIndex];
             double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
             double coordAngle = Math.atan(motion.dispX / motion.dispZ);
             double forwardDisp = Math.abs(Math.sqrt(motion.dispX * motion.dispX + motion.dispZ * motion.dispZ) * Math.cos(targetAngle - coordAngle));

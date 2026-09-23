@@ -23,6 +23,9 @@ public class MovementNameListPreparer {
 	String invalidMessage = "";
 
 	int initialMovementIndex = 0; //index of final piece of initial movement
+
+	int[] startIndices;
+	int[] endIndices;
 	
 	public MovementNameListPreparer() {
 		//this.genPropertiesModel = VectorCalculator.genPropertiesModel;
@@ -30,6 +33,12 @@ public class MovementNameListPreparer {
 	}
 	
 	public String prepareList() {
+		startIndices = new int[Movement.COMPONENT_COUNT];
+		endIndices = new int[Movement.COMPONENT_COUNT];
+		for (int i = 0; i < Movement.COMPONENT_COUNT; i++) {
+			startIndices[i] = -1;
+			endIndices[i] = -1;
+		}
 
 		//handle reverse bonk based on whether it is present
 		// if (p.midairPreset.equals("Custom")) {
@@ -201,9 +210,16 @@ public class MovementNameListPreparer {
 		for (int duration : movementFrames) {
 			lastInitialMovementFrame += duration;
 		}
+
+		startIndices[Movement.IM] = 0;
+		endIndices[Movement.IM] = initialMovementIndex;
 		
 		//midair movement
 		String oldName = "";
+
+		int startIndex = initialMovementIndex + 1;
+		int endIndex = startIndex;
+		int category = Movement.IM;
 		
 		int[][] midairs = p.midairs;
 
@@ -221,11 +237,13 @@ public class MovementNameListPreparer {
 					movementFrames.add(24);
 					movementNames.add("Falling");
 					movementFrames.add(frames - 24);
+					endIndex++;
 				}
 				else {
 					movementNames.add(name);
 					movementFrames.add(frames);
 				}
+				//if (midairs[i][1] == VectorCalculator.HTT)
 			}
 			else if (name.equals("Rainbow Spin")) {
 				if (movementNames.contains("Rainbow Spin"))
@@ -237,6 +255,7 @@ public class MovementNameListPreparer {
 					movementFrames.add(31);
 					movementNames.add("Falling");
 					movementFrames.add(frames - 31);
+					endIndex++;
 				}
 			}
 			else {
@@ -276,6 +295,8 @@ public class MovementNameListPreparer {
 				movementFrames.add(frames);
 			}
 			oldName = name;
+			startIndex = endIndex + 1;
+			endIndex = startIndex;
 		}
 		//System.out.println("Initial movement index: " + initialMovementIndex);
 		return "";

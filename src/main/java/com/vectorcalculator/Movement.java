@@ -59,6 +59,9 @@ public class Movement {
 	public static final int RB_FRAMES = 19; //duration of an optimal reverse bonk
 	public static final int RB_FRAMES_MOON = 22; //duration of an optimal reverse bonk on the moon
 
+	public static final int IM = 0, CT1 = 1, DIVE1 = 2, CB = 3, HCT = 4, RS = 5, CT2 = 6, DIVE2 = 7, RB = 8; //movement constants for the different components of a jump
+	public static final int COMPONENT_COUNT = 9;
+
 	//no downthrow or fakethrow because these are equivalent to others
 	public static final String[] RC_TYPES = {"Motion Cap Throw RCV", "Single Throw RCV", "Upthrow RCV", "Double Throw RCV", "Triple Throw RCV", "Spinthrow RCV"};
 	
