@@ -26,6 +26,8 @@ public class MovementNameListPreparer {
 
 	int[] startIndices;
 	int[] endIndices;
+
+	int hctType = -1;
 	
 	public MovementNameListPreparer() {
 		//this.genPropertiesModel = VectorCalculator.genPropertiesModel;
@@ -219,7 +221,7 @@ public class MovementNameListPreparer {
 
 		int startIndex = initialMovementIndex + 1;
 		int endIndex = startIndex;
-		int category = Movement.IM;
+		int category = -1;
 		
 		int[][] midairs = p.midairs;
 
@@ -243,7 +245,16 @@ public class MovementNameListPreparer {
 					movementNames.add(name);
 					movementFrames.add(frames);
 				}
-				//if (midairs[i][1] == VectorCalculator.HTT)
+				if (i + 1 < midairs.length && midairs[i + 1][0] == VectorCalculator.RS) { //we found an hct
+					category = Movement.HCT;
+					hctType = midairs[i][0];
+				}
+				else if (i + 2 < midairs.length && midairs[i + 1][0] == VectorCalculator.DIVE && (midairs[i + 2][0] == VectorCalculator.CB || midairs[i + 2][0] == VectorCalculator.P2CB)) {
+					category = Movement.CT1;
+				}
+				else if (i + 1 < midairs.length && midairs[i + 1][0] == VectorCalculator.DIVE) {
+					category = Movement.CT2;
+				}
 			}
 			else if (name.equals("Rainbow Spin")) {
 				if (movementNames.contains("Rainbow Spin"))
@@ -256,6 +267,7 @@ public class MovementNameListPreparer {
 					movementNames.add("Falling");
 					movementFrames.add(frames - 31);
 					endIndex++;
+					category = Movement.RS;
 				}
 			}
 			else {
@@ -264,6 +276,7 @@ public class MovementNameListPreparer {
 						return "Cannot have two cap bounces in a jump";
 					if (oldName.equals("Dive"))
 						name = "Dive Cap Bounce";
+					category = Movement.CB;
 				}
 				else if (name.equals("Dive"))
 					if  (oldName.equals("Dive"))
@@ -272,27 +285,37 @@ public class MovementNameListPreparer {
 						movementNames.add("Ground Pound");
 						if (i == midairs.length - (p.reverseBonk ? 2 : 1)) {
 							movementFrames.add(p.finalGPFrames);
+							category = Movement.DIVE1;
 						}
-						else
+						else {
 							movementFrames.add(1);
+							category = Movement.DIVE2;
+						}
+						endIndex++;
 					}
 				else if (name.equals("2P Midair Vault")) {
 					if (movementNames.contains("Cap Bounce") || movementNames.contains("Dive Cap Bounce") || movementNames.contains("2P Midair Vault"))
 						return "Cannot have two cap bounces in a jump";
 					else if (oldName.equals("Dive"))
 						return "Use cap bounce instead for 2P bounce after dive";
+					category = Movement.CB;
 				}
 				else if (name.equals("Reverse Bonk")) {
 					if (i < midairs.length - 1)
 						return "Reverse bonk must be final midair";
 					if (midairs[midairs.length - 2][0] != VectorCalculator.DIVE)
 						return "Reverse bonk only supported after dive";
+					category = Movement.RB;
 					//else
 					//	p.reverseBonk = true;
 				}
 				
 				movementNames.add(name);
 				movementFrames.add(frames);
+			}
+			if (category > -1) {
+				startIndices[category] = startIndex;
+				endIndices[category] = endIndex;
 			}
 			oldName = name;
 			startIndex = endIndex + 1;
