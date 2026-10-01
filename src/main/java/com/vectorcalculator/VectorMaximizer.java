@@ -1143,7 +1143,8 @@ public class VectorMaximizer {
 				holdingAngles[holdingAngles.length - allYankFrames] = SimpleMotion.NORMAL_ANGLE + (partialYank * Math.PI / 2);
 			}
 			for (int a = holdingAngles.length - fullYankFrames; a < holdingAngles.length; a++) {
-				holdingAngles[a] = SimpleMotion.BACK_ANGLE;
+				if (holdingAngles.length - fullYankFrames >= 0)
+					holdingAngles[a] = SimpleMotion.BACK_ANGLE;
 			}
 			((ComplexVector) motionGroup[motionIndex]).setHoldingAngles(holdingAngles);
 		}

@@ -27,4 +27,20 @@ public class DispDataCTDive extends DispData {
     public double yDisp(int index) {
         return data[index][4];
     }
+
+    public double maxYDisp() {
+        double maxYDisp = 0;
+        for (int index = 0; index < data.length; index++) {
+            maxYDisp = Math.max(maxYDisp, yDisp(index));
+        }
+        return maxYDisp;
+    }
+
+    public int minFrames() {
+        int minFrames = Integer.MAX_VALUE;
+        for (int index = 0; index < data.length; index++) {
+            minFrames = Math.min(minFrames, frames(index));
+        }
+        return minFrames;
+    }
 }

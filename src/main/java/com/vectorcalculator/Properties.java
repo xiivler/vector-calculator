@@ -408,6 +408,15 @@ public class Properties {
         return Math.max(upwarp - UPWARP_ERROR, 0);
     }
 
+    public int getCoyoteTimeMaxFrames() {
+        if (coyoteType == CoyoteType.MOONWALK)
+            return 5;
+        else if (coyoteType == CoyoteType.RUNNING)
+            return initialMovementName.equals("Long Jump") ? 5 : 6;
+        else
+            return 0;
+    }
+
     public static void copyAttributes(Object from, Object to) {
         try {
             Map<String, Field> toFieldNameMap = new HashMap<>();

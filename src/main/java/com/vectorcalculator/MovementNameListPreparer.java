@@ -1,6 +1,7 @@
 package com.vectorcalculator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.table.DefaultTableModel;
@@ -28,6 +29,7 @@ public class MovementNameListPreparer {
 	int[] endIndices;
 
 	int hctType = -1;
+	String cbType = "";
 	
 	public MovementNameListPreparer() {
 		//this.genPropertiesModel = VectorCalculator.genPropertiesModel;
@@ -228,6 +230,7 @@ public class MovementNameListPreparer {
 		for (int i = 0; i < midairs.length; i++) {
 			name = VectorCalculator.midairMovementNames[midairs[i][0]];
 			frames = midairs[i][1];
+			category = -1;
 			
 			if (Movement.isMidairCapThrow(name)) {
 				if (Movement.isMidairCapThrow(oldName))
@@ -255,6 +258,9 @@ public class MovementNameListPreparer {
 				else if (i + 1 < midairs.length && midairs[i + 1][0] == VectorCalculator.DIVE) {
 					category = Movement.CT2;
 				}
+				else {
+					category = -1; //don't know how to identify
+				}
 			}
 			else if (name.equals("Rainbow Spin")) {
 				if (movementNames.contains("Rainbow Spin"))
@@ -276,6 +282,7 @@ public class MovementNameListPreparer {
 						return "Cannot have two cap bounces in a jump";
 					if (oldName.equals("Dive"))
 						name = "Dive Cap Bounce";
+					cbType = name;
 					category = Movement.CB;
 				}
 				else if (name.equals("Dive"))
@@ -285,11 +292,11 @@ public class MovementNameListPreparer {
 						movementNames.add("Ground Pound");
 						if (i == midairs.length - (p.reverseBonk ? 2 : 1)) {
 							movementFrames.add(p.finalGPFrames);
-							category = Movement.DIVE1;
+							category = Movement.DIVE2;
 						}
 						else {
 							movementFrames.add(1);
-							category = Movement.DIVE2;
+							category = Movement.DIVE1;
 						}
 						endIndex++;
 					}
@@ -299,6 +306,7 @@ public class MovementNameListPreparer {
 					else if (oldName.equals("Dive"))
 						return "Use cap bounce instead for 2P bounce after dive";
 					category = Movement.CB;
+					cbType = name;
 				}
 				else if (name.equals("Reverse Bonk")) {
 					if (i < midairs.length - 1)
@@ -321,7 +329,9 @@ public class MovementNameListPreparer {
 			startIndex = endIndex + 1;
 			endIndex = startIndex;
 		}
-		//System.out.println("Initial movement index: " + initialMovementIndex);
+		// System.out.println(Arrays.toString(startIndices));
+		// System.out.println(Arrays.toString(endIndices));
+		// System.out.println("Initial movement index: " + initialMovementIndex);
 		return "";
 	}
 	

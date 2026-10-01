@@ -14,16 +14,50 @@ public class DispData {
     int context;
     double[] forwardDisps; //forward displacement if the movement is 1 frame, 2 frames, etc.
     double[] yDisps;
+    double[] efficiencies;
+    int firstDownwardFrame = 0;
 
     public DispData(String movementType, int context, double[] forwardDisps, double[] yDisps) {
         this.movementType = movementType;
         this.context = context;
         this.forwardDisps = forwardDisps;
         this.yDisps = yDisps;
+        
+        firstDownwardFrame = 0;
+        if (forwardDisps != null) {
+            efficiencies = new double[forwardDisps.length];
+            efficiencies[0] = 2;
+            for (int i = 1; i < forwardDisps.length; i++) {
+                double yVel = yDisps[i] - yDisps[i - 1];
+                double forwardDelta = forwardDisps[i] - forwardDisps[i - 1];
+                if (yVel >= 0) {
+                    efficiencies[i] = 2;
+                    firstDownwardFrame++;
+                }
+                else
+                    efficiencies[i] = -1 / ((yVel / forwardDelta) - 1);
+            }
+        }
     }
 
     public int maxFrames() {
         return forwardDisps.length - 1;
+    }
+
+    //get maximum number of frames where the final frame's efficiency is at least as high as minEfficiency
+    public int maxFrames(double minEfficiency) {
+        int i = firstDownwardFrame;
+        while (efficiencies[i] >= minEfficiency && i < forwardDisps.length)
+            i++;
+        return i - 1;
+    }
+
+    public double maxYDisp() {
+        double maxYDisp = 0;
+        for (double yDisp : yDisps) {
+            maxYDisp = Math.max(maxYDisp, yDisp);
+        }
+        return maxYDisp;
     }
 
     public static void initializeDispData() {

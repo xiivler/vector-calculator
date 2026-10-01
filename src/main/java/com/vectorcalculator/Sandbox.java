@@ -60,6 +60,32 @@ public class Sandbox {
         System.out.println(Arrays.toString(yDisps));
     }
 
+    public static DispData getIMDispData(int minFrames, int maxFrames) {
+        Properties p = Properties.getInstance();
+        VectorCalculator.addPreset(p.midairPreset, false);
+        double[] forwardDisps = new double[maxFrames + 1];
+        double[] yDisps = new double[maxFrames + 1];
+        for (int i = minFrames; i <= maxFrames; i++) {
+            p.initialFrames = i - p.framesCrouch - p.framesMoonwalk - p.framesRun;
+            VectorMaximizer maximizer;
+            maximizer = VectorCalculator.calculate();
+
+            double dispX, dispY, dispZ;
+            dispX = dispY = dispZ = 0;
+            for (int j = 0; j < maximizer.listPreparer.initialMovementIndex; j++) {
+                dispX += maximizer.motions[j].dispX;
+                dispY += maximizer.motions[j].dispY;
+                dispZ += maximizer.motions[j].dispZ;
+            };
+            double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
+            double coordAngle = Math.atan(dispX / dispZ);
+            double forwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));;
+            forwardDisps[i] = forwardDisp;
+            yDisps[i] = dispY;
+        }
+        return new DispData(p.initialMovementName, DispData.DEFAULT, forwardDisps, yDisps);
+    }
+
     public static void calcFinalCTDispData() {
         Properties p = Properties.getInstance();
         VectorCalculator.addPreset("Spinless", false);
