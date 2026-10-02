@@ -2,6 +2,7 @@ package com.vectorcalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 
 import com.vectorcalculator.Properties.CoyoteType;
 import com.vectorcalculator.Properties.TripleThrow;
@@ -91,83 +92,89 @@ public class SpeedrunSolver implements SolverInterface {
 		int minFrames = imMinFrames + cbMinFrames + diveMinFrames + fctMinFrames + ctDiveMinFrames + 1 + 1; //2 ground pounds of 1 frame each
 		int totalFrames = minFrames;
 
+		System.out.println("Min Frames: " + minFrames);
+
 		int minCoyoteFrames = 0;
 		int maxCoyoteFrames = p.getCoyoteTimeMaxFrames();
 
-		for (int imFrames = imMinFrames; totalFrames <= maxFrames; imFrames++, totalFrames++) { //TODO: start at a more reasonable value (max height probably)
-			imForwardDisp = 0;
-			imYDisp = 0;
-			System.out.println("Total / Max Frames: " + totalFrames + ", " + maxFrames);
+		for (int framesJump = 1; framesJump <= (VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1); framesJump++) { //tried flipping to count down but it was actually slower that way
+			p.framesJump = framesJump;
 			for (int coyoteFrames = minCoyoteFrames; coyoteFrames <= maxCoyoteFrames; coyoteFrames++) {
-				double prevImForwardDisp = imForwardDisp;
-				double prevImYDisp = imYDisp;
-				calcIMDisps(imFrames, coyoteFrames);
-				double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp;
-				if (maxYDisp < lowestYDisp)
-					break; //if it is impossible to get high enough, break now
-				double maxYDisp2 = maxYDisp - cbDataMaxYDisp;
-				int totalFrames2 = totalFrames;
-				double forwardDisp2 = imForwardDisp;
+				//reset values
+				imForwardDisp = 0;
+				imYDisp = 0;
+				totalFrames = minFrames;
+				for (int imFrames = imMinFrames; totalFrames <= maxFrames; imFrames++, totalFrames++) { //TODO: start at a more reasonable value (max height probably)
+					System.out.println("Total / Max Frames: " + totalFrames + ", " + maxFrames);
+					double prevImForwardDisp = imForwardDisp;
+					double prevImYDisp = imYDisp;
+					calcIMDisps(imFrames, coyoteFrames);
+					double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp;
+					if (maxYDisp < lowestYDisp)
+						break; //if it is impossible to get high enough, break now
+					double maxYDisp2 = maxYDisp - cbDataMaxYDisp;
+					int totalFrames2 = totalFrames;
+					double forwardDisp2 = imForwardDisp;
 
-				//calculate efficiency of last frame of IM
-				double yVel = imYDisp - prevImYDisp;
-				double forwardDelta = imForwardDisp - prevImForwardDisp;
-				double imEfficiency;
-				if (yVel >= 0)
-					imEfficiency = 2;
-				else
-					imEfficiency = -1 / ((yVel / forwardDelta) - 1);
+					//calculate efficiency of last frame of IM
+					double yVel = imYDisp - prevImYDisp;
+					double forwardDelta = imForwardDisp - prevImForwardDisp;
+					double imEfficiency;
+					if (yVel >= 0)
+						imEfficiency = 2;
+					else
+						imEfficiency = -1 / ((yVel / forwardDelta) - 1);
 
-				System.out.println("IM: " + imFrames + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
+					System.out.println("IM: " + imFrames + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
 
-				cbMaxFrames = cbData.maxFrames(imEfficiency);
-				diveMaxFrames = diveData.maxFrames(imEfficiency);
-				//fctMaxFrames = fctData.maxFrames(imEfficiency);
-				//System.out.println(" CB Max Frames: " + cbMaxFrames);
-				//System.out.println(" Dive Max Frames: " + diveMaxFrames);
+					cbMaxFrames = cbData.maxFrames(imEfficiency);
+					diveMaxFrames = diveData.maxFrames(imEfficiency);
+					//fctMaxFrames = fctData.maxFrames(imEfficiency);
+					//System.out.println(" CB Max Frames: " + cbMaxFrames);
+					//System.out.println(" Dive Max Frames: " + diveMaxFrames);
 
-				for (int cbFrames = cbMinFrames; cbFrames <= cbMaxFrames && totalFrames2 <= maxFrames; cbFrames++, totalFrames2++) {
-					fctMaxFrames = fctData.maxFrames(cbData.efficiencies[cbFrames]); //doesn't really help because it doesn't tend to get this long
-					//System.out.println(" FCT Max Frames: " + fctMaxFrames);
+					for (int cbFrames = cbMinFrames; cbFrames <= cbMaxFrames && totalFrames2 <= maxFrames; cbFrames++, totalFrames2++) {
+						fctMaxFrames = fctData.maxFrames(cbData.efficiencies[cbFrames]); //doesn't really help because it doesn't tend to get this long
+						//System.out.println(" FCT Max Frames: " + fctMaxFrames);
 
-					if (maxYDisp2 + cbYDisps[cbFrames] < lowestYDisp)
-						break;
-					double maxYDisp3 = maxYDisp2 + cbYDisps[cbFrames] - diveDataMaxYDisp;
-					int totalFrames3 = totalFrames2;
-					double forwardDisp3 = forwardDisp2 + cbForwardDisps[cbFrames];
-
-					for (int diveFrames = diveMinFrames; diveFrames <= diveMaxFrames && totalFrames3 <= maxFrames; diveFrames++, totalFrames3++) {
-						if (maxYDisp3 + diveYDisps[diveFrames] < lowestYDisp)
+						if (maxYDisp2 + cbYDisps[cbFrames] < lowestYDisp)
 							break;
-						double maxYDisp4 = maxYDisp3 + diveYDisps[diveFrames] - fctDataMaxYDisp;
-						int totalFrames4 = totalFrames3;
-						double forwardDisp4 = forwardDisp3 + diveFrames * 20; //TODO allow for diveangle
+						double maxYDisp3 = maxYDisp2 + cbYDisps[cbFrames] - diveDataMaxYDisp;
+						int totalFrames3 = totalFrames2;
+						double forwardDisp3 = forwardDisp2 + cbForwardDisps[cbFrames];
 
-						for (int fctFrames = fctMinFrames; fctFrames <= fctMaxFrames && totalFrames4 <= maxFrames; fctFrames++, totalFrames4++) {
-							if (fctFrames > 0 && fctFrames < 8)
-								continue;
-							if (maxYDisp4 + fctYDisps[fctFrames] < lowestYDisp)
+						for (int diveFrames = diveMinFrames; diveFrames <= diveMaxFrames && totalFrames3 <= maxFrames; diveFrames++, totalFrames3++) {
+							if (maxYDisp3 + diveYDisps[diveFrames] < lowestYDisp)
 								break;
-							double maxYDisp5 = maxYDisp4 + fctYDisps[fctFrames] - ctDiveDataMaxYDisp;
-							int totalFrames5 = totalFrames4;
-							double forwardDisp5 = forwardDisp4 + fctForwardDisps[fctFrames];
+							double maxYDisp4 = maxYDisp3 + diveYDisps[diveFrames] - fctDataMaxYDisp;
+							int totalFrames4 = totalFrames3;
+							double forwardDisp4 = forwardDisp3 + diveFrames * 20; //TODO allow for diveangle
 
-							for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
-								System.out.println(ctDiveDataIndex);
-								totalFrames5 = totalFrames4 + ctDiveData.frames(ctDiveDataIndex);
-								if (totalFrames5 > maxFrames) {
-									break;
-								}
-								double yDisp = maxYDisp5 + ctDiveYDisps[ctDiveDataIndex];
-								if (yDisp > highestYDisp || yDisp < lowestYDisp) {
+							for (int fctFrames = fctMinFrames; fctFrames <= fctMaxFrames && totalFrames4 <= maxFrames; fctFrames++, totalFrames4++) {
+								if (fctFrames > 0 && fctFrames < 8)
 									continue;
-								}
-								double forwardDisp = forwardDisp5 + ctDiveForwardDisps[ctDiveDataIndex];
-								if (forwardDisp >= targetDisp - RANGE) {
-									int durations[] = {imFrames - p.framesCrouch - p.framesMoonwalk - p.framesRun, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
-									candidates.add(new Candidate(totalFrames5, durations, coyoteFrames, forwardDisp, yDisp));
-									if (forwardDisp >= targetDisp + RANGE)
-										maxFrames = totalFrames5;
+								if (maxYDisp4 + fctYDisps[fctFrames] < lowestYDisp)
+									break;
+								double maxYDisp5 = maxYDisp4 + fctYDisps[fctFrames] - ctDiveDataMaxYDisp;
+								int totalFrames5 = totalFrames4;
+								double forwardDisp5 = forwardDisp4 + fctForwardDisps[fctFrames];
+
+								for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
+									totalFrames5 = totalFrames4 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
+									if (totalFrames5 > maxFrames) {
+										break;
+									}
+									double yDisp = maxYDisp5 + ctDiveYDisps[ctDiveDataIndex];
+									if (yDisp > highestYDisp || yDisp < lowestYDisp) {
+										continue;
+									}
+									double forwardDisp = forwardDisp5 + ctDiveForwardDisps[ctDiveDataIndex];
+									if (forwardDisp >= targetDisp - RANGE) {
+										int durations[] = {imFrames - p.framesCrouch - p.framesMoonwalk - p.framesRun, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
+										candidates.add(new Candidate(totalFrames5, durations, coyoteFrames, framesJump, forwardDisp, yDisp));
+										if (forwardDisp >= targetDisp + RANGE)
+											maxFrames = totalFrames5;
+									}
 								}
 							}
 						}
@@ -191,8 +198,9 @@ public class SpeedrunSolver implements SolverInterface {
 				if (c.totalFrames > minTotalFrames && bestDisp < targetDisp)
 					minTotalFrames++;
 				p.initialFrames = c.durations[0];
+				p.framesJump = c.framesJump;
 				int eliminatedMovements = 0;
-				VectorCalculator.addPreset("Spinless", false);
+				VectorCalculator.addPreset("Spinless", false); //TODO add the right preset, not just spinless
 				for (int i = 1; i < c.durations.length; i++) {
 					p.midairs[i - 1][1] = c.durations[i];
 					if (c.durations[i] == 0)
@@ -225,6 +233,7 @@ public class SpeedrunSolver implements SolverInterface {
 		if (bestDisp >= targetDisp) {
 			System.out.println("Best Result: " + bestCandidate.toString() + ", " + bestDisp);
 			p.initialFrames = bestCandidate.durations[0];
+			p.framesJump = bestCandidate.framesJump;
 			int eliminatedMovements = 0;
 			VectorCalculator.addPreset("Spinless", false);
 			for (int i = 1; i < bestCandidate.durations.length; i++) {
@@ -244,6 +253,10 @@ public class SpeedrunSolver implements SolverInterface {
 			//TODO identify what the preset SHOULD be now
 			p.midairs = realMidairs;
 			VectorCalculator.addPreset(p.midairs);
+			if (p.coyoteType == CoyoteType.MOONWALK)
+				p.framesMoonwalk = bestCandidate.coyoteFrames;
+			else if (p.coyoteType == CoyoteType.RUNNING)
+				p.framesRun = bestCandidate.coyoteFrames;
 			double disp = test();
 			// VectorDisplayWindow.generateData(maximizer);
 			// VectorDisplayWindow.display();
@@ -343,15 +356,17 @@ public class SpeedrunSolver implements SolverInterface {
 		int totalFrames;
 		int[] durations;
 		int coyoteFrames;
+		int framesJump;
 		double forwardDisp;
 		double yDisp;
 
-		public Candidate(int totalFrames, int[] durations, int coyoteFrames, double forwardDisp, double yDisp) {
+		public Candidate(int totalFrames, int[] durations, int coyoteFrames, int framesJump, double forwardDisp, double yDisp) {
 			this.totalFrames = totalFrames;
 			this.durations = durations;
+			this.coyoteFrames = coyoteFrames;
+			this.framesJump = framesJump;
 			this.forwardDisp = forwardDisp;
 			this.yDisp = yDisp;
-			this.coyoteFrames = coyoteFrames;
 		}
 
 		@Override
