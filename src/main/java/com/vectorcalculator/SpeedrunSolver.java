@@ -3,10 +3,14 @@ package com.vectorcalculator;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.vectorcalculator.Properties.CoyoteType;
 import com.vectorcalculator.Properties.TripleThrow;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class SpeedrunSolver implements SolverInterface {
+	public static final double IM_MIN_Y_DISP = 100;
+
+
 	Properties p = Properties.p;
 	VectorMaximizer maximizer;
 	boolean diveTurn = true;
@@ -55,7 +59,9 @@ public class SpeedrunSolver implements SolverInterface {
 		double lowestYDisp = p.y1 - Solver.ERROR - p.getUpwarpMinusError() - p.y0; //lowest yDisp that will make the movement land
 		double highestYDisp = p.y1 - p.y0 + Solver.ERROR; //highest yDisp that will make the movement land
 
-		int imMinFrames = p.framesCrouch + p.framesMoonwalk + p.framesRun + 1;
+		p.initialDispY = p.y1 - p.y0 + IM_MIN_Y_DISP;
+
+        int imMinFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getCoyoteDisp()) + p.framesCrouch + p.framesMoonwalk + p.framesRun;
 		int cbMinFrames = 1;
 		int diveMinFrames = 14;
 		int fctMinFrames = 0;
@@ -88,11 +94,14 @@ public class SpeedrunSolver implements SolverInterface {
 		int minCoyoteFrames = 0;
 		int maxCoyoteFrames = p.getCoyoteTimeMaxFrames();
 
-		//for (int coyoteFrames = minCoyoteFrames; coyoteFrames <= maxCoyoteFrames; coyoteFrames++) {
-			for (int imFrames = imMinFrames; totalFrames <= maxFrames; imFrames++, totalFrames++) { //TODO: start at a more reasonable value (max height probably)
+		for (int imFrames = imMinFrames; totalFrames <= maxFrames; imFrames++, totalFrames++) { //TODO: start at a more reasonable value (max height probably)
+			imForwardDisp = 0;
+			imYDisp = 0;
+			System.out.println("Total / Max Frames: " + totalFrames + ", " + maxFrames);
+			for (int coyoteFrames = minCoyoteFrames; coyoteFrames <= maxCoyoteFrames; coyoteFrames++) {
 				double prevImForwardDisp = imForwardDisp;
 				double prevImYDisp = imYDisp;
-				calcIMDisps(imFrames);
+				calcIMDisps(imFrames, coyoteFrames);
 				double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp;
 				if (maxYDisp < lowestYDisp)
 					break; //if it is impossible to get high enough, break now
@@ -109,13 +118,13 @@ public class SpeedrunSolver implements SolverInterface {
 				else
 					imEfficiency = -1 / ((yVel / forwardDelta) - 1);
 
-				System.out.println("IM: " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
+				System.out.println("IM: " + imFrames + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
 
 				cbMaxFrames = cbData.maxFrames(imEfficiency);
 				diveMaxFrames = diveData.maxFrames(imEfficiency);
 				//fctMaxFrames = fctData.maxFrames(imEfficiency);
-				System.out.println(" CB Max Frames: " + cbMaxFrames);
-				System.out.println(" Dive Max Frames: " + diveMaxFrames);
+				//System.out.println(" CB Max Frames: " + cbMaxFrames);
+				//System.out.println(" Dive Max Frames: " + diveMaxFrames);
 
 				for (int cbFrames = cbMinFrames; cbFrames <= cbMaxFrames && totalFrames2 <= maxFrames; cbFrames++, totalFrames2++) {
 					fctMaxFrames = fctData.maxFrames(cbData.efficiencies[cbFrames]); //doesn't really help because it doesn't tend to get this long
@@ -144,17 +153,19 @@ public class SpeedrunSolver implements SolverInterface {
 							double forwardDisp5 = forwardDisp4 + fctForwardDisps[fctFrames];
 
 							for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
-								totalFrames5 = totalFrames4 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
-								if (totalFrames5 > maxFrames)
-									continue;
+								System.out.println(ctDiveDataIndex);
+								totalFrames5 = totalFrames4 + ctDiveData.frames(ctDiveDataIndex);
+								if (totalFrames5 > maxFrames) {
+									break;
+								}
 								double yDisp = maxYDisp5 + ctDiveYDisps[ctDiveDataIndex];
 								if (yDisp > highestYDisp || yDisp < lowestYDisp) {
 									continue;
 								}
 								double forwardDisp = forwardDisp5 + ctDiveForwardDisps[ctDiveDataIndex];
 								if (forwardDisp >= targetDisp - RANGE) {
-									int durations[] = {imFrames, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
-									candidates.add(new Candidate(totalFrames5, durations, forwardDisp, yDisp));
+									int durations[] = {imFrames - p.framesCrouch - p.framesMoonwalk - p.framesRun, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
+									candidates.add(new Candidate(totalFrames5, durations, coyoteFrames, forwardDisp, yDisp));
 									if (forwardDisp >= targetDisp + RANGE)
 										maxFrames = totalFrames5;
 								}
@@ -163,7 +174,7 @@ public class SpeedrunSolver implements SolverInterface {
 					}
 				}
 			}
-		//}
+		}
 		if (candidates.size() == 0) {
 			error = "No Solution Found";
 			success = false;
@@ -198,6 +209,10 @@ public class SpeedrunSolver implements SolverInterface {
 				}
 				p.midairs = realMidairs;
 				VectorCalculator.addPreset(p.midairs);
+				if (p.coyoteType == CoyoteType.MOONWALK)
+					p.framesMoonwalk = c.coyoteFrames;
+				else if (p.coyoteType == CoyoteType.RUNNING)
+					p.framesRun = c.coyoteFrames;
 				double disp = test();
 				if (disp > bestDisp) {
 					bestDisp = disp;
@@ -266,9 +281,13 @@ public class SpeedrunSolver implements SolverInterface {
         }
     }
 
-	public void calcIMDisps(int frames) {
+	public void calcIMDisps(int frames, int coyoteFrames) {
         VectorCalculator.addPreset(p.midairPreset, false);
 		p.initialFrames = frames - p.framesCrouch - p.framesMoonwalk - p.framesRun;
+		if (p.coyoteType == CoyoteType.MOONWALK)
+			p.framesMoonwalk = coyoteFrames;
+		else if (p.coyoteType == CoyoteType.RUNNING)
+			p.framesRun = coyoteFrames;
 		VectorMaximizer maximizer;
 		maximizer = VectorCalculator.calculate();
 
@@ -323,14 +342,16 @@ public class SpeedrunSolver implements SolverInterface {
 	public class Candidate implements Comparable<Candidate> {
 		int totalFrames;
 		int[] durations;
+		int coyoteFrames;
 		double forwardDisp;
 		double yDisp;
 
-		public Candidate(int totalFrames, int[] durations, double forwardDisp, double yDisp) {
+		public Candidate(int totalFrames, int[] durations, int coyoteFrames, double forwardDisp, double yDisp) {
 			this.totalFrames = totalFrames;
 			this.durations = durations;
 			this.forwardDisp = forwardDisp;
 			this.yDisp = yDisp;
+			this.coyoteFrames = coyoteFrames;
 		}
 
 		@Override
