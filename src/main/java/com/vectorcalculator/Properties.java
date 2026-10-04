@@ -307,6 +307,7 @@ public class Properties {
 	CameraType cameraType = CameraType.ABSOLUTE;
 	double customCameraAngle = 0;
     int[][] midairs;
+    int[] componentIndices;
 
     int scriptType = VectorDisplayWindow.TSV_TAS_2;
     String scriptPath = "";

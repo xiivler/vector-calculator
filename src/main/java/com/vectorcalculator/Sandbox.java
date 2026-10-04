@@ -24,8 +24,9 @@ public class Sandbox {
         //SpeedrunSolver ss = new SpeedrunSolver();
         //ss.solve(0);
         //calcDispData(1, 500, -1, 0, "Spinless (No Final Cap Throw)"); //initial motion
-        calcDispData(1, 500, -1, 0, false, "Spinless (No Final Cap Throw)"); //initial motion
-        calcDispData(1, 50, -1, 0, false, "Spinless (No Final Cap Throw)"); //final dive
+        //calcDispData(1, 500, -1, 0, false, "Spinless (No Final Cap Throw)"); //initial motion
+        //calcDispData(1, 50, -1, 0, false, "Spinless (No Final Cap Throw)"); //final dive
+        calcDispData(1, 100, 2, 4, false, "Spinless (No Final Cap Throw)");
         //calcFinalCTDispData();
     }
 

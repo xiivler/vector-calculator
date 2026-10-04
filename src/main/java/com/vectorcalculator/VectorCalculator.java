@@ -1136,15 +1136,32 @@ public class VectorCalculator extends JPanel {
 		p.reverseBonk = false;
 		p.midairVault = false;
 		p.firstCTIndex = -1;
+		p.componentIndices = new int[Movement.COMPONENT_COUNT];
+		for (int i = 0; i < p.componentIndices.length; i++) {
+			p.componentIndices[i] = Integer.MIN_VALUE;
+		}
+		if (!p.initialMovementName.equals("None"))
+			p.componentIndices[Movement.IM] = -1;
 		for (int i = 0; i < p.midairs.length; i++) {
 			if (i > 0 && p.midairs[i][0] == CB && p.midairs[i - 1][0] == DIVE) {
 				p.diveCapBounce = true;
-				if (i > 1 && (p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT)) {
+				p.componentIndices[Movement.CB] = i;
+				p.componentIndices[Movement.DIVE1] = i - 1;
+				if (i > 1 && (p.midairs[i - 2][0] == MCCT || p.midairs[i - 2][0] == CT || p.midairs[i - 2][0] == TT || p.midairs[i - 2][0] == FT)) {
 					p.firstCTIndex = i - 2;
+					p.componentIndices[Movement.CT1] = i - 2;
 				}
 			}
-			else if (p.midairs[i][0] == HMCCT)
+			else if (p.midairs[i][0] == HMCCT) {
 				p.hct = true;
+				p.componentIndices[Movement.HCT] = i;
+			}
+			else if (p.midairs[i][0] == HTT) {
+				p.componentIndices[Movement.HCT] = i;
+			}
+			else if (p.midairs[i][0] == FT && i + 1 < p.midairs.length && p.midairs[i + 1][0] == RS) {
+				p.componentIndices[Movement.HCT] = i;
+			}
 			else if (p.midairPreset.equals("Custom") && p.midairs[i][0] == TT) {
 				p.tripleThrowDiveCB = TripleThrow.YES;
 			}
@@ -1153,21 +1170,46 @@ public class VectorCalculator extends JPanel {
 			}
 			else if (p.midairs[i][0] == RS) {
 				p.rainbowSpin = true;
+				p.componentIndices[Movement.RS] = i;
 			}
 			else if (p.midairs[i][0] == RB) {
 				p.reverseBonk = true;
 				if (!oldReverseBonk) {
 					p.solveUpwarp = true;
 				}
+				p.componentIndices[Movement.RB] = i;
 			}
 			else if (p.midairs[i][0] == P2CB) {
 				p.midairVault = true;
+				p.componentIndices[Movement.CB] = i;
+			}
+			else if (p.midairs[i][0] == CB) {
+				p.componentIndices[Movement.CB] = i;
 			}
 			else if (p.midairs[i][0] == DIVE && i >= p.midairs.length - 2 && i > 0) {
-				if (i == p.midairs.length - 2 && p.midairs[i + 1][0] != RB) p.fctType = Movement.MCCTU; //default it to this
-				else if (p.midairs[i - 1][0] == TT) p.fctType = Movement.TTU;
-				else if (p.midairs[i - 1][0] == MCCT) p.fctType = Movement.MCCTU;
-				else if (p.midairs[i - 1][0] == CT) p.fctType = Movement.CT;
+				if (i == p.midairs.length - 2 && p.midairs[i + 1][0] != RB) {
+					p.fctType = Movement.MCCTU; //default it to this
+				}
+				else {
+					p.componentIndices[Movement.DIVE2] = i;
+					if (p.midairs[i - 1][0] == TT) {
+						p.fctType = Movement.TTU;
+						p.componentIndices[Movement.CT2] = i - 1;
+					}
+					else if (p.midairs[i - 1][0] == MCCT) {
+						p.fctType = Movement.MCCTU;
+						p.componentIndices[Movement.CT2] = i - 1;
+					}
+					else if (p.midairs[i - 1][0] == CT) {
+						p.fctType = Movement.CT;
+						p.componentIndices[Movement.CT2] = i - 1;
+
+					}
+					else if (p.midairs[i - 1][0] == FT) {
+						p.fctType = Movement.FT;
+						p.componentIndices[Movement.CT2] = i - 1;
+					}
+				}
 			}
 		}
 		if (!p.reverseBonk && oldReverseBonk) {
@@ -1176,6 +1218,7 @@ public class VectorCalculator extends JPanel {
 				setProperty(Parameter.upwarp, 40);
 			p.finalGPFrames = 1;
 		}
+		Debug.println(11, Arrays.toString(p.componentIndices));
 	}
 
 	static void updateHCTDuration() {

@@ -134,6 +134,7 @@ public class SpeedrunSolver implements SolverInterface {
 					//System.out.println(" Dive Max Frames: " + diveMaxFrames);
 
 					for (int cbFrames = cbMinFrames; cbFrames <= cbMaxFrames && totalFrames2 <= maxFrames; cbFrames++, totalFrames2++) {
+						int cbDurationLimit = p.cbCapReturnFrame + 11;
 						fctMaxFrames = fctData.maxFrames(cbData.efficiencies[cbFrames]); //doesn't really help because it doesn't tend to get this long
 						//System.out.println(" FCT Max Frames: " + fctMaxFrames);
 
@@ -151,6 +152,8 @@ public class SpeedrunSolver implements SolverInterface {
 							double forwardDisp4 = forwardDisp3 + diveFrames * 20; //TODO allow for diveangle
 
 							for (int fctFrames = fctMinFrames; fctFrames <= fctMaxFrames && totalFrames4 <= maxFrames; fctFrames++, totalFrames4++) {
+								if (fctFrames > 0 && cbFrames < cbDurationLimit) //cannot have a fct //TODO account for CB first hct case
+									break;
 								if (fctFrames > 0 && fctFrames < 8)
 									continue;
 								if (maxYDisp4 + fctYDisps[fctFrames] < lowestYDisp)
@@ -316,6 +319,36 @@ public class SpeedrunSolver implements SolverInterface {
 		imForwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));;
 		imYDisp = dispY;
 	}
+
+	public static DispData getDispData(int component, int minFrames, int maxFrames) {
+        Properties p = Properties.getInstance();
+        VectorCalculator.addPreset(p.midairPreset, false);
+        double[] forwardDisps = new double[maxFrames + 1];
+        double[] yDisps = new double[maxFrames + 1];
+        for (int i = minFrames; i <= maxFrames; i++) {
+			p.midairs[p.componentIndices[component]][1] = i;
+
+            VectorMaximizer maximizer;
+            maximizer = VectorCalculator.calculate();
+
+			int maximizerStartIndex = maximizer.listPreparer.startIndices[component];
+			int maximizerEndIndex = maximizer.listPreparer.endIndices[component];
+
+            double dispX, dispY, dispZ;
+            dispX = dispY = dispZ = 0;
+            for (int j = maximizerStartIndex; j <= maximizerEndIndex; j++) {
+                dispX += maximizer.motions[j].dispX;
+                dispY += maximizer.motions[j].dispY;
+                dispZ += maximizer.motions[j].dispZ;
+            };
+            double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
+            double coordAngle = Math.atan(dispX / dispZ);
+            double forwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));;
+            forwardDisps[i] = forwardDisp;
+            yDisps[i] = dispY;
+        }
+        return new DispData(p.initialMovementName, DispData.DEFAULT, forwardDisps, yDisps);
+    }
 
 	@Override
 	public String getError() {
