@@ -1,7 +1,7 @@
 package com.vectorcalculator;
 
-import com.vectorcalculator.Properties.TripleThrow;
-import com.vectorcalculator.Properties.TurnDuringDive;
+import com.vectorcalculator.Properties.YNT;
+import com.vectorcalculator.Properties.YNT;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 //class that only solves for the dive lengths
@@ -14,7 +14,7 @@ public class DiveSolver implements SolverInterface {
 
     boolean singleThrowAllowed = true;
     boolean mcctAllowed = true;
-    TripleThrow ttAllowed;
+    YNT ttAllowed;
 
     String error;
 
@@ -42,7 +42,7 @@ public class DiveSolver implements SolverInterface {
         return bestDisp;
     }
 
-    public TripleThrow ttAllowed() {
+    public YNT ttAllowed() {
         return ttAllowed;
     }
 
@@ -81,7 +81,7 @@ public class DiveSolver implements SolverInterface {
         mcctAllowed = true;
 
         ttAllowed = p.tripleThrowDiveCB;
-        if (ttAllowed == TripleThrow.YES) {
+        if (ttAllowed == YNT.YES) {
             singleThrowAllowed = false;
             mcctAllowed = false;
         }
@@ -108,13 +108,13 @@ public class DiveSolver implements SolverInterface {
                 solveFirstDive = true;
                 if (p.midairPreset.equals("Custom")) {
                     if (midairs[i - 2][0] == VectorCalculator.MCCT)
-                        ttAllowed = TripleThrow.NO;
+                        ttAllowed = YNT.NO;
                     else if (midairs[i - 2][0] == VectorCalculator.CT) {
-                        ttAllowed = TripleThrow.NO;
+                        ttAllowed = YNT.NO;
                         mcctAllowed = false;
                     }
                     else {
-                        ttAllowed = TripleThrow.YES;
+                        ttAllowed = YNT.YES;
                         singleThrowAllowed = false;
                         mcctAllowed = false;
                     }
@@ -241,14 +241,14 @@ public class DiveSolver implements SolverInterface {
             return -1;
         }
 
-        if (p.diveTurn == TurnDuringDive.TEST) {
+        if (p.diveTurn == YNT.TEST) {
             int testDiveTurn = testCT(.01, 1, true, roughOptimizeFCTFalling, useCurrentAngles);
             if (testDiveTurn != -1)
                 return testDiveTurn;
             else
                 return testCT(.1, 1, false, roughOptimizeFCTFalling, useCurrentAngles);
         }
-        else if (p.diveTurn == TurnDuringDive.YES) {
+        else if (p.diveTurn == YNT.YES) {
             return testCT(.01, 1, true, roughOptimizeFCTFalling, useCurrentAngles);
         }
         else
@@ -282,7 +282,7 @@ public class DiveSolver implements SolverInterface {
         maximizer.roughOptimizeFCTFalling = roughOptimizeFCTFalling;
         maximizer.roughCTRotations = true;
         bestDisp = maximizer.maximize();
-        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
+        int ctType = maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != YNT.YES, ttAllowed != YNT.NO);
         if (ctType != -1)
             this.diveTurn = diveTurn;
         return ctType;
@@ -300,7 +300,7 @@ public class DiveSolver implements SolverInterface {
         p.diveCapBounceAngle = diveTurn ? Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : 0;
         maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
         maximizer.maximize();
-        if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+        if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != YNT.YES, !singleThrowAllowed && ttAllowed != YNT.YES, ttAllowed != YNT.NO) > -1) { //also conforms the motion correctly
             maximizer.recalculateDisps(true);
             maximizer.adjustToGivenAngle();
             return maximizer.bestDisp;

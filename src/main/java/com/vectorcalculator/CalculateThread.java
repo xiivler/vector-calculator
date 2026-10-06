@@ -7,7 +7,7 @@ import javax.swing.SwingWorker;
 
 import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.Mode;
-import com.vectorcalculator.Properties.TurnDuringDive;
+import com.vectorcalculator.Properties.YNT;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 class CalculateThread extends SwingWorker<Boolean, String> {
@@ -37,7 +37,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     return false;
                 }
 
-                TurnDuringDive oldTurnDuringDive = p.diveTurn;
+                YNT oldTurnDuringDive = p.diveTurn;
                 SolverInterface solver;
                 if (optimalDistanceMotion) {
                     p.initialMovementName = "Triple Jump";
@@ -157,7 +157,7 @@ class CalculateThread extends SwingWorker<Boolean, String> {
                     return false;
                 }
 
-                TurnDuringDive oldTurnDuringDive = p.diveTurn;
+                YNT oldTurnDuringDive = p.diveTurn;
                 SolverInterface solver;
                 //TODO crouch roll, roll boost
                 solver = VectorCalculator.runSolver(p.mode, true);

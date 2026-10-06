@@ -1,6 +1,6 @@
 package com.vectorcalculator;
 
-import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.YNT;
 
 public interface SolverInterface {
     boolean solve(int delta);
@@ -9,6 +9,6 @@ public interface SolverInterface {
     boolean solveSuccess();
     boolean singleThrowAllowed();
     boolean mcctAllowed();
-    TripleThrow ttAllowed();
+    YNT ttAllowed();
     VectorMaximizer getMaximizer();
 }

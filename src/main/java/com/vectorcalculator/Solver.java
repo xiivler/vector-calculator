@@ -3,10 +3,10 @@ package com.vectorcalculator;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.vectorcalculator.Properties.TurnDuringDive;
+import com.vectorcalculator.Properties.YNT;
 import com.vectorcalculator.Properties.GroundType;
 import com.vectorcalculator.Properties.HctType;
-import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.YNT;
 import com.vectorcalculator.VectorCalculator.Parameter;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
@@ -38,8 +38,8 @@ public class Solver implements SolverInterface {
 
     boolean singleThrowAllowed = true;
     boolean mcctAllowed = true;
-    TripleThrow ttAllowed; //whether the cap throw that is bounced on must be a tt or not tt or if the program should test both
-    TurnDuringDive dtAllowed;
+    YNT ttAllowed; //whether the cap throw that is bounced on must be a tt or not tt or if the program should test both
+    YNT dtAllowed;
 
     boolean hasRCV;
 
@@ -131,7 +131,7 @@ public class Solver implements SolverInterface {
         return singleThrowAllowed;
     }
 
-    public TripleThrow ttAllowed() {
+    public YNT ttAllowed() {
         return ttAllowed;
     }
 
@@ -186,12 +186,12 @@ public class Solver implements SolverInterface {
 
         boolean simpleRSFirst = p.midairPreset.equals("Simple Tech Rainbow Spin First");
         mcctFirst =  p.midairPreset.equals("MCCT First");
-        boolean ttFirst = mcctFirst && p.tripleThrow == TripleThrow.YES;
+        boolean ttFirst = mcctFirst && p.tripleThrow == YNT.YES;
         cbvFirst = p.midairPreset.equals("CB First");
         if (p.initialMovementName.equals("Vault") && (simpleRSFirst || ttFirst)) {
             initialDurationLimit = p.vaultCapReturnFrame + 11;
         }
-        if (cbvFirst && p.tripleThrow == TripleThrow.YES) {
+        if (cbvFirst && p.tripleThrow == YNT.YES) {
             if (p.initialMovementName.equals("Vault"))
                 initialDurationLimit = p.vaultCapReturnFrame + 11;
             singleThrowAllowed = false;
@@ -201,7 +201,7 @@ public class Solver implements SolverInterface {
             cbDurationLimit = p.cbCapReturnFrame + 11;
         }
         ttAllowed = p.tripleThrowDiveCB;
-        if (ttAllowed == TripleThrow.YES) {
+        if (ttAllowed == YNT.YES) {
             singleThrowAllowed = false;
             mcctAllowed = false;
         }
@@ -247,10 +247,13 @@ public class Solver implements SolverInterface {
 
         if (p.twoPlayerMode) {
             singleThrowAllowed = false;
-            ttAllowed = TripleThrow.NO;
+            ttAllowed = YNT.NO;
             mcctAllowed = false;
             throwOrRSAfterCB = false;
         }
+
+        if (p.componentIndices[Movement.DIVE2] == p.componentIndices[Movement.CB] + 1)
+            throwOrRSAfterCB = false;
 
         if (p.groundTypeCB == GroundType.WATER) { //TODO: find way to let MCCTs happen with water
             mcctAllowed = false;
@@ -297,7 +300,7 @@ public class Solver implements SolverInterface {
         if (p.groundTypeCB != GroundType.NONE && cbvFirst) {
             if (p.twoPlayerMode)
                 preset[homingFTIndex - 1][1] += 2;
-            else if (p.tripleThrow == TripleThrow.YES)
+            else if (p.tripleThrow == YNT.YES)
                 preset[homingTTIndex - 1][1] += 2;
             else
                 preset[homingMCCTIndex - 1][1] += 8;
@@ -307,7 +310,7 @@ public class Solver implements SolverInterface {
             if (cbvFirst || mcctFirst) {
                 if (p.twoPlayerMode)
                     preset[homingFTIndex - 1][1] = 48;
-                else if (p.tripleThrow == TripleThrow.YES)
+                else if (p.tripleThrow == YNT.YES)
                     preset[homingTTIndex - 1][1] = 48;
                 else
                     preset[homingMCCTIndex - 1][1] = 48;
@@ -594,9 +597,9 @@ public class Solver implements SolverInterface {
                     }
                     testDurations[diveCapBounceIndex - 2] = ctDuration;
                     testDurations[diveCapBounceIndex - 1] = diveDuration;
-                    setDurations(testDurations, p.tripleThrow == TripleThrow.YES);
-                    boolean testNoDiveTurn = (dtAllowed == TurnDuringDive.NO || (dtAllowed == TurnDuringDive.TEST && !hasRCV));
-                    if (dtAllowed != TurnDuringDive.NO && testCT(-1, .01, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
+                    setDurations(testDurations, p.tripleThrow == YNT.YES);
+                    boolean testNoDiveTurn = (dtAllowed == YNT.NO || (dtAllowed == YNT.TEST && !hasRCV));
+                    if (dtAllowed != YNT.NO && testCT(-1, .01, 5, true, true) >= 0) { //test quick and dirty first just to figure out if it is possible
                         //testCT(ctType, .01, .01, false); //only test with smaller increment if it's already possible with larger increment
                         Debug.println(10, "Possible CT/Dive: " + ctDuration + " " + diveDuration + ", vector angle: " + vectorAngle + ", ct type: " + ctType);
                         ctTypes[ctDuration][diveDuration] = ctType;
@@ -852,7 +855,7 @@ public class Solver implements SolverInterface {
         //     ballparkMaximizer.rsYankFrames = rsYankFrames;
         // }
         ballparkMaximizer.maximize();
-        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO);
+        ctType = ballparkMaximizer.isDiveCapBouncePossible(throwType, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != YNT.YES, ttAllowed != YNT.NO);
         //diveDecel = ballparkMaximizer.firstFrameDecel;
         vectorAngle = ballparkMaximizer.vectorAngle;
         edgeCBAngle = ballparkMaximizer.diveCapBounceAngle;
@@ -1061,7 +1064,7 @@ public class Solver implements SolverInterface {
             bestYDisp = dispY; //for debugging
         // }
 
-        boolean diveTurn = diveTurns != null ? diveTurns[ctDuration][diveDuration] : (p.diveTurn != TurnDuringDive.NO);
+        boolean diveTurn = diveTurns != null ? diveTurns[ctDuration][diveDuration] : (p.diveTurn != YNT.NO);
         if (diveTurn) {
             VectorCalculator.setProperty(Parameter.dive_turn, "Yes");
         }
@@ -1111,7 +1114,7 @@ public class Solver implements SolverInterface {
             //     System.out.println(maximizer.motionGroup1FinalAngle);
             // }
             maximizer.vectorAngleMax = maxTestVectorAngle;
-            if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+            if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, mcctAllowed, !singleThrowAllowed && ttAllowed != YNT.YES, ttAllowed != YNT.NO) > -1) { //also conforms the motion correctly
                 maximizer.recalculateDisps(true);
                 maximizer.adjustToGivenAngle();
                 disp = maximizer.bestDisp;

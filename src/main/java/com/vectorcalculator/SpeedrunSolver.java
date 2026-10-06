@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import com.vectorcalculator.Properties.CoyoteType;
-import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.YNT;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
 public class SpeedrunSolver implements SolverInterface {
@@ -16,7 +16,7 @@ public class SpeedrunSolver implements SolverInterface {
 	VectorMaximizer maximizer;
 	boolean diveTurn = true;
 	boolean singleThrowAllowed = true;
-	TripleThrow ttAllowed = TripleThrow.NO;
+	YNT ttAllowed = YNT.NO;
 	int minTotalFrames = 0;
 	boolean success = false;
 	double bestDisp;
@@ -102,6 +102,8 @@ public class SpeedrunSolver implements SolverInterface {
 		int minCoyoteFrames = 0;
 		int maxCoyoteFrames = p.getCoyoteTimeMaxFrames();
 
+		int[] frames = new int[Movement.COMPONENT_COUNT];
+
 		for (int framesJump = 1; framesJump <= (VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1); framesJump++) { //tried flipping to count down but it was actually slower that way
 			p.framesJump = framesJump;
 			for (int coyoteFrames = minCoyoteFrames; coyoteFrames <= maxCoyoteFrames; coyoteFrames++) {
@@ -109,11 +111,11 @@ public class SpeedrunSolver implements SolverInterface {
 				imForwardDisp = 0;
 				imYDisp = 0;
 				totalFrames1 = minFrames;
-				for (int imFrames = imMinFrames; totalFrames1 <= maxFrames; imFrames++, totalFrames1++) { //TODO: start at a more reasonable value (max height probably)
+				for (frames[Movement.IM] = imMinFrames; totalFrames1 <= maxFrames; frames[Movement.IM]++, totalFrames1++) { //TODO: start at a more reasonable value (max height probably)
 					System.out.println("Total / Max Frames: " + totalFrames1 + ", " + maxFrames);
 					double prevImForwardDisp = imForwardDisp;
 					double prevImYDisp = imYDisp;
-					calcIMDisps(imFrames, coyoteFrames);
+					calcIMDisps(frames[Movement.IM], coyoteFrames);
 					double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp;
 					if (maxYDisp < lowestYDisp)
 						break; //if it is impossible to get high enough, break now
@@ -130,7 +132,7 @@ public class SpeedrunSolver implements SolverInterface {
 					else
 						imEfficiency = -1 / ((yVel / forwardDelta) - 1);
 
-					System.out.println("IM: " + imFrames + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
+					System.out.println("IM: " + frames[Movement.IM] + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
 
 					cbMaxFrames = cbData.maxFrames(imEfficiency);
 					diveMaxFrames = diveData.maxFrames(imEfficiency);
@@ -138,33 +140,32 @@ public class SpeedrunSolver implements SolverInterface {
 					//System.out.println(" CB Max Frames: " + cbMaxFrames);
 					//System.out.println(" Dive Max Frames: " + diveMaxFrames);
 
-					for (int cbFrames = cbMinFrames; cbFrames <= cbMaxFrames && totalFrames2 <= maxFrames; cbFrames++, totalFrames2++) {
-						int cbDurationLimit = p.cbCapReturnFrame + 11;
-						fctMaxFrames = fctData.maxFrames(cbData.efficiencies[cbFrames]); //doesn't really help because it doesn't tend to get this long
+					for (frames[Movement.CB] = cbMinFrames; frames[Movement.CB] <= cbMaxFrames && totalFrames2 <= maxFrames; frames[Movement.CB]++, totalFrames2++) {
+						fctMaxFrames = fctData.maxFrames(cbData.efficiencies[frames[Movement.CB]]); //doesn't really help because it doesn't tend to get this long
 						//System.out.println(" FCT Max Frames: " + fctMaxFrames);
 
-						if (maxYDisp2 + cbYDisps[cbFrames] < lowestYDisp)
+						if (maxYDisp2 + cbYDisps[frames[Movement.CB]] < lowestYDisp)
 							break;
-						double maxYDisp3 = maxYDisp2 + cbYDisps[cbFrames] - diveDataMaxYDisp;
+						double maxYDisp3 = maxYDisp2 + cbYDisps[frames[Movement.CB]] - diveDataMaxYDisp;
 						int totalFrames3 = totalFrames2;
-						double forwardDisp3 = forwardDisp2 + cbForwardDisps[cbFrames];
+						double forwardDisp3 = forwardDisp2 + cbForwardDisps[frames[Movement.CB]];
 
-						for (int diveFrames = diveMinFrames; diveFrames <= diveMaxFrames && totalFrames3 <= maxFrames; diveFrames++, totalFrames3++) {
-							if (maxYDisp3 + diveYDisps[diveFrames] < lowestYDisp)
+						for (frames[Movement.DIVE2] = diveMinFrames; frames[Movement.DIVE2] <= diveMaxFrames && totalFrames3 <= maxFrames; frames[Movement.DIVE2]++, totalFrames3++) {
+							if (maxYDisp3 + diveYDisps[frames[Movement.DIVE2]] < lowestYDisp)
 								break;
-							double maxYDisp4 = maxYDisp3 + diveYDisps[diveFrames] - fctDataMaxYDisp;
+							double maxYDisp4 = maxYDisp3 + diveYDisps[frames[Movement.DIVE2]] - fctDataMaxYDisp;
 							int totalFrames4 = totalFrames3;
-							double forwardDisp4 = forwardDisp3 + diveFrames * 20; //TODO allow for diveangle
+							double forwardDisp4 = forwardDisp3 + frames[Movement.DIVE2] * 20; //TODO allow for diveangle
 
-							for (int fctFrames = fctMinFrames; fctFrames <= fctMaxFrames && totalFrames4 <= maxFrames; fctFrames++, totalFrames4++) {
-								if (fctFrames > 0 && cbFrames < cbDurationLimit) //cannot have a fct //TODO account for CB first hct case
+							for (frames[Movement.CT2] = fctMinFrames; frames[Movement.CT2] <= fctMaxFrames && totalFrames4 <= maxFrames; frames[Movement.CT2]++, totalFrames4++) {
+								if (frames[Movement.CT2] > 0 && frames[Movement.CB] < p.cbCapReturnFrame) //cannot have a fct //TODO account for CB first hct case
 									break;
-								if (fctFrames > 0 && fctFrames < 8)
+								if (frames[Movement.CT2] > 0 && frames[Movement.CT2] < 8)
 									continue;
-								if (maxYDisp4 + fctYDisps[fctFrames] < lowestYDisp)
+								if (maxYDisp4 + fctYDisps[frames[Movement.CT2]] < lowestYDisp)
 									break;
-								double maxYDisp5 = maxYDisp4 + fctYDisps[fctFrames] - ctDiveDataMaxYDisp;
-								double forwardDisp5 = forwardDisp4 + fctForwardDisps[fctFrames];
+								double maxYDisp5 = maxYDisp4 + fctYDisps[frames[Movement.CT2]] - ctDiveDataMaxYDisp;
+								double forwardDisp5 = forwardDisp4 + fctForwardDisps[frames[Movement.CT2]];
 
 								for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
 									int totalFrames = totalFrames4 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
@@ -177,8 +178,19 @@ public class SpeedrunSolver implements SolverInterface {
 									}
 									double forwardDisp = forwardDisp5 + ctDiveForwardDisps[ctDiveDataIndex];
 									if (forwardDisp >= targetDisp - RANGE) {
-										int durations[] = {imFrames - p.framesCrouch - p.framesMoonwalk - p.framesRun, ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), cbFrames, fctFrames, diveFrames};
-										candidates.add(new Candidate(totalFrames, durations, coyoteFrames, framesJump, forwardDisp, yDisp));
+										frames[Movement.CT1] = ctDiveData.ctFrames(ctDiveDataIndex);
+										frames[Movement.DIVE1] = ctDiveData.diveFrames(ctDiveDataIndex);
+										int[][] midairs = new int[p.midairs.length][2];
+										for (int i = 0; i < midairs.length; i++) {
+											midairs[i][0] = p.midairs[i][0];
+										}
+										for (int component = 1; component < Movement.COMPONENT_COUNT; component++) {
+											if (p.componentIndices[component] >= 0) {
+												midairs[p.componentIndices[component]][1] = frames[component];
+											}
+										}
+										//int midairs[] = {ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), frames[Movement.CB], fctFrames, diveFrames};
+										candidates.add(new Candidate(totalFrames, frames[Movement.IM] - p.framesCrouch - p.framesMoonwalk - p.framesRun, midairs, coyoteFrames, framesJump, forwardDisp, yDisp));
 										if (forwardDisp >= targetDisp + RANGE)
 											maxFrames = totalFrames;
 									}
@@ -204,13 +216,12 @@ public class SpeedrunSolver implements SolverInterface {
 			if (c.totalFrames == minTotalFrames || c.totalFrames > minTotalFrames && bestDisp < targetDisp) {
 				if (c.totalFrames > minTotalFrames && bestDisp < targetDisp)
 					minTotalFrames++;
-				p.initialFrames = c.durations[0];
+				p.initialFrames = c.imFrames;
 				p.framesJump = c.framesJump;
 				int eliminatedMovements = 0;
-				VectorCalculator.addPreset(p.midairPreset, false);
-				for (int i = 1; i < c.durations.length; i++) {
-					p.midairs[i - 1][1] = c.durations[i];
-					if (c.durations[i] == 0)
+				VectorCalculator.addPreset(c.midairs);
+				for (int i = 0; i < p.midairs.length; i++) {
+					if (p.midairs[i][1] == 0)
 						eliminatedMovements++;
 				}
 				int[][] realMidairs = new int[p.midairs.length - eliminatedMovements][2];
@@ -239,13 +250,13 @@ public class SpeedrunSolver implements SolverInterface {
 		System.out.println();
 		if (bestDisp >= targetDisp) {
 			System.out.println("Best Result: " + bestCandidate.toString() + ", " + bestDisp);
-			p.initialFrames = bestCandidate.durations[0];
+			p.initialFrames = bestCandidate.imFrames;
 			p.framesJump = bestCandidate.framesJump;
 			int eliminatedMovements = 0;
-			VectorCalculator.addPreset("Spinless", false);
-			for (int i = 1; i < bestCandidate.durations.length; i++) {
-				p.midairs[i - 1][1] = bestCandidate.durations[i];
-				if (bestCandidate.durations[i] == 0)
+			// VectorCalculator.addPreset("Spinless", false);
+			p.midairs = bestCandidate.midairs;
+			for (int i = 0; i < p.midairs.length; i++) {
+				if (p.midairs[i][1] == 0)
 					eliminatedMovements++;
 			}
 			int[][] realMidairs = new int[p.midairs.length - eliminatedMovements][2];
@@ -290,7 +301,7 @@ public class SpeedrunSolver implements SolverInterface {
         p.diveCapBounceAngle = diveTurn ? Solver.DEFAULT_EDGE_CB_ANGLE_DIVE_TURN : 0;
         maximizer.vectorAngleMax = Math.min(p.vectorAngle + 15, 90); //this is to speed things up
         maximizer.maximize();
-        if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != TripleThrow.YES, !singleThrowAllowed && ttAllowed != TripleThrow.YES, ttAllowed != TripleThrow.NO) > -1) { //also conforms the motion correctly
+        if (p.twoPlayerMode || maximizer.isDiveCapBouncePossible(-1, singleThrowAllowed, false, ttAllowed != YNT.YES, !singleThrowAllowed && ttAllowed != YNT.YES, ttAllowed != YNT.NO) > -1) { //also conforms the motion correctly
             maximizer.recalculateDisps(true);
             maximizer.adjustToGivenAngle();
             return maximizer.bestDisp;
@@ -380,7 +391,7 @@ public class SpeedrunSolver implements SolverInterface {
 	}
 
 	@Override
-	public TripleThrow ttAllowed() {
+	public YNT ttAllowed() {
 		return ttAllowed;
 	}
 
@@ -391,15 +402,17 @@ public class SpeedrunSolver implements SolverInterface {
 
 	public class Candidate implements Comparable<Candidate> {
 		int totalFrames;
-		int[] durations;
+		int imFrames;
+		int[][] midairs;
 		int coyoteFrames;
 		int framesJump;
 		double forwardDisp;
 		double yDisp;
 
-		public Candidate(int totalFrames, int[] durations, int coyoteFrames, int framesJump, double forwardDisp, double yDisp) {
+		public Candidate(int totalFrames, int imFrames, int[][] midairs, int coyoteFrames, int framesJump, double forwardDisp, double yDisp) {
 			this.totalFrames = totalFrames;
-			this.durations = durations;
+			this.imFrames = imFrames;
+			this.midairs = midairs;
 			this.coyoteFrames = coyoteFrames;
 			this.framesJump = framesJump;
 			this.forwardDisp = forwardDisp;
@@ -408,7 +421,11 @@ public class SpeedrunSolver implements SolverInterface {
 
 		@Override
 		public String toString() {
-			return totalFrames + ", " + Arrays.toString(durations) + ", " + forwardDisp + ", " + yDisp;
+			int[] midairDurations = new int[midairs.length];
+			for (int i = 0; i < midairs.length; i++) {
+				midairDurations[i] = midairs[i][1];
+			}
+			return totalFrames + ", " + Arrays.toString(midairDurations) + ", " + forwardDisp + ", " + yDisp;
 		}
 
 		@Override 

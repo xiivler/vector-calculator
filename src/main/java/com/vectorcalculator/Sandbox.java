@@ -3,7 +3,7 @@ package com.vectorcalculator;
 import java.util.Arrays;
 import java.util.Vector;
 
-import com.vectorcalculator.Properties.TripleThrow;
+import com.vectorcalculator.Properties.YNT;
 
 public class Sandbox {
 
@@ -134,7 +134,7 @@ public class Sandbox {
                 p.midairs[p.firstCTIndex + 1][1] = j;
                 //SolverInterface solver = VectorCalculator.runSolver(true, true);
                 DiveSolver solver = new DiveSolver();
-                solver.ttAllowed = TripleThrow.NO;
+                solver.ttAllowed = YNT.NO;
                 double disp = solver.test();
                 if (disp != 0) {
                     VectorMaximizer maximizer = solver.getMaximizer();

@@ -1,7 +1,7 @@
 package com.vectorcalculator;
 
 import java.util.ArrayList;
-import com.vectorcalculator.Properties.TurnDuringDive;
+import com.vectorcalculator.Properties.YNT;
 
 public class VectorMaximizer {
 
@@ -1233,7 +1233,7 @@ public class VectorMaximizer {
                 preCapBounceDiveIndex = j;
                 motionGroup[i] = currentMovement.getMotion(movementFrames.get(j), currentVectorRight, true);
                 ((DiveTurn) motionGroup[i]).firstFrameDecel = firstFrameDecel;
-                if (p.diveTurn == TurnDuringDive.NO || (p.reverseBonk && j == movementNames.size() - 2)) {
+                if (p.diveTurn == YNT.NO || (p.reverseBonk && j == movementNames.size() - 2)) {
                     ((DiveTurn) motionGroup[i]).setHoldingAngle(0);
                 }
             }

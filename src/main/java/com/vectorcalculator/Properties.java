@@ -70,38 +70,19 @@ public class Properties {
         }
 	}
 
-    static enum TripleThrow {
+    static enum YNT {
         YES("Yes"), NO("No"), TEST("Test Both");
 
         String displayName;
 
-        TripleThrow(String displayName) {
+        YNT(String displayName) {
             this.displayName = displayName;
         }
 
-        static TripleThrow fromDisplayName(String name) {
-            for (TripleThrow tt : TripleThrow.values()) {
-                if (tt.displayName.equals(name)) {
-                    return tt;
-                }
-            }
-            return NO;
-        }
-    }
-
-    static enum TurnDuringDive {
-        YES("Yes"), NO("No"), TEST("Test Both");
-
-        String displayName;
-
-        TurnDuringDive(String displayName) {
-            this.displayName = displayName;
-        }
-
-        static TurnDuringDive fromDisplayName(String name) {
-            for (TurnDuringDive dt : TurnDuringDive.values()) {
-                if (dt.displayName.equals(name)) {
-                    return dt;
+        static YNT fromDisplayName(String name) {
+            for (YNT ynt : YNT.values()) {
+                if (ynt.displayName.equals(name)) {
+                    return ynt;
                 }
             }
             return YES;
@@ -271,7 +252,7 @@ public class Properties {
 	double diveCapBounceAngle = 0; //how many more degrees the cap throw should be to the side than the dive angle
     double diveCapBounceTolerance = 0.01; //how much flexibility there is in the dive cap bounce working
     double diveFirstFrameDecel = 0; //how much to decelerate on the first frame of the dive before the cap bounce
-    TurnDuringDive diveTurn = TurnDuringDive.YES;
+    YNT diveTurn = YNT.YES;
     int cbCapReturnFrame = 25;
     double vectorAngle = 90; //how sharply to vector the first cap throw
 
@@ -281,14 +262,15 @@ public class Properties {
     boolean canTripleThrow = true;
     boolean canTripleThrowDiveCB = false;
     boolean canTestTripleThrow = false; //whether dive CB triple throw can be tested for (misleading name because of earlier versions of the calculator)
-    TripleThrow tripleThrow = TripleThrow.YES;
-    TripleThrow tripleThrowDiveCB = TripleThrow.NO;
+    YNT tripleThrow = YNT.YES;
+    YNT tripleThrowDiveCB = YNT.NO;
     boolean midairVault = false;
     boolean reverseBonk = false;
     double reverseBonkAngle = 30; //positive number is left if initial vector direction is left, right if initial vector direction is right; negative values also accepted
     int finalGPFrames = 1;
     int firstCTIndex = 0;
     boolean optimizeCT1Falling = false;
+    YNT fct = YNT.YES; 
     int fctType = Movement.MCCTU;
     boolean optimizeFCTFalling = true;
     boolean customFCTAngle = false;
