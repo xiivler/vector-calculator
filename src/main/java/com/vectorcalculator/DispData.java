@@ -47,7 +47,7 @@ public class DispData {
     //get maximum number of frames where the final frame's efficiency is at least as high as minEfficiency
     public int maxFrames(double minEfficiency) {
         int i = firstDownwardFrame;
-        while (efficiencies[i] >= minEfficiency && i < forwardDisps.length)
+        while (i < forwardDisps.length && efficiencies[i] >= minEfficiency)
             i++;
         return i - 1;
     }
