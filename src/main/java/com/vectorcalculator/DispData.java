@@ -17,6 +17,10 @@ public class DispData {
     double[] efficiencies;
     int firstDownwardFrame = 0;
 
+    public DispData() {
+        this("", DEFAULT, new double[]{0}, new double[]{0});
+    }
+
     public DispData(String movementType, int context, double[] forwardDisps, double[] yDisps) {
         this.movementType = movementType;
         this.context = context;

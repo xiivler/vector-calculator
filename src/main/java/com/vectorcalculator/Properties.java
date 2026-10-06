@@ -400,6 +400,12 @@ public class Properties {
             return 0;
     }
 
+    public int getHCTType() {
+        if (p.componentIndices[Movement.HCT] < 0)
+            return -1;
+        return p.midairs[p.componentIndices[Movement.HCT]][0];
+    }
+
     public static void copyAttributes(Object from, Object to) {
         try {
             Map<String, Field> toFieldNameMap = new HashMap<>();

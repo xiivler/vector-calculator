@@ -2,9 +2,9 @@ package com.vectorcalculator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
 
 import com.vectorcalculator.Properties.CoyoteType;
+import com.vectorcalculator.Properties.HctType;
 import com.vectorcalculator.Properties.YNT;
 
 //this class finds the optimal durations for each midair input, given the target vertical displacement
@@ -46,7 +46,17 @@ public class SpeedrunSolver implements SolverInterface {
 		DispDataCTDive ctDiveData = (DispDataCTDive) DispData.getDispData("MCCT Dive", DispData.DEFAULT);
 		DispData cbData = getDispData(Movement.CB, 1, 50); //TODO: these values are just guesses and are only appropriate for Dive CB in regular gravity
 		DispData diveData = getDispData(Movement.DIVE2, 1, 30); //TODO: similar
-		DispData fctData = getDispData(Movement.CT2, 8, 35); //TODO: similar
+		DispData fctData = new DispData();
+		if (p.fct == YNT.YES || p.fct == YNT.TEST)
+			fctData = getDispData(Movement.CT2, 8, 35); //TODO: similar
+		DispData hctData = new DispData();
+		if (p.componentIndices[Movement.HCT] >= 0) {
+			int hctType = p.getHCTType();
+			int hctMinFrames = 23;
+			if (hctType == VectorCalculator.HMCCT)
+				hctMinFrames = Math.max(p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame, 23);
+			hctData = getDispDataHCT(hctMinFrames, 36);
+		}
 		//DispData cbData = DispData.getDispData("Dive Cap Bounce", DispData.DEFAULT);
 		//DispData diveData = DispData.getDispData("Final Dive", DispData.DEFAULT);
 		//DispData fctData = DispData.getDispData("Final Cap Throw", DispData.DEFAULT);
@@ -70,7 +80,7 @@ public class SpeedrunSolver implements SolverInterface {
         int imMinFrames = VectorCalculator.initialMovement.getMotion(p.initialFrames, false, false).calcFrames(p.initialDispY - VectorCalculator.getCoyoteDisp()) + p.framesCrouch + p.framesMoonwalk + p.framesRun;
 		int cbMinFrames = 1;
 		int diveMinFrames = 14;
-		int fctMinFrames = 0;
+		int fctMinFrames = p.fct == YNT.YES ? 8 : 0; //TODO: handle for TT FCT
 		int ctDiveMinFrames = ctDiveData.minFrames();
 
 		int cbMaxFrames = cbData.maxFrames();
@@ -166,6 +176,16 @@ public class SpeedrunSolver implements SolverInterface {
 									break;
 								double maxYDisp5 = maxYDisp4 + fctYDisps[frames[Movement.CT2]] - ctDiveDataMaxYDisp;
 								double forwardDisp5 = forwardDisp4 + fctForwardDisps[frames[Movement.CT2]];
+
+								// for (frames[Movement.CT2] = hctMinFrames; frames[Movement.CT2] <= hctMaxFrames && totalFrames5 <= maxFrames; frames[Movement.CT2]++, totalFrames5++) {
+								// 	if (frames[Movement.CT2] > 0 && frames[Movement.CB] < p.cbCapReturnFrame) //cannot have a fct //TODO account for CB first hct case
+								// 		break;
+								// 	if (frames[Movement.CT2] > 0 && frames[Movement.CT2] < 8)
+								// 		continue;
+								// 	if (maxYDisp4 + fctYDisps[frames[Movement.CT2]] < lowestYDisp)
+								// 		break;
+								// 	double maxYDisp6 = maxYDisp5 + hctYDisps[frames[Movement.CT2]] - hctDataMaxYDisp;
+								// 	double forwardDisp6 = forwardDisp5 + fctForwardDisps[frames[Movement.CT2]];
 
 								for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
 									int totalFrames = totalFrames4 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
@@ -348,6 +368,36 @@ public class SpeedrunSolver implements SolverInterface {
 
 			int maximizerStartIndex = maximizer.listPreparer.startIndices[component];
 			int maximizerEndIndex = maximizer.listPreparer.endIndices[component];
+
+            double dispX, dispY, dispZ;
+            dispX = dispY = dispZ = 0;
+            for (int j = maximizerStartIndex; j <= maximizerEndIndex; j++) {
+                dispX += maximizer.motions[j].dispX;
+                dispY += maximizer.motions[j].calcDispY();
+                dispZ += maximizer.motions[j].dispZ;
+            };
+            double targetAngle = Math.atan(maximizer.bestDispX / maximizer.bestDispZ);
+            double coordAngle = Math.atan(dispX / dispZ);
+            double forwardDisp = Math.abs(Math.sqrt(dispX * dispX + dispZ * dispZ) * Math.cos(targetAngle - coordAngle));;
+            forwardDisps[i] = forwardDisp;
+            yDisps[i] = dispY;
+        }
+        return new DispData(p.initialMovementName, DispData.DEFAULT, forwardDisps, yDisps);
+    }
+
+	public static DispData getDispDataHCT(int minFrames, int maxFrames) {
+        Properties p = Properties.getInstance();
+        VectorCalculator.addPreset(p.midairPreset, false);
+        double[] forwardDisps = new double[maxFrames + 1];
+        double[] yDisps = new double[maxFrames + 1];
+        for (int i = minFrames; i <= maxFrames; i++) {
+			p.midairs[p.componentIndices[Movement.HCT]][1] = i;
+
+            VectorMaximizer maximizer;
+            maximizer = VectorCalculator.calculate();
+
+			int maximizerStartIndex = maximizer.listPreparer.startIndices[Movement.HCT];
+			int maximizerEndIndex = maximizer.listPreparer.endIndices[Movement.RS];
 
             double dispX, dispY, dispZ;
             dispX = dispY = dispZ = 0;

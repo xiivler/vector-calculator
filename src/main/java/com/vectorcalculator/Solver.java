@@ -724,9 +724,9 @@ public class Solver implements SolverInterface {
             return false;
         if (i == rainbowSpinIndex && frames <= 32)
             return false;
-        if (i == homingMCCTIndex && frames <= (p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame))
+        if (i == homingMCCTIndex && frames <= Math.max((p.hctType == HctType.OPTIMAL ? 36 : p.hctCapReturnFrame), 23))
             return false;
-        if (i == homingFTIndex && frames <= 23)
+        if ((i == homingFTIndex || i == homingTTIndex) && frames <= 23)
             return false;
         if (i == diveCapBounceIndex && frames <= p.cbCapReturnFrame && throwOrRSAfterCB)
             return false;
