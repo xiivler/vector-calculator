@@ -390,7 +390,9 @@ public class Properties {
     }
 
     public int getCoyoteTimeMaxFrames() {
-        if (coyoteType == CoyoteType.MOONWALK)
+        if (!canMoonwalk)
+            return 0;
+        else if (coyoteType == CoyoteType.MOONWALK)
             return 5;
         else if (coyoteType == CoyoteType.RUNNING)
             return initialMovementName.equals("Long Jump") ? 5 : 6;
