@@ -856,6 +856,8 @@ public class VectorCalculator extends JPanel {
 			YNT oldFCT = p.fct;
 			p.fct = YNT.fromDisplayName(value.toString());
 			if (oldFCT != p.fct && !p.midairPreset.equals("Custom")) {
+				if (p.fct == YNT.NO || p.fct == YNT.TEST)
+					p.reverseBonk = false;
 				addPreset(p.midairPreset, false);
 			}
 			break;

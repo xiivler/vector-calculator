@@ -378,10 +378,11 @@ public class VectorMaximizer {
 	//angleDiff is how many radians to the side of the dive angle the throw angle is
 	//vectorAngle is how many degrees to the side are being held in order to vector the cap throw
 	private boolean setCapThrowHoldingAngles(boolean ct1, ComplexVector motion, double angle, double angleDiff, double vectorAngle, int frames, int fallingFrames) {		
-		if (!(ct1 && optimizeCT1Falling) && (angleDiff == OPTIMAL_ANGLE_DIFF || p.trySimplifyFirstThrowVector) && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle))
+		//System.out.println("Set Cap Throw Holding Angles, Frames: " + frames);
+		if (!(ct1 && optimizeCT1Falling) && angleDiff == OPTIMAL_ANGLE_DIFF && canSetOptimalHoldingAngles(frames, angle, angle + angleDiff, vectorAngle)) //TODO look into this for final cap throw? anglediff is negative infinity so it always works, maybe should use diveCapBounceAngle
 			return setOptimalHoldingAngles(motion, angle, angleDiff, vectorAngle, frames);
 		else if (angleDiff == OPTIMAL_ANGLE_DIFF)
-			angleDiff = Math.toRadians(diveCapBounceAngle);
+			angleDiff = 0;
 
 		double angleDiffDeg = Math.toDegrees(angleDiff);
 		double throwAngle = angle + angleDiff;
@@ -713,6 +714,8 @@ public class VectorMaximizer {
 
 		double ang_deg = Math.toDegrees(vectorAngle - diveAngle);
 
+		//System.out.println("test " + frames + " " + ang_deg);
+
 		int turnaroundFrames;
 		if (ang_deg <= 25 + 22.5) //TODO determine whether this should have + FINAL_CT_ANGLE_REDUCTION_LIMIT
 			return false;
@@ -736,7 +739,8 @@ public class VectorMaximizer {
 		}
 		// System.out.println("Max Rotation: " + maxRotation);
 		// System.out.println("Vector angle: " + Math.toDegrees(vectorAngle));
-		// System.out.println("Needed rotation: " + Math.toDegrees(vectorAngle - throwAngle));
+		// System.out.println("Needed rotation: " + Math.toDegrees(vectorAngle - relativeInitialRotation));
+		// System.out.println(vectorAngle - relativeInitialRotation < Math.toRadians(maxRotation));
 		return (vectorAngle - relativeInitialRotation < Math.toRadians(maxRotation)); //is it possible to rotate enough to reach the vector angle from the throw angle? If so, then we can use an optimally vectored turnaround
 	}
 
