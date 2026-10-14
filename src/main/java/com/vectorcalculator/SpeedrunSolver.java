@@ -115,6 +115,7 @@ public class SpeedrunSolver implements SolverInterface {
 		double fctDataMaxYDisp = fctData.maxYDisp();
 		double fctDataMaxYDispFrame = fctData.maxYDispFrame();
 		double hctDataMaxYDisp = hctData.maxYDisp();
+		double hctDataMaxYDispFrame = hctData.maxYDispFrame();
 		double rsDataMaxYDisp = hasRS ? rsData.yDisps[rsFrames] : 0;
 		double rbDataMaxYDisp = hasRB ? rbData.yDisps[rbFrames] : 0;
 
@@ -127,6 +128,7 @@ public class SpeedrunSolver implements SolverInterface {
 		double[] cbYDisps = cbData.yDisps;
 		double[] diveYDisps = diveData.yDisps;
 		double[] fctYDisps = fctData.yDisps;
+		double[] hctYDisps = hctData.yDisps;
 		double[] ctDiveYDisps = new double[ctDiveData.data.length];
 		for (int i = 0; i < ctDiveData.data.length; i++) {
 			ctDiveYDisps[i] = ctDiveData.yDisp(i);
@@ -144,7 +146,7 @@ public class SpeedrunSolver implements SolverInterface {
 		double rbDataForwardDisp = hasRB ? rbData.forwardDisps[rbFrames] : 0;
 
 		//the minimum possible number of frames
-		int minFrames = imMinFrames + cbMinFrames + diveMinFrames + fctMinFrames + ctDiveMinFrames + rsFrames + rbFrames + 1 + 1; //2 ground pounds of 1 frame each
+		int minFrames = imMinFrames + cbMinFrames + diveMinFrames + fctMinFrames + ctDiveMinFrames + rsFrames + rbFrames + hctMinFrames + 1 + 1; //2 ground pounds of 1 frame each
 		int totalFrames1 = minFrames;
 
 		System.out.println("Min Frames: " + minFrames);
@@ -171,7 +173,7 @@ public class SpeedrunSolver implements SolverInterface {
 					double prevImForwardDisp = imForwardDisp;
 					double prevImYDisp = imYDisp;
 					calcIMDisps(frames[Movement.IM], coyoteFrames);
-					double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp + rsDataMaxYDisp + rbDataMaxYDisp;
+					double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp + rsDataMaxYDisp + rbDataMaxYDisp + hctDataMaxYDisp;
 					if (maxYDisp < lowestYDisp) //TODO this is not accurate yet because it needs the at least max frame check like the ones below
 						break; //if it is impossible to get high enough, break now
 					double maxYDisp2 = maxYDisp - cbDataMaxYDisp;
@@ -221,43 +223,41 @@ public class SpeedrunSolver implements SolverInterface {
 									break;
 								double maxYDisp5 = maxYDisp4 + fctYDisps[frames[Movement.CT2]] - ctDiveDataMaxYDisp;
 								double forwardDisp5 = forwardDisp4 + fctForwardDisps[frames[Movement.CT2]];
+								int totalFrames5 = totalFrames4;
 
-								// for (frames[Movement.CT2] = hctMinFrames; frames[Movement.CT2] <= hctMaxFrames && totalFrames5 <= maxFrames; frames[Movement.CT2]++, totalFrames5++) {
-								// 	if (frames[Movement.CT2] > 0 && frames[Movement.CB] < p.cbCapReturnFrame) //cannot have a fct //TODO account for CB first hct case
-								// 		break;
-								// 	if (frames[Movement.CT2] > 0 && frames[Movement.CT2] < 8)
-								// 		continue;
-								// 	if (frames[Movement.CT2] >= fctDataMaxYDispFrame && maxYDisp4 + fctYDisps[frames[Movement.CT2]] < lowestYDisp)
-								// 		break;
-								// 	double maxYDisp6 = maxYDisp5 + hctYDisps[frames[Movement.CT2]] - hctDataMaxYDisp;
-								// 	double forwardDisp6 = forwardDisp5 + fctForwardDisps[frames[Movement.CT2]];
-
-								for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
-									int totalFrames = totalFrames4 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
-									if (totalFrames > maxFrames) {
+								for (frames[Movement.HCT] = hctMinFrames; frames[Movement.HCT] <= hctMaxFrames && totalFrames5 <= maxFrames; frames[Movement.HCT]++, totalFrames5++) {
+									if (frames[Movement.HCT] >= hctDataMaxYDispFrame && maxYDisp4 + hctYDisps[frames[Movement.HCT]] < lowestYDisp)
 										break;
-									}
-									double yDisp = maxYDisp5 + ctDiveYDisps[ctDiveDataIndex];
-									if (yDisp > highestYDisp || yDisp < lowestYDisp) {
-										continue;
-									}
-									double forwardDisp = forwardDisp5 + ctDiveForwardDisps[ctDiveDataIndex];
-									if (forwardDisp >= targetDisp - RANGE) {
-										frames[Movement.CT1] = ctDiveData.ctFrames(ctDiveDataIndex);
-										frames[Movement.DIVE1] = ctDiveData.diveFrames(ctDiveDataIndex);
-										int[][] midairs = new int[p.midairs.length][2];
-										for (int i = 0; i < midairs.length; i++) {
-											midairs[i][0] = p.midairs[i][0];
+									double maxYDisp6 = maxYDisp5 + hctYDisps[frames[Movement.HCT]] - hctDataMaxYDisp;
+									double forwardDisp6 = forwardDisp5 + hctForwardDisps[frames[Movement.HCT]];
+
+									for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
+										int totalFrames = totalFrames5 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
+										if (totalFrames > maxFrames) {
+											break;
 										}
-										for (int component = 1; component < Movement.COMPONENT_COUNT; component++) {
-											if (p.componentIndices[component] >= 0) {
-												midairs[p.componentIndices[component]][1] = frames[component];
+										double yDisp = maxYDisp6 + ctDiveYDisps[ctDiveDataIndex];
+										if (yDisp > highestYDisp || yDisp < lowestYDisp) {
+											continue;
+										}
+										double forwardDisp = forwardDisp6 + ctDiveForwardDisps[ctDiveDataIndex];
+										if (forwardDisp >= targetDisp - RANGE) {
+											frames[Movement.CT1] = ctDiveData.ctFrames(ctDiveDataIndex);
+											frames[Movement.DIVE1] = ctDiveData.diveFrames(ctDiveDataIndex);
+											int[][] midairs = new int[p.midairs.length][2];
+											for (int i = 0; i < midairs.length; i++) {
+												midairs[i][0] = p.midairs[i][0];
 											}
+											for (int component = 1; component < Movement.COMPONENT_COUNT; component++) {
+												if (p.componentIndices[component] >= 0) {
+													midairs[p.componentIndices[component]][1] = frames[component];
+												}
+											}
+											//int midairs[] = {ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), frames[Movement.CB], fctFrames, diveFrames};
+											candidates.add(new Candidate(totalFrames, frames[Movement.IM] - p.framesCrouch - p.framesMoonwalk - p.framesRun, midairs, coyoteFrames, framesJump, forwardDisp, yDisp));
+											if (forwardDisp >= targetDisp + RANGE)
+												maxFrames = totalFrames;
 										}
-										//int midairs[] = {ctDiveData.ctFrames(ctDiveDataIndex), ctDiveData.diveFrames(ctDiveDataIndex), frames[Movement.CB], fctFrames, diveFrames};
-										candidates.add(new Candidate(totalFrames, frames[Movement.IM] - p.framesCrouch - p.framesMoonwalk - p.framesRun, midairs, coyoteFrames, framesJump, forwardDisp, yDisp));
-										if (forwardDisp >= targetDisp + RANGE)
-											maxFrames = totalFrames;
 									}
 								}
 							}
