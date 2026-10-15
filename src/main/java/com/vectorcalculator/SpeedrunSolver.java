@@ -42,6 +42,8 @@ public class SpeedrunSolver implements SolverInterface {
 
 		VectorCalculator.setProgressText("Solver: Generating Data");
 
+		p.framesJump = VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1;
+
 		//TODO update based on context
 		DispDataCTDive ctDiveData = (DispDataCTDive) DispData.getDispData("MCCT Dive", DispData.DEFAULT);
 
@@ -62,8 +64,10 @@ public class SpeedrunSolver implements SolverInterface {
 					imMaxFrames = p.vaultCapReturnFrame + 11;
 			}
 		}
-
 		//TODO imMaxFrames for a tt later
+		if (imMinFrames > imMaxFrames) {
+			imMinFrames = imMaxFrames;	
+		}
 
 		int cbMinFrames = (hctAfterCB || rsAfterCB) ? p.cbCapReturnFrame : 1, cbMaxFrames = (ttAfterCB || rsAfterCB) ? p.cbCapReturnFrame + 11 : 50;
 		int diveMinFrames = 14, diveMaxFrames = 30;
@@ -78,10 +82,13 @@ public class SpeedrunSolver implements SolverInterface {
 		int rbFrames = hasRB ? (p.onMoon ? Movement.RB_FRAMES_MOON : Movement.RB_FRAMES) : 0;
 
 		DispData cbData = getDispData(Movement.CB, cbMinFrames, cbMaxFrames); //TODO: these values are just guesses and are only appropriate for Dive CB in regular gravity
+		if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 		DispData diveData = getDispData(Movement.DIVE2, diveMinFrames, diveMaxFrames); //TODO: similar
+		if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 		DispData fctData = new DispData();
 		if (p.fct == YNT.YES || p.fct == YNT.TEST)
 			fctData = getDispData(Movement.CT2, fctMinTestFrames, fctMaxFrames); //TODO: similar
+		if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 		DispData hctData = new DispData();
 		if (p.componentIndices[Movement.HCT] >= 0) {
 			int hctType = p.getHCTType();
@@ -101,6 +108,7 @@ public class SpeedrunSolver implements SolverInterface {
 		//DispData cbData = DispData.getDispData("Dive Cap Bounce", DispData.DEFAULT);
 		//DispData diveData = DispData.getDispData("Final Dive", DispData.DEFAULT);
 		//DispData fctData = DispData.getDispData("Final Cap Throw", DispData.DEFAULT);
+		if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 
 		ArrayList<Candidate> candidates = new ArrayList<Candidate>();
 
@@ -161,27 +169,30 @@ public class SpeedrunSolver implements SolverInterface {
 		frames[Movement.RS] = rsFrames;
 		frames[Movement.RB] = rbFrames;
 
-		for (int framesJump = 1; framesJump <= (VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1); framesJump++) { //tried flipping to count down but it was actually slower that way
+		for (int framesJump = (VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1); framesJump >= 1; framesJump--) { //tried flipping to count down but it was actually slower that way
 			p.framesJump = framesJump;
+			int maxFramesPrevFramesJump = maxFrames;
+			int maxFramesCurFramesJump = Integer.MAX_VALUE;
 			for (int coyoteFrames = minCoyoteFrames; coyoteFrames <= maxCoyoteFrames; coyoteFrames++) {
+				System.out.println("Testing Jump Frames / Coyote Frames: " + framesJump + " " + coyoteFrames);
 				//reset values
 				imForwardDisp = 0;
 				imYDisp = 0;
 				totalFrames1 = minFrames;
 				for (frames[Movement.IM] = imMinFrames; frames[Movement.IM] <= imMaxFrames && totalFrames1 <= maxFrames; frames[Movement.IM]++, totalFrames1++) { //TODO: start at a more reasonable value (max height probably)
-					System.out.println("Total / Max Frames: " + totalFrames1 + ", " + maxFrames);
+					//System.out.println("Total / Max Frames: " + totalFrames1 + ", " + maxFrames);
 					double prevImForwardDisp = imForwardDisp;
 					double prevImYDisp = imYDisp;
 					calcIMDisps(frames[Movement.IM], coyoteFrames);
 					double maxYDisp = imYDisp + ctDiveDataMaxYDisp + cbDataMaxYDisp + diveDataMaxYDisp + fctDataMaxYDisp + rsDataMaxYDisp + rbDataMaxYDisp + hctDataMaxYDisp;
-					if (maxYDisp < lowestYDisp) //TODO this is not accurate yet because it needs the at least max frame check like the ones below
+					double yVel = imYDisp - prevImYDisp;
+					if (maxYDisp < lowestYDisp && yVel < 0) //TODO this is not accurate yet because it needs the at least max frame check like the ones below
 						break; //if it is impossible to get high enough, break now
 					double maxYDisp2 = maxYDisp - cbDataMaxYDisp;
 					int totalFrames2 = totalFrames1;
 					double forwardDisp2 = imForwardDisp + rsDataForwardDisp + rbDataForwardDisp; //add rs and rb disp now because it is constant
 
 					//calculate efficiency of last frame of IM
-					double yVel = imYDisp - prevImYDisp;
 					double forwardDelta = imForwardDisp - prevImForwardDisp;
 					double imEfficiency;
 					if (yVel >= 0)
@@ -189,13 +200,15 @@ public class SpeedrunSolver implements SolverInterface {
 					else
 						imEfficiency = -1 / ((yVel / forwardDelta) - 1);
 
-					System.out.println("IM: " + frames[Movement.IM] + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
+					//System.out.println("IM: " + frames[Movement.IM] + ", " + imForwardDisp + ", " + imYDisp + ", " + imEfficiency);
 
 					cbMaxFrames = cbData.maxFrames(imEfficiency);
 					diveMaxFrames = diveData.maxFrames(imEfficiency);
+					//hctMaxFrames = Math.max(hctMinFrames, hctData.maxFrames(imEfficiency)); //does not appear to be faster
 					//fctMaxFrames = fctData.maxFrames(imEfficiency);
 					//System.out.println(" CB Max Frames: " + cbMaxFrames);
 					//System.out.println(" Dive Max Frames: " + diveMaxFrames);
+					//System.out.println(" HCT Max Frames: " + hctMaxFrames);
 
 					for (frames[Movement.CB] = cbMinFrames; frames[Movement.CB] <= cbMaxFrames && totalFrames2 <= maxFrames; frames[Movement.CB]++, totalFrames2++) {
 						fctMaxFrames = fctData.maxFrames(cbData.efficiencies[frames[Movement.CB]]); //doesn't really help because it doesn't tend to get this long
@@ -214,6 +227,9 @@ public class SpeedrunSolver implements SolverInterface {
 							int totalFrames4 = totalFrames3;
 							double forwardDisp4 = forwardDisp3 + frames[Movement.DIVE2] * 20; //TODO allow for diveangle
 
+							if (frames[Movement.DIVE2] == 25 && frames[Movement.IM] == 70)
+								System.out.println("Woo");
+
 							for (frames[Movement.CT2] = fctMinFrames; frames[Movement.CT2] <= fctMaxFrames && totalFrames4 <= maxFrames; frames[Movement.CT2]++, totalFrames4++) {
 								if (frames[Movement.CT2] > 0 && (fctAfterCB && frames[Movement.CB] < p.cbCapReturnFrame) || (fctAfterVault && frames[Movement.IM] < p.cbCapReturnFrame)) //cannot have a fct //TODO account for CB first hct case
 									break;
@@ -226,17 +242,23 @@ public class SpeedrunSolver implements SolverInterface {
 								int totalFrames5 = totalFrames4;
 
 								for (frames[Movement.HCT] = hctMinFrames; frames[Movement.HCT] <= hctMaxFrames && totalFrames5 <= maxFrames; frames[Movement.HCT]++, totalFrames5++) {
-									if (frames[Movement.HCT] >= hctDataMaxYDispFrame && maxYDisp4 + hctYDisps[frames[Movement.HCT]] < lowestYDisp)
+									if (frames[Movement.HCT] >= hctDataMaxYDispFrame && maxYDisp5 + hctYDisps[frames[Movement.HCT]] < lowestYDisp)
 										break;
 									double maxYDisp6 = maxYDisp5 + hctYDisps[frames[Movement.HCT]] - hctDataMaxYDisp;
 									double forwardDisp6 = forwardDisp5 + hctForwardDisps[frames[Movement.HCT]];
 
 									for (int ctDiveDataIndex = 0; ctDiveDataIndex < ctDiveData.data.length; ctDiveDataIndex++) {
+										if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 										int totalFrames = totalFrames5 + ctDiveData.frames(ctDiveDataIndex) - ctDiveMinFrames;
 										if (totalFrames > maxFrames) {
 											break;
 										}
 										double yDisp = maxYDisp6 + ctDiveYDisps[ctDiveDataIndex];
+										if (totalFrames >= 232) {
+											frames[Movement.CT1] = ctDiveData.ctFrames(ctDiveDataIndex);
+											frames[Movement.DIVE1] = ctDiveData.diveFrames(ctDiveDataIndex);
+											System.out.println(frames[Movement.IM] + ", " + frames[Movement.CT1] + ", " + frames[Movement.DIVE1] + ", " + frames[Movement.CB] + ", " + frames[Movement.CT2] + ", " + frames[Movement.DIVE2] + " — " + yDisp);
+										}
 										if (yDisp > highestYDisp || yDisp < lowestYDisp) {
 											continue;
 										}
@@ -257,6 +279,7 @@ public class SpeedrunSolver implements SolverInterface {
 											candidates.add(new Candidate(totalFrames, frames[Movement.IM] - p.framesCrouch - p.framesMoonwalk - p.framesRun, midairs, coyoteFrames, framesJump, forwardDisp, yDisp));
 											if (forwardDisp >= targetDisp + RANGE)
 												maxFrames = totalFrames;
+												maxFramesCurFramesJump = totalFrames;
 										}
 									}
 								}
@@ -265,10 +288,15 @@ public class SpeedrunSolver implements SolverInterface {
 					}
 				}
 			}
+			if (maxFrames == Integer.MAX_VALUE)
+				break; //impossible because fewer frames of jump will not give more distance
+			if (maxFramesCurFramesJump > maxFramesPrevFramesJump)
+				break;
 		}
 		if (candidates.size() == 0) {
 			error = "No Solution Found";
 			success = false;
+			p.framesJump = VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1;
 			return false;
 		}
 		candidates.sort(null);
@@ -278,6 +306,7 @@ public class SpeedrunSolver implements SolverInterface {
 		bestDisp = 0;
 		Candidate bestCandidate = null;
 		for (Candidate c : candidates) {
+			if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return false;
 			if (c.totalFrames == minTotalFrames || c.totalFrames > minTotalFrames && bestDisp < targetDisp) {
 				if (c.totalFrames > minTotalFrames && bestDisp < targetDisp)
 					minTotalFrames++;
@@ -350,6 +379,7 @@ public class SpeedrunSolver implements SolverInterface {
 		else {
 			error = "No Solution Found";
 			success = false;
+			p.framesJump = VectorCalculator.initialMovement.variableJumpFrames ? 10 : 1;
 			return false;
 		}
 	}
@@ -406,6 +436,8 @@ public class SpeedrunSolver implements SolverInterface {
         double[] forwardDisps = new double[maxFrames + 1];
         double[] yDisps = new double[maxFrames + 1];
         for (int i = minFrames; i <= maxFrames; i++) {
+			if (VectorCalculator.cancelCalculating && VectorCalculator.calculateThread != null) return null;
+
 			p.midairs[p.componentIndices[component]][1] = i;
 
             VectorMaximizer maximizer;

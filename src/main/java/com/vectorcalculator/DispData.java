@@ -1,6 +1,7 @@
 package com.vectorcalculator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 //holds the displacement data for a certain type of movement
 public class DispData {
@@ -74,6 +75,10 @@ public class DispData {
             }
         }
         return maxYDispFrame;
+    }
+
+    public String toString() {
+        return movementType + '\n' + Arrays.toString(forwardDisps) + '\n' + Arrays.toString(yDisps);
     }
 
     public static void initializeDispData() {
